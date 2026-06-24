@@ -1,0 +1,4118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Realm of Eldoria</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: #1a1208;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #f5e6c8;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  #stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  /* ---- HUD (top bar) ---- */
+  .hud {
+    display: flex;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    margin: 6px 0 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: linear-gradient(180deg, rgba(60,34,10,0.92) 0%, rgba(40,22,6,0.95) 100%);
+    border: 2px solid rgba(255,214,102,0.4);
+    border-radius: 10px;
+    padding: 5px 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,214,102,0.1);
+  }
+  .hud > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .hud-gold  { color: #ffd666; }
+  .hud-seeds { color: #88cc55; }
+  .hud-crops { color: #e8a040; }
+  .hud-hp    { color: #ff7a7a; }
+  .hud-level { color: #9cd0ff; }
+  .hud-food  { color: #ffb866; }
+
+  #game {
+    background: #000;
+    border: 3px solid #5a3a1a;
+    border-radius: 8px;
+    width: min(96vw, 960px);
+    height: auto;
+    image-rendering: pixelated;
+    touch-action: none;
+  }
+
+  /* ---- Shop modal (opens when you walk into the building) ---- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;                 /* hidden until the shop opens */
+    align-items: center;
+    justify-content: center;
+    z-index: 200;                  /* above the D-pad and action button */
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-overlay.slash-mode {
+    background: rgba(0, 0, 0, 0.25);
+    align-items: flex-end;
+    padding-bottom: 160px;
+  }
+  .slash-mode .modal {
+    padding: 12px;
+    opacity: 0.85;
+    width: min(86vw, 320px);
+  }
+  .slash-mode .modal .hp-row { display: none; }
+  .slash-mode .modal .btn-close { display: none; }
+  .modal {
+    background: linear-gradient(170deg, #4a3018 0%, #3d2200 40%, #2e1a06 100%);
+    border: 4px solid #ffd666;
+    border-radius: 14px;
+    padding: 22px;
+    width: min(86vw, 360px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    box-shadow: inset 0 1px 0 rgba(255,214,102,0.15), inset 0 -1px 0 rgba(0,0,0,0.3),
+                0 8px 32px rgba(0,0,0,0.7), 0 0 0 2px #2a1800;
+  }
+  .modal-title {
+    color: #ffd666;
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid rgba(255,214,102,0.25);
+    padding-bottom: 6px;
+  }
+  .modal button {
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    border: 3px solid #5a3a1a;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.2);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .modal button:active { transform: scale(0.96); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+  .btn-buy  { background: linear-gradient(180deg, #99dd66 0%, #6aaa33 100%); color: #1a3300; border-color: #4a7722; }
+  .btn-buy:disabled  { background: #556644; color: #888; cursor: default; box-shadow: none; }
+  .btn-sell  { background: linear-gradient(180deg, #ffe080 0%, #ddaa33 100%); color: #3a2800; border-color: #aa8822; }
+  .btn-sell:disabled { background: #998844; color: #888; cursor: default; box-shadow: none; }
+  .btn-close { background: linear-gradient(180deg, #c07a44 0%, #8a5020 100%); color: #fff; border-color: #6a3a10; }
+
+  /* ---- Shop crop rows (slice 10a) ---- */
+  .shop-hint {
+    font-size: 0.95rem;
+    color: #ffe0a0;
+    font-style: italic;
+    margin: 0 0 4px;
+  }
+  .shop-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,214,102,0.12);
+    border-radius: 8px;
+    padding: 6px 8px;
+  }
+  .crop-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shop-info {
+    flex: 1;
+    text-align: left;
+    line-height: 1.3;
+  }
+  .shop-info small {
+    display: block;
+    font-size: 0.8rem;
+    color: #c8b080;
+  }
+  .shop-row .btn-buy {
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    min-width: 50px;
+  }
+  /* ---- Seed picker overlay (tap to choose which seed to plant) ---- */
+  .btn-seed {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    background: linear-gradient(180deg, #5a7a2a 0%, #3a5510 100%);
+    color: #f5e6c8;
+    border: 3px solid #4a7722;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.1s;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  }
+  .btn-seed:active { transform: scale(0.96); }
+
+  /* ---- Virtual joystick (bottom-left) ---- */
+  #joystickZone {
+    position: fixed;
+    left: 18px;
+    bottom: 18px;
+    width: 140px;
+    height: 140px;
+    z-index: 50;
+    touch-action: none;
+  }
+  #joystickBase {
+    position: absolute;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(120, 80, 40, 0.5);
+    border: 3px solid rgba(255, 214, 102, 0.6);
+  }
+  #joystickThumb {
+    position: absolute;
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: rgba(120, 80, 40, 0.85);
+    border: 2px solid #ffd666;
+    left: 43px; top: 43px;
+    pointer-events: none;
+    transition: none;
+  }
+  .joystick-arrow {
+    position: absolute;
+    color: rgba(255, 214, 102, 0.7);
+    font-size: 1.1rem;
+    font-weight: bold;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .joystick-arrow.arr-up    { left: 50%; top: 8px; transform: translateX(-50%); }
+  .joystick-arrow.arr-down  { left: 50%; bottom: 8px; transform: translateX(-50%); }
+  .joystick-arrow.arr-left  { left: 10px; top: 50%; transform: translateY(-50%); }
+  .joystick-arrow.arr-right { right: 10px; top: 50%; transform: translateY(-50%); }
+
+  /* ---- Action button (bottom-right) ---- */
+  #actionBtn {
+    position: fixed;
+    right: 18px;
+    bottom: 50px;
+    width: 80px;
+    height: 80px;
+    background: rgba(120, 80, 40, 0.85);
+    border: 3px solid #ffd666;
+    border-radius: 50%;
+    color: #ffd666;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    z-index: 50;
+    line-height: 1.1;
+  }
+  #actionBtn:active, #actionBtn.flash {
+    background: rgba(255, 214, 102, 0.9);
+    color: #3a2800;
+  }
+
+  /* ---- Bonus-harvest button (sits above the Action button) ---- */
+  #bonusBtn {
+    position: fixed;
+    right: 18px;
+    bottom: 142px;
+    width: 80px;
+    height: 80px;
+    background: rgba(80, 50, 110, 0.9);
+    border: 3px solid #c9a0ff;
+    border-radius: 50%;
+    color: #f0e0ff;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    z-index: 50;
+    line-height: 1.1;
+  }
+  #bonusBtn:active { background: rgba(170, 120, 230, 0.95); color: #1a0a2a; }
+  /* dim it when there's nothing ready to bonus-harvest */
+  #bonusBtn.dim { opacity: 0.4; }
+
+  /* ---- "Do this now!" attention pulses, so kids never get lost ---- */
+  /* Action button glows + grows when you're standing on something you can do. */
+  @keyframes actionPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 214, 102, 0.7); transform: scale(1); }
+    50%      { box-shadow: 0 0 22px 8px rgba(255, 214, 102, 0.95); transform: scale(1.08); }
+  }
+  #actionBtn.ready {
+    animation: actionPulse 0.9s ease-in-out infinite;
+    background: rgba(255, 214, 102, 0.95);
+    color: #3a2800;
+  }
+  /* Bonus button pulses purple when there are ready crops to scoop up with math. */
+  @keyframes bonusPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(170, 120, 230, 0.7); transform: scale(1); }
+    50%      { box-shadow: 0 0 22px 8px rgba(200, 150, 255, 0.95); transform: scale(1.08); }
+  }
+  #bonusBtn.ready { animation: bonusPulse 0.9s ease-in-out infinite; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+  @keyframes slashFlash { 0% { opacity:1; } 50% { opacity:0.2; } 100% { opacity:1; } }
+  .slash-flash { animation: slashFlash 0.15s ease-out 2; }
+
+  /* Respect the OS "reduce motion" setting: keep the helpful glow, drop the pulsing
+     scale/box-shadow animation for kids (or adults) who find motion uncomfortable. */
+  @media (prefers-reduced-motion: reduce) {
+    #actionBtn.ready, #bonusBtn.ready { animation: none; }
+  }
+
+  /* ---- Combat HP bars (slice 10c) ---- */
+  .hp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+  .hp-label { width: 70px; text-align: left; font-weight: bold; }
+  .hp-track {
+    flex: 1;
+    height: 14px;
+    background: #221a10;
+    border: 2px solid #5a3a1a;
+    border-radius: 7px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+  }
+  .hp-fill { height: 100%; transition: width 0.2s; }
+  .hp-fill.enemy { background: #cc4444; }
+  .hp-fill.you   { background: #55cc66; }
+  .hp-num { width: 58px; text-align: right; }
+  /* The turn result line above the question (e.g. "Hit! Slime hits back 2."). */
+  #combatMsg { font-size: 1rem; color: #ffe0a0; min-height: 1.2em; margin: 2px 0; }
+
+  /* ---- Cooking modal (slice 13a) ---- */
+  .cook-section { color: #ffd666; font-weight: bold; text-align: left; margin: 8px 0 2px; border-top: 1px solid #5a3a1a; padding-top: 8px; }
+  .cook-hp { float: right; font-weight: normal; color: #ff9a9a; font-size: 0.9rem; }
+
+  /* ---- Math answer buttons (big tap targets) ---- */
+  .btn-answer {
+    background: linear-gradient(180deg, #77ccee 0%, #4499bb 100%);
+    color: #06283a;
+    padding: 16px;
+    font-size: 1.3rem;
+    border-color: #337799;
+  }
+  .btn-answer:active { transform: scale(0.96); }
+
+  /* ---- Toast ---- */
+  .toast {
+    position: fixed;
+    top: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #4a3018 0%, #2e1a06 100%);
+    color: #ffd666;
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: 2px solid rgba(255,214,102,0.4);
+    font-size: 1.1rem;
+    font-weight: bold;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .toast.show { opacity: 1; }
+
+  /* ---- Profile bits in the HUD ---- */
+  .hud-profile { color: #ffd666; background: #3d2200; padding: 2px 10px; border-radius: 6px; }
+  .hud-switch {
+    background: #b0683a; color: #fff; border: 2px solid #ffd666;
+    border-radius: 6px; padding: 2px 10px; font-weight: bold; cursor: pointer;
+  }
+  .hud-mute {
+    background: #b0683a; color: #fff; border: 2px solid #ffd666;
+    border-radius: 6px; padding: 2px 10px; font-size: 1.1rem; cursor: pointer;
+    min-width: 38px; min-height: 34px; line-height: 1;
+  }
+  .quest-tracker {
+    position: absolute;
+    top: 40px;
+    left: 8px;
+    font-size: 0.75rem;
+    color: #ffd666;
+    background: linear-gradient(180deg, rgba(60,34,10,0.9), rgba(40,22,6,0.95));
+    border: 1px solid rgba(255,214,102,0.35);
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: none;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  /* ---- Title / profile-picker screen ---- */
+  .title-overlay {
+    position: fixed;
+    inset: 0;
+    background: #1a1208 url('assets/title-bg.png') center/cover no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: min(6vh, 40px);
+    z-index: 300;
+  }
+  .title-overlay.hide { display: none; }
+  .title-logo {
+    position: absolute;
+    top: min(4vh, 30px);
+    left: 50%; transform: translateX(-50%);
+    width: min(80vw, 500px);
+    pointer-events: none;
+  }
+  .title-box {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: min(92vw, 480px);
+    background: rgba(20,14,6,0.82);
+    border-radius: 16px;
+    padding: 18px 20px;
+    border: 2px solid rgba(255,214,102,0.5);
+  }
+  .title-name { display: none; }
+  .title-sub  { color: #e8d5b0; font-size: 1.1rem; margin-bottom: 2px; text-shadow: 1px 1px 3px #000; }
+  .profile-btn {
+    padding: 14px 20px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: 3px solid #ffd666;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #1a3300;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+  }
+  .profile-btn:active { transform: scale(0.97); }
+  .profile-btn.adventurer { background: #88cc55; }
+  .profile-btn.mage       { background: #66bbdd; }
+  .profile-portrait {
+    width: 52px; height: 52px;
+    border-radius: 8px;
+    border: 2px solid rgba(0,0,0,0.25);
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #d4eaff 0%, #f0e8d8 100%);
+  }
+  .profile-info { display: flex; flex-direction: column; align-items: flex-start; }
+  .profile-grade { font-size: 0.7rem; font-weight: normal; opacity: 0.7; }
+  .profile-row { display: flex; align-items: stretch; gap: 10px; }
+  .profile-row .profile-btn { flex: 1; }
+  .rename-btn {
+    padding: 0 16px;
+    font-size: 1.3rem;
+    border: 3px solid #ffd666;
+    border-radius: 12px;
+    background: #fff4cc;
+    color: #1a3300;
+    cursor: pointer;
+  }
+  .rename-btn:active { transform: scale(0.95); }
+
+  /* ---- Save tools (slice 14) ---- */
+  /* Opened from the title screen (z-index 300), so it must sit above it. */
+  #saveToolsModal { z-index: 400; }
+  .save-tools-btn {
+    margin-top: 6px;
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    background: #3d2200;
+    color: #c8b080;
+    border: 2px solid #5a3a1a;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .save-tools-btn:active { transform: scale(0.97); }
+  .save-tabs { display: flex; gap: 8px; }
+  .save-tab {
+    flex: 1;
+    padding: 10px;
+    font-weight: bold;
+    border: 2px solid #5a3a1a;
+    border-radius: 8px;
+    background: #2a1c0a;
+    color: #c8b080;
+    cursor: pointer;
+  }
+  .save-tab.active { background: #ffd666; color: #3a2800; border-color: #ffd666; }
+  .save-text {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.8rem;
+    padding: 8px;
+    border-radius: 8px;
+    border: 2px solid #5a3a1a;
+    background: #1a1208;
+    color: #f5e6c8;
+    resize: vertical;
+  }
+  .save-btn-row { display: flex; gap: 8px; }
+  .save-btn-row button { flex: 1; }
+  .btn-reset {
+    padding: 12px;
+    font-weight: bold;
+    border: 2px solid #5a3a1a;
+    border-radius: 10px;
+    background: #6a4a2a;
+    color: #f5e6c8;
+    cursor: pointer;
+  }
+  .btn-reset.danger { background: #7a2a2a; }
+  .btn-reset:active { transform: scale(0.97); }
+
+  /* Screen-reader-only: hidden visually but announced by assistive tech. */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="hud">
+    <span class="hud-profile" id="profileName">—</span>
+    <span class="hud-gold">&#x26C3; <span id="gold">10</span></span>
+    <span class="hud-seeds">&#x1F331; <span id="seeds">4</span></span>
+    <span class="hud-crops">&#x1F33E; <span id="crops">0</span></span>
+    <span class="hud-food">&#x1F356; <span id="food">0</span></span>
+    <span class="hud-hp">&#x2764; <span id="hp">20</span>/<span id="maxHp">20</span></span>
+    <span class="hud-level">&#x2B50; Lv <span id="level">1</span></span>
+    <button class="hud-switch" id="switchBtn" aria-label="Hold to switch hero profile">Switch</button>
+    <button class="hud-mute" id="muteBtn" aria-label="Toggle sound" onclick="toggleMute()">&#x1f50a;</button>
+  </div>
+  <div id="questTracker" class="quest-tracker"></div>
+  <canvas id="game" width="640" height="480" aria-label="Game world — move your hero to farm, shop, and explore"></canvas>
+</div>
+
+<!-- Title / profile picker: shown on load, hidden once a kid is chosen -->
+<div class="title-overlay" id="titleScreen">
+  <img class="title-logo" src="assets/title-logo.png" alt="Realm of Eldoria">
+  <div class="title-box">
+    <h1 class="title-name">Realm of Eldoria</h1>
+    <p class="title-sub">Who's playing?</p>
+    <div class="profile-row">
+      <button class="profile-btn adventurer" onclick="selectProfile('adventurer')">
+        <img class="profile-portrait" src="assets/adventurer-portrait.png" alt="">
+        <span class="profile-info"><span id="label-adventurer">Adventurer</span><span class="profile-grade">Grade 5</span></span>
+      </button>
+      <button class="rename-btn" onclick="renameProfile('adventurer')" aria-label="Name this hero">✎</button>
+    </div>
+    <div class="profile-row">
+      <button class="profile-btn mage" onclick="selectProfile('mage')">
+        <img class="profile-portrait" src="assets/mage-portrait.png" alt="">
+        <span class="profile-info"><span id="label-mage">Mage</span><span class="profile-grade">Grade 2</span></span>
+      </button>
+      <button class="rename-btn" onclick="renameProfile('mage')" aria-label="Name this hero">✎</button>
+    </div>
+    <button class="save-tools-btn" onclick="openSaveTools()" aria-label="Open save tools">⚙ Save tools</button>
+  </div>
+</div>
+
+<!-- Math-bonus modal: answer right to auto-harvest all ready crops (bonus, never a gate) -->
+<div class="modal-overlay" id="mathModal" role="dialog" aria-modal="true" aria-labelledby="mathTitle">
+  <div class="modal">
+    <h2 class="modal-title" id="mathTitle">Bonus Harvest!</h2>
+    <p id="mathQuestion" style="font-size:1.5rem; font-weight:bold; color:#fff;">2 + 2 = ?</p>
+    <div id="mathAnswers" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <button class="btn-close" onclick="closeMathBonus()" aria-label="Skip bonus harvest">Skip</button>
+  </div>
+</div>
+
+<!-- Shop modal: shown when the player walks onto the building's door -->
+<div class="modal-overlay" id="shopModal" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+  <div class="modal">
+    <h2 class="modal-title" id="shopTitle">General Store</h2>
+    <p class="shop-hint" id="shopHint">Which seed makes you the most gold? Do the math!</p>
+    <div class="shop-row">
+      <span class="crop-dot" style="background:#66aa33"></span>
+      <div class="shop-info"><b>Turnip</b> — 2g<small>8s grow · sells 3g</small></div>
+      <button class="btn-buy" id="btnBuy_turnip" onclick="buySeeds('turnip')" aria-label="Buy turnip seed for 2 gold">Buy</button>
+    </div>
+    <div class="shop-row">
+      <span class="crop-dot" style="background:#cc7722"></span>
+      <div class="shop-info"><b>Carrot</b> — 4g<small>15s grow · sells 8g</small></div>
+      <button class="btn-buy" id="btnBuy_carrot" onclick="buySeeds('carrot')" aria-label="Buy carrot seed for 4 gold">Buy</button>
+    </div>
+    <div class="shop-row">
+      <span class="crop-dot" style="background:#e8c840"></span>
+      <div class="shop-info"><b>Corn</b> — 6g<small>20s grow · sells 12g</small></div>
+      <button class="btn-buy" id="btnBuy_corn" onclick="buySeeds('corn')" aria-label="Buy corn seed for 6 gold">Buy</button>
+    </div>
+    <div class="shop-row">
+      <span class="crop-dot" style="background:#dd9922"></span>
+      <div class="shop-info"><b>Pumpkin</b> — 8g<small>30s grow · sells 20g</small></div>
+      <button class="btn-buy" id="btnBuy_pumpkin" onclick="buySeeds('pumpkin')" aria-label="Buy pumpkin seed for 8 gold">Buy</button>
+    </div>
+    <div class="shop-row">
+      <span class="crop-dot" style="background:#cc55cc"></span>
+      <div class="shop-info"><b>Starfruit</b> — 15g<small>45s grow · sells 40g</small></div>
+      <button class="btn-buy" id="btnBuy_starfruit" onclick="buySeeds('starfruit')" aria-label="Buy starfruit seed for 15 gold">Buy</button>
+    </div>
+    <button class="btn-sell" id="btnSell" onclick="sellCrops()" aria-label="Sell all harvested crops">Sell All Crops</button>
+    <!-- Upgrades (slice 19): a gold SINK. Buy a Heart Crystal for permanent +5 Max HP.
+         Price climbs with each one bought, so late-game gold always has somewhere to go. -->
+    <div class="shop-row" style="margin-top:14px;">
+      <span class="crop-dot" style="background:#ff5577"></span>
+      <div class="shop-info"><b>Heart Crystal</b><small>+5 Max HP, forever</small></div>
+      <button class="btn-buy" id="btnBuyHeart" onclick="buyHeartCrystal()" aria-label="Buy a Heart Crystal for plus 5 max health">Buy</button>
+    </div>
+    <div class="shop-row">
+      <span class="crop-dot" style="background:#ff8833"></span>
+      <div class="shop-info"><b>Training</b><small>+2 Attack, forever</small></div>
+      <button class="btn-buy" id="btnBuyTraining" onclick="buyTraining()" aria-label="Buy training for plus 2 permanent attack">Buy</button>
+    </div>
+    <!-- Sell gear (slice 18): un-equipped gear you've picked up. Equipped gear is never
+         listed here, so you can't accidentally sell what you're wearing. Filled by updateHUD. -->
+    <div id="gearSellSection" style="display:none; margin-top:14px;">
+      <h3 class="modal-title" id="gearSellTitle" style="font-size:1em; margin:0 0 6px;">Sell spare gear</h3>
+      <div id="gearSellList"></div>
+    </div>
+    <button class="btn-close" id="btnClose" onclick="closeShop()" aria-label="Leave the shop">Leave</button>
+  </div>
+</div>
+
+<!-- Save tools (slice 14): back up / restore / reset a profile's save. Opened from the
+     title screen. "Export" dumps the save text to the box; "Import" writes pasted text
+     back; resets are confirmed first so a stray tap can't wipe progress. -->
+<div class="modal-overlay" id="saveToolsModal" role="dialog" aria-modal="true" aria-labelledby="saveToolsTitle">
+  <div class="modal">
+    <h2 class="modal-title" id="saveToolsTitle">Save Tools</h2>
+    <p class="shop-hint">Back up or restore a hero. Pick a slot, then Export to copy the
+       text somewhere safe, or paste a backup and Import.</p>
+    <div class="save-tabs">
+      <button class="save-tab" id="saveTab_adventurer" onclick="setSaveToolsProfile('adventurer')">Adventurer</button>
+      <button class="save-tab" id="saveTab_mage" onclick="setSaveToolsProfile('mage')">Mage</button>
+    </div>
+    <label for="saveToolsText" class="sr-only">Save data</label>
+    <textarea id="saveToolsText" class="save-text" rows="5" placeholder="Save text appears here on Export — or paste a backup, then Import."></textarea>
+    <div class="save-btn-row">
+      <button class="btn-buy" onclick="exportSave()" aria-label="Export save data">Export</button>
+      <button class="btn-sell" onclick="importSave()" aria-label="Import save data">Import</button>
+    </div>
+    <div class="save-btn-row">
+      <button class="btn-buy" onclick="downloadSave()" aria-label="Download save as file">&#x1F4BE; Download</button>
+      <button class="btn-sell" onclick="document.getElementById('saveFileInput').click()" aria-label="Load save from file">&#x1F4C2; Load file</button>
+      <input type="file" id="saveFileInput" accept=".json" style="display:none" onchange="loadSaveFile(event)">
+    </div>
+    <button class="btn-reset" onclick="resetProfileSave()" aria-label="Reset this hero's save">Reset this slot</button>
+    <button class="btn-reset danger" onclick="resetAllSaves()" aria-label="Reset all saved heroes">Reset ALL slots</button>
+    <button class="btn-close" onclick="closeSaveTools()" aria-label="Close save tools">Done</button>
+  </div>
+</div>
+
+<!-- Seed picker: shown when planting and you have multiple seed types -->
+<div class="modal-overlay" id="seedPicker" role="dialog" aria-modal="true" aria-labelledby="seedPickerTitle">
+  <div class="modal">
+    <h2 class="modal-title" id="seedPickerTitle">Plant which seed?</h2>
+    <div id="seedOptions"></div>
+    <button class="btn-close" onclick="closeSeedPicker()" aria-label="Cancel seed selection">Cancel</button>
+  </div>
+</div>
+
+<!-- Cooking modal (slice 13a): walk up to the Farm cooking pot to turn crops into
+     food. Top half = recipes you can cook; bottom half = food you own, eat to heal. -->
+<div class="modal-overlay" id="cookingModal" role="dialog" aria-modal="true" aria-labelledby="cookingTitle">
+  <div class="modal">
+    <h2 class="modal-title" id="cookingTitle">Cooking Pot</h2>
+    <p class="shop-hint">Which dish heals the most HP for your crops?</p>
+    <div id="recipeRows"></div>
+    <p class="cook-section">Your food <span id="cookHpLine" class="cook-hp"></span></p>
+    <div id="foodRows"></div>
+    <p id="foodEmpty" class="shop-hint" style="display:none;">No food yet — cook a recipe above!</p>
+    <button class="btn-close" onclick="closeCooking()" aria-label="Leave the cooking pot">Leave</button>
+  </div>
+</div>
+
+<!-- Double-batch bonus (slice 13b): after cooking, answer a doubling question for a free
+     second portion. Wrong answer still keeps the first — never a gate, only a bonus. -->
+<div class="modal-overlay" id="doubleBatchModal" role="dialog" aria-modal="true" aria-labelledby="doubleBatchTitle">
+  <div class="modal">
+    <h2 class="modal-title" id="doubleBatchTitle">Double Batch?</h2>
+    <p class="shop-hint">Answer right for a FREE bonus portion!</p>
+    <p id="doubleBatchQuestion" style="font-size:1.5rem; font-weight:bold; color:#fff;">? × 2 = ?</p>
+    <div id="doubleBatchAnswers" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <button class="btn-close" onclick="answerDoubleBatch(-1)" aria-label="Skip double batch bonus">Skip</button>
+  </div>
+</div>
+
+<!-- Combat modal (slice 10c): walk into a Wilds enemy to open a turn-based battle.
+     Attack = answer a math question (grade-scaled). A wrong answer just misses — the
+     player is never stuck and can always try again next turn. -->
+<div class="modal-overlay" id="combatModal" role="dialog" aria-modal="true" aria-labelledby="combatTitle">
+  <div class="modal">
+    <h2 class="modal-title" id="combatTitle">Battle!</h2>
+    <!-- Two HP bars: the enemy on top, you below. Filled in by updateCombatBars(). -->
+    <div class="hp-row">
+      <span class="hp-label" id="enemyName">Slime</span>
+      <div class="hp-track"><div class="hp-fill enemy" id="enemyHpFill" style="width:100%"></div></div>
+      <span class="hp-num" id="enemyHpNum">15/15</span>
+    </div>
+    <div class="hp-row">
+      <span class="hp-label">You</span>
+      <div class="hp-track"><div class="hp-fill you" id="youHpFill" style="width:100%"></div></div>
+      <span class="hp-num" id="youHpNum">20/20</span>
+    </div>
+    <p id="combatMsg">...</p>
+    <p id="combatQuestion" style="font-size:1.5rem; font-weight:bold; color:#fff;">14 − 6 = ?</p>
+    <div id="combatAnswers" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <div id="slashZone" style="display:none;">
+      <div style="width:100%; height:12px; background:#333; border-radius:6px; margin-bottom:8px; overflow:hidden;">
+        <div id="slashTimer" style="width:100%; height:100%; background:#ff8800; border-radius:6px; transition:width linear;"></div>
+      </div>
+      <button id="slashBtn" class="btn-answer" style="font-size:1.6rem; background:#ff4444; color:#fff; border:3px solid #ff8800; animation:pulse 0.4s infinite alternate; width:100%; padding:18px;" onclick="executeSlash()">⚔ SLASH! ⚔</button>
+      <p id="slashCount" style="color:#ffd666; font-size:0.9rem; margin:4px 0 0;">Hits: 0</p>
+    </div>
+    <div id="combatFoodRow" style="display:none; margin-top:4px;">
+      <button class="btn-sell" id="combatEatBtn" onclick="eatInCombat()" aria-label="Eat food to heal (costs your turn)">Eat food</button>
+    </div>
+    <button class="btn-close" onclick="fleeCombat()" aria-label="Run away from battle">Run away</button>
+  </div>
+</div>
+
+<!-- Quest modal: tap Action next to the Town NPC for a word-problem quest -->
+<div class="modal-overlay" id="questModal" role="dialog" aria-modal="true" aria-labelledby="questTitle">
+  <div class="modal">
+    <h2 class="modal-title" id="questTitle">Mira the Villager</h2>
+    <p id="questText" style="font-size:1.1rem; color:#fff; line-height:1.4;">...</p>
+    <div id="questAnswers" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <button class="btn-close" onclick="closeQuest()" aria-label="Decline this quest">Maybe later</button>
+  </div>
+</div>
+
+<div id="joystickZone" aria-label="Movement joystick">
+  <div id="joystickBase">
+    <span class="joystick-arrow arr-up">&#9650;</span>
+    <span class="joystick-arrow arr-down">&#9660;</span>
+    <span class="joystick-arrow arr-left">&#9664;</span>
+    <span class="joystick-arrow arr-right">&#9654;</span>
+  </div>
+  <div id="joystickThumb"></div>
+</div>
+
+<button id="bonusBtn" aria-label="Bonus Harvest">Bonus<br>Harvest</button>
+<button id="actionBtn" aria-label="Action">Action</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d');
+// Crisp pixel art: never bilinear-smooth our 32px sprites when drawImage scales/samples.
+// (CSS image-rendering: pixelated only governs the final CSS upscale, not canvas sampling.)
+ctx.imageSmoothingEnabled = false;
+ctx.mozImageSmoothingEnabled = false;
+ctx.webkitImageSmoothingEnabled = false;
+
+// Focus management for modals: move focus into the dialog on open, restore on close.
+var _priorFocus = null;
+function focusModal(modalId) {
+  _priorFocus = document.activeElement || null;
+  var el = document.getElementById(modalId);
+  if (el && el.querySelector) {
+    var target = el.querySelector('button, input, textarea, [tabindex]');
+    if (target && target.focus) target.focus();
+  }
+}
+function restoreFocus() {
+  if (_priorFocus && _priorFocus.focus) _priorFocus.focus();
+  _priorFocus = null;
+}
+
+var TILE = 32;
+var MAP_W = 30;
+var MAP_H = 22;
+
+// ---- Tile types ----
+var GRASS = 0, WATER = 1, TREE = 2, SOIL = 3, PATH = 4, HOUSE = 5, DOOR = 6, EXIT = 7;
+
+var BLOCKED = {};
+BLOCKED[WATER] = true;
+BLOCKED[TREE]  = true;
+BLOCKED[HOUSE] = true;
+
+var TILE_COLOR = {};
+TILE_COLOR[GRASS] = '#4f8a35';
+TILE_COLOR[WATER] = '#2a6cc0';
+TILE_COLOR[TREE]  = '#1f5c1f';
+TILE_COLOR[SOIL]  = '#6b4226';
+TILE_COLOR[PATH]  = '#c9a86a';
+TILE_COLOR[HOUSE] = '#8a8a8a';
+TILE_COLOR[DOOR]  = '#7a4a1a';   // a wooden door you can walk onto (not blocked)
+TILE_COLOR[EXIT]  = '#d4b483';   // a road tile at the map edge: step on it to travel
+
+// ---- Sprite art (slice 8) ----
+// Drop PNG files into the ./assets folder and they replace the gray boxes automatically.
+// Any file that is missing or fails to load simply falls back to its colored shape, so
+// the game ALWAYS renders. Everything is local & offline (relative paths, no network).
+// See assets/README.md for the exact file list and recommended sizes.
+var SPRITES = {};
+function loadSprite(name, file) {
+  var rec = { img: new Image(), ready: false };
+  rec.img.onload  = function () { rec.ready = true; };
+  rec.img.onerror = function () { rec.ready = false; };   // missing file → keep the fallback shape
+  rec.img.src = file;
+  SPRITES[name] = rec;
+}
+// Returns the loaded image for `name`, or null if it isn't available (use the fallback).
+function spr(name) { var r = SPRITES[name]; return (r && r.ready) ? r.img : null; }
+
+// Which file backs each tile type. Rename here if you prefer other filenames.
+var TILE_SPRITE = {};
+TILE_SPRITE[GRASS] = 'assets/grass.png';
+TILE_SPRITE[WATER] = 'assets/water.png';
+TILE_SPRITE[TREE]  = 'assets/tree.png';
+TILE_SPRITE[SOIL]  = 'assets/soil.png';
+TILE_SPRITE[PATH]  = 'assets/path.png';
+TILE_SPRITE[HOUSE] = 'assets/house.png';
+TILE_SPRITE[DOOR]  = 'assets/door.png';
+TILE_SPRITE[EXIT]  = 'assets/exit.png';
+
+// Kick off loading everything up front (async; sprites pop in as they finish).
+for (var ts in TILE_SPRITE) loadSprite('tile_' + ts, TILE_SPRITE[ts]);
+// Profile-specific, four-direction player sprites. The legacy player.png stays loaded
+// as a compatibility fallback while new art is still being added one file at a time.
+var PLAYER_DIRECTIONS = ['down', 'up', 'left', 'right'];
+// Profiles are identified by reading level, not by a child's name: 'adventurer' is
+// the older-reader slot, 'mage' is the early-reader slot. These ids double as the
+// sprite-file prefixes (assets/adventurer-down.png, assets/mage-up-walk.png, ...).
+var PLAYER_PROFILES = ['adventurer', 'mage'];
+var EQUIPMENT_SLOTS = ['head', 'body', 'weapon', 'cape'];
+var WALK_FRAMES = 4;
+var WALK_FRAME_MS = 110;
+for (var pp = 0; pp < PLAYER_PROFILES.length; pp++) {
+  for (var pd = 0; pd < PLAYER_DIRECTIONS.length; pd++) {
+    var profile = PLAYER_PROFILES[pp];
+    var direction = PLAYER_DIRECTIONS[pd];
+    loadSprite('player_' + profile + '_' + direction,
+      'assets/' + profile + '-' + direction + '.png');
+    loadSprite('player_walk_' + profile + '_' + direction,
+      'assets/' + profile + '-' + direction + '-walk.png');
+    loadSprite('player_attack_' + profile + '_' + direction,
+      'assets/' + profile + '-' + direction + '-attack.png');
+    for (var es = 0; es < EQUIPMENT_SLOTS.length; es++) {
+      var slot = EQUIPMENT_SLOTS[es];
+      loadSprite('equipment_' + profile + '_' + direction + '_' + slot,
+        'assets/' + profile + '-' + direction + '-' + slot + '.png');
+      loadSprite('equipment_walk_' + profile + '_' + direction + '_' + slot,
+        'assets/' + profile + '-' + direction + '-' + slot + '-walk.png');
+      loadSprite('equipment_attack_' + profile + '_' + direction + '_' + slot,
+        'assets/' + profile + '-' + direction + '-' + slot + '-attack.png');
+    }
+  }
+}
+loadSprite('player', 'assets/player.png');
+loadSprite('crop_growing', 'assets/crop_growing.png');
+loadSprite('crop_ready', 'assets/crop_ready.png');
+// Enemy sprites (slice 23 art pass). Each replaces the hand-drawn placeholder shape.
+var ENEMY_TYPES_ALL = ['slime','bat','goblin','wolf','bear','troll','rock_golem','magma_slug','crystal_wyrm','shadow_warden'];
+for (var ei = 0; ei < ENEMY_TYPES_ALL.length; ei++)
+  loadSprite('enemy_' + ENEMY_TYPES_ALL[ei], 'assets/enemy_' + ENEMY_TYPES_ALL[ei] + '.png');
+loadSprite('npc_mira', 'assets/npc_mira.png');
+loadSprite('cookpot', 'assets/cookpot.png');
+loadSprite('shop_building', 'assets/shop_building.png');
+loadSprite('grass2', 'assets/grass2.png');
+loadSprite('grass3', 'assets/grass3.png');
+loadSprite('deco_flowers', 'assets/flowers.png');
+loadSprite('deco_boulder', 'assets/boulder.png');
+loadSprite('deco_stump', 'assets/tree_stump.png');
+loadSprite('deco_stone', 'assets/stone.png');
+
+// Temporary visual-only equipment state. Combat, inventory, and saving deliberately
+// do not touch this yet; later systems can call setVisualEquipment when gear changes.
+var VISUAL_EQUIPMENT = {
+  adventurer: { head: false, body: false, weapon: false, cape: false },
+  mage:       { head: false, body: false, weapon: false, cape: false }
+};
+
+function setVisualEquipment(profile, slot, equipped) {
+  if (!VISUAL_EQUIPMENT[profile] || EQUIPMENT_SLOTS.indexOf(slot) === -1) return;
+  VISUAL_EQUIPMENT[profile][slot] = !!equipped;
+}
+
+// Profile art is kept separate so equipment never lands on the legacy fallback sprite.
+function profilePlayerSprite() {
+  if (!currentProfile) return null;
+  return spr('player_' + currentProfile + '_' + player.facing);
+}
+
+// A walk strip is 4 x 32px frames laid out horizontally. Never use one without
+// its matching static base: that keeps partial art installs graceful.
+function playerWalkSprite() {
+  if (!currentProfile || !player.walking || !profilePlayerSprite()) return null;
+  return spr('player_walk_' + currentProfile + '_' + player.facing);
+}
+
+function playerAttackSprite() {
+  if (!currentProfile || !player.attacking || !profilePlayerSprite()) return null;
+  return spr('player_attack_' + currentProfile + '_' + player.facing);
+}
+
+var ATTACK_FRAMES = 4;
+var ATTACK_FRAME_MS = 80;
+
+function equipmentAttackSprite(slot) {
+  if (!currentProfile || !player.attacking || !VISUAL_EQUIPMENT[currentProfile][slot]) return null;
+  return spr('equipment_attack_' + currentProfile + '_' + player.facing + '_' + slot);
+}
+
+function equipmentSprite(slot) {
+  if (!currentProfile || !VISUAL_EQUIPMENT[currentProfile][slot]) return null;
+  return spr('equipment_' + currentProfile + '_' + player.facing + '_' + slot);
+}
+
+function equipmentWalkSprite(slot) {
+  if (!currentProfile || !player.walking || !VISUAL_EQUIPMENT[currentProfile][slot]) return null;
+  return spr('equipment_walk_' + currentProfile + '_' + player.facing + '_' + slot);
+}
+
+function drawSpriteFrame(img, stripType, dx, dy) {
+  // If the image isn't wide enough to be a strip, draw it statically
+  var isStrip = img.naturalWidth > TILE;
+  if (stripType === 'walk' && isStrip) {
+    ctx.drawImage(img, player.walkFrame * TILE, 0, TILE, TILE, dx, dy, TILE, TILE);
+  } else if (stripType === 'attack' && isStrip) {
+    ctx.drawImage(img, player.attackFrame * TILE, 0, TILE, TILE, dx, dy, TILE, TILE);
+  } else {
+    ctx.drawImage(img, dx, dy, TILE, TILE);
+  }
+}
+
+// Prefer the selected child's directional art. Missing new art falls back to the
+// original single player.png, then the existing yellow-box placeholder.
+function playerSprite() {
+  var directional = profilePlayerSprite();
+  return directional || spr('player');
+}
+
+// ---- Crop types (slice 10a: crop variety) ----
+// Each type has a different cost/reward/speed tradeoff — the math IS the strategy.
+var CROPS = {
+  turnip:    { name: 'Turnip',    cost: 2,  grow: 8000,  sell: 3,  color: '#66aa33', readyColor: '#88dd44' },
+  carrot:    { name: 'Carrot',    cost: 4,  grow: 15000, sell: 8,  color: '#cc7722', readyColor: '#ff9933' },
+  corn:      { name: 'Corn',      cost: 6,  grow: 20000, sell: 12, color: '#e8c840', readyColor: '#ffe066' },
+  pumpkin:   { name: 'Pumpkin',   cost: 8,  grow: 30000, sell: 20, color: '#dd9922', readyColor: '#ffcc44' },
+  starfruit: { name: 'Starfruit', cost: 15, grow: 45000, sell: 40, color: '#cc55cc', readyColor: '#ee88ee' }
+};
+var CROP_TYPES = ['turnip', 'carrot', 'corn', 'pumpkin', 'starfruit'];
+
+// ---- Recipes (slice 13a: cooking) ----
+// Each recipe turns crops into a food item that heals HP when eaten. The hidden math
+// is RATIO/efficiency: which dish heals the most HP per crop you spend? (turnip soup is
+// cheap-but-weak, pumpkin pie is expensive-but-strong.) `cost` is crops consumed, keyed
+// by crop type; `heal` is HP restored per portion when eaten.
+var RECIPES = {
+  veggie_soup:      { name: 'Veggie Soup',      cost: { turnip: 2 },               heal: 8,  color: '#88cc55' },
+  carrot_stew:      { name: 'Carrot Stew',      cost: { carrot: 2 },               heal: 18, color: '#ff9933' },
+  corn_chowder:     { name: 'Corn Chowder',     cost: { corn: 2 },                 heal: 25, color: '#ffe066' },
+  pumpkin_pie:      { name: 'Pumpkin Pie',      cost: { pumpkin: 1, carrot: 1 },   heal: 40, color: '#ffcc44' },
+  starfruit_elixir: { name: 'Starfruit Elixir', cost: { starfruit: 1, pumpkin: 1 }, heal: 60, color: '#ee88ee' }
+};
+var FOOD_TYPES = ['veggie_soup', 'carrot_stew', 'corn_chowder', 'pumpkin_pie', 'starfruit_elixir'];
+
+// ---- Player state ----
+var player = {
+  x: 5 * TILE,
+  y: 8 * TILE,
+  size: 22,
+  speed: 2.4,
+  facing: 'down',
+  walking: false,
+  walkFrame: 0,
+  walkLastAt: 0,
+  attackFrame: 0,
+  attackLastAt: 0,
+  attacking: false,
+  gold: 10,
+  seeds: { turnip: 4, carrot: 0, corn: 0, pumpkin: 0, starfruit: 0 },
+  crops: { turnip: 0, carrot: 0, corn: 0, pumpkin: 0, starfruit: 0 },
+  questsDone: 0,
+  // ---- Combat stats (slice 10c) ----
+  hp: 20, maxHp: 20,   // current / max health; lose a fight at 0, respawn at full
+  level: 1, xp: 0,     // XP from winning fights; level up at level×50 XP
+  hpUpgrades: 0,       // Heart Crystals bought in the shop (slice 19) — scales their price
+  atkUpgrades: 0,      // Training sessions bought in the shop (slice 21) — scales their price
+  gear: { weapon: null, head: null, body: null, cape: null },
+  inventory: [],   // spare (un-equipped) gear item ids you can sell in the shop (slice 18)
+  food: { veggie_soup: 0, carrot_stew: 0, corn_chowder: 0, pumpkin_pie: 0, starfruit_elixir: 0 },
+  killCounts: {},
+  killQuest: null
+};
+
+var held = { up: false, down: false, left: false, right: false };
+
+// ---- Shop state (the walk-in building) ----
+var shopOpen = false;    // is the shop UI open?
+var wasNearDoor = false; // was the player near the door last frame? (so we open only on approach)
+var wasNearEnemy = false; // same idea for the Wilds enemy (open the battle only on approach)
+var seedPickerOpen = false;  // is the "plant which seed?" picker showing?
+var cookingOpen = false;     // is the cooking modal open?
+
+// Totals across all crop types (for HUD and checks).
+function totalSeeds() {
+  var n = 0;
+  for (var i = 0; i < CROP_TYPES.length; i++) n += player.seeds[CROP_TYPES[i]];
+  return n;
+}
+function totalFood() {
+  var n = 0;
+  for (var i = 0; i < FOOD_TYPES.length; i++) n += player.food[FOOD_TYPES[i]];
+  return n;
+}
+function totalCrops() {
+  var n = 0;
+  for (var i = 0; i < CROP_TYPES.length; i++) n += player.crops[CROP_TYPES[i]];
+  return n;
+}
+function sellTotal() {
+  var g = 0;
+  for (var i = 0; i < CROP_TYPES.length; i++)
+    g += player.crops[CROP_TYPES[i]] * CROPS[CROP_TYPES[i]].sell;
+  return g;
+}
+
+// ---- Profile / save state ----
+var currentProfile = null;   // 'adventurer' or 'mage' once chosen
+var gameActive = false;      // false while the title/profile screen is up
+var bgMusic = (typeof Audio !== 'undefined') ? new Audio('assets/music-town.mp3') : { loop: false, volume: 0, play: function(){ return Promise.resolve(); }, pause: function(){} };
+bgMusic.loop = true;
+
+var gameMuted = localStorage.getItem('eldoria_muted') === '1';
+function toggleMute() {
+  gameMuted = !gameMuted;
+  localStorage.setItem('eldoria_muted', gameMuted ? '1' : '0');
+  document.getElementById('muteBtn').innerHTML = gameMuted ? '&#x1f507;' : '&#x1f50a;';
+  if (gameMuted) { bgMusic.pause(); } else if (gameActive) { bgMusic.play().catch(function(){}); }
+}
+// Sync button label on load
+if (gameMuted) document.getElementById('muteBtn').innerHTML = '&#x1f507;';
+bgMusic.volume = 0.35;
+
+// ---- Build a map ----
+// Helper: a fresh MAP_W x MAP_H grid with a tree border all around.
+function blankMap() {
+  var m = [];
+  for (var r = 0; r < MAP_H; r++) {
+    m[r] = [];
+    for (var c = 0; c < MAP_W; c++) {
+      if (r === 0 || r === MAP_H - 1 || c === 0 || c === MAP_W - 1) {
+        m[r][c] = TREE;
+      } else {
+        m[r][c] = GRASS;
+      }
+    }
+  }
+  return m;
+}
+
+// fillRect now takes the map to draw onto (so we can build several areas).
+function fillRect(m, x, y, w, h, type) {
+  for (var r = y; r < y + h; r++) {
+    for (var c = x; c < x + w; c++) {
+      if (r >= 0 && r < MAP_H && c >= 0 && c < MAP_W) {
+        m[r][c] = type;
+      }
+    }
+  }
+}
+
+// ---- Home Farm area: soil plots + water, NO shop. EXIT on the right edge → Town. ----
+function buildFarmMap() {
+  var m = blankMap();
+  fillRect(m, 3, 3, 4, 3, WATER);
+  // Soil kept at the SAME tiles as the old single-area map (rows 3-7, cols 14-18)
+  // so old saves (their crop keys) map straight onto these plots — no lost crops.
+  fillRect(m, 14, 3, 5, 5, SOIL);
+  // Paths connecting key features to the right-edge exit.
+  fillRect(m, 7, 8, MAP_W - 8, 2, PATH);   // main road from cookpot area to right exit
+  fillRect(m, 12, 5, 2, 3, PATH);           // short spur from soil area down to the road
+  m[8][MAP_W - 1] = EXIT;
+  m[9][MAP_W - 1] = EXIT;
+  // Scatter a few trees in the expanded south/east area
+  m[14][3] = TREE; m[15][5] = TREE; m[16][2] = TREE;
+  m[13][22] = TREE; m[15][25] = TREE; m[17][24] = TREE;
+  m[18][10] = TREE; m[19][14] = TREE;
+  return m;
+}
+
+// ---- Town area: village plaza with General Store, Forge, central well. ----
+function buildTownMap() {
+  var m = blankMap();
+  // Main road across the full width (rows 10-11), both exits
+  m[10][0] = EXIT; m[11][0] = EXIT;
+  m[10][MAP_W - 1] = EXIT; m[11][MAP_W - 1] = EXIT;
+  fillRect(m, 1, 10, MAP_W - 2, 2, PATH);
+  // General Store (rows 4-6, cols 6-9) with door
+  fillRect(m, 6, 4, 4, 3, HOUSE);
+  m[6][7] = DOOR; m[6][8] = DOOR;
+  fillRect(m, 7, 7, 2, 3, PATH); // path from road up to the store door
+  // Forge (rows 4-6, cols 20-23) — PATH entrance, no DOOR
+  fillRect(m, 20, 4, 4, 3, HOUSE);
+  fillRect(m, 21, 7, 2, 3, PATH); // path from road up to the forge
+  m[6][21] = PATH; m[6][22] = PATH;
+  // Central plaza (rows 13-16, cols 12-17) — open gathering space with the well
+  fillRect(m, 11, 13, 7, 4, PATH);
+  fillRect(m, 13, 12, 3, 1, PATH); // path from road down to plaza
+  // Side paths branching off the main road
+  fillRect(m, 4, 8, 3, 2, PATH);   // left path up to store area
+  fillRect(m, 24, 8, 3, 2, PATH);  // right path up to forge area
+  // A small pond in the southeast corner
+  fillRect(m, 22, 16, 3, 3, WATER);
+  // Tree clusters along edges to break up the rectangle
+  var treeClusters = [
+    [2,2],[3,2],[2,3], [2,17],[3,18],[2,19],
+    [25,2],[26,3],[27,2], [25,17],[26,18],[27,19],
+    [10,3],[11,4], [17,3],[18,4],
+    [5,15],[4,16],[6,17], [8,19],[9,18]
+  ];
+  for (var ti = 0; ti < treeClusters.length; ti++) {
+    var tc = treeClusters[ti];
+    if (tc[1] > 0 && tc[1] < MAP_H - 1 && tc[0] > 0 && tc[0] < MAP_W - 1)
+      m[tc[1]][tc[0]] = TREE;
+  }
+  return m;
+}
+
+// ---- Wilds area (slice 10c): walk in from Town to explore and fight. ----
+// Left-edge EXIT → back to Town. Right-edge EXIT → on to the Deep Woods (slice 16).
+// A few trees make it feel like wilderness; three enemies stand on the trail.
+function buildWildsMap() {
+  var m = blankMap();
+  m[8][0] = EXIT;                  // left edge → Town
+  m[9][0] = EXIT;
+  fillRect(m, 1, 8, MAP_W - 2, 2, PATH);  // a trail across the whole map (both exits reachable)
+  m[8][MAP_W - 1] = EXIT;          // right edge → Deep Woods
+  m[9][MAP_W - 1] = EXIT;
+  // Scattered trees (TREE blocks movement) — keep them clear of the trail (rows 8-9).
+  m[4][6] = TREE;  m[5][10] = TREE; m[12][8] = TREE;
+  m[13][14] = TREE; m[6][18] = TREE; m[11][19] = TREE;
+  return m;
+}
+
+// ---- Deep Woods area (slice 16): the tougher zone past the Wilds. Reached from the
+// Wilds' right-edge EXIT; left-edge EXIT → back to the Wilds. Denser forest (more TREE
+// walls) and three stronger enemies (Wolf → Bear → Troll) with tier-2 gear drops. ----
+function buildDeepWoodsMap() {
+  var m = blankMap();
+  m[8][0] = EXIT;                  // left edge → back to the Wilds
+  m[9][0] = EXIT;
+  fillRect(m, 1, 8, MAP_W - 2, 2, PATH);  // a trail across the map
+  m[8][MAP_W - 1] = EXIT;          // right edge → the Mine (opens up once you pass the boss)
+  m[9][MAP_W - 1] = EXIT;
+  // Denser tree cover than the Wilds, to read as "deeper / more dangerous".
+  m[3][4] = TREE;  m[4][5] = TREE;  m[5][7] = TREE;  m[6][3] = TREE;
+  m[11][6] = TREE; m[12][9] = TREE; m[13][5] = TREE; m[14][11] = TREE;
+  m[4][13] = TREE; m[5][16] = TREE; m[6][12] = TREE; m[3][19] = TREE;
+  m[12][15] = TREE; m[13][18] = TREE; m[11][21] = TREE; m[14][20] = TREE;
+  return m;
+}
+
+// ---- The Mine area (slice 20): the underground endgame zone past the Deep Woods boss.
+// Reached from the Deep Woods' right-edge EXIT; its left edge returns to the Deep Woods.
+// No grass — the floor is PATH (mine track) walled in by TREE "rock" pillars, so it reads
+// as a cramped cavern. Two tier-3 enemies then the Crystal Wyrm boss at the end of the track. ----
+function buildMineMap() {
+  var m = blankMap();
+  // Flood the whole cavern with rock (TREE blocks movement) so only the carved track is walkable.
+  // fillRect is (m, x=col, y=row, w=cols, h=rows).
+  fillRect(m, 0, 0, MAP_W, MAP_H, TREE);
+  // Carve the mine track: the main horizontal tunnel (rows 8-9) the enemies stand in...
+  fillRect(m, 0, 8, MAP_W, 2, PATH);
+  // ...plus a couple of side pockets off the track so it doesn't feel like one straight line.
+  fillRect(m, 4, 6, 3, 4, PATH);    // cols 4-6, rows 6-9 — opens upward off the track
+  fillRect(m, 14, 9, 3, 4, PATH);   // cols 14-16, rows 9-12 — opens downward off the track
+  m[8][0] = EXIT;                   // left edge → back to the Deep Woods
+  m[9][0] = EXIT;
+  return m;
+}
+
+// ---- Areas: each holds its own map + crop state. ----
+var areas = {
+  farm:      { map: buildFarmMap(),      crops: {} },
+  town:      { map: buildTownMap(),      crops: {} },
+  wilds:     { map: buildWildsMap(),     crops: {} },
+  deepwoods: { map: buildDeepWoodsMap(), crops: {} },
+  mine:      { map: buildMineMap(),      crops: {} }
+};
+
+// Area travel order (left edge → previous area, right edge → next area).
+var AREA_ORDER = ['farm', 'town', 'wilds', 'deepwoods', 'mine'];
+
+// Friendly arrival message per destination.
+var AREA_LABEL = {
+  farm: 'Back to the Farm!', town: 'Welcome to Town!',
+  wilds: 'Into the Wilds!', deepwoods: 'The Deep Woods... be careful!',
+  mine: 'The Mine... danger ahead!'
+};
+
+// ---- Town NPCs: each villager has a position, role, and placeholder color. ----
+var NPCS = [
+  { id: 'mira',   name: 'Mira',   area: 'town', row: 10, col: 14, role: 'quests', color: '#9c6cd0' },
+  { id: 'bram',   name: 'Bram',   area: 'town', row: 7,  col: 7,  role: 'shop',   color: '#d4a55a' },
+  { id: 'gunnar', name: 'Gunnar', area: 'town', row: 7,  col: 21, role: 'forge',  color: '#7a8a9a' }
+];
+var TOWN_SHOP = { row: 4, col: 6, w: 4, h: 3 };
+
+// ---- Farm cooking pot (slice 13a): walk up to it on the Farm to open the cooking
+// modal and turn crops into food. Placed on open grass below the player's start. ----
+var FARM_COOKPOT = { row: 11, col: 5, name: 'Cooking Pot' };
+
+// ---- Enemy data (slice 10c) ----
+// One simple data object per enemy type. Stats are tuned so BOTH profiles can win:
+// the player deals 5+ damage per correct answer (see playerDamage), so ~3 right
+// answers beats a Slime. Enemy attacks never one-shot a level-1 hero.
+// Each enemy has a `loot` table of { item, chance } entries for gear drops.
+var ENEMIES = {
+  // ---- Wilds (tier 1): tuned so a no-gear level-1 hero can win with perfect answers. ----
+  slime:  { name: 'Slime',  hp: 15, attack: 2, xpReward: 20, color: '#5fa860',
+            loot: [{ item: 'wooden_sword', chance: 0.35 }] },
+  bat:    { name: 'Bat',    hp: 22, attack: 3, xpReward: 35, color: '#8866bb',
+            loot: [{ item: 'leather_cap', chance: 0.30 }, { item: 'hero_cape', chance: 0.20 }] },
+  goblin: { name: 'Goblin', hp: 25, attack: 4, xpReward: 50, color: '#bb7744',
+            loot: [{ item: 'iron_armor', chance: 0.25 }, { item: 'crystal_blade', chance: 0.15 }] },
+  // ---- Deep Woods (tier 2): stronger; meant for a leveled-up, geared hero. Losing is
+  // never punitive (respawn at full HP), so an underleveled hero is just nudged to grind. ----
+  wolf:  { name: 'Wolf',  hp: 32, attack: 4, xpReward: 70,  color: '#888888',
+           loot: [{ item: 'steel_sword', chance: 0.30 }, { item: 'shadow_cape', chance: 0.20 }] },
+  bear:  { name: 'Bear',  hp: 42, attack: 5, xpReward: 100, color: '#7a5230',
+           loot: [{ item: 'guardian_armor', chance: 0.25 }, { item: 'crystal_crown', chance: 0.20 }] },
+  troll: { name: 'Troll', hp: 55, attack: 6, xpReward: 150, color: '#6b8e4e',
+           loot: [{ item: 'crystal_staff', chance: 0.22 }, { item: 'guardian_armor', chance: 0.25 }] },
+  // ---- BOSS (slice 17): the capstone fight at the end of the Deep Woods. High HP makes it a
+  // long battle (lots of math), but its attack still can't one-shot, and losing is penalty-free.
+  // Drops the best weapon in the game on EVERY win (chance 1) — a guaranteed trophy. `boss: true`
+  // flags it for a bigger placeholder shape and a special victory message. ----
+  shadow_warden: { name: 'Shadow Warden', hp: 80, attack: 7, xpReward: 300, color: '#3a2a5a', boss: true,
+                   loot: [{ item: 'eldoria_blade', chance: 1 }] },
+  // ---- The Mine (tier 3, slice 20): the endgame zone past the Deep Woods boss. Built for a
+  // hero who already beat the Shadow Warden (high level, Eldoria Blade). High HP = long, math-
+  // heavy fights; attacks still can't one-shot and losing stays penalty-free. Drops tier-3 gear. ----
+  rock_golem: { name: 'Rock Golem', hp: 65, attack: 7, xpReward: 220, color: '#7d7468',
+                loot: [{ item: 'obsidian_blade', chance: 0.25 }, { item: 'titan_helm', chance: 0.25 }] },
+  magma_slug: { name: 'Magma Slug', hp: 75, attack: 8, xpReward: 280, color: '#c0501f',
+                loot: [{ item: 'mithril_armor', chance: 0.25 }, { item: 'dragon_cape', chance: 0.22 }] },
+  // The Mine's capstone boss (from the original Wilds+Mine vision). Best ARMOR in the game,
+  // guaranteed — the Eldoria Blade stays the best WEAPON (slice 17), so both bosses keep a trophy.
+  crystal_wyrm: { name: 'Crystal Wyrm', hp: 130, attack: 9, xpReward: 600, color: '#2f6e8f', boss: true,
+                  loot: [{ item: 'wyrm_scale', chance: 1 }] }
+};
+
+// ---- Gear (slice 10c-ii): dropped by enemies, auto-equipped, gives a damage bonus.
+// Each item fills one equipment slot. If you already have something better in that slot
+// the drop is acknowledged but not equipped. Visual overlay toggled via setVisualEquipment.
+var GEAR = {
+  // Tier 1 (Wilds drops)
+  wooden_sword:  { name: 'Wooden Sword',  slot: 'weapon', damage: 2 },
+  leather_cap:   { name: 'Leather Cap',   slot: 'head',   damage: 1 },
+  hero_cape:     { name: "Hero's Cape",    slot: 'cape',   damage: 1 },
+  iron_armor:    { name: 'Iron Armor',     slot: 'body',   damage: 2 },
+  crystal_blade: { name: 'Crystal Blade',  slot: 'weapon', damage: 5 },
+  // Tier 2 (Deep Woods drops) — all stronger than their tier-1 slot-mates.
+  steel_sword:    { name: 'Steel Sword',     slot: 'weapon', damage: 6 },
+  crystal_staff:  { name: 'Crystal Staff',   slot: 'weapon', damage: 8 },
+  crystal_crown:  { name: 'Crystal Crown',   slot: 'head',   damage: 3 },
+  guardian_armor: { name: 'Guardian Armor',  slot: 'body',   damage: 4 },
+  shadow_cape:    { name: 'Shadow Cape',     slot: 'cape',   damage: 3 },
+  // Boss reward (Shadow Warden) — the best weapon in the game, a guaranteed first-kill trophy.
+  eldoria_blade:  { name: 'Eldoria Blade',   slot: 'weapon', damage: 12 },
+  // Tier 3 (Mine drops, slice 20) — all stronger than their tier-2 slot-mates. Weapons stay
+  // BELOW the Eldoria Blade (12) so slice 17's "best weapon in the game" promise holds.
+  obsidian_blade: { name: 'Obsidian Blade',  slot: 'weapon', damage: 10 },
+  titan_helm:     { name: 'Titan Helm',      slot: 'head',   damage: 5 },
+  dragon_cape:    { name: 'Dragon Cape',     slot: 'cape',   damage: 5 },
+  mithril_armor:  { name: 'Mithril Armor',   slot: 'body',   damage: 6 },
+  // Crystal Wyrm boss reward — best armor in the game, guaranteed every win.
+  wyrm_scale:     { name: 'Wyrm Scale Armor', slot: 'body',  damage: 9 }
+};
+
+// ---- Area enemies (slice 10c-ii / 16): monsters along each combat area's trail, easy → hard.
+// Walk into one (or tap Action beside it) to start a battle. `alive` flips false when
+// defeated and back to true whenever the player re-enters that area, so enemies respawn. ----
+var WILDS_ENEMIES = [
+  { row: 8, col: 8,  type: 'slime',  alive: true },
+  { row: 8, col: 14, type: 'bat',    alive: true },
+  { row: 8, col: 20, type: 'goblin', alive: true }
+];
+var DEEPWOODS_ENEMIES = [
+  { row: 8, col: 8,  type: 'wolf',  alive: true },
+  { row: 8, col: 14, type: 'bear',  alive: true },
+  { row: 8, col: 20, type: 'troll', alive: true },
+  { row: 8, col: 22, type: 'shadow_warden', alive: true }  // the boss, at the very end of the trail
+];
+// The Mine (slice 20): tier-3 trail, two enemies then the Crystal Wyrm boss at the end.
+var MINE_ENEMIES = [
+  { row: 8, col: 8,  type: 'rock_golem',   alive: true },
+  { row: 8, col: 14, type: 'magma_slug',   alive: true },
+  { row: 8, col: 22, type: 'crystal_wyrm', alive: true }  // the boss, at the very end of the trail
+];
+// Which enemy list belongs to which area. Areas not listed (farm/town) have no enemies.
+var AREA_ENEMIES = { wilds: WILDS_ENEMIES, deepwoods: DEEPWOODS_ENEMIES, mine: MINE_ENEMIES };
+// Live pointer to the current area's enemies (mirrors how `map`/`cropData` work).
+var currentEnemies = [];
+
+// ---- Crop state per area: keyed by "row,col" for each soil tile ----
+// Each entry: { status: 'empty'|'growing'|'ready', plantedAt: number }
+function initAreaCrops(name) {
+  var m = areas[name].map;
+  var crops = {};
+  for (var r = 0; r < MAP_H; r++) {
+    for (var c = 0; c < MAP_W; c++) {
+      if (m[r][c] === SOIL) crops[r + ',' + c] = { status: 'empty', plantedAt: 0, type: null };
+    }
+  }
+  areas[name].crops = crops;
+}
+initAreaCrops('farm');
+initAreaCrops('town');
+initAreaCrops('wilds');     // no soil in the Wilds, so this stays empty (kept for consistency)
+initAreaCrops('deepwoods'); // likewise no soil in the Deep Woods
+initAreaCrops('mine');      // no soil in the Mine either (kept for save-format consistency)
+
+// Decorations: small sprites drawn on top of grass to break up monotony.
+var AREA_DECORATIONS = {
+  farm: [
+    {col:2, row:1, spr:'deco_flowers'}, {col:8, row:2, spr:'deco_flowers'},
+    {col:15, row:10, spr:'deco_flowers'}, {col:6, row:12, spr:'deco_flowers'},
+    {col:10, row:9, spr:'deco_flowers'}, {col:1, row:8, spr:'deco_flowers'},
+    {col:22, row:3, spr:'deco_flowers'}, {col:25, row:15, spr:'deco_flowers'},
+    {col:11, row:1, spr:'deco_boulder'}, {col:18, row:11, spr:'deco_boulder'},
+    {col:24, row:2, spr:'deco_boulder'}, {col:27, row:18, spr:'deco_boulder'},
+    {col:4, row:10, spr:'deco_stump'}, {col:21, row:17, spr:'deco_stump'},
+    {col:9, row:12, spr:'deco_stone'}, {col:2, row:10, spr:'deco_stone'},
+    {col:12, row:2, spr:'deco_stone'}, {col:26, row:12, spr:'deco_stone'},
+    // a little paddock fence run (decorative, no collision)
+    {col:7, row:11, proc:'fence'}, {col:8, row:11, proc:'fence'},
+    {col:9, row:11, proc:'fence'}, {col:10, row:11, proc:'fence'},
+    // signpost by the right-edge exit → Town
+    {col:27, row:7, proc:'signpost', dir:'right', label:'Town'}
+  ],
+  town: [
+    {col:4, row:3, spr:'deco_flowers'}, {col:12, row:3, spr:'deco_flowers'},
+    {col:16, row:2, spr:'deco_flowers'}, {col:26, row:5, spr:'deco_flowers'},
+    {col:8, row:17, spr:'deco_flowers'}, {col:18, row:17, spr:'deco_flowers'},
+    {col:10, row:8, spr:'deco_flowers'}, {col:24, row:14, spr:'deco_flowers'},
+    {col:1, row:13, spr:'deco_boulder'}, {col:27, row:13, spr:'deco_boulder'},
+    {col:15, row:2, spr:'deco_boulder'}, {col:7, row:19, spr:'deco_boulder'},
+    {col:4, row:17, spr:'deco_stump'}, {col:25, row:17, spr:'deco_stump'},
+    {col:13, row:1, spr:'deco_stone'}, {col:16, row:18, spr:'deco_stone'},
+    {col:20, row:19, spr:'deco_stone'}, {col:3, row:8, spr:'deco_stone'},
+    // Well in the center of the plaza
+    {col:14, row:14, proc:'well'},
+    // Signposts at both exits
+    {col:2, row:9, proc:'signpost', dir:'left', label:'Farm'},
+    {col:27, row:9, proc:'signpost', dir:'right', label:'Wilds'},
+    // Fences along the main road
+    {col:4, row:9, proc:'fence'}, {col:5, row:9, proc:'fence'},
+    {col:24, row:9, proc:'fence'}, {col:25, row:9, proc:'fence'}
+  ],
+  wilds: [
+    {col:3, row:3, spr:'deco_boulder'}, {col:12, row:5, spr:'deco_boulder'},
+    {col:17, row:3, spr:'deco_boulder'}, {col:7, row:11, spr:'deco_stump'},
+    {col:15, row:12, spr:'deco_stump'}, {col:9, row:4, spr:'deco_flowers'},
+    {col:5, row:8, spr:'deco_stone'}, {col:14, row:2, spr:'deco_stone'},
+    {col:19, row:10, spr:'deco_stone'}, {col:2, row:12, spr:'deco_boulder'},
+    {col:10, row:10, spr:'deco_stump'},
+    {col:24, row:4, spr:'deco_flowers'}, {col:26, row:14, spr:'deco_flowers'},
+    {col:22, row:16, spr:'deco_stump'}, {col:25, row:6, spr:'deco_boulder'},
+    {col:2, row:7, proc:'signpost', dir:'left', label:'Town'},
+    {col:27, row:7, proc:'signpost', dir:'right', label:'Woods'}
+  ],
+  deepwoods: [
+    {col:2, row:2, spr:'deco_stump'}, {col:9, row:6, spr:'deco_stump'},
+    {col:16, row:2, spr:'deco_boulder'}, {col:13, row:11, spr:'deco_boulder'},
+    {col:7, row:3, spr:'deco_flowers'}, {col:18, row:12, spr:'deco_flowers'},
+    {col:4, row:10, spr:'deco_stump'}, {col:15, row:8, spr:'deco_stump'},
+    {col:11, row:2, spr:'deco_boulder'}, {col:6, row:12, spr:'deco_stone'},
+    {col:19, row:4, spr:'deco_stone'},
+    {col:24, row:5, spr:'deco_stump'}, {col:26, row:14, spr:'deco_boulder'},
+    {col:2, row:7, proc:'signpost', dir:'left', label:'Wilds'},
+    {col:27, row:7, proc:'signpost', dir:'right', label:'Mine'}
+  ],
+  mine: [
+    {col:5, row:3, spr:'deco_boulder'}, {col:12, row:2, spr:'deco_boulder'},
+    {col:18, row:5, spr:'deco_boulder'}, {col:8, row:11, spr:'deco_boulder'},
+    {col:3, row:8, spr:'deco_stone'}, {col:15, row:10, spr:'deco_stone'},
+    {col:10, row:4, spr:'deco_stone'}, {col:19, row:12, spr:'deco_boulder'},
+    {col:7, row:6, spr:'deco_stone'},
+    {col:2, row:7, proc:'signpost', dir:'left', label:'Woods'}
+  ]
+};
+
+// ---- Live pointers to the area the player is currently in. ----
+// map / cropData always reference the active area, so the rest of the engine
+// (drawing, collision, farming) needs no changes.
+var currentArea = 'farm';
+var map = areas.farm.map;
+var cropData = areas.farm.crops;
+
+function activateArea(name) {
+  currentArea = name;
+  map = areas[name].map;
+  cropData = areas[name].crops;
+  currentEnemies = AREA_ENEMIES[name] || [];
+}
+
+// ---- Collision ----
+function tileAtPixel(px, py) {
+  var c = Math.floor(px / TILE);
+  var r = Math.floor(py / TILE);
+  if (r < 0 || r >= MAP_H || c < 0 || c >= MAP_W) return TREE;
+  return map[r][c];
+}
+
+function boxIsBlocked(x, y) {
+  var s = player.size;
+  return BLOCKED[tileAtPixel(x, y)] ||
+         BLOCKED[tileAtPixel(x + s, y)] ||
+         BLOCKED[tileAtPixel(x, y + s)] ||
+         BLOCKED[tileAtPixel(x + s, y + s)];
+}
+
+// ---- Which tile is the player facing / standing on? ----
+function getFacingTile() {
+  var cx = player.x + player.size / 2;
+  var cy = player.y + player.size / 2;
+  var col = Math.floor(cx / TILE);
+  var row = Math.floor(cy / TILE);
+
+  // Check the tile the player is on first, then adjacent tiles within 1 tile range
+  var checks = [
+    [row, col],
+    [row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]
+  ];
+
+  for (var i = 0; i < checks.length; i++) {
+    var r = checks[i][0], c = checks[i][1];
+    if (r >= 0 && r < MAP_H && c >= 0 && c < MAP_W && map[r][c] === SOIL) {
+      return { row: r, col: c };
+    }
+  }
+  return null;
+}
+
+// ---- Is the player on or next to a door tile? (forgiving shop entry) ----
+function isNearDoor() {
+  var col = Math.floor((player.x + player.size / 2) / TILE);
+  var row = Math.floor((player.y + player.size / 2) / TILE);
+  var checks = [
+    [row, col],
+    [row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]
+  ];
+  for (var i = 0; i < checks.length; i++) {
+    var r = checks[i][0], c = checks[i][1];
+    if (r >= 0 && r < MAP_H && c >= 0 && c < MAP_W && map[r][c] === DOOR) return true;
+  }
+  return false;
+}
+
+// ---- Is the player on or next to any NPC? Returns the NPC object or null. ----
+function isNearNPC() {
+  var col = Math.floor((player.x + player.size / 2) / TILE);
+  var row = Math.floor((player.y + player.size / 2) / TILE);
+  var checks = [
+    [row, col],
+    [row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]
+  ];
+  for (var n = 0; n < NPCS.length; n++) {
+    if (NPCS[n].area !== currentArea) continue;
+    for (var i = 0; i < checks.length; i++) {
+      if (checks[i][0] === NPCS[n].row && checks[i][1] === NPCS[n].col) return NPCS[n];
+    }
+  }
+  return null;
+}
+
+// ---- Is the player on or next to the Farm cooking pot? (same forgiving 1-tile range) ----
+function isNearCookpot() {
+  if (currentArea !== 'farm') return false;
+  var col = Math.floor((player.x + player.size / 2) / TILE);
+  var row = Math.floor((player.y + player.size / 2) / TILE);
+  var checks = [
+    [row, col],
+    [row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]
+  ];
+  for (var i = 0; i < checks.length; i++) {
+    if (checks[i][0] === FARM_COOKPOT.row && checks[i][1] === FARM_COOKPOT.col) return true;
+  }
+  return false;
+}
+
+// ---- Is the player on or next to any live Wilds enemy? Returns the enemy object or null. ----
+function isNearEnemy() {
+  if (!AREA_ENEMIES[currentArea]) return null;
+  var col = Math.floor((player.x + player.size / 2) / TILE);
+  var row = Math.floor((player.y + player.size / 2) / TILE);
+  var checks = [
+    [row, col],
+    [row - 1, col], [row + 1, col], [row, col - 1], [row, col + 1]
+  ];
+  for (var e = 0; e < currentEnemies.length; e++) {
+    var en = currentEnemies[e];
+    if (!en.alive) continue;
+    for (var i = 0; i < checks.length; i++) {
+      if (checks[i][0] === en.row && checks[i][1] === en.col) return en;
+    }
+  }
+  return null;
+}
+
+// ---- Update crop growth ----
+function updateCrops() {
+  var now = Date.now();
+  for (var key in cropData) {
+    var crop = cropData[key];
+    var growTime = (crop.type && CROPS[crop.type]) ? CROPS[crop.type].grow : 8000;
+    if (crop.status === 'growing' && now - crop.plantedAt >= growTime) {
+      crop.status = 'ready';
+    }
+  }
+}
+
+// ---- Action button: plant or harvest ----
+function doAction() {
+  if (!gameActive) return;         // no play until a profile is chosen
+  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  // Tapping Action beside the shop door opens the store.
+  if (isNearDoor() && !shopOpen) { openShop(); return; }
+  // Tapping Action beside any NPC dispatches per role.
+  var nearNpc = isNearNPC();
+  if (nearNpc) { interactNPC(nearNpc); return; }
+  // Tapping Action beside the Farm cooking pot opens the cooking modal.
+  if (isNearCookpot()) { openCooking(); return; }
+  // Tapping Action beside a Wilds enemy starts a battle.
+  var nearEn = isNearEnemy();
+  if (nearEn) { openCombat(nearEn); return; }
+  var tile = getFacingTile();
+  if (!tile) {
+    showToast('Stand near a soil plot!');
+    return;
+  }
+
+  var key = tile.row + ',' + tile.col;
+  var crop = cropData[key];
+
+  if (crop.status === 'empty') {
+    // Figure out which seed types the player has.
+    var available = [];
+    for (var i = 0; i < CROP_TYPES.length; i++) {
+      if (player.seeds[CROP_TYPES[i]] > 0) available.push(CROP_TYPES[i]);
+    }
+    if (available.length === 0) {
+      showToast('No seeds! Buy some.');
+    } else if (available.length === 1) {
+      plantSeed(key, crop, available[0]);
+    } else {
+      openSeedPicker(key, crop);
+    }
+  } else if (crop.status === 'ready') {
+    var harvestType = crop.type || 'turnip';
+    crop.status = 'empty';
+    crop.plantedAt = 0;
+    crop.type = null;
+    player.crops[harvestType]++;
+    addPop(tile.row, tile.col, '+1');
+    soundHarvest();
+    showToast('Harvested 1 ' + CROPS[harvestType].name + '!');
+  } else if (crop.status === 'growing') {
+    var ct = crop.type || 'turnip';
+    var pct = Math.round(((Date.now() - crop.plantedAt) / CROPS[ct].grow) * 100);
+    showToast(CROPS[ct].name + ' growing... ' + Math.min(pct, 99) + '%');
+  }
+
+  updateHUD();
+  saveGame();
+}
+
+// ---- Shop ----
+function buySeeds(type) {
+  var info = CROPS[type];
+  if (player.gold >= info.cost) {
+    player.gold -= info.cost;
+    player.seeds[type]++;
+    showToast('Bought 1 ' + info.name + ' seed for ' + info.cost + 'g');
+    speak('You bought a ' + info.name + ' seed for ' + info.cost + ' gold.');
+    updateHUD();
+    saveGame();
+  }
+}
+
+// ---- Heart Crystal upgrade (slice 19): a gold SINK that grants permanent +5 Max HP.
+// Price climbs 15g per crystal already owned, so it scales into a real late-game sink.
+// Max HP also persists in the save (no new save field needed beyond the purchase count).
+var HEART_HP = 5;          // max HP gained per crystal
+var HEART_BASE_PRICE = 30; // price of the first crystal
+function heartCrystalPrice() {
+  return HEART_BASE_PRICE + player.hpUpgrades * 15;
+}
+function buyHeartCrystal() {
+  var price = heartCrystalPrice();
+  if (player.gold < price) return;   // can't afford — button is also disabled in updateHUD
+  player.gold -= price;
+  player.maxHp += HEART_HP;
+  player.hp += HEART_HP;             // the new health is yours right away (feels good)
+  player.hpUpgrades++;
+  soundCoin();
+  showToast('Heart Crystal! Max HP is now ' + player.maxHp + '.');
+  speak('Heart Crystal! Your max health is now ' + player.maxHp + '.');
+  updateHUD();
+  saveGame();
+}
+
+// ---- Training upgrade (slice 21): a gold SINK that grants permanent +2 Attack.
+// Parallel to Heart Crystal — the attack counterpart. Price scales the same way.
+var TRAIN_ATK = 2;
+var TRAIN_BASE_PRICE = 25;
+function trainingPrice() {
+  return TRAIN_BASE_PRICE + player.atkUpgrades * 15;
+}
+function buyTraining() {
+  var price = trainingPrice();
+  if (player.gold < price) return;
+  player.gold -= price;
+  player.atkUpgrades++;
+  soundCoin();
+  showToast('Training complete! Attack +' + TRAIN_ATK + '!');
+  speak('Training complete! Your attack power went up by ' + TRAIN_ATK + '.');
+  updateHUD();
+  saveGame();
+}
+
+function sellCrops() {
+  if (totalCrops() === 0) return;
+  var earned = sellTotal();
+  showToast('Sold crops for ' + earned + 'g!');
+  speak('You sold your crops for ' + earned + ' gold!');
+  soundCoin();
+  player.gold += earned;
+  for (var i = 0; i < CROP_TYPES.length; i++) player.crops[CROP_TYPES[i]] = 0;
+  updateHUD();
+  saveGame();
+}
+
+// Plant a specific seed type on a soil tile.
+function plantSeed(key, crop, type) {
+  player.seeds[type]--;
+  crop.status = 'growing';
+  crop.plantedAt = Date.now();
+  crop.type = type;
+  showToast('Planted ' + CROPS[type].name + '! (-1 seed)');
+  updateHUD();
+  saveGame();
+}
+
+// Seed picker: choose which seed to plant when you have multiple types.
+var seedPickerKey = null;
+var seedPickerCrop = null;
+
+function openSeedPicker(key, crop) {
+  seedPickerKey = key;
+  seedPickerCrop = crop;
+  var box = document.getElementById('seedOptions');
+  box.innerHTML = '';
+  for (var i = 0; i < CROP_TYPES.length; i++) {
+    var t = CROP_TYPES[i];
+    if (player.seeds[t] <= 0) continue;
+    var info = CROPS[t];
+    var btn = document.createElement('button');
+    btn.className = 'btn-seed';
+    btn.style.borderLeft = '6px solid ' + info.color;
+    btn.textContent = info.name + ' (' + player.seeds[t] + ')';
+    btn.dataset.type = t;
+    btn.addEventListener('click', onSeedPickerClick);
+    box.appendChild(btn);
+  }
+  seedPickerOpen = true;
+  document.getElementById('seedPicker').classList.add('open');
+  focusModal('seedPicker');
+}
+
+function onSeedPickerClick(e) {
+  var type = e.currentTarget.dataset.type;
+  var key = seedPickerKey;
+  var crop = seedPickerCrop;
+  closeSeedPicker();
+  plantSeed(key, crop, type);
+}
+
+function closeSeedPicker() {
+  seedPickerOpen = false;
+  document.getElementById('seedPicker').classList.remove('open');
+  seedPickerKey = null;
+  seedPickerCrop = null;
+  restoreFocus();
+}
+
+// ---- Town NPC quest (slice 10b) ----
+// One shared system for both players; only the question + reading level change per profile.
+// The older-reader slot ('adventurer') gets multiplication word problems; the early-reader
+// slot ('mage') gets counting/addition kept at or below 20 and read aloud. A correct answer
+// pays GOLD (the learning track's reward); a wrong answer just gives no reward and you can
+// ask again. Never a gate.
+var questOpen = false;
+var questAnswer = 0;
+
+// Build a word problem sized to the profile. Returns { text, answer }.
+function makeQuestProblem() {
+  var a, b, templates;
+  if (currentProfile === 'adventurer') {
+    a = 2 + Math.floor(Math.random() * 8);   // 2..9
+    b = 2 + Math.floor(Math.random() * 8);   // 2..9
+    templates = [
+      'Each basket holds ' + a + ' carrots. You fill ' + b + ' baskets. How many carrots in all?',
+      'A crate fits ' + a + ' pumpkins. How many pumpkins fit in ' + b + ' crates?',
+      'You plant ' + a + ' rows with ' + b + ' seeds in each row. How many seeds did you plant?'
+    ];
+    return { text: templates[Math.floor(Math.random() * templates.length)], answer: a * b };
+  }
+  // 'mage' (and any non-adventurer): counting / addition, total kept ≤ 20.
+  a = 1 + Math.floor(Math.random() * 10);                       // 1..10
+  b = 1 + Math.floor(Math.random() * Math.min(10, 20 - a));     // keeps a+b ≤ 20
+  templates = [
+    'You pick ' + a + ' red apples and ' + b + ' green apples. How many apples?',
+    'There are ' + a + ' ducks on the pond and ' + b + ' more on the grass. How many ducks?',
+    'You find ' + a + ' shiny coins, then ' + b + ' more. How many coins?'
+  ];
+  return { text: templates[Math.floor(Math.random() * templates.length)], answer: a + b };
+}
+
+// ---- NPC role titles for the quest modal header. ----
+var NPC_TITLES = { mira: 'the Villager', bram: 'the Shopkeeper', gunnar: 'the Smith' };
+
+// ---- NPC greetings: voiced on first interaction each session. ----
+var NPC_GREETINGS = {
+  mira: 'Hello, adventurer! I have a task for you.',
+  bram: 'Welcome to my store! Solve this and I will cut you a deal.',
+  gunnar: 'Hmm. Show me your math and I will forge something strong.'
+};
+var npcGreeted = {};
+
+function interactNPC(npc) {
+  if (npc.role === 'shop') { openShop(); return; }
+  openQuest(npc);
+}
+
+function openQuest(npc) {
+  var npcName = npc ? npc.name : 'Mira';
+  var npcId = npc ? npc.id : 'mira';
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+
+  // Voiced greeting on first interaction this session
+  if (!npcGreeted[npcId]) {
+    npcGreeted[npcId] = true;
+    speak(npcName + ' says: ' + (NPC_GREETINGS[npcId] || 'Hello!'));
+  }
+
+  // Offer a kill quest if the player doesn't have one active (Mira only)
+  if (npcId === 'mira' && !player.killQuest) {
+    var kq = assignKillQuest();
+    if (kq) {
+      player.killQuest = { target: kq.target, count: kq.count, reward: kq.reward, name: kq.name, progress: 0 };
+      showToast('New quest: ' + kq.name + '!');
+      speak(npcName + ' says: Can you help? ' + kq.name + '! I will pay ' + kq.reward + ' gold.');
+      saveGame();
+    }
+  } else if (npcId === 'mira' && player.killQuest) {
+    var kq = player.killQuest;
+    var prog = kq.progress || 0;
+    if (prog < kq.count) {
+      showToast(kq.name + ': ' + prog + '/' + kq.count);
+      speak('Remember, ' + kq.name + '! ' + prog + ' of ' + kq.count + ' done.');
+    }
+  }
+
+  var q = makeQuestProblem();
+  questAnswer = q.answer;
+  document.getElementById('questTitle').textContent = npcName + ' ' + (NPC_TITLES[npcId] || '');
+  document.getElementById('questText').textContent = q.text;
+  speak(npcName + ' asks: ' + q.text);
+
+  var box = document.getElementById('questAnswers');
+  box.innerHTML = '';
+  var opts = makeOptions(q.answer);   // reuse the math-bonus option builder
+  for (var i = 0; i < opts.length; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'btn-answer';
+    btn.textContent = opts[i];
+    btn.dataset.value = opts[i];
+    btn.addEventListener('click', onQuestAnswerClick);
+    box.appendChild(btn);
+  }
+
+  questOpen = true;
+  document.getElementById('questModal').classList.add('open');
+  focusModal('questModal');
+}
+
+function onQuestAnswerClick(e) {
+  answerQuest(parseInt(e.currentTarget.dataset.value, 10));
+}
+
+function answerQuest(value) {
+  var correct = (value === questAnswer);
+  closeQuest();
+  if (correct) {
+    // Learning pays gold (the economy lever). The harder multiplication problems pay more.
+    var reward = (currentProfile === 'adventurer') ? 8 : 5;
+    player.gold += reward;
+    player.questsDone++;
+    soundCorrect();
+    showToast('Quest done! +' + reward + 'g');
+    speak('Correct! You earned ' + reward + ' gold!');
+    updateHUD();
+    saveGame();
+  } else {
+    showToast('Not quite — ask me again!');
+    speak('Good try! Ask me again.');
+  }
+}
+
+function closeQuest() {
+  questOpen = false;
+  document.getElementById('questModal').classList.remove('open');
+  restoreFocus();
+}
+
+// ---- Kill quests: Mira assigns "defeat N monsters" tasks. ----
+var KILL_QUESTS = [
+  { target: 'slime',        count: 3,  reward: 15, name: 'Slay 3 Slimes',       tier: 1 },
+  { target: 'bat',          count: 3,  reward: 15, name: 'Slay 3 Bats',         tier: 1 },
+  { target: 'goblin',       count: 2,  reward: 20, name: 'Slay 2 Goblins',      tier: 1 },
+  { target: 'wolf',         count: 3,  reward: 25, name: 'Slay 3 Wolves',       tier: 2 },
+  { target: 'bear',         count: 2,  reward: 30, name: 'Slay 2 Bears',        tier: 2 },
+  { target: 'troll',        count: 2,  reward: 35, name: 'Slay 2 Trolls',       tier: 2 },
+  { target: 'rock_golem',   count: 2,  reward: 40, name: 'Slay 2 Rock Golems',  tier: 3 },
+  { target: 'magma_slug',   count: 2,  reward: 40, name: 'Slay 2 Magma Slugs',  tier: 3 },
+  { target: 'crystal_wyrm', count: 1,  reward: 50, name: 'Slay the Crystal Wyrm', tier: 3 }
+];
+
+function assignKillQuest() {
+  // Mage (younger player) only gets tier-1 quests; adventurer gets all tiers.
+  var maxTier = (currentProfile === 'mage') ? 1 : 3;
+  var available = [];
+  for (var i = 0; i < KILL_QUESTS.length; i++) {
+    var kq = KILL_QUESTS[i];
+    if (ENEMIES[kq.target] && kq.tier <= maxTier) available.push(kq);
+  }
+  if (available.length === 0) return null;
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+function checkKillQuest(enemyType) {
+  if (!player.killQuest) return;
+  var kq = player.killQuest;
+  if (kq.target !== enemyType) return;
+  kq.progress = (kq.progress || 0) + 1;
+  if (kq.progress >= kq.count) {
+    player.gold += kq.reward;
+    soundWin();
+    showToast('Quest done: ' + kq.name + '! +' + kq.reward + 'g');
+    speak('Quest complete! ' + kq.name + '! You earned ' + kq.reward + ' gold!');
+    player.killQuest = null;
+    updateHUD();
+  } else {
+    showToast(kq.name + ': ' + kq.progress + '/' + kq.count);
+  }
+}
+
+// ---- Combat (slice 10c) ----
+// A turn-based battle, built to feel like the quest/bonus modals. You ATTACK by
+// answering a math question: right answer = deal damage, wrong = miss. EITHER way
+// the enemy bites back for a small fixed amount, but you are NEVER stuck — there is
+// always another question next turn. Win at enemy HP 0 (earn XP); lose at your HP 0
+// (respawn at the Wilds entrance, full HP, no penalty — never punitive).
+// One shared system for both profiles; only the math grade changes (see makeCombatQuestion).
+var combatOpen = false;     // is the battle modal up?
+var combatAnswer = 0;       // correct answer to the current question
+var combatEnemy = null;     // a fresh, fightable COPY of the enemy template for this fight
+var combatSource = null;    // the WILDS_ENEMIES entry this fight is against
+
+// Sum of +damage from all equipped gear.
+function gearDamageBonus() {
+  var bonus = 0;
+  for (var slot in player.gear) {
+    if (player.gear[slot] && GEAR[player.gear[slot]]) bonus += GEAR[player.gear[slot]].damage;
+  }
+  return bonus;
+}
+
+// How much damage the player deals on a correct answer. Grows with level + gear.
+function playerDamage() {
+  return 5 + (player.level - 1) * 2 + gearDamageBonus() + player.atkUpgrades * TRAIN_ATK;
+}
+
+// Roll the enemy's loot table for a gear drop. Returns the item id or null.
+function rollLoot(enemyType) {
+  var loot = ENEMIES[enemyType].loot;
+  if (!loot) return null;
+  for (var i = 0; i < loot.length; i++) {
+    if (Math.random() < loot[i].chance) return loot[i].item;
+  }
+  return null;
+}
+
+// Equip a gear drop if it's better than what's in that slot (or slot is empty). Anything
+// not equipped goes into your bag (player.inventory) so you can SELL it later — nothing is
+// ever silently lost. Equipped gear is never in the bag, so you can't sell what you wear.
+function equipGear(itemId) {
+  var item = GEAR[itemId];
+  if (!item) return;
+  var current = player.gear[item.slot];
+  if (current && GEAR[current] && GEAR[current].damage >= item.damage) {
+    // Not an upgrade — keep it in the bag to sell for gold.
+    player.inventory.push(itemId);
+    showToast('Found ' + item.name + ' — in your bag to sell (' + gearSellPrice(itemId) + 'g).');
+    speak('You found a ' + item.name + '. It is in your bag to sell.');
+    return;
+  }
+  // It's an upgrade: the old item (if any) drops into the bag so it's not lost.
+  if (current) player.inventory.push(current);
+  player.gear[item.slot] = itemId;
+  if (currentProfile) setVisualEquipment(currentProfile, item.slot, true);
+  showToast('Equipped ' + item.name + '! +' + item.damage + ' damage');
+  speak('You found a ' + item.name + '! Plus ' + item.damage + ' damage!');
+}
+
+// What a spare gear item sells for: 5 gold per damage point (the price IS a multiply —
+// hidden curriculum). Equipped gear isn't sellable, so this only ever runs on bag items.
+function gearSellPrice(itemId) {
+  var item = GEAR[itemId];
+  return item ? item.damage * 5 : 0;
+}
+
+// Sell one spare gear item from the bag (by its index in player.inventory).
+function sellGear(index) {
+  if (index < 0 || index >= player.inventory.length) return;
+  var itemId = player.inventory[index];
+  var price = gearSellPrice(itemId);
+  player.inventory.splice(index, 1);
+  player.gold += price;
+  soundCoin();
+  showToast('Sold ' + GEAR[itemId].name + ' for ' + price + 'g!');
+  speak('You sold the ' + GEAR[itemId].name + ' for ' + price + ' gold.');
+  updateHUD();
+  saveGame();
+}
+
+// Build the "Sell spare gear" rows in the shop from the bag. Hidden when the bag is empty.
+function renderGearSell() {
+  var section = document.getElementById('gearSellSection');
+  var list = document.getElementById('gearSellList');
+  if (!section || !list) return;
+  if (player.inventory.length === 0) {
+    section.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  section.style.display = 'block';
+  var html = '';
+  for (var i = 0; i < player.inventory.length; i++) {
+    var id = player.inventory[i];
+    var g = GEAR[id];
+    if (!g) continue;
+    var price = gearSellPrice(id);
+    html += '<div class="shop-row">' +
+      '<div class="shop-info"><b>' + g.name + '</b><small>+' + g.damage + ' dmg · sells ' + price + 'g</small></div>' +
+      '<button class="btn-sell" onclick="sellGear(' + i + ')" aria-label="Sell ' + g.name + ' for ' + price + ' gold">Sell ' + price + 'g</button>' +
+      '</div>';
+  }
+  list.innerHTML = html;
+}
+
+// XP needed to reach the next level (kept simple: level × 50).
+function xpForNextLevel() {
+  return player.level * 50;
+}
+
+// Build a battle question sized to the profile. Both return { text, answer, options }.
+//   adventurer (older reader, ~grade 5): subtraction, sometimes estimation (rounding).
+//   mage (early reader, ~grade 2): subtraction with both numbers and answer kept ≤ 20.
+function makeCombatQuestion() {
+  if (currentProfile === 'adventurer') {
+    // ~1 in 3 questions is an estimation (round each number to the nearest ten, add).
+    if (Math.random() < 0.34) {
+      var ea = 10 + Math.floor(Math.random() * 80);   // 10..89
+      var eb = 10 + Math.floor(Math.random() * 80);   // 10..89
+      var est = roundToTen(ea) + roundToTen(eb);
+      return { text: 'About how much? ' + ea + ' + ' + eb, answer: est, options: tensOptions(est) };
+    }
+    // Subtraction with a positive answer, e.g. "48 − 17 = ?".
+    var x = 20 + Math.floor(Math.random() * 60);      // 20..79
+    var y = 1 + Math.floor(Math.random() * (x - 1));  // 1..x-1 (answer stays ≥ 1)
+    return { text: x + ' − ' + y + ' = ?', answer: x - y, options: makeOptions(x - y) };
+  }
+  // 'mage' (and any non-adventurer): subtraction kept small, e.g. "14 − 6 = ?".
+  var a = 5 + Math.floor(Math.random() * 16);   // 5..20
+  var b = 1 + Math.floor(Math.random() * a);    // 1..a  (answer ≥ 0)
+  return { text: a + ' − ' + b + ' = ?', answer: a - b, options: makeOptions(a - b) };
+}
+
+function roundToTen(n) { return Math.round(n / 10) * 10; }
+
+// Three estimation options spaced by tens (so the rounded answer is the clear pick).
+function tensOptions(answer) {
+  var opts = [answer];
+  var guard = 0;
+  while (opts.length < 3 && guard++ < 50) {
+    var cand = answer + (1 + Math.floor(Math.random() * 3)) * 10 * (Math.random() < 0.5 ? -1 : 1);
+    if (cand >= 0 && opts.indexOf(cand) === -1) opts.push(cand);
+  }
+  for (var i = opts.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = opts[i]; opts[i] = opts[j]; opts[j] = t;
+  }
+  return opts;
+}
+
+// Turn a "14 − 6 = ?" style line into something the voice can read aloud.
+function spokenQuestion(text) {
+  return text.replace('−', 'minus').replace('×', 'times').replace('+', 'plus')
+             .replace(' = ?', '').replace('?', '');
+}
+
+// Repaint both HP bars (width + number) from the live combat state.
+function updateCombatBars() {
+  if (!combatEnemy) return;
+  var ePct = Math.max(0, combatEnemy.hp) / combatEnemy.maxHp * 100;
+  document.getElementById('enemyName').textContent = combatEnemy.name;
+  document.getElementById('enemyHpFill').style.width = ePct + '%';
+  document.getElementById('enemyHpNum').textContent = Math.max(0, combatEnemy.hp) + '/' + combatEnemy.maxHp;
+  var yPct = Math.max(0, player.hp) / player.maxHp * 100;
+  document.getElementById('youHpFill').style.width = yPct + '%';
+  document.getElementById('youHpNum').textContent = Math.max(0, player.hp) + '/' + player.maxHp;
+}
+
+// Start a fight with a specific Wilds enemy. Makes a COPY so the template stays pristine.
+function openCombat(enemyEntry) {
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  if (!enemyEntry) enemyEntry = isNearEnemy();
+  if (!enemyEntry || !enemyEntry.alive) return;
+  combatSource = enemyEntry;
+  var base = ENEMIES[enemyEntry.type];
+  combatEnemy = { name: base.name, hp: base.hp, maxHp: base.hp, attack: base.attack, xpReward: base.xpReward, type: enemyEntry.type };
+  combatOpen = true;
+  document.getElementById('combatModal').classList.add('open');
+  document.getElementById('combatTitle').textContent = 'A wild ' + combatEnemy.name + '!';
+  nextCombatTurn('Solve the problem to attack!');
+  focusModal('combatModal');
+}
+
+// Show the next question (and the result of the last turn) and refresh the bars.
+function nextCombatTurn(message) {
+  updateCombatBars();
+  document.getElementById('combatMsg').textContent = message || '';
+
+  var q = makeCombatQuestion();
+  combatAnswer = q.answer;
+  document.getElementById('combatQuestion').textContent = q.text;
+  // Read the turn message + the question aloud for the early-reader slot.
+  speak((message ? message + ' ' : '') + 'What is ' + spokenQuestion(q.text) + '?');
+
+  var box = document.getElementById('combatAnswers');
+  box.innerHTML = '';
+  for (var i = 0; i < q.options.length; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'btn-answer';
+    btn.textContent = q.options[i];
+    btn.dataset.value = q.options[i];
+    btn.addEventListener('click', onCombatAnswerClick);
+    box.appendChild(btn);
+  }
+
+  // Show the eat-food button if the player has food and isn't at full HP.
+  var eatRow = document.getElementById('combatFoodRow');
+  var bf = bestFood();
+  if (bf && player.hp < player.maxHp) {
+    eatRow.style.display = 'block';
+    document.getElementById('combatEatBtn').textContent =
+      'Eat ' + RECIPES[bf].name + ' (+' + Math.min(RECIPES[bf].heal, player.maxHp - player.hp) + ' HP)';
+  } else {
+    eatRow.style.display = 'none';
+  }
+}
+
+function onCombatAnswerClick(e) {
+  answerCombat(parseInt(e.currentTarget.dataset.value, 10));
+}
+
+// Combat slash phase: answer math, then mash SLASH to deal damage.
+// Correct = full damage + 3s window. Wrong = half damage + 1.5s window.
+var slashDmgPerHit = 0;
+var slashHits = 0;
+var slashTimerId = 0;
+var slashActive = false;
+var SLASH_TIME_ADV = 3000;
+var SLASH_TIME_MAGE = 5000;
+function slashTime() { return (currentProfile === 'mage') ? SLASH_TIME_MAGE : SLASH_TIME_ADV; }
+
+function answerCombat(value) {
+  if (!combatOpen || !combatEnemy) return;
+  var correct = (value === combatAnswer);
+  var baseDmg = playerDamage();
+
+  if (correct) {
+    soundCorrect();
+    slashDmgPerHit = baseDmg * 2;
+    startSlashPhase(slashTime(), 'POWER BOOST! Slash away!');
+  } else {
+    slashDmgPerHit = baseDmg;
+    if (typeof HTMLElement !== 'undefined') {
+      startSlashPhase(slashTime(), 'Slash away!');
+    } else {
+      player.hp -= combatEnemy.attack;
+      if (player.hp <= 0) { player.hp = 0; loseCombat(); return; }
+      nextCombatTurn('Miss! ' + combatEnemy.name + ' hits you for ' + combatEnemy.attack + '.');
+    }
+  }
+}
+
+function startSlashPhase(duration, msg) {
+  slashHits = 0;
+  slashActive = true;
+  if (typeof HTMLElement !== 'undefined') {
+    document.getElementById('combatAnswers').innerHTML = '';
+    document.getElementById('combatQuestion').textContent = '';
+    document.getElementById('combatMsg').textContent = msg;
+    speak(msg);
+    var zone = document.getElementById('slashZone');
+    zone.style.display = 'block';
+    document.getElementById('slashCount').textContent = 'Hits: 0';
+    document.getElementById('combatModal').classList.add('slash-mode');
+    var timerBar = document.getElementById('slashTimer');
+    timerBar.style.transition = 'none';
+    timerBar.style.width = '100%';
+    void timerBar.offsetWidth;
+    timerBar.style.transition = 'width ' + duration + 'ms linear';
+    timerBar.style.width = '0%';
+    document.getElementById('combatFoodRow').style.display = 'none';
+    slashTimerId = setTimeout(endSlashPhase, duration);
+  } else {
+    executeSlash();
+    endSlashPhase();
+  }
+}
+
+function executeSlash() {
+  if (!slashActive || !combatOpen || !combatEnemy) return;
+  slashHits++;
+  combatEnemy.hp -= slashDmgPerHit;
+  soundCorrect();
+  // Floating damage number over the player's position
+  var pr = Math.floor(player.y / TILE);
+  var pc = Math.floor(player.x / TILE);
+  addPop(pr, pc, '-' + slashDmgPerHit, slashDmgPerHit > playerDamage() ? '#ffdd44' : '#ff6644');
+  triggerShake();
+  player.attacking = true;
+  player.attackFrame = 0;
+  player.attackLastAt = Date.now();
+  var bar = document.getElementById('enemyHpFill');
+  if (bar) {
+    bar.classList.remove('slash-flash');
+    void bar.offsetWidth;
+    bar.classList.add('slash-flash');
+  }
+  updateCombatBars();
+  var countEl = document.getElementById('slashCount');
+  if (countEl) countEl.textContent = 'Hits: ' + slashHits + ' (' + (slashHits * slashDmgPerHit) + ' dmg)';
+  if (combatEnemy.hp <= 0) {
+    combatEnemy.hp = 0;
+    slashActive = false;
+    clearTimeout(slashTimerId);
+    var zone = document.getElementById('slashZone');
+    if (zone) zone.style.display = 'none';
+    winCombat();
+  }
+}
+
+function endSlashPhase() {
+  if (!slashActive) return;
+  slashActive = false;
+  player.attacking = false;
+  player.attackFrame = 0;
+  var overlay = document.getElementById('combatModal');
+  if (overlay) overlay.classList.remove('slash-mode');
+  var zone = document.getElementById('slashZone');
+  if (zone) zone.style.display = 'none';
+  if (!combatOpen || !combatEnemy) return;
+  var totalDmg = slashHits * slashDmgPerHit;
+  player.hp -= combatEnemy.attack;
+  // Enemy hit-back damage pop (red)
+  var pr = Math.floor(player.y / TILE);
+  var pc = Math.floor(player.x / TILE);
+  addPop(pr, pc, '-' + combatEnemy.attack, '#ff4444');
+  triggerShake();
+  soundHit();
+  if (player.hp <= 0) {
+    player.hp = 0;
+    loseCombat();
+    return;
+  }
+  var msg = slashHits + ' hits for ' + totalDmg + ' total! ' + combatEnemy.name + ' hits you for ' + combatEnemy.attack + '.';
+  nextCombatTurn(msg);
+}
+
+// Win: enemy defeated. Award XP, roll for a gear drop, mark it dead.
+function winCombat() {
+  updateCombatBars();
+  var name = combatEnemy.name;
+  var xp = combatEnemy.xpReward;
+  var enemyType = combatEnemy.type;
+  if (combatSource) {
+    combatSource.alive = false;
+    combatSource.respawnAt = Date.now() + 30000;
+  }
+  if (!player.killCounts) player.killCounts = {};
+  player.killCounts[enemyType] = (player.killCounts[enemyType] || 0) + 1;
+  closeCombat();
+  soundWin();
+  var isBoss = ENEMIES[enemyType] && ENEMIES[enemyType].boss;
+  if (isBoss) {
+    showToast('★ You defeated the ' + name + '! ★  +' + xp + ' XP');
+    speak('Amazing! You defeated the ' + name + '! You earned ' + xp + ' experience!');
+  } else {
+    showToast('You beat the ' + name + '! +' + xp + ' XP');
+    speak('You beat the ' + name + '! You earned ' + xp + ' experience.');
+  }
+  gainXp(xp);
+  // Roll the loot table for a gear drop.
+  var drop = rollLoot(enemyType);
+  if (drop) equipGear(drop);
+  checkKillQuest(enemyType);
+  updateHUD();
+  saveGame();
+}
+
+// Add XP and level up as many times as the new total allows. Leveling raises maxHp
+// and fully heals (a clean reward), with a toast + sound each time.
+function gainXp(amount) {
+  player.xp += amount;
+  while (player.xp >= xpForNextLevel()) {
+    player.xp -= xpForNextLevel();
+    player.level++;
+    player.maxHp += 5;
+    player.hp = player.maxHp;   // full heal on level up
+    soundLevelUp();
+    showToast('Level up! You are level ' + player.level + '!');
+    speak('Level up! You are now level ' + player.level + '.');
+  }
+}
+
+// Lose: respawn at the current area's entrance with full HP and NO penalty. Never punitive.
+// All enemies in this area stay/turn alive so the player can walk back and try again.
+function loseCombat() {
+  updateCombatBars();
+  closeCombat();
+  player.hp = player.maxHp;
+  player.x = 1 * TILE;   // just inside the left entrance of the current area
+  // Find the left-edge exit row so we spawn on the road
+  var faintRow = 9;
+  for (var fr = 0; fr < MAP_H; fr++) { if (map[fr][0] === EXIT) { faintRow = fr; break; } }
+  player.y = faintRow * TILE;
+  for (var i = 0; i < currentEnemies.length; i++) currentEnemies[i].alive = true;
+  wasNearEnemy = false;  // don't instantly re-trigger from the old position
+  showToast('You fainted! Back to the entrance, full HP.');
+  speak('You fainted! No worries — back to the start with full health.');
+  updateHUD();
+  saveGame();
+}
+
+// Pick the best food to eat (highest heal that won't over-heal too much, or just the best available).
+function bestFood() {
+  var best = null, bestHeal = 0;
+  for (var i = 0; i < FOOD_TYPES.length; i++) {
+    var fid = FOOD_TYPES[i];
+    if (player.food[fid] <= 0) continue;
+    var h = RECIPES[fid].heal;
+    if (h > bestHeal) { best = fid; bestHeal = h; }
+  }
+  return best;
+}
+
+// Eat food mid-combat: heals HP but costs your turn (enemy still attacks).
+function eatInCombat() {
+  if (!combatOpen || !combatEnemy) return;
+  var fid = bestFood();
+  if (!fid) return;
+  var rec = RECIPES[fid];
+  player.food[fid]--;
+  var healed = Math.min(rec.heal, player.maxHp - player.hp);
+  player.hp += healed;
+  soundEat();
+  var msg = 'Ate ' + rec.name + '! +' + healed + ' HP. ';
+  speak('You ate ' + rec.name + ' and healed ' + healed + ' health.');
+
+  // Enemy still attacks on your eat turn.
+  player.hp -= combatEnemy.attack;
+  soundHit();
+  if (player.hp <= 0) {
+    player.hp = 0;
+    loseCombat();
+    return;
+  }
+  msg += combatEnemy.name + ' hits you ' + combatEnemy.attack + '.';
+  nextCombatTurn(msg);
+}
+
+// Flee: close the battle, no harm done. The player can always walk back to retry.
+function fleeCombat() {
+  closeCombat();
+  showToast('You backed away.');
+}
+
+function closeCombat() {
+  combatOpen = false;
+  slashActive = false;
+  player.attacking = false;
+  player.attackFrame = 0;
+  clearTimeout(slashTimerId);
+  var zone = document.getElementById('slashZone');
+  if (zone) zone.style.display = 'none';
+  var overlay = document.getElementById('combatModal');
+  overlay.classList.remove('open');
+  overlay.classList.remove('slash-mode');
+  restoreFocus();
+}
+
+// ---- Cooking (slice 13a) ----
+// Walk up to the Farm cooking pot and turn crops into food. Each recipe shows its
+// ingredient cost and how much HP it heals — the hidden math is RATIO/efficiency
+// (most HP per crop). Cooked food is eaten to heal, which feeds straight back into
+// combat. Never a gate: you just cook what you have ingredients for.
+
+// Do we have the crops a recipe needs?
+function canCook(recipeId) {
+  var cost = RECIPES[recipeId].cost;
+  for (var crop in cost) {
+    if (player.crops[crop] < cost[crop]) return false;
+  }
+  return true;
+}
+
+// Short "2 turnip, 1 carrot" style ingredient summary for a recipe row.
+function recipeCostText(recipeId) {
+  var cost = RECIPES[recipeId].cost;
+  var parts = [];
+  for (var crop in cost) parts.push(cost[crop] + ' ' + CROPS[crop].name);
+  return parts.join(' + ');
+}
+
+function openCooking() {
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  cookingOpen = true;
+  document.getElementById('cookingModal').classList.add('open');
+  renderCooking();
+  speakToAll('Cook your crops into food. Which dish heals the most?');
+  focusModal('cookingModal');
+}
+
+// (Re)build the recipe rows and the "your food" rows from current state.
+function renderCooking() {
+  // Recipe rows: each shows ingredients + heal, with a Cook button (disabled if short).
+  var rbox = document.getElementById('recipeRows');
+  rbox.innerHTML = '';
+  for (var i = 0; i < FOOD_TYPES.length; i++) {
+    var id = FOOD_TYPES[i];
+    var rec = RECIPES[id];
+    var row = document.createElement('div');
+    row.className = 'shop-row';
+    var dot = document.createElement('span');
+    dot.className = 'crop-dot';
+    dot.style.background = rec.color;
+    var info = document.createElement('div');
+    info.className = 'shop-info';
+    info.innerHTML = '<b>' + rec.name + '</b> — heals ' + rec.heal +
+                     ' HP<small>needs ' + recipeCostText(id) + '</small>';
+    var btn = document.createElement('button');
+    btn.className = 'btn-buy';
+    btn.textContent = 'Cook';
+    btn.disabled = !canCook(id);
+    btn.dataset.recipe = id;
+    btn.addEventListener('click', onCookClick);
+    row.appendChild(dot); row.appendChild(info); row.appendChild(btn);
+    rbox.appendChild(row);
+  }
+
+  // Your-food rows: each food you own, with an Eat button (disabled when already full HP).
+  var fbox = document.getElementById('foodRows');
+  fbox.innerHTML = '';
+  var full = (player.hp >= player.maxHp);
+  var have = false;
+  for (var j = 0; j < FOOD_TYPES.length; j++) {
+    var fid = FOOD_TYPES[j];
+    if (player.food[fid] <= 0) continue;
+    have = true;
+    var frec = RECIPES[fid];
+    var frow = document.createElement('div');
+    frow.className = 'shop-row';
+    var fdot = document.createElement('span');
+    fdot.className = 'crop-dot';
+    fdot.style.background = frec.color;
+    var finfo = document.createElement('div');
+    finfo.className = 'shop-info';
+    finfo.innerHTML = '<b>' + frec.name + '</b> ×' + player.food[fid] +
+                      '<small>+' + frec.heal + ' HP</small>';
+    var fbtn = document.createElement('button');
+    fbtn.className = 'btn-sell';
+    fbtn.textContent = 'Eat';
+    fbtn.disabled = full;
+    fbtn.dataset.food = fid;
+    fbtn.addEventListener('click', onEatClick);
+    frow.appendChild(fdot); frow.appendChild(finfo); frow.appendChild(fbtn);
+    fbox.appendChild(frow);
+  }
+  document.getElementById('foodEmpty').style.display = have ? 'none' : 'block';
+  document.getElementById('cookHpLine').textContent =
+    'Your HP: ' + player.hp + '/' + player.maxHp + (full ? ' (full!)' : '');
+}
+
+function onCookClick(e) { cookRecipe(e.currentTarget.dataset.recipe); }
+function onEatClick(e)  { eatFood(e.currentTarget.dataset.food); }
+
+// Cook one portion: spend the crops, gain the food, then offer a doubling question.
+var doubleBatchRecipe = null;   // which recipe is pending its bonus question
+var doubleBatchAnswer = 0;      // the correct answer
+
+function cookRecipe(recipeId) {
+  if (!canCook(recipeId)) return;
+  var rec = RECIPES[recipeId];
+  for (var crop in rec.cost) player.crops[crop] -= rec.cost[crop];
+  player.food[recipeId]++;
+  soundCook();
+
+  // Offer a doubling question: answer right → free bonus portion.
+  var q = makeDoubleBatchQuestion(recipeId);
+  doubleBatchRecipe = recipeId;
+  doubleBatchAnswer = q.answer;
+  document.getElementById('doubleBatchQuestion').textContent = q.text;
+  speak('You cooked ' + rec.name + '! Bonus round: ' + spokenQuestion(q.text) + '?');
+
+  var box = document.getElementById('doubleBatchAnswers');
+  box.innerHTML = '';
+  var opts = makeOptions(q.answer);
+  for (var i = 0; i < opts.length; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'btn-answer';
+    btn.textContent = opts[i];
+    btn.dataset.value = opts[i];
+    btn.addEventListener('click', onDoubleBatchClick);
+    box.appendChild(btn);
+  }
+
+  document.getElementById('doubleBatchModal').classList.add('open');
+  focusModal('doubleBatchModal');
+}
+
+function makeDoubleBatchQuestion(recipeId) {
+  var rec = RECIPES[recipeId];
+  if (currentProfile === 'adventurer') {
+    // "If one batch heals 8, how much do two batches heal?"
+    var heal = rec.heal;
+    return { text: heal + ' × 2 = ?', answer: heal * 2 };
+  } else {
+    // Mage: simple addition doubling, kept small.
+    var a = 1 + Math.floor(Math.random() * 9); // 1..9
+    return { text: a + ' + ' + a + ' = ?', answer: a + a };
+  }
+}
+
+function onDoubleBatchClick(e) {
+  answerDoubleBatch(parseInt(e.currentTarget.dataset.value, 10));
+}
+
+function answerDoubleBatch(value) {
+  document.getElementById('doubleBatchModal').classList.remove('open');
+  restoreFocus();
+  var correct = (value === doubleBatchAnswer);
+  var rec = RECIPES[doubleBatchRecipe];
+  if (correct) {
+    player.food[doubleBatchRecipe]++;
+    soundCorrect();
+    showToast('Double batch! 2× ' + rec.name + '!');
+    speak('Correct! You got a double batch!');
+  } else {
+    showToast('Cooked ' + rec.name + '!');
+    speak('Good try! You still made one ' + rec.name + '.');
+  }
+  doubleBatchRecipe = null;
+  updateHUD();
+  renderCooking();
+  saveGame();
+}
+
+// Eat one portion: heal HP (capped at maxHp). No effect (and no waste) at full HP.
+function eatFood(foodId) {
+  if (player.food[foodId] <= 0) return;
+  if (player.hp >= player.maxHp) { showToast('Already full HP!'); return; }
+  var rec = RECIPES[foodId];
+  player.food[foodId]--;
+  var healed = Math.min(rec.heal, player.maxHp - player.hp);
+  player.hp += healed;
+  soundEat();
+  showToast('Ate ' + rec.name + '! +' + healed + ' HP');
+  speak('Yum! You healed ' + healed + ' health.');
+  updateHUD();
+  renderCooking();
+  saveGame();
+}
+
+function closeCooking() {
+  cookingOpen = false;
+  document.getElementById('cookingModal').classList.remove('open');
+  restoreFocus();
+}
+
+// ---- Shop open/close (walk-in building) ----
+function openShop() {
+  shopOpen = true;
+  document.getElementById('shopModal').classList.add('open');
+  updateHUD();
+  if (currentProfile === 'mage') {
+    var lines = 'Welcome to the store! You can buy seeds: ';
+    for (var si = 0; si < CROP_TYPES.length; si++) {
+      var ci = CROPS[CROP_TYPES[si]];
+      lines += ci.name + ' costs ' + ci.cost + ' gold and sells for ' + ci.sell + '. ';
+    }
+    lines += 'You can also buy a Heart Crystal for more health, or Training for more attack power. Which seed makes you the most gold?';
+    speak(lines);
+  } else {
+    speakToAll('Which seed makes you the most gold? Do the math!');
+  }
+  focusModal('shopModal');
+}
+function closeShop() {
+  shopOpen = false;
+  document.getElementById('shopModal').classList.remove('open');
+  restoreFocus();
+}
+
+// ---- Math-bonus auto-harvest (slice 7) ----
+// Answer one quick question right -> auto-harvest ALL ready crops in this area as a
+// BONUS. A wrong answer just means no bonus (you can still harvest by hand). It is
+// NEVER a gate: it only ever ADDS crops, never blocks or takes anything away.
+var mathOpen = false;
+var mathAnswer = 0;   // the correct answer to the current question
+
+// How many crops are ready to harvest in the area the player is standing in?
+function countReady() {
+  var n = 0;
+  for (var key in cropData) {
+    if (cropData[key].status === 'ready') n++;
+  }
+  return n;
+}
+
+// Build a question sized to the profile: adventurer = multiplication, mage = small sums (≤20).
+function makeQuestion() {
+  var a, b, text, answer;
+  if (currentProfile === 'adventurer') {
+    a = 2 + Math.floor(Math.random() * 8);   // 2..9
+    b = 2 + Math.floor(Math.random() * 8);   // 2..9
+    answer = a * b;
+    text = a + ' × ' + b + ' = ?';
+  } else {
+    // 'mage' (and any non-adventurer): addition with the total kept at or below 20.
+    a = 1 + Math.floor(Math.random() * 10);  // 1..10
+    b = 1 + Math.floor(Math.random() * (Math.min(10, 20 - a)));  // keeps a+b ≤ 20
+    answer = a + b;
+    text = a + ' + ' + b + ' = ?';
+  }
+  return { text: text, answer: answer };
+}
+
+// Three big-tap options: the correct answer plus two nearby (never negative) distractors.
+function makeOptions(answer) {
+  var opts = [answer];
+  var guard = 0;
+  while (opts.length < 3 && guard++ < 50) {
+    var delta = (1 + Math.floor(Math.random() * 4)) * (Math.random() < 0.5 ? -1 : 1);
+    var cand = answer + delta;
+    if (cand >= 0 && opts.indexOf(cand) === -1) opts.push(cand);
+  }
+  // shuffle
+  for (var i = opts.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = opts[i]; opts[i] = opts[j]; opts[j] = t;
+  }
+  return opts;
+}
+
+function openMathBonus() {
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  if (countReady() === 0) { showToast('No crops ready yet!'); return; }
+
+  var q = makeQuestion();
+  mathAnswer = q.answer;
+  document.getElementById('mathQuestion').textContent = q.text;
+  // Read the question aloud for the early-reader slot (e.g. "What is 3 plus 8?").
+  var spoken = q.text.replace('×', 'times').replace('+', 'plus').replace(' = ?', '');
+  speak('What is ' + spoken + '?');
+
+  var box = document.getElementById('mathAnswers');
+  box.innerHTML = '';
+  var opts = makeOptions(q.answer);
+  for (var i = 0; i < opts.length; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'btn-answer';
+    btn.textContent = opts[i];
+    btn.dataset.value = opts[i];
+    btn.addEventListener('click', onAnswerClick);
+    box.appendChild(btn);
+  }
+
+  mathOpen = true;
+  document.getElementById('mathModal').classList.add('open');
+  focusModal('mathModal');
+}
+
+function onAnswerClick(e) {
+  answerMath(parseInt(e.currentTarget.dataset.value, 10));
+}
+
+function answerMath(value) {
+  var correct = (value === mathAnswer);
+  closeMathBonus();
+  if (correct) {
+    var n = autoHarvestReady();
+    soundCorrect();
+    showToast('Correct! Bonus harvest +' + n + ' crops!');
+    speak('Correct! You harvested ' + n + ' crops!');
+  } else {
+    showToast('No bonus this time — harvest by hand!');
+    speak('Good try! Harvest by hand.');
+  }
+}
+
+function closeMathBonus() {
+  mathOpen = false;
+  document.getElementById('mathModal').classList.remove('open');
+  restoreFocus();
+}
+
+// Harvest every ready crop in the current area at once; returns how many were collected.
+function autoHarvestReady() {
+  var n = 0;
+  for (var key in cropData) {
+    if (cropData[key].status === 'ready') {
+      var type = cropData[key].type || 'turnip';
+      cropData[key].status = 'empty';
+      cropData[key].plantedAt = 0;
+      cropData[key].type = null;
+      var parts = key.split(',');
+      addPop(parseInt(parts[0], 10), parseInt(parts[1], 10), '+1');
+      player.crops[type]++;
+      n++;
+    }
+  }
+  if (n > 0) soundHarvest();
+  updateHUD();
+  saveGame();
+  return n;
+}
+
+// ---- Profiles & saving (localStorage, one save per kid) ----
+// SAVE FORMAT v2 (slice 14, audit-hardening). The save is now versioned and grouped:
+//   { version:2, area, x, y, player:{...}, areas:{ farm:{tiles}, town:{tiles}, wilds:{tiles} } }
+// `player` holds everything about the hero (gold, seeds, crops, combat, gear, food);
+// `areas.<name>.tiles` holds each area's per-plot soil state (keyed "row,col").
+// applyState() still loads every OLDER flat save (v1/v0: farmTiles/townTiles/tiles,
+// numeric seeds/crops) by normalizing it into the same shape — see normalizeSave().
+var SAVE_VERSION = 2;
+
+function defaultState() {
+  return {
+    version: SAVE_VERSION,
+    area: 'farm', x: 5 * TILE, y: 8 * TILE,
+    player: {
+      gold: 10,
+      seeds: { turnip: 4, carrot: 0, corn: 0, pumpkin: 0, starfruit: 0 },
+      crops: { turnip: 0, carrot: 0, corn: 0, pumpkin: 0, starfruit: 0 },
+      questsDone: 0,
+      hp: 20, maxHp: 20, level: 1, xp: 0, hpUpgrades: 0, atkUpgrades: 0,
+      gear: { weapon: null, head: null, body: null, cape: null },
+      inventory: [],
+      food: { veggie_soup: 0, carrot_stew: 0, corn_chowder: 0, pumpkin_pie: 0, starfruit_elixir: 0 }
+    },
+    areas: { farm: { tiles: null }, town: { tiles: null }, wilds: { tiles: null }, deepwoods: { tiles: null }, mine: { tiles: null } }
+  };
+}
+
+// Normalize ANY saved shape (v2 nested, or v1/v0 flat) into one predictable object:
+//   { area, x, y, p:{...player fields...}, tiles:{ farm, town, wilds } }
+// This is the single place that knows about old layouts, so applyState() below stays clean.
+function normalizeSave(s) {
+  s = s || {};
+  var out = { area: s.area, x: s.x, y: s.y, p: {}, tiles: {} };
+  if (s.version >= 2 && s.player) {
+    // v2: hero fields live under .player, soil under .areas.<name>.tiles
+    out.p = s.player;
+    out.tiles.farm      = (s.areas && s.areas.farm)      ? s.areas.farm.tiles      : null;
+    out.tiles.town      = (s.areas && s.areas.town)      ? s.areas.town.tiles      : null;
+    out.tiles.wilds     = (s.areas && s.areas.wilds)     ? s.areas.wilds.tiles     : null;
+    out.tiles.deepwoods = (s.areas && s.areas.deepwoods) ? s.areas.deepwoods.tiles : null;
+    out.tiles.mine      = (s.areas && s.areas.mine)      ? s.areas.mine.tiles      : null;
+  } else {
+    // v1/v0 (flat): hero fields sit directly on the save; soil under farmTiles/townTiles
+    // (and the very first single-area saves used `tiles` for the farm).
+    out.p = s;
+    out.tiles.farm      = s.farmTiles || s.tiles || null;
+    out.tiles.town      = s.townTiles || null;
+    out.tiles.wilds     = null;
+    out.tiles.deepwoods = null;
+    out.tiles.mine      = null;
+  }
+  return out;
+}
+
+// Restore one area's crops: reset all its plots, then lay saved progress back on.
+function restoreAreaCrops(name, tiles) {
+  initAreaCrops(name);
+  if (tiles) {
+    var crops = areas[name].crops;
+    for (var k in tiles) {
+      if (crops[k]) {
+        crops[k] = tiles[k];
+        // Old saves lack a type field; default active crops to turnip.
+        if (!crops[k].type && crops[k].status !== 'empty') crops[k].type = 'turnip';
+      }
+    }
+  }
+}
+
+function applyState(s) {
+  var n = normalizeSave(s);
+  var p = n.p;
+
+  player.gold = (p.gold != null) ? p.gold : 10;
+  player.questsDone = (p.questsDone != null) ? p.questsDone : 0;
+
+  // Combat fields (slice 10c). Old saves predate these — default to a fresh level-1
+  // hero at full HP so they load with no errors and no lost progress.
+  player.level = (p.level != null) ? p.level : 1;
+  player.maxHp = (p.maxHp != null) ? p.maxHp : 20;
+  player.hp = (p.hp != null) ? p.hp : player.maxHp;
+  if (player.hp > player.maxHp) player.hp = player.maxHp;   // guard against odd saves
+  player.xp = (p.xp != null) ? p.xp : 0;
+  // Heart Crystals bought (slice 19). Old saves predate it — default to 0.
+  player.hpUpgrades = (p.hpUpgrades != null) ? p.hpUpgrades : 0;
+  // Training sessions bought (slice 21). Old saves predate it — default to 0.
+  player.atkUpgrades = (p.atkUpgrades != null) ? p.atkUpgrades : 0;
+
+  // Gear (slice 10c-ii). Old saves have no gear field — default to all-empty slots.
+  if (p.gear) {
+    player.gear = {};
+    for (var gs = 0; gs < EQUIPMENT_SLOTS.length; gs++)
+      player.gear[EQUIPMENT_SLOTS[gs]] = p.gear[EQUIPMENT_SLOTS[gs]] || null;
+  } else {
+    player.gear = { weapon: null, head: null, body: null, cape: null };
+  }
+
+  // Spare-gear bag (slice 18). Old saves predate it — default to empty. Keep only ids
+  // that are real gear, so a corrupt/edited save can't break the shop's sell list.
+  player.inventory = [];
+  if (Array.isArray(p.inventory)) {
+    for (var iv = 0; iv < p.inventory.length; iv++)
+      if (GEAR[p.inventory[iv]]) player.inventory.push(p.inventory[iv]);
+  }
+
+  // Food (slice 13a). Old saves predate it — default to an empty larder.
+  player.food = {};
+  for (var fi = 0; fi < FOOD_TYPES.length; fi++)
+    player.food[FOOD_TYPES[fi]] = (p.food && p.food[FOOD_TYPES[fi]]) || 0;
+
+  // Kill quest tracking (slice 26). Old saves default to empty.
+  player.killCounts = p.killCounts || {};
+  player.killQuest = p.killQuest || null;
+
+  // Friendship meters (town villagers). Old saves default to 0.
+  player.friends = {};
+  for (var fi2 = 0; fi2 < NPCS.length; fi2++)
+    player.friends[NPCS[fi2].id] = (p.friends && p.friends[NPCS[fi2].id]) || 0;
+
+  // Old saves stored seeds/crops as plain numbers → convert to per-type objects.
+  if (typeof p.seeds === 'number' || p.seeds == null) {
+    var sc = (p.seeds != null) ? p.seeds : 4;
+    player.seeds = { turnip: sc, carrot: 0, pumpkin: 0 };
+  } else {
+    player.seeds = {};
+    for (var i = 0; i < CROP_TYPES.length; i++)
+      player.seeds[CROP_TYPES[i]] = p.seeds[CROP_TYPES[i]] || 0;
+  }
+  if (typeof p.crops === 'number' || p.crops == null) {
+    var cc = (p.crops != null) ? p.crops : 0;
+    player.crops = { turnip: cc, carrot: 0, pumpkin: 0 };
+  } else {
+    player.crops = {};
+    for (var i2 = 0; i2 < CROP_TYPES.length; i2++)
+      player.crops[CROP_TYPES[i2]] = p.crops[CROP_TYPES[i2]] || 0;
+  }
+
+  // Per-area soil state (farm/town/wilds). Wilds has no soil today, so its tiles stay
+  // empty — but the slot exists so future Wilds plots/chests can save with no new format.
+  restoreAreaCrops('farm', n.tiles.farm);
+  restoreAreaCrops('town', n.tiles.town);
+  restoreAreaCrops('wilds', n.tiles.wilds);
+  restoreAreaCrops('deepwoods', n.tiles.deepwoods);
+  restoreAreaCrops('mine', n.tiles.mine);
+
+  var area = areas[n.area] ? n.area : 'farm';   // accept any known area; default to farm
+  activateArea(area);
+
+  player.x = (n.x != null) ? n.x : 5 * TILE;
+  player.y = (n.y != null) ? n.y : 8 * TILE;
+
+  // Toggle visual overlays so saved gear shows on the sprite.
+  if (currentProfile) {
+    for (var vs = 0; vs < EQUIPMENT_SLOTS.length; vs++)
+      setVisualEquipment(currentProfile, EQUIPMENT_SLOTS[vs], !!player.gear[EQUIPMENT_SLOTS[vs]]);
+  }
+}
+
+function loadGame(profile) {
+  try {
+    var raw = localStorage.getItem('eldoria_save_' + profile);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function saveGame() {
+  if (!currentProfile) return;
+  var data = {
+    version: SAVE_VERSION,
+    area: currentArea,
+    x: player.x, y: player.y,
+    player: {
+      gold: player.gold, seeds: player.seeds, crops: player.crops,
+      questsDone: player.questsDone,
+      hp: player.hp, maxHp: player.maxHp, level: player.level, xp: player.xp,
+      hpUpgrades: player.hpUpgrades, atkUpgrades: player.atkUpgrades,
+      gear: player.gear, inventory: player.inventory, food: player.food,
+      killCounts: player.killCounts, killQuest: player.killQuest,
+      friends: player.friends
+    },
+    areas: {
+      farm:      { tiles: areas.farm.crops },
+      town:      { tiles: areas.town.crops },
+      wilds:     { tiles: areas.wilds.crops },
+      deepwoods: { tiles: areas.deepwoods.crops },
+      mine:      { tiles: areas.mine.crops }
+    }
+  };
+  try { localStorage.setItem('eldoria_save_' + currentProfile, JSON.stringify(data)); } catch (e) {}
+}
+
+// The neutral default label for each slot, shown until the player types their own name.
+var DEFAULT_NAMES = { adventurer: 'Adventurer', mage: 'Mage' };
+
+// What to show for a slot: the player's typed-in name, or the neutral default. The
+// typed name lives only in localStorage on this device — it is never in the game files.
+function profileDisplayName(id) {
+  try {
+    var n = localStorage.getItem('eldoria_name_' + id);
+    if (n && n.trim()) return n.trim();
+  } catch (e) {}
+  return DEFAULT_NAMES[id] || 'Hero';
+}
+
+// Saves from the first version were keyed by old slot ids that contained real names.
+// Copy an old save over to the new neutral id once, so existing progress is never lost.
+// Only runs when the new key is empty and the legacy key exists.
+var LEGACY_SAVE_KEY = { adventurer: 'eldoria_save_\x6c\x75\x6b\x65', mage: 'eldoria_save_\x68\x65\x6e\x72\x69\x6b' };
+function migrateLegacySave(id) {
+  try {
+    var oldKey = LEGACY_SAVE_KEY[id];
+    var newKey = 'eldoria_save_' + id;
+    if (oldKey && !localStorage.getItem(newKey) && localStorage.getItem(oldKey)) {
+      localStorage.setItem(newKey, localStorage.getItem(oldKey));
+    }
+  } catch (e) {}
+}
+
+// Repaint the two title-screen buttons with the current display names.
+function refreshTitleLabels() {
+  for (var id in DEFAULT_NAMES) {
+    var el = document.getElementById('label-' + id);
+    if (el) el.textContent = profileDisplayName(id);
+  }
+}
+
+// Let a player name (or rename) their hero. Stored locally only; kept short and tidy.
+function renameProfile(id) {
+  var name = prompt('What is your hero’s name?', profileDisplayName(id));
+  if (name === null) return;                 // cancelled
+  name = name.trim().slice(0, 16);
+  try {
+    if (name) localStorage.setItem('eldoria_name_' + id, name);
+    else localStorage.removeItem('eldoria_name_' + id);
+  } catch (e) {}
+  refreshTitleLabels();
+  if (currentProfile === id) {
+    document.getElementById('profileName').textContent = profileDisplayName(id);
+  }
+}
+
+// Pick a slot: migrate any old save, load it (or a fresh start), and begin playing.
+function selectProfile(id) {
+  currentProfile = id;
+  migrateLegacySave(id);
+  applyState(loadGame(id) || defaultState());
+  document.getElementById('profileName').textContent = profileDisplayName(id);
+  document.getElementById('titleScreen').classList.add('hide');
+  gameActive = true;
+  updateHUD();
+  if (!gameMuted) bgMusic.play().catch(function() {});
+}
+
+// Save and go back to the profile picker.
+function switchProfile() {
+  saveGame();
+  closeShop();
+  gameActive = false;
+  currentProfile = null;
+  bgMusic.pause();
+  document.getElementById('titleScreen').classList.remove('hide');
+}
+
+// Parent-gate: hold the Switch button for 2 seconds to prevent accidental profile switching.
+(function () {
+  var btn = document.getElementById('switchBtn');
+  var HOLD_MS = 2000;
+  var timer = null;
+  var startTime = 0;
+  var raf = null;
+
+  function updateLabel() {
+    var elapsed = Date.now() - startTime;
+    var remaining = Math.ceil((HOLD_MS - elapsed) / 1000);
+    if (remaining > 0) {
+      btn.textContent = 'Hold ' + remaining + '…';
+      raf = requestAnimationFrame(updateLabel);
+    }
+  }
+
+  function startHold(e) {
+    e.preventDefault();
+    startTime = Date.now();
+    timer = setTimeout(function () {
+      cancelAnimationFrame(raf);
+      btn.textContent = 'Switch';
+      switchProfile();
+    }, HOLD_MS);
+    updateLabel();
+  }
+
+  function cancelHold() {
+    if (timer) { clearTimeout(timer); timer = null; }
+    cancelAnimationFrame(raf);
+    btn.textContent = 'Switch';
+  }
+
+  btn.addEventListener('touchstart', startHold, { passive: false });
+  btn.addEventListener('touchend', cancelHold);
+  btn.addEventListener('touchcancel', cancelHold);
+  btn.addEventListener('mousedown', startHold);
+  btn.addEventListener('mouseup', cancelHold);
+  btn.addEventListener('mouseleave', cancelHold);
+})();
+
+// ---- Save tools (slice 14): export / import / reset, from the title screen ----
+// A small parent-facing backup panel. localStorage is easy to lose (a cleared browser,
+// a new device), so this lets you copy a save out as text and paste it back. All offline.
+var saveToolsProfile = 'adventurer';   // which slot the panel is acting on
+
+function openSaveTools() {
+  saveToolsProfile = 'adventurer';
+  document.getElementById('saveToolsText').value = '';
+  refreshSaveToolsUI();
+  document.getElementById('saveToolsModal').classList.add('open');
+  focusModal('saveToolsModal');
+}
+function closeSaveTools() {
+  document.getElementById('saveToolsModal').classList.remove('open');
+  restoreFocus();
+}
+function setSaveToolsProfile(id) {
+  saveToolsProfile = id;
+  document.getElementById('saveToolsText').value = '';
+  refreshSaveToolsUI();
+}
+// Highlight the active slot tab and label it with the hero's display name.
+function refreshSaveToolsUI() {
+  ['adventurer', 'mage'].forEach(function (id) {
+    var tab = document.getElementById('saveTab_' + id);
+    if (!tab) return;
+    tab.classList.toggle('active', id === saveToolsProfile);
+    tab.textContent = profileDisplayName(id);
+  });
+}
+// Export: dump the selected slot's raw save into the text box to copy somewhere safe.
+function exportSave() {
+  var raw = localStorage.getItem('eldoria_save_' + saveToolsProfile);
+  var name = profileDisplayName(saveToolsProfile);
+  if (!raw) { showToast('No save yet for ' + name); return; }
+  document.getElementById('saveToolsText').value = raw;
+  showToast('Exported ' + name + ' — copy the text!');
+}
+// Download: save as a .json file the kid can keep in Files / iCloud.
+function downloadSave() {
+  var raw = localStorage.getItem('eldoria_save_' + saveToolsProfile);
+  var name = profileDisplayName(saveToolsProfile);
+  if (!raw) { showToast('No save yet for ' + name); return; }
+  var blob = new Blob([raw], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'eldoria-' + saveToolsProfile + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Downloaded ' + name + "'s save!");
+}
+// Load file: read a .json backup from the device and import it.
+function loadSaveFile(evt) {
+  var file = evt.target.files && evt.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    var txt = (e.target.result || '').trim();
+    var name = profileDisplayName(saveToolsProfile);
+    try { JSON.parse(txt); } catch (err) { showToast("That file isn't a valid save."); return; }
+    try {
+      localStorage.setItem('eldoria_save_' + saveToolsProfile, txt);
+      showToast('Loaded ' + name + "'s save from file!");
+      document.getElementById('saveToolsText').value = txt;
+    } catch (err) { showToast('Could not save (storage full?).'); }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+// Import: validate pasted text is real JSON, then write it into the selected slot.
+function importSave() {
+  var txt = (document.getElementById('saveToolsText').value || '').trim();
+  var name = profileDisplayName(saveToolsProfile);
+  if (!txt) { showToast('Paste a backup first.'); return; }
+  try { JSON.parse(txt); } catch (e) { showToast("That isn't valid save text."); return; }
+  try {
+    localStorage.setItem('eldoria_save_' + saveToolsProfile, txt);
+    showToast('Imported into ' + name + '!');
+  } catch (e) { showToast('Could not save (storage full?).'); }
+}
+// Reset one slot (confirmed). Removes the save but keeps the typed-in hero name.
+function resetProfileSave() {
+  var name = profileDisplayName(saveToolsProfile);
+  if (!confirm('Erase ' + name + "'s save? This cannot be undone.")) return;
+  try { localStorage.removeItem('eldoria_save_' + saveToolsProfile); } catch (e) {}
+  document.getElementById('saveToolsText').value = '';
+  showToast(name + "'s save erased.");
+}
+// Reset ALL slots (confirmed) — a clean slate for both heroes.
+function resetAllSaves() {
+  if (!confirm('Erase ALL hero saves? This cannot be undone.')) return;
+  ['adventurer', 'mage'].forEach(function (id) {
+    try { localStorage.removeItem('eldoria_save_' + id); } catch (e) {}
+  });
+  document.getElementById('saveToolsText').value = '';
+  showToast('All saves erased.');
+}
+
+// ---- HUD ----
+function updateHUD() {
+  document.getElementById('gold').textContent = player.gold;
+  document.getElementById('seeds').textContent = totalSeeds();
+  document.getElementById('crops').textContent = totalCrops();
+  document.getElementById('food').textContent = totalFood();
+  document.getElementById('hp').textContent = player.hp;
+  document.getElementById('maxHp').textContent = player.maxHp;
+  document.getElementById('level').textContent = player.level;
+  // Disable each buy button if the player can't afford that seed type.
+  for (var i = 0; i < CROP_TYPES.length; i++) {
+    var btn = document.getElementById('btnBuy_' + CROP_TYPES[i]);
+    if (btn) btn.disabled = player.gold < CROPS[CROP_TYPES[i]].cost;
+  }
+  var btnSell = document.getElementById('btnSell');
+  var tc = totalCrops();
+  btnSell.disabled = tc === 0;
+  btnSell.textContent = tc > 0 ? 'Sell All Crops (' + sellTotal() + 'g)' : 'Sell All Crops';
+  var btnHeart = document.getElementById('btnBuyHeart');
+  if (btnHeart) {
+    var hp = heartCrystalPrice();
+    btnHeart.textContent = 'Buy ' + hp + 'g';
+    btnHeart.disabled = player.gold < hp;
+  }
+  var btnTrain = document.getElementById('btnBuyTraining');
+  if (btnTrain) {
+    var tp = trainingPrice();
+    btnTrain.textContent = 'Buy ' + tp + 'g';
+    btnTrain.disabled = player.gold < tp;
+  }
+  var qt = document.getElementById('questTracker');
+  if (qt) {
+    if (player.killQuest) {
+      var kq = player.killQuest;
+      qt.textContent = '⚔ ' + kq.name + ': ' + (kq.progress || 0) + '/' + kq.count;
+      qt.style.display = 'block';
+    } else {
+      qt.style.display = 'none';
+    }
+  }
+  renderGearSell();
+}
+
+// ---- Toast ----
+var toastTimer = null;
+function showToast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 1200);
+}
+
+// ---- Juice: sound, floating pops, and voiced text (slice 9) ----
+// All offline & built-in: WebAudio for blips, canvas text for pops, SpeechSynthesis
+// for reading prompts aloud to the early-reader slot. No assets, no network.
+
+// Sound: one shared AudioContext, unlocked on the first tap (browser autoplay rule).
+var audioCtx = null;
+function ensureAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { audioCtx = null; }
+}
+// Play a short tone. Used to build little chimes; safe to call even if audio failed.
+function playTone(freq, dur, type, delay) {
+  if (!audioCtx || gameMuted) return;
+  var t = audioCtx.currentTime + (delay || 0);
+  var osc = audioCtx.createOscillator();
+  var gain = audioCtx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.value = freq;
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0.18, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.start(t); osc.stop(t + dur);
+}
+function soundHarvest() { playTone(660, 0.12, 'triangle'); }
+function soundCoin()    { playTone(880, 0.08, 'square'); playTone(1320, 0.12, 'square', 0.07); }
+function soundCorrect() { playTone(523, 0.1, 'sine'); playTone(659, 0.1, 'sine', 0.1); playTone(784, 0.16, 'sine', 0.2); }
+// Combat blips (slice 10c): a thud when something gets hit, a fanfare on a win, a
+// rising arpeggio on level-up. All built-in WebAudio, no assets.
+function soundHit()      { playTone(150, 0.16, 'sawtooth'); }
+function soundWin()      { playTone(659, 0.1, 'triangle'); playTone(988, 0.18, 'triangle', 0.1); }
+function soundLevelUp()  { playTone(523, 0.12, 'sine'); playTone(659, 0.12, 'sine', 0.12); playTone(784, 0.12, 'sine', 0.24); playTone(1047, 0.22, 'sine', 0.36); }
+// Cooking blips (slice 13a): a soft "sizzle" when cooking, a warm chime when eating.
+function soundCook()     { playTone(420, 0.14, 'triangle'); playTone(560, 0.12, 'triangle', 0.08); }
+function soundEat()      { playTone(700, 0.1, 'sine'); playTone(950, 0.14, 'sine', 0.08); }
+
+// Floating "+1" pops that rise and fade above a tile.
+var pops = [];
+function addPop(row, col, text, color) {
+  pops.push({ wx: col * TILE + 8, wy: row * TILE, text: text, born: Date.now(), color: color || null });
+}
+
+// Screen shake state
+var shakeUntil = 0;
+var SHAKE_DURATION = 120;
+function triggerShake() { shakeUntil = Date.now() + SHAKE_DURATION; }
+
+// Voiced text — early-reader slot only. No-op for the older reader / unsupported browsers.
+function speak(text) {
+  if (currentProfile !== 'mage') return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+// Read aloud to BOTH boys (used for the shop hint nudge).
+function speakToAll(text) {
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+// ---- Update action button label based on what you're near ----
+function updateActionLabel() {
+  var btn = document.getElementById('actionBtn');
+  var tile = getFacingTile();
+  var canAct = false;   // is there something useful to do right here?
+  if (isNearDoor() && !shopOpen) {
+    btn.textContent = 'Shop';
+    canAct = true;
+  } else if (isNearEnemy()) {
+    btn.textContent = 'Fight';
+    canAct = true;
+  } else if (isNearNPC()) {
+    var nn = isNearNPC();
+    btn.textContent = nn.role === 'shop' ? 'Shop' : 'Talk';
+    canAct = true;
+  } else if (isNearCookpot()) {
+    btn.textContent = 'Cook';           // standing by the Farm pot → cooking modal
+    canAct = totalCrops() > 0 || totalFood() > 0;   // pulse if there's something to do
+  } else if (!tile) {
+    btn.textContent = 'Action';
+  } else {
+    var crop = cropData[tile.row + ',' + tile.col];
+    if (crop.status === 'empty') {
+      btn.textContent = 'Plant';
+      canAct = totalSeeds() > 0;          // pulse only if you actually have seeds
+    } else if (crop.status === 'growing') {
+      btn.textContent = 'Growing...';     // nothing to do yet → stay calm
+    } else if (crop.status === 'ready') {
+      btn.textContent = 'Harvest!';
+      canAct = true;
+    }
+  }
+  // Pulse the Action button when standing on something you can do.
+  btn.classList.toggle('ready', canAct);
+
+  // Bonus-Harvest button: pulse when crops are ready, dim when there's nothing to grab.
+  var ready = countReady() > 0;
+  var bonus = document.getElementById('bonusBtn');
+  bonus.classList.toggle('dim', !ready);
+  bonus.classList.toggle('ready', ready);
+}
+
+// ---- Movement ----
+function update() {
+  if (!gameActive) return;   // nothing happens until a profile is chosen
+  // Respawn dead enemies after their timer expires.
+  var now = Date.now();
+  for (var ri = 0; ri < currentEnemies.length; ri++) {
+    var re = currentEnemies[ri];
+    if (!re.alive && re.respawnAt && now >= re.respawnAt) {
+      re.alive = true;
+      re.respawnAt = 0;
+    }
+  }
+  // Freeze the player while a modal (shop, math bonus, quest, or battle) is open.
+  if (!shopOpen && !mathOpen && !seedPickerOpen && !questOpen && !combatOpen && !cookingOpen) {
+    var oldX = player.x, oldY = player.y;
+    var dx = 0, dy = 0;
+    if (held.left)  dx -= 1;
+    if (held.right) dx += 1;
+    if (held.up)    dy -= 1;
+    if (held.down)  dy += 1;
+
+    // A diagonal still uses one readable cardinal pose. Prefer the stronger axis;
+    // tied diagonals keep the horizontal direction.
+    if (dx !== 0 || dy !== 0) {
+      if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) player.facing = (dx < 0) ? 'left' : 'right';
+      else player.facing = (dy < 0) ? 'up' : 'down';
+    }
+
+    if (dx !== 0 && dy !== 0) {
+      dx *= 0.7071;
+      dy *= 0.7071;
+    }
+    dx *= player.speed;
+    dy *= player.speed;
+
+    if (dx !== 0 && !boxIsBlocked(player.x + dx, player.y)) player.x += dx;
+    if (dy !== 0 && !boxIsBlocked(player.x, player.y + dy)) player.y += dy;
+
+    // Only animate a walk when the player actually moved; pushing into a wall stays idle.
+    player.walking = (player.x !== oldX || player.y !== oldY);
+    if (player.walking) {
+      var walkNow = Date.now();
+      if (walkNow - player.walkLastAt >= WALK_FRAME_MS) {
+        player.walkFrame = (player.walkFrame + 1) % WALK_FRAMES;
+        player.walkLastAt = walkNow;
+      }
+    } else {
+      player.walkFrame = 0;
+    }
+  } else {
+    player.walking = false;
+    player.walkFrame = 0;
+  }
+
+  // Open the shop as soon as the player is on OR next to the door (forgiving entry).
+  wasNearDoor = isNearDoor();
+
+  // Walking into a live Wilds enemy starts a battle (auto-open, like the shop door).
+  // wasNearEnemy stops it from re-firing every frame, so fleeing then standing still
+  // won't instantly reopen it — you walk away and back to re-trigger.
+  var nearEnemy = isNearEnemy();
+  if (nearEnemy && !wasNearEnemy && !combatOpen && !shopOpen && !mathOpen && !questOpen && !seedPickerOpen) openCombat(nearEnemy);
+  wasNearEnemy = !!nearEnemy;
+
+  // Travel: stepping onto an EXIT road tile carries you to the other area.
+  checkTravel();
+
+  updateCrops();
+  updateActionLabel();
+}
+
+// ---- Area travel (walk onto an edge EXIT tile) ----
+function checkTravel() {
+  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  var col = Math.floor((player.x + player.size / 2) / TILE);
+  var row = Math.floor((player.y + player.size / 2) / TILE);
+  if (row < 0 || row >= MAP_H || col < 0 || col >= MAP_W) return;
+  if (map[row][col] !== EXIT) return;
+
+  // Areas sit in a line (farm — town — wilds). The LEFT-edge exit (col 0) goes to
+  // the previous area; the RIGHT-edge exit goes to the next one.
+  var goingLeft = (col === 0);
+  var idx = AREA_ORDER.indexOf(currentArea);
+  var dest = goingLeft ? AREA_ORDER[idx - 1] : AREA_ORDER[idx + 1];
+  if (!dest) return;   // no area that way (shouldn't happen — edge maps have one valid exit)
+
+  // Land just inside the destination's matching entrance: came from the left →
+  // arrive on its right side; came from the right → arrive on its left side.
+  activateArea(dest);
+  // Re-entering a combat area respawns its enemies so there's always something to fight.
+  for (var re = 0; re < currentEnemies.length; re++) currentEnemies[re].alive = true;
+  player.x = goingLeft ? (MAP_W - 2) * TILE : 1 * TILE;
+  // Spawn on the exit row of the destination area (find the first EXIT on the entry edge).
+  var entryCol = goingLeft ? MAP_W - 1 : 0;
+  var spawnRow = 9;
+  for (var sr = 0; sr < MAP_H; sr++) { if (map[sr][entryCol] === EXIT) { spawnRow = sr; break; } }
+  player.y = spawnRow * TILE;
+  wasNearDoor = false;   // don't auto-open the shop just from arriving
+  wasNearEnemy = false;  // don't auto-open the battle just from arriving
+  var msg = AREA_LABEL[dest];
+  showToast(msg);
+  speak(msg);
+  saveGame();
+}
+
+// Draw a small filled triangle "arrow" pointing in a direction (a clear visual cue).
+function drawArrow(cx, cy, size, dir, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  if (dir === 'down')      { ctx.moveTo(cx - size, cy - size); ctx.lineTo(cx + size, cy - size); ctx.lineTo(cx, cy + size); }
+  else if (dir === 'up')   { ctx.moveTo(cx - size, cy + size); ctx.lineTo(cx + size, cy + size); ctx.lineTo(cx, cy - size); }
+  else if (dir === 'left') { ctx.moveTo(cx + size, cy - size); ctx.lineTo(cx + size, cy + size); ctx.lineTo(cx - size, cy); }
+  else                     { ctx.moveTo(cx - size, cy - size); ctx.lineTo(cx - size, cy + size); ctx.lineTo(cx + size, cy); }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ---- Procedural decorations (placeholder shapes drawn until art replaces them) ----
+// Procedural NPC placeholder shapes — each villager is a distinct colored body + skin head.
+// Auto-replaced by npc_<id>.png when the art lands (same fallback pattern as enemies).
+function drawNpcShape(npc, nx, ny) {
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath();
+  ctx.ellipse(nx + 16, ny + 30, 10, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Body (tunic)
+  ctx.fillStyle = npc.color;
+  ctx.fillRect(nx + 7, ny + 10, 18, 20);
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 2;
+  ctx.strokeRect(nx + 7, ny + 10, 18, 20);
+  // Head
+  ctx.fillStyle = '#f0c8a0';
+  ctx.fillRect(nx + 10, ny + 2, 12, 10);
+  // Hair/hat per NPC
+  if (npc.id === 'bram') {
+    ctx.fillStyle = '#8b6914';
+    ctx.fillRect(nx + 8, ny + 1, 16, 4);
+  } else if (npc.id === 'gunnar') {
+    ctx.fillStyle = '#555';
+    ctx.fillRect(nx + 9, ny + 0, 14, 5);
+    // Anvil icon on apron
+    ctx.fillStyle = '#444';
+    ctx.fillRect(nx + 12, ny + 16, 8, 4);
+  } else {
+    ctx.fillStyle = '#7744aa';
+    ctx.fillRect(nx + 9, ny + 1, 14, 4);
+  }
+  // Name tag
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 7px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(npc.name, nx + 16, ny + 30);
+  ctx.textAlign = 'left';
+}
+
+// Fences and signposts are drawn with canvas shapes so the world reads richer without
+// needing PNGs yet. Each is purely decorative (no collision), like boulders/stumps.
+function drawProcDeco(d, dx, dy) {
+  // soft ground shadow for grounding
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath();
+  ctx.ellipse(dx + 16, dy + 28, 11, 3.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (d.proc === 'fence') {
+    // two horizontal rails spanning the full tile so adjacent fence tiles connect
+    ctx.fillStyle = '#8a5a2a';
+    ctx.fillRect(dx, dy + 13, TILE, 3);
+    ctx.fillRect(dx, dy + 20, TILE, 3);
+    // two posts
+    ctx.fillStyle = '#6a4420';
+    ctx.fillRect(dx + 4, dy + 9, 4, 20);
+    ctx.fillRect(dx + 24, dy + 9, 4, 20);
+    // dark outline accents
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(dx, dy + 15, TILE, 1);
+    ctx.fillRect(dx, dy + 22, TILE, 1);
+  } else if (d.proc === 'signpost') {
+    // post
+    ctx.fillStyle = '#6a4420';
+    ctx.fillRect(dx + 14, dy + 12, 4, 18);
+    // board
+    ctx.fillStyle = '#a9712f';
+    ctx.fillRect(dx + 3, dy + 6, 26, 12);
+    ctx.strokeStyle = '#5a3a1a';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(dx + 3, dy + 6, 26, 12);
+    // pointing arrow on the board toward the exit
+    if (d.dir) drawArrow(dx + 16, dy + 12, 4, d.dir, '#3a2410');
+    // optional small label above (helps the strong reader; the voiced area
+    // name on arrival covers the early reader)
+    if (d.label) {
+      ctx.fillStyle = '#fff2b0';
+      ctx.font = 'bold 8px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.label, dx + 16, dy + 3);
+      ctx.textAlign = 'left';
+    }
+  } else if (d.proc === 'well') {
+    // Stone well — circular stone rim with dark center
+    ctx.fillStyle = '#888';
+    ctx.beginPath();
+    ctx.ellipse(dx + 16, dy + 18, 12, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#223';
+    ctx.beginPath();
+    ctx.ellipse(dx + 16, dy + 18, 8, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Wooden crossbar + rope
+    ctx.fillStyle = '#6a4420';
+    ctx.fillRect(dx + 6, dy + 2, 3, 16);
+    ctx.fillRect(dx + 23, dy + 2, 3, 16);
+    ctx.fillRect(dx + 6, dy + 2, 20, 3);
+    ctx.fillStyle = '#aa8844';
+    ctx.fillRect(dx + 15, dy + 5, 2, 10);
+  }
+}
+
+// ---- Enemy placeholder shapes (one per type, so the kids can tell them apart) ----
+function drawEnemyShape(type, ex, ey, now) {
+  if (type === 'slime') {
+    ctx.fillStyle = '#5fa860';
+    ctx.fillRect(ex + 6, ey + 12, 20, 16);
+    ctx.fillStyle = '#3c7a40';
+    ctx.fillRect(ex + 6, ey + 22, 20, 6);
+    ctx.strokeStyle = '#244a26'; ctx.lineWidth = 2;
+    ctx.strokeRect(ex + 6, ey + 12, 20, 16);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(ex + 11, ey + 17, 3, 3);
+    ctx.fillRect(ex + 18, ey + 17, 3, 3);
+  } else if (type === 'bat') {
+    ctx.fillStyle = '#8866bb';
+    ctx.fillRect(ex + 10, ey + 14, 12, 10);
+    ctx.fillStyle = '#6644aa';
+    ctx.beginPath(); ctx.moveTo(ex + 10, ey + 14); ctx.lineTo(ex + 2, ey + 20); ctx.lineTo(ex + 10, ey + 22); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ex + 22, ey + 14); ctx.lineTo(ex + 30, ey + 20); ctx.lineTo(ex + 22, ey + 22); ctx.fill();
+    ctx.fillStyle = '#ff3333';
+    ctx.fillRect(ex + 13, ey + 17, 2, 2);
+    ctx.fillRect(ex + 18, ey + 17, 2, 2);
+  } else if (type === 'goblin') {
+    ctx.fillStyle = '#bb7744';
+    ctx.fillRect(ex + 8, ey + 10, 16, 18);
+    ctx.fillStyle = '#997733';
+    ctx.fillRect(ex + 8, ey + 22, 16, 6);
+    ctx.strokeStyle = '#664422'; ctx.lineWidth = 2;
+    ctx.strokeRect(ex + 8, ey + 10, 16, 18);
+    ctx.fillStyle = '#ccaa66';
+    ctx.beginPath(); ctx.arc(ex + 16, ey + 7, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ff4444';
+    ctx.fillRect(ex + 13, ey + 5, 2, 2);
+    ctx.fillRect(ex + 18, ey + 5, 2, 2);
+  } else if (type === 'wolf') {
+    // Gray body with pointed ears (lean and quick-looking).
+    ctx.fillStyle = '#888888';
+    ctx.fillRect(ex + 6, ey + 14, 20, 12);
+    ctx.beginPath(); ctx.moveTo(ex + 8, ey + 14); ctx.lineTo(ex + 11, ey + 7); ctx.lineTo(ex + 14, ey + 14); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ex + 18, ey + 14); ctx.lineTo(ex + 21, ey + 7); ctx.lineTo(ex + 24, ey + 14); ctx.fill();
+    ctx.fillStyle = '#5a5a5a';
+    ctx.fillRect(ex + 6, ey + 22, 20, 4);
+    ctx.fillStyle = '#ffdd33';
+    ctx.fillRect(ex + 11, ey + 18, 2, 2);
+    ctx.fillRect(ex + 19, ey + 18, 2, 2);
+  } else if (type === 'bear') {
+    // Big brown bulk with round ears (heavy bruiser).
+    ctx.fillStyle = '#7a5230';
+    ctx.fillRect(ex + 5, ey + 9, 22, 20);
+    ctx.fillStyle = '#5e3d22';
+    ctx.beginPath(); ctx.arc(ex + 9, ey + 9, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(ex + 23, ey + 9, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#422c18'; ctx.lineWidth = 2;
+    ctx.strokeRect(ex + 5, ey + 9, 22, 20);
+    ctx.fillStyle = '#ff4444';
+    ctx.fillRect(ex + 12, ey + 16, 2, 2);
+    ctx.fillRect(ex + 18, ey + 16, 2, 2);
+  } else if (type === 'troll') {
+    // Tall green brute (the toughest — biggest body, club).
+    ctx.fillStyle = '#6b8e4e';
+    ctx.fillRect(ex + 6, ey + 6, 18, 22);
+    ctx.fillStyle = '#557039';
+    ctx.fillRect(ex + 6, ey + 22, 18, 6);
+    ctx.strokeStyle = '#3c5026'; ctx.lineWidth = 2;
+    ctx.strokeRect(ex + 6, ey + 6, 18, 22);
+    // Crude club on the side.
+    ctx.fillStyle = '#7a5230';
+    ctx.fillRect(ex + 24, ey + 10, 4, 14);
+    ctx.fillStyle = '#ff3333';
+    ctx.fillRect(ex + 11, ey + 12, 2, 2);
+    ctx.fillRect(ex + 17, ey + 12, 2, 2);
+  } else if (type === 'shadow_warden') {
+    // The boss: a big dark figure filling the tile, with glowing cyan crystal eyes and a
+    // crystal blade, so it reads instantly as "this one is special / the final fight".
+    ctx.fillStyle = '#2a1f44';
+    ctx.fillRect(ex + 4, ey + 4, 22, 26);
+    ctx.fillStyle = '#3a2a5a';
+    ctx.fillRect(ex + 4, ey + 20, 22, 10);
+    ctx.strokeStyle = '#11091f'; ctx.lineWidth = 2;
+    ctx.strokeRect(ex + 4, ey + 4, 22, 26);
+    // Glowing crystal eyes (cyan, gently pulsing).
+    var glow = 0.6 + 0.4 * Math.sin(now / 200);
+    ctx.globalAlpha = glow;
+    ctx.fillStyle = '#66ffee';
+    ctx.fillRect(ex + 10, ey + 12, 3, 3);
+    ctx.fillRect(ex + 17, ey + 12, 3, 3);
+    ctx.globalAlpha = 1;
+    // Crystal blade jutting from its side.
+    ctx.fillStyle = '#9be7ff';
+    ctx.beginPath();
+    ctx.moveTo(ex + 27, ey + 6); ctx.lineTo(ex + 31, ey + 16); ctx.lineTo(ex + 27, ey + 26);
+    ctx.closePath(); ctx.fill();
+  } else if (type === 'rock_golem') {
+    // Blocky gray boulder-body with a cracked seam (heavy, slow-looking).
+    ctx.fillStyle = '#7d7468';
+    ctx.fillRect(ex + 5, ey + 8, 22, 21);
+    ctx.fillStyle = '#5f574d';
+    ctx.fillRect(ex + 5, ey + 22, 22, 7);
+    ctx.strokeStyle = '#3e382f'; ctx.lineWidth = 2;
+    ctx.strokeRect(ex + 5, ey + 8, 22, 21);
+    // A crack down the middle.
+    ctx.beginPath(); ctx.moveTo(ex + 16, ey + 8); ctx.lineTo(ex + 13, ey + 18); ctx.lineTo(ex + 17, ey + 29); ctx.stroke();
+    ctx.fillStyle = '#ffcc33';
+    ctx.fillRect(ex + 11, ey + 14, 3, 3);
+    ctx.fillRect(ex + 18, ey + 14, 3, 3);
+  } else if (type === 'magma_slug') {
+    // Glowing molten blob (like the slime, but red-hot and pulsing).
+    var heat = 0.6 + 0.4 * Math.sin(now / 180);
+    ctx.fillStyle = '#c0501f';
+    ctx.fillRect(ex + 5, ey + 12, 22, 16);
+    ctx.globalAlpha = heat;
+    ctx.fillStyle = '#ffcc33';
+    ctx.fillRect(ex + 8, ey + 20, 16, 6);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#7a2a0f'; ctx.lineWidth = 2;
+    ctx.strokeRect(ex + 5, ey + 12, 22, 16);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(ex + 11, ey + 16, 3, 3);
+    ctx.fillRect(ex + 18, ey + 16, 3, 3);
+  } else if (type === 'crystal_wyrm') {
+    // The Mine boss: a big teal serpent-head filling the tile, glowing crystal eyes and fangs.
+    ctx.fillStyle = '#27536b';
+    ctx.fillRect(ex + 4, ey + 4, 22, 26);
+    ctx.fillStyle = '#2f6e8f';
+    ctx.fillRect(ex + 4, ey + 18, 22, 12);
+    ctx.strokeStyle = '#0f2b38'; ctx.lineWidth = 2;
+    ctx.strokeRect(ex + 4, ey + 4, 22, 26);
+    // Glowing crystal eyes (pulsing).
+    var wglow = 0.6 + 0.4 * Math.sin(now / 200);
+    ctx.globalAlpha = wglow;
+    ctx.fillStyle = '#9be7ff';
+    ctx.fillRect(ex + 9, ey + 11, 4, 4);
+    ctx.fillRect(ex + 17, ey + 11, 4, 4);
+    ctx.globalAlpha = 1;
+    // Two crystal fangs.
+    ctx.fillStyle = '#dff6ff';
+    ctx.beginPath(); ctx.moveTo(ex + 11, ey + 24); ctx.lineTo(ex + 13, ey + 30); ctx.lineTo(ex + 15, ey + 24); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ex + 16, ey + 24); ctx.lineTo(ex + 18, ey + 30); ctx.lineTo(ex + 20, ey + 24); ctx.fill();
+  }
+  var eBob = Math.sin(now / 250) * 3;
+  ctx.fillStyle = '#ff5555';
+  ctx.beginPath();
+  ctx.arc(ex + TILE / 2, ey - 3 + eBob, 4, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ---- Draw ----
+function draw() {
+  var camX = player.x + player.size / 2 - canvas.width / 2;
+  var camY = player.y + player.size / 2 - canvas.height / 2;
+  var maxCamX = MAP_W * TILE - canvas.width;
+  var maxCamY = MAP_H * TILE - canvas.height;
+  camX = Math.max(0, Math.min(camX, maxCamX));
+  camY = Math.max(0, Math.min(camY, maxCamY));
+  // Snap the camera to whole pixels so every tile/sprite lands on an integer
+  // coordinate — fractional camX/camY (from player.speed) caused sub-pixel shimmer.
+  camX = Math.round(camX);
+  camY = Math.round(camY);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  var now = Date.now();
+
+  // Screen shake offset during combat hits
+  if (now < shakeUntil) {
+    var sx = (Math.random() - 0.5) * 8;
+    var sy = (Math.random() - 0.5) * 8;
+    ctx.save();
+    ctx.translate(sx, sy);
+  }
+
+  for (var r = 0; r < MAP_H; r++) {
+    for (var c = 0; c < MAP_W; c++) {
+      var sx = c * TILE - camX;
+      var sy = r * TILE - camY;
+      if (sx + TILE < 0 || sy + TILE < 0 || sx > canvas.width || sy > canvas.height) continue;
+
+      var tileType = map[r][c];
+      // Draw grass under tiles that have transparency (trees, houses, doors, exits)
+      if (tileType !== GRASS && tileType !== WATER && tileType !== SOIL && tileType !== PATH) {
+        var grassImg = spr('tile_' + GRASS);
+        if (grassImg) ctx.drawImage(grassImg, sx, sy, TILE, TILE);
+        else { ctx.fillStyle = TILE_COLOR[GRASS]; ctx.fillRect(sx, sy, TILE, TILE); }
+      }
+      // Skip HOUSE/DOOR tiles when we have the large shop building sprite
+      if ((tileType === HOUSE || tileType === DOOR) && currentArea === 'town' && spr('shop_building')) continue;
+      var tileImg = spr('tile_' + tileType);
+      if (tileType === GRASS && tileImg) {
+        var grassHash = (r * 31 + c * 17 + 7) % 5;
+        var gv = (grassHash === 1) ? spr('grass2') : (grassHash === 2) ? spr('grass3') : null;
+        ctx.drawImage(gv || tileImg, sx, sy, TILE, TILE);
+      } else if (tileImg) {
+        ctx.drawImage(tileImg, sx, sy, TILE, TILE);
+      } else {
+        // Fallback: the colored box (+ a subtle grass checker for texture).
+        ctx.fillStyle = TILE_COLOR[tileType];
+        ctx.fillRect(sx, sy, TILE, TILE);
+        if (tileType === GRASS && (r + c) % 2 === 0) {
+          ctx.fillStyle = 'rgba(0,0,0,0.06)';
+          ctx.fillRect(sx, sy, TILE, TILE);
+        }
+      }
+
+      // Tree shadow: a subtle dark ellipse at the base of each tree
+      if (tileType === TREE) {
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.beginPath();
+        ctx.ellipse(sx + TILE / 2, sy + TILE - 3, 12, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Water shimmer: a gentle moving highlight on water tiles
+      if (tileType === WATER) {
+        var waveOff = Math.sin((now / 600) + r * 1.3 + c * 0.7) * 0.12;
+        ctx.fillStyle = 'rgba(200,230,255,' + (0.08 + waveOff) + ')';
+        var wy = 4 + Math.sin((now / 800) + c * 2) * 3;
+        ctx.fillRect(sx + 2, sy + wy, TILE - 4, 3);
+        var wy2 = 18 + Math.sin((now / 700) + c * 1.5 + 2) * 3;
+        ctx.fillRect(sx + 6, sy + wy2, TILE - 10, 2);
+      }
+
+      // Draw crop overlays on soil tiles
+      if (tileType === SOIL) {
+        var key = r + ',' + c;
+        var crop = cropData[key];
+
+        if (crop && crop.status === 'growing') {
+          var ct = crop.type || 'turnip';
+          var ci = CROPS[ct];
+          var pct = Math.min((now - crop.plantedAt) / ci.grow, 1);
+          var growImg = spr('crop_growing');
+          if (growImg) {
+            var gh = Math.floor(TILE * (0.35 + 0.65 * pct));
+            ctx.drawImage(growImg, sx, sy + TILE - gh, TILE, gh);
+          } else {
+            // Fallback: colored sprout per crop type.
+            var sproutH = 4 + Math.floor(pct * 16);
+            ctx.fillStyle = ci.color;
+            ctx.fillRect(sx + 12, sy + TILE - sproutH - 2, 8, sproutH);
+          }
+        } else if (crop && crop.status === 'ready') {
+          var ct = crop.type || 'turnip';
+          var ci = CROPS[ct];
+          var readyImg = spr('crop_ready');
+          if (readyImg) {
+            ctx.drawImage(readyImg, sx, sy, TILE, TILE);
+          } else {
+            // Fallback: pulsing crop head in the type's ready color.
+            var pulse = 0.7 + 0.3 * Math.sin(now / 300);
+            ctx.globalAlpha = pulse;
+            ctx.fillStyle = ci.readyColor;
+            ctx.fillRect(sx + 4, sy + 4, 24, 24);
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = ci.color;
+            ctx.fillRect(sx + 12, sy + TILE - 22, 8, 20);
+          }
+          var cropBob = Math.sin(now / 200) * 3;
+          drawArrow(sx + TILE / 2, sy - 5 + cropBob, 6, 'down', '#fff2b0');
+        }
+
+        // Faint grid lines on soil so you can see plot boundaries
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sx + 0.5, sy + 0.5, TILE - 1, TILE - 1);
+      }
+
+      // EXIT road tile: pulsing border + an arrow pointing off-map ("walk here to travel").
+      if (tileType === EXIT) {
+        var ep = 0.5 + 0.5 * Math.abs(Math.sin(now / 350));
+        ctx.strokeStyle = 'rgba(255, 214, 102,' + ep + ')';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(sx + 1.5, sy + 1.5, TILE - 3, TILE - 3);
+        var edir = (c === 0) ? 'left' : (c === MAP_W - 1) ? 'right' : (r === 0) ? 'up' : 'down';
+        var slide = Math.abs(Math.sin(now / 250)) * 4;   // nudge toward the edge
+        var eax = sx + TILE / 2, eay = sy + TILE / 2;
+        if (edir === 'left')  eax -= slide; else if (edir === 'right') eax += slide;
+        else if (edir === 'up') eay -= slide; else eay += slide;
+        drawArrow(eax, eay, 8, edir, '#fff2b0');
+      }
+
+      // DOOR tile (the shop): pulsing border + a bobbing arrow pointing down at it.
+      if (tileType === DOOR) {
+        var dp = 0.5 + 0.5 * Math.abs(Math.sin(now / 350));
+        ctx.strokeStyle = 'rgba(255, 214, 102,' + dp + ')';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(sx + 1.5, sy + 1.5, TILE - 3, TILE - 3);
+        var doorBob = Math.sin(now / 200) * 3;
+        drawArrow(sx + TILE / 2, sy - 5 + doorBob, 6, 'down', '#fff2b0');
+      }
+    }
+  }
+
+  // Soft grass-fringe edges: where path/water/soil borders grass, draw a
+  // semi-transparent grass-colored strip bleeding inward, softening hard edges.
+  var edgeFringe = 6;
+  var grassEdgeColor = 'rgba(76,128,48,0.35)';
+  for (var r = 0; r < MAP_H; r++) {
+    for (var c = 0; c < MAP_W; c++) {
+      var tt = map[r][c];
+      if (tt !== PATH && tt !== WATER && tt !== SOIL) continue;
+      var ex = c * TILE - camX, ey = r * TILE - camY;
+      if (ex + TILE < 0 || ey + TILE < 0 || ex > canvas.width || ey > canvas.height) continue;
+      // Check each neighbor; if it's grass, draw a fringe on this tile's matching edge.
+      ctx.fillStyle = grassEdgeColor;
+      if (r > 0 && map[r - 1][c] === GRASS) ctx.fillRect(ex, ey, TILE, edgeFringe);
+      if (r < MAP_H - 1 && map[r + 1][c] === GRASS) ctx.fillRect(ex, ey + TILE - edgeFringe, TILE, edgeFringe);
+      if (c > 0 && map[r][c - 1] === GRASS) ctx.fillRect(ex, ey, edgeFringe, TILE);
+      if (c < MAP_W - 1 && map[r][c + 1] === GRASS) ctx.fillRect(ex + TILE - edgeFringe, ey, edgeFringe, TILE);
+    }
+  }
+
+  // Draw decorations (flowers, boulders, stumps) on top of ground tiles.
+  var decos = AREA_DECORATIONS[currentArea] || [];
+  for (var di = 0; di < decos.length; di++) {
+    var d = decos[di];
+    var dx = d.col * TILE - camX;
+    var dy = d.row * TILE - camY;
+    if (dx + TILE < 0 || dy + TILE < 0 || dx > canvas.width || dy > canvas.height) continue;
+    if (d.proc) {
+      var pimg = d.spr ? spr(d.spr) : null;   // a future PNG wins over the placeholder
+      if (pimg) ctx.drawImage(pimg, dx, dy, TILE, TILE);
+      else drawProcDeco(d, dx, dy);
+    } else {
+      var dimg = spr(d.spr);
+      if (dimg) ctx.drawImage(dimg, dx, dy, TILE, TILE);
+    }
+  }
+
+  // Highlight the tile the player is near (if soil) — blinking so it's unmissable.
+  var facing = getFacingTile();
+  if (facing) {
+    var hx = facing.col * TILE - camX;
+    var hy = facing.row * TILE - camY;
+    var hp = 0.45 + 0.55 * Math.abs(Math.sin(now / 250));
+    ctx.strokeStyle = 'rgba(255, 214, 102,' + hp + ')';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(hx + 1.5, hy + 1.5, TILE - 3, TILE - 3);
+  }
+
+  // Draw the shop building sprite + forge placeholder (overlays HOUSE tiles).
+  if (currentArea === 'town') {
+    // Building shadows (drawn behind the buildings)
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    var shx = TOWN_SHOP.col * TILE - camX;
+    var shy = TOWN_SHOP.row * TILE - camY;
+    ctx.fillRect(shx + 4, shy + TOWN_SHOP.h * TILE, TOWN_SHOP.w * TILE, 5);
+    ctx.fillRect(shx + TOWN_SHOP.w * TILE, shy + 4, 5, TOWN_SHOP.h * TILE);
+    var sfx = 20 * TILE - camX, sfy = 4 * TILE - camY;
+    ctx.fillRect(sfx + 4, sfy + 3 * TILE, 4 * TILE, 5);
+    ctx.fillRect(sfx + 4 * TILE, sfy + 4, 5, 3 * TILE);
+
+    var shopImg = spr('shop_building');
+    if (shopImg) {
+      var sx = TOWN_SHOP.col * TILE - camX;
+      var sy = TOWN_SHOP.row * TILE - camY;
+      ctx.drawImage(shopImg, sx, sy, TOWN_SHOP.w * TILE, TOWN_SHOP.h * TILE);
+    }
+    // Forge building placeholder (dark stone look)
+    var forgeImg = spr('forge_building');
+    var fx = 20 * TILE - camX, fy = 4 * TILE - camY;
+    if (forgeImg) {
+      ctx.drawImage(forgeImg, fx, fy, 4 * TILE, 3 * TILE);
+    } else {
+      ctx.fillStyle = '#5a4a3a';
+      ctx.fillRect(fx, fy, 4 * TILE, 3 * TILE);
+      ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 2;
+      ctx.strokeRect(fx, fy, 4 * TILE, 3 * TILE);
+      ctx.fillStyle = '#ff6622';
+      ctx.fillRect(fx + 20, fy + 60, 24, 12);
+      ctx.fillStyle = '#fff2b0'; ctx.font = 'bold 10px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('FORGE', fx + 2 * TILE, fy + 20);
+      ctx.textAlign = 'left';
+    }
+  }
+
+  // Draw all NPCs in the current area.
+  for (var ni = 0; ni < NPCS.length; ni++) {
+    var npc = NPCS[ni];
+    if (npc.area !== currentArea) continue;
+    var nx = npc.col * TILE - camX;
+    var ny = npc.row * TILE - camY;
+    var npcImg = spr('npc_' + npc.id);
+    if (npcImg) {
+      ctx.drawImage(npcImg, nx, ny, TILE, TILE);
+    } else {
+      drawNpcShape(npc, nx, ny);
+    }
+    // Bobbing "!" cue above the NPC
+    var npcBob = Math.sin(now / 250) * 3;
+    ctx.fillStyle = '#fff2b0';
+    ctx.font = 'bold 18px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('!', nx + TILE / 2, ny - 4 + npcBob);
+    ctx.textAlign = 'left';
+  }
+
+  // Draw the Farm cooking pot (placeholder: a dark pot over flickering flames).
+  if (currentArea === 'farm') {
+    var kx = FARM_COOKPOT.col * TILE - camX;
+    var ky = FARM_COOKPOT.row * TILE - camY;
+    var potImg = spr('cookpot');
+    if (potImg) {
+      ctx.drawImage(potImg, kx, ky, TILE, TILE);
+    } else {
+      var flick = 0.6 + 0.4 * Math.abs(Math.sin(now / 120));
+      ctx.fillStyle = 'rgba(255,150,40,' + flick + ')';
+      ctx.fillRect(kx + 10, ky + 22, 12, 6);
+      ctx.fillStyle = '#3a3a3a';
+      ctx.fillRect(kx + 7, ky + 12, 18, 12);
+      ctx.fillStyle = '#555';
+      ctx.fillRect(kx + 6, ky + 11, 20, 3);
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(kx + 7, ky + 12, 18, 12);
+    }
+    var potBob = Math.sin(now / 250) * 3;
+    ctx.fillStyle = '#ffe0a0';
+    ctx.font = 'bold 16px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🍲', kx + TILE / 2, ky - 4 + potBob);
+    ctx.textAlign = 'left';
+  }
+
+  // Draw all alive enemies in the current combat area. Each type gets a distinct
+  // placeholder shape so the kids can read difficulty at a glance.
+  for (var we = 0; we < currentEnemies.length; we++) {
+    var wen = currentEnemies[we];
+    if (!wen.alive) continue;
+    var ex = wen.col * TILE - camX;
+    var ey = wen.row * TILE - camY;
+    var enemyImg = spr('enemy_' + wen.type);
+    if (enemyImg) {
+      ctx.drawImage(enemyImg, ex, ey, TILE, TILE);
+      var eBob2 = Math.sin(now / 250) * 3;
+      ctx.fillStyle = '#ff5555';
+      ctx.beginPath(); ctx.arc(ex + TILE / 2, ey - 3 + eBob2, 4, 0, Math.PI * 2); ctx.fill();
+    } else {
+      drawEnemyShape(wen.type, ex, ey, now);
+    }
+  }
+
+  // Draw player
+  var px = player.x - camX;
+  var py = player.y - camY;
+  var profilePlayerImg = profilePlayerSprite();
+  var playerAttackImg = playerAttackSprite();
+  var playerWalkImg = playerWalkSprite();
+  var playerImg = playerAttackImg || playerWalkImg || playerSprite();
+  var spriteMode = playerAttackImg ? 'attack' : (playerWalkImg ? 'walk' : null);
+  var pdx = px + player.size / 2 - TILE / 2;
+  var pdy = py + player.size - TILE;
+
+  // Advance attack animation frames
+  if (player.attacking) {
+    var atkNow = Date.now();
+    if (atkNow - player.attackLastAt >= ATTACK_FRAME_MS) {
+      player.attackFrame = (player.attackFrame + 1) % ATTACK_FRAMES;
+      player.attackLastAt = atkNow;
+    }
+  }
+
+  // Capes sit behind the base sprite; armor, helmets, and weapons sit on top.
+  // Only draw overlays with their matching profile base, never over legacy art.
+  if (profilePlayerImg) {
+    var capeWalkImg = equipmentWalkSprite('cape');
+    var capeImg = capeWalkImg || equipmentSprite('cape');
+    if (capeImg) drawSpriteFrame(capeImg, spriteMode === 'walk' ? 'walk' : null, pdx, pdy);
+  }
+  if (playerImg) {
+    drawSpriteFrame(playerImg, spriteMode, pdx, pdy);
+    if (profilePlayerImg && spriteMode === 'attack') {
+      var bodyAtkImg = equipmentAttackSprite('body');
+      var headAtkImg = equipmentAttackSprite('head');
+      var weaponAtkImg = equipmentAttackSprite('weapon');
+      if (bodyAtkImg) drawSpriteFrame(bodyAtkImg, 'attack', pdx, pdy);
+      if (headAtkImg) drawSpriteFrame(headAtkImg, 'attack', pdx, pdy);
+      if (weaponAtkImg) drawSpriteFrame(weaponAtkImg, 'attack', pdx, pdy);
+    } else if (profilePlayerImg) {
+      var bodyWalkImg = equipmentWalkSprite('body');
+      var headWalkImg = equipmentWalkSprite('head');
+      var weaponWalkImg = equipmentWalkSprite('weapon');
+      var bodyImg = bodyWalkImg || equipmentSprite('body');
+      var headImg = headWalkImg || equipmentSprite('head');
+      var weaponImg = weaponWalkImg || equipmentSprite('weapon');
+      if (bodyImg) drawSpriteFrame(bodyImg, playerWalkImg ? 'walk' : null, pdx, pdy);
+      if (headImg) drawSpriteFrame(headImg, playerWalkImg ? 'walk' : null, pdx, pdy);
+      if (weaponImg) drawSpriteFrame(weaponImg, playerWalkImg ? 'walk' : null, pdx, pdy);
+    }
+  } else {
+    // Fallback: the yellow box with a directional nose so you can tell which way you face.
+    ctx.fillStyle = '#ffd666';
+    ctx.fillRect(px, py, player.size, player.size);
+    ctx.strokeStyle = '#3a2800';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px, py, player.size, player.size);
+    // Small dark triangle pointing in player.facing direction.
+    var cx = px + player.size / 2;
+    var cy = py + player.size / 2;
+    var ns = 5; // nose size
+    ctx.fillStyle = '#3a2800';
+    ctx.beginPath();
+    if (player.facing === 'down') {
+      ctx.moveTo(cx, cy + ns + 4); ctx.lineTo(cx - ns, cy + 2); ctx.lineTo(cx + ns, cy + 2);
+    } else if (player.facing === 'up') {
+      ctx.moveTo(cx, cy - ns - 4); ctx.lineTo(cx - ns, cy - 2); ctx.lineTo(cx + ns, cy - 2);
+    } else if (player.facing === 'left') {
+      ctx.moveTo(cx - ns - 4, cy); ctx.lineTo(cx - 2, cy - ns); ctx.lineTo(cx - 2, cy + ns);
+    } else {
+      ctx.moveTo(cx + ns + 4, cy); ctx.lineTo(cx + 2, cy - ns); ctx.lineTo(cx + 2, cy + ns);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Floating "+1" harvest pops: rise and fade, then drop off the list.
+  var keep = [];
+  ctx.font = 'bold 18px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  for (var i = 0; i < pops.length; i++) {
+    var p = pops[i];
+    var age = now - p.born;
+    if (age > 900) continue;
+    var sx = p.wx - camX;
+    var sy = p.wy - camY - (age / 900) * 30;
+    ctx.globalAlpha = 1 - age / 900;
+    ctx.strokeStyle = '#1a0a00';
+    ctx.lineWidth = 3;
+    ctx.strokeText(p.text, sx, sy);
+    ctx.fillStyle = p.color || '#fff2b0';
+    ctx.fillText(p.text, sx, sy);
+    ctx.globalAlpha = 1;
+    keep.push(p);
+  }
+  ctx.textAlign = 'left';
+  pops = keep;
+
+  // End screen shake
+  if (now < shakeUntil) ctx.restore();
+}
+
+// ---- Main loop ----
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ---- Virtual joystick ----
+var joystickZone = document.getElementById('joystickZone');
+var joystickThumb = document.getElementById('joystickThumb');
+var joystickActive = false;
+var joystickId = null;
+var JOYSTICK_RADIUS = 70;
+var JOYSTICK_DEAD = 0.2;
+
+function joystickUpdate(cx, cy) {
+  var rect = joystickZone.getBoundingClientRect();
+  var ox = cx - (rect.left + rect.width / 2);
+  var oy = cy - (rect.top + rect.height / 2);
+  var dist = Math.sqrt(ox * ox + oy * oy);
+  var maxDist = JOYSTICK_RADIUS - 27;
+  if (dist > maxDist) { ox = ox / dist * maxDist; oy = oy / dist * maxDist; }
+  joystickThumb.style.left = (JOYSTICK_RADIUS - 27 + ox) + 'px';
+  joystickThumb.style.top  = (JOYSTICK_RADIUS - 27 + oy) + 'px';
+  var nx = dist > 0 ? ox / maxDist : 0;
+  var ny = dist > 0 ? oy / maxDist : 0;
+  held.left  = nx < -JOYSTICK_DEAD;
+  held.right = nx >  JOYSTICK_DEAD;
+  held.up    = ny < -JOYSTICK_DEAD;
+  held.down  = ny >  JOYSTICK_DEAD;
+}
+
+function joystickReset() {
+  joystickActive = false;
+  joystickId = null;
+  joystickThumb.style.left = '43px';
+  joystickThumb.style.top  = '43px';
+  held.left = held.right = held.up = held.down = false;
+}
+
+joystickZone.addEventListener('pointerdown', function(e) {
+  e.preventDefault();
+  joystickActive = true;
+  joystickId = e.pointerId;
+  joystickZone.setPointerCapture(e.pointerId);
+  joystickUpdate(e.clientX, e.clientY);
+});
+joystickZone.addEventListener('pointermove', function(e) {
+  if (joystickActive && e.pointerId === joystickId) {
+    e.preventDefault();
+    joystickUpdate(e.clientX, e.clientY);
+  }
+});
+joystickZone.addEventListener('pointerup', function(e) {
+  if (e.pointerId === joystickId) joystickReset();
+});
+joystickZone.addEventListener('pointercancel', function(e) {
+  if (e.pointerId === joystickId) joystickReset();
+});
+
+// ---- Action button ----
+document.getElementById('actionBtn').addEventListener('pointerdown', function(e) {
+  e.preventDefault();
+  this.classList.add('flash');
+  doAction();
+  var self = this;
+  setTimeout(function() { self.classList.remove('flash'); }, 150);
+});
+
+// ---- Bonus-Harvest button: opens the quick math question ----
+document.getElementById('bonusBtn').addEventListener('pointerdown', function(e) {
+  e.preventDefault();
+  openMathBonus();
+});
+
+// ---- Keyboard controls ----
+var KEY_DIR = {
+  ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+  w: 'up', s: 'down', a: 'left', d: 'right'
+};
+window.addEventListener('keydown', function (e) {
+  if (KEY_DIR[e.key]) {
+    var dir = KEY_DIR[e.key];
+    held[dir] = true;
+    player.facing = dir;
+    e.preventDefault();
+  }
+  // Space or E = action
+  if (e.key === ' ' || e.key === 'e' || e.key === 'E') { doAction(); e.preventDefault(); }
+  // Escape closes whichever modal is open
+  if (e.key === 'Escape' && seedPickerOpen) closeSeedPicker();
+  if (e.key === 'Escape' && questOpen) closeQuest();
+  if (e.key === 'Escape' && shopOpen) closeShop();
+  if (e.key === 'Escape' && mathOpen) closeMathBonus();
+  if (e.key === 'Escape' && combatOpen) fleeCombat();
+  if (e.key === 'Escape' && cookingOpen) closeCooking();
+  if (e.key === 'Escape' && document.getElementById('saveToolsModal').classList.contains('open')) closeSaveTools();
+});
+window.addEventListener('keyup', function (e) {
+  if (KEY_DIR[e.key]) { held[KEY_DIR[e.key]] = false; e.preventDefault(); }
+});
+
+// Unlock/resume audio on the first touch or key (browsers block audio until then).
+window.addEventListener('pointerdown', ensureAudio);
+window.addEventListener('keydown', ensureAudio);
+
+// Recover audio after iPad tab/app switch — iOS suspends AudioContext on blur.
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden || gameMuted || !gameActive) return;
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  bgMusic.play().catch(function () {});
+});
+
+// ---- Start ----
+refreshTitleLabels();   // show any previously-saved hero names on the title screen
+updateHUD();
+loop();
+// Autosave the current profile every few seconds (covers walking/position changes).
+setInterval(function () { if (gameActive) saveGame(); }, 3000);
+</script>
+
+</body>
+</html>

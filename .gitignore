@@ -1,0 +1,23 @@
+# OS / editor cruft
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Node (only if a helper tool ever gets installed; the game itself stays dependency-free)
+node_modules/
+npm-debug.log*
+
+# Local test/dev scratch output (not part of the game)
+.playwright-mcp/
+.lighthouseci/
+_srv_out.txt
+_srv_err.txt
+
+# Raw ChatGPT sprite exports — large source images, processed into assets/ by
+# tools/process-sprite.mjs. Keep them local; only the processed PNGs get committed.
+art-incoming/
+
+# Scratch art / reference images with real names in their filenames.
+# Keep them local; a stray `git add -A` must never stage them.
+eldoria-*luke*
+eldoria-*henrik*
