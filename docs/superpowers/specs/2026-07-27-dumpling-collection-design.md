@@ -91,6 +91,13 @@ could over-power; if the combat fix is greenlit separately, these numbers stay s
   - 10 pulls = **150g** (15g each)
   - The kid compares cost-per-pull — the same "which is the best deal?" lesson the crop shop
     already teaches. Passive; never a gate.
+- **Farm linkage (owner-approved 2026-07-28):**
+  - Keep seed costs and growth times unchanged so cooking and the familiar farming rhythm are not
+    made more expensive.
+  - Sale values are turnip 3g, carrot 5g, corn 7g, pumpkin 9g, and starfruit 17g.
+  - After replacing seeds, a full 25-plot ordinary harvest nets 25g; starfruit nets 50g.
+    This makes an ordinary full harvest fund one single pull and a premium full harvest fund the
+    discounted three-pull bundle.
 - **Roll:** pick a rarity band by weighted roll (reuse the existing weighted-chance pattern from
   `rollLoot`, index.html ~line 1899), then pick a dumpling uniformly within that band.
 - **Pity:** track `pullsSinceLegendary`. If a pull would be the 15th since the last Legendary and
@@ -135,7 +142,7 @@ could over-power; if the combat fix is greenlit separately, these numbers stay s
 ## 6. Duplicates & dumpling dough
 
 - Pulling a dumpling you already own:
-  - grants a small **instant gold refund (~8g)**, and
+  - grants a small **instant gold refund (4g)**, and
   - grants **+1 dumpling dough**.
 - **10 dough** → redeem to **hand-pick any dumpling you don't yet own** (guaranteed completion path).
 - This makes every pull feel rewarding and guarantees a kid can reach 18/18 without infinite luck.
