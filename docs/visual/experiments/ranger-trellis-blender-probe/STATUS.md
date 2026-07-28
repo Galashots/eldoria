@@ -103,18 +103,24 @@ Ranger proof machine gates passed; deterministic=true
 
 **This is the first time that harness has run against real rendered art rather than its synthetic self-test fixtures.** That is a genuine result for Track 2: the harness works on real input, and the 3D→normalize path can satisfy it.
 
-### `npm test` — pre-existing failure on `main`, not caused by this probe
+### `npm test` — Windows-local only; `main` CI is green
 
-`npm test` fails at its first step, `assets:build`:
+**Correction.** An earlier revision of this document claimed `npm test` was a "pre-existing failure on `main`" and a "red baseline" to be flagged to Track 2 mainline. **That claim was wrong and is withdrawn.**
+
+`main` CI is green. So is PR #11's branch. Verified with `gh run list`: every recent `ci` run on `main` concluded `success`, including the most recent at the time of writing.
+
+What is true is narrower: `npm test` fails **on this Windows workstation** at its first step, `assets:build`:
 
 ```
 Error: corn committed pixels differ at 139,37
   at tools/process-crop-sheet.mjs
 ```
 
-I verified this is a red baseline, not a regression: checking out clean `main` (`8fedcaf`) in a throwaway worktree and running `node tools/process-crop-sheet.mjs` reproduces the identical error. This probe touches only `.gitignore` and two new directories; `process-crop-sheet.mjs` reads `art/source/crops/crop-family-source.png` and writes `assets/iso/`, neither of which this branch modifies.
+It does reproduce on clean `main` in a throwaway worktree, which is what led to the original mistake — I treated "reproduces on clean `main` locally" as equivalent to "`main` is broken" without checking CI. The two are not the same, and CI is the authority.
 
-Flagging it for whoever owns Track 2 mainline. I have **not** fixed it — it is outside this probe's scope and touching `assets/iso/` would collide with the isometric slice work.
+Probable cause, stated as inference rather than proof: `tools/process-crop-sheet.mjs` rasterizes inside a Puppeteer page `evaluate` (the stack trace confirms the failure is in-page), and `assertPixelEquivalent` asserts **exact byte-equality** against committed assets. Canvas rasterization is not guaranteed bit-identical across platforms and Chrome builds. The committed assets are produced by CI on `ubuntu-latest` with Node 22; local Windows Chrome differs by a pixel. I have not isolated this to a specific Chrome/Skia version, so treat it as the leading explanation, not a diagnosis.
+
+Consequence worth recording: `npm test` currently cannot be used as a local pre-push gate on Windows. That is a developer-experience wart for Track 2 mainline to weigh — the fix would mean relaxing an exact-equality guarantee the repo deliberately chose, which is an owner call, not a probe call. Nothing here is fixed by this probe, and nothing needed to be.
 
 ## Honest visual assessment — where this fails
 
