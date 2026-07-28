@@ -778,6 +778,23 @@ var TILE = 32;
 var MAP_W = 30;
 var MAP_H = 22;
 
+// ---- Iso math (Phase 0) ----
+// True 2:1 isometric as a RENDER-ONLY transform over the unchanged world space.
+// See docs/superpowers/specs/2026-07-27-isometric-conversion-design.md (sections 5, 5b, 6).
+var ISO_TW = 64, ISO_TH = 32;            // ground diamond size in projected px
+var ISO_X_OFF = MAP_H * TILE;            // shifts projected x non-negative (704)
+var TARGET_VIEW_ROWS = 14;               // vertical FOV in world rows — the ONE zoom knob
+
+function isoPX(px, py) { return (px - py) + ISO_X_OFF; }
+function isoPY(px, py) { return (px + py) / 2; }
+function isoInvX(sx, sy) { return sy + (sx - ISO_X_OFF) / 2; }
+function isoInvY(sx, sy) { return sy - (sx - ISO_X_OFF) / 2; }
+// Screen-relative joystick: screen vector -> world vector (inverse projection, offset-free).
+function isoInputX(jx, jy) { return jy + jx / 2; }
+function isoInputY(jx, jy) { return jy - jx / 2; }
+// Painter's-algorithm sort key: larger = nearer the viewer, drawn later.
+function isoDepthKey(px, py) { return px + py; }
+
 // ---- Tile types ----
 var GRASS = 0, WATER = 1, TREE = 2, SOIL = 3, PATH = 4, HOUSE = 5, DOOR = 6, EXIT = 7;
 
