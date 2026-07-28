@@ -97,5 +97,23 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Suite 6: screen-relative movement ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    player.x = 10 * 32; player.y = 10 * 32;   // open grass, no collisions
+    var sy0 = isoPY(player.x, player.y);
+    var sx0 = isoPX(player.x, player.y);
+    __isoTestMove(0, -1, 30);                  // push straight up for 30 frames
+    var sy1 = isoPY(player.x, player.y);
+    var sx1 = isoPX(player.x, player.y);
+    return { rose: sy1 < sy0, drift: Math.abs(sx1 - sx0) };
+  });
+  check('input: pushing up moves hero up-screen', r.rose === true);
+  check('input: no sideways drift on pure-up', r.drift < 1);
+  await browser.close();
+}
+
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');

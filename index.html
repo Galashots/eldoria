@@ -829,6 +829,23 @@ function isoInputY(jx, jy) { return jy - jx / 2; }
 // Painter's-algorithm sort key: larger = nearer the viewer, drawn later.
 function isoDepthKey(px, py) { return px + py; }
 
+// Test hook: run the movement step N times with a fixed joystick vector. Used only by
+// tools/iso-test.mjs; harmless in play (nothing calls it). Mirrors the live movement
+// block's iso transform exactly.
+function __isoTestMove(jx, jy, frames) {
+  for (var i = 0; i < frames; i++) {
+    var dx = jx, dy = jy;
+    if (isoActive() && (dx !== 0 || dy !== 0)) {
+      var wx = isoInputX(dx, dy), wy = isoInputY(dx, dy);
+      var wl = Math.sqrt(wx * wx + wy * wy);
+      dx = wx / wl; dy = wy / wl;
+    }
+    dx *= 2; dy *= 2;   // 2 px/frame, matching the walk speed order of magnitude
+    if (dx !== 0 && !boxIsBlocked(player.x + dx, player.y)) player.x += dx;
+    if (dy !== 0 && !boxIsBlocked(player.x, player.y + dy)) player.y += dy;
+  }
+}
+
 // ---- Tile types ----
 var GRASS = 0, WATER = 1, TREE = 2, SOIL = 3, PATH = 4, HOUSE = 5, DOOR = 6, EXIT = 7;
 
@@ -3311,6 +3328,18 @@ function update() {
     if (held.up)    dy -= 1;
     if (held.down)  dy += 1;
 
+    // Iso mode: the joystick is SCREEN-relative (up = up on screen). Convert the screen
+    // vector to a UNIT world vector through the inverse projection; facing then derives
+    // from world motion, matching the facing->sprite mapping in the iso pipeline doc.
+    var isoMoved = false;
+    if (typeof isoActive === 'function' && isoActive() && (dx !== 0 || dy !== 0)) {
+      var wvx = isoInputX(dx, dy), wvy = isoInputY(dx, dy);
+      var wvl = Math.sqrt(wvx * wvx + wvy * wvy);
+      dx = wvx / wvl;
+      dy = wvy / wvl;
+      isoMoved = true;
+    }
+
     // A diagonal still uses one readable cardinal pose. Prefer the stronger axis;
     // tied diagonals keep the horizontal direction.
     if (dx !== 0 || dy !== 0) {
@@ -3318,7 +3347,8 @@ function update() {
       else player.facing = (dy < 0) ? 'up' : 'down';
     }
 
-    if (dx !== 0 && dy !== 0) {
+    // (Iso vectors are already unit-length; re-normalizing would halve some directions.)
+    if (!isoMoved && dx !== 0 && dy !== 0) {
       dx *= 0.7071;
       dy *= 0.7071;
     }
