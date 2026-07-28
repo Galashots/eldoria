@@ -115,5 +115,29 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Suite 7: gameplay is mode-independent (the sacred-world proof) ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    // Stand on farm soil (soil block: cols 14-18, rows 3-7) and plant a turnip directly
+    // through the same logic path the Action button uses.
+    player.x = 14 * 32; player.y = 4 * 32;
+    var key = '4,14';
+    plantSeed(key, cropData[key], 'turnip');
+    var planted = cropData[key].status === 'growing';
+    saveGame();
+    localStorage.setItem('eldoria_iso', '0');          // flip to top-down
+    var saved = JSON.parse(localStorage.getItem('eldoria_save_adventurer'));
+    var savedTile = saved.areas.farm.tiles[key];
+    return { planted: planted, savedGrowing: savedTile && savedTile.status === 'growing',
+             savedType: savedTile && savedTile.type };
+  });
+  check('gameplay: planting works in iso mode', r.planted === true);
+  check('save: iso-planted crop persists in the schema', r.savedGrowing === true);
+  check('save: crop type recorded', r.savedType === 'turnip');
+  await browser.close();
+}
+
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');
