@@ -142,6 +142,29 @@
     max-height: 90dvh;
     overflow-y: auto;
   }
+  .dumpling-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,214,102,0.25);
+    padding-bottom: 6px;
+  }
+  .dumpling-heading .modal-title {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .modal .dumpling-close-x {
+    flex: 0 0 46px;
+    min-height: 46px;
+    padding: 4px;
+    background: linear-gradient(180deg, #c07a44 0%, #8a5020 100%);
+    color: #fff;
+    border-color: #6a3a10;
+    font-size: 1.4rem;
+    line-height: 1;
+  }
   .dumpling-balance {
     display: flex;
     justify-content: space-between;
@@ -721,7 +744,10 @@
      Buddy powers and final art deliberately follow only after this loop playtests well. -->
 <div class="modal-overlay" id="dumplingModal" role="dialog" aria-modal="true" aria-labelledby="dumplingTitle">
   <div class="modal dumpling-modal">
-    <h2 class="modal-title" id="dumplingTitle">Squishy Dumplings</h2>
+    <div class="dumpling-heading">
+      <h2 class="modal-title" id="dumplingTitle">Squishy Dumplings</h2>
+      <button class="dumpling-close-x" onclick="closeDumplingVendor()" aria-label="Close the dumpling collection">×</button>
+    </div>
     <div class="dumpling-balance">
       <span id="dumplingGold">Gold: 0g</span>
       <span id="dumplingOwned">Collection: 0/18</span>
