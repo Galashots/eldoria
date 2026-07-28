@@ -1,0 +1,11 @@
+{
+  "name": "eldoria-dev-tests",
+  "private": true,
+  "description": "Dev-only test harness. The game itself has zero dependencies.",
+  "scripts": {
+    "test": "node tools/smoke-test.mjs"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.4.0"
+  }
+}
