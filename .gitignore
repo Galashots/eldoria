@@ -27,3 +27,8 @@ art-incoming/
 
 # Brainstorming visual-companion mockups / scratch (local only)
 .superpowers/
+
+# Track 2(b) Ranger 3D probe scratch: raw 512px Blender renders, TRELLIS inputs
+# and any .glb/.blend intermediates. Regenerate with tools/3d/ranger_iso_scene.py;
+# only the normalized 64x64 PNGs and evidence sheets are committed.
+_probe_local/
