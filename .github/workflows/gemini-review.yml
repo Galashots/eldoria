@@ -133,7 +133,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          REVIEW_BODY: ${{ steps.gemini_review.outputs.gemini_response }}
+          REVIEW_BODY: ${{ steps.gemini_review.outputs.summary }}
           REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
