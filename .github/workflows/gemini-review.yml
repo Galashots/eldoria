@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: read
       issues: write
-      pull-requests: write
+      pull-requests: read
 
     steps:
       # Review the PR through GitHub's API, but keep the checked-out workspace on
@@ -84,11 +84,10 @@ jobs:
             flag NORTH STAR REFRESH RECOMMENDED and suggest a feature-specific prompt;
             never self-approve or overwrite the current North Star.
 
-            Create a pending PR review, add any line-specific findings to that pending
-            review, then submit it with event COMMENT only. Never use APPROVE or
-            REQUEST_CHANGES. Never modify code, push, merge, close, label, or present
-            this review as a merge gate. Even when no line-specific issue exists,
-            submit a concise COMMENT review summary.
+            Return only a concise Markdown review for the workflow to publish as an
+            ordinary PR comment. Do not call any write tool. Never approve, request
+            changes, modify code, push, merge, close, label, or present this review as
+            a merge gate. Even when no issue exists, return a useful summary.
 
             Start the summary with:
             ## Gemini advisory review (non-blocking)
@@ -117,9 +116,7 @@ jobs:
                     "ghcr.io/github/github-mcp-server:v0.27.0"
                   ],
                   "includeTools": [
-                    "add_comment_to_pending_review",
-                    "pull_request_read",
-                    "pull_request_review_write"
+                    "pull_request_read"
                   ],
                   "env": {
                     "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
@@ -130,3 +127,34 @@ jobs:
                 "core": []
               }
             }
+- name: Publish advisory comment
+        if: steps.credential.outputs.available == 'true' && steps.gemini_review.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVIEW_BODY: ${{ steps.gemini_review.outputs.gemini_response }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [[ -z "${REVIEW_BODY//[[:space:]]/}" ]]; then
+            echo "::warning title=Gemini review not published::Gemini returned no review text."
+            exit 0
+          fi
+
+          marker='<!-- gemini-advisory-review -->'
+          body="${marker}"$'\n\n'"${REVIEW_BODY}"
+          comment_id="$(
+            gh api "repos/${REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate \
+              --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- gemini-advisory-review -->"))) | .id' \
+              | sed -n '1p'
+          )"
+          payload="$(jq -n --arg body "${body}" '{body: $body}')"
+
+          if [[ -n "${comment_id}" ]]; then
+            gh api --method PATCH "repos/${REPOSITORY}/issues/comments/${comment_id}" \
+              --input - <<<"${payload}"
+          else
+            gh api --method POST "repos/${REPOSITORY}/issues/${PR_NUMBER}/comments" \
+              --input - <<<"${payload}"
+          fi
