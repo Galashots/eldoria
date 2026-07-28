@@ -40,13 +40,14 @@ async function syntheticSources(page, walkDirection) {
   }, { frame: FRAME, facings: FACINGS, walkDirection });
 }
 
-async function fileSources(inputDir, walkDirection) {
-  const names = [...FACINGS.map(f => f.file), `adventurer-${walkDirection}-walk.png`];
+async function fileSources(inputDir, walkDirection, staticOnly) {
+  const names = FACINGS.map(f => f.file);
+  if (!staticOnly) names.push(`adventurer-${walkDirection}-walk.png`);
   return Object.fromEntries(await Promise.all(names.map(async name => [name, (await readFile(path.join(inputDir, name))).toString('base64')])));
 }
 
-async function validate(page, sources, walkDirection) {
-  return page.evaluate(async ({ frame, facings, sources, walkDirection }) => {
+async function validate(page, sources, walkDirection, staticOnly) {
+  return page.evaluate(async ({ frame, facings, sources, walkDirection, staticOnly }) => {
     const canvas = (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h });
     const load = (b64, name) => new Promise((resolve, reject) => {
       const image = new Image();
@@ -77,38 +78,50 @@ async function validate(page, sources, walkDirection) {
         bottomAnchorPass: Boolean(s.bounds && s.bounds.maxY === frame - 1),
         horizontalPaddingPass: Boolean(s.bounds && s.bounds.x > 0 && s.bounds.maxX < frame - 1) };
     });
-    const walkName = `adventurer-${walkDirection}-walk.png`, walk = images[walkName], wc = canvas(walk.naturalWidth, walk.naturalHeight), wg = wc.getContext('2d', { willReadFrequently: true });
-    wg.drawImage(walk, 0, 0);
-    const walkFrames = Array.from({ length: 4 }, (_, i) => ({ index: i, ...scan(wg.getImageData(i * frame, 0, frame, frame)) }));
     const range = values => Math.max(...values) - Math.min(...values);
     const metrics = {
       staticHeightRange: range(statics.map(x => x.bounds?.height || 0)),
       staticWidthRange: range(statics.map(x => x.bounds?.width || 0)),
-      walkCenterRange: range(walkFrames.map(x => x.bounds?.centerX || 0)),
-      walkTopRange: range(walkFrames.map(x => x.bounds?.y || 0)),
     };
     const gates = {
       statics: statics.every(x => x.dimensionsPass && x.binaryAlphaPass && x.visiblePass && x.bottomAnchorPass && x.horizontalPaddingPass),
-      walkDimensions: wc.width === frame * 4 && wc.height === frame,
-      walkFrames: walkFrames.every(x => x.bounds && x.bounds.maxY === frame - 1 && x.semiTransparentPixels === 0),
       scaleConsistency: metrics.staticHeightRange <= 6 && metrics.staticWidthRange <= 10,
-      walkStability: metrics.walkCenterRange <= 6 && metrics.walkTopRange <= 4,
     };
+    let walkReport = { status: 'not-generated' };
+    let walk = null;
+    if (!staticOnly) {
+      const walkName = `adventurer-${walkDirection}-walk.png`;
+      walk = images[walkName];
+      const wc = canvas(walk.naturalWidth, walk.naturalHeight), wg = wc.getContext('2d', { willReadFrequently: true });
+      wg.drawImage(walk, 0, 0);
+      const walkFrames = Array.from({ length: 4 }, (_, i) => ({ index: i, ...scan(wg.getImageData(i * frame, 0, frame, frame)) }));
+      metrics.walkCenterRange = range(walkFrames.map(x => x.bounds?.centerX || 0));
+      metrics.walkTopRange = range(walkFrames.map(x => x.bounds?.y || 0));
+      gates.walkDimensions = wc.width === frame * 4 && wc.height === frame;
+      gates.walkFrames = walkFrames.every(x => x.bounds && x.bounds.maxY === frame - 1 && x.semiTransparentPixels === 0);
+      gates.walkStability = metrics.walkCenterRange <= 6 && metrics.walkTopRange <= 4;
+      walkReport = { status: 'generated', file: walkName, width: wc.width, height: wc.height, frames: walkFrames };
+    }
     const nearest = (g, image, sx, dx, scale) => { g.imageSmoothingEnabled = false; g.drawImage(image, sx, 0, frame, frame, dx, 0, frame * scale, frame * scale); };
     const contact = canvas(frame * 8, frame * 2), cg = contact.getContext('2d'); facings.forEach((f, i) => nearest(cg, images[f.file], 0, i * frame * 2, 2));
     const runtime = canvas(frame * 4, frame), rg = runtime.getContext('2d'); facings.forEach((f, i) => nearest(rg, images[f.file], 0, i * frame, 1));
     const dark = canvas(frame * 8, frame * 2), dg = dark.getContext('2d'); dg.fillStyle = '#11131a'; dg.fillRect(0, 0, dark.width, dark.height); facings.forEach((f, i) => nearest(dg, images[f.file], 0, i * frame * 2, 2));
     const overlay = canvas(frame * 8, frame * 2), og = overlay.getContext('2d'); facings.forEach((f, i) => { const x = i * frame * 2, b = statics[i].bounds; nearest(og, images[f.file], 0, x, 2); if (b) { og.strokeStyle = '#00ff88'; og.strokeRect(x + b.x * 2 + .5, b.y * 2 + .5, b.width * 2 - 1, b.height * 2 - 1); } og.strokeStyle = '#ff3b6b'; og.strokeRect(x + frame - 3, frame * 2 - 4, 6, 3); });
-    const preview = canvas(frame * 8, frame * 2), pg = preview.getContext('2d'); pg.fillStyle = '#11131a'; pg.fillRect(0, 0, preview.width, preview.height); for (let i = 0; i < 4; i++) nearest(pg, walk, i * frame, i * frame * 2, 2);
+    const evidence = { 'four-facing-contact-sheet.png': contact, 'runtime-scale-sheet.png': runtime, 'dark-background-sheet.png': dark, 'anchor-bounds-overlay.png': overlay };
+    if (!staticOnly) {
+      const preview = canvas(frame * 8, frame * 2), pg = preview.getContext('2d'); pg.fillStyle = '#11131a'; pg.fillRect(0, 0, preview.width, preview.height); for (let i = 0; i < 4; i++) nearest(pg, walk, i * frame, i * frame * 2, 2);
+      evidence['walk-strip-preview.png'] = preview;
+    }
     return {
-      report: { frameSize: [frame, frame], facingOrder: facings.map(f => `${f.engine}:${f.view}`), walkFile: walkName, statics, walk: { width: wc.width, height: wc.height, frames: walkFrames }, metrics, gates, passed: Object.values(gates).every(Boolean), visualSemanticsNotMachineVerified: ['identity consistency','fixed-camera consistency','elevated isometric projection','facing readability','upper-left lighting','pixel treatment','North Star alignment'] },
-      evidence: Object.fromEntries([['four-facing-contact-sheet.png', contact],['runtime-scale-sheet.png', runtime],['dark-background-sheet.png', dark],['anchor-bounds-overlay.png', overlay],['walk-strip-preview.png', preview]].map(([name, c]) => [name, c.toDataURL('image/png').split(',')[1]])),
+      report: { frameSize: [frame, frame], facingOrder: facings.map(f => `${f.engine}:${f.view}`), staticOnly, statics, walk: walkReport, metrics, gates, passed: Object.values(gates).every(Boolean), visualSemanticsNotMachineVerified: ['identity consistency','fixed-camera consistency','elevated isometric projection','facing readability','upper-left lighting','pixel treatment','North Star alignment'] },
+      evidence: Object.fromEntries(Object.entries(evidence).map(([name, c]) => [name, c.toDataURL('image/png').split(',')[1]])),
     };
-  }, { frame: FRAME, facings: FACINGS, sources, walkDirection });
+  }, { frame: FRAME, facings: FACINGS, sources, walkDirection, staticOnly });
 }
 
 async function main() {
   const selfTest = process.argv.includes('--self-test');
+  const staticOnly = process.argv.includes('--static-only');
   const walkDirection = arg('--walk-direction', 'right');
   if (!['down','up','left','right'].includes(walkDirection)) throw new Error(`Invalid walk direction: ${walkDirection}`);
   const inputDir = path.resolve(ROOT, arg('--input-dir', 'art/ranger-proof/normalized'));
@@ -116,8 +129,8 @@ async function main() {
   const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   try {
     const page = await browser.newPage();
-    const sources = selfTest ? await syntheticSources(page, walkDirection) : await fileSources(inputDir, walkDirection);
-    const first = await validate(page, sources, walkDirection), second = await validate(page, sources, walkDirection);
+    const sources = selfTest ? await syntheticSources(page, walkDirection) : await fileSources(inputDir, walkDirection, staticOnly);
+    const first = await validate(page, sources, walkDirection, staticOnly), second = await validate(page, sources, walkDirection, staticOnly);
     const firstHashes = Object.fromEntries(Object.entries(first.evidence).map(([n, b]) => [n, hash(Buffer.from(b, 'base64'))]));
     const secondHashes = Object.fromEntries(Object.entries(second.evidence).map(([n, b]) => [n, hash(Buffer.from(b, 'base64'))]));
     const deterministic = JSON.stringify(firstHashes) === JSON.stringify(secondHashes);
@@ -127,7 +140,8 @@ async function main() {
     const report = { ...first.report, deterministic, sources: Object.fromEntries(Object.entries(sources).map(([n, b]) => [n, { bytes: Buffer.from(b, 'base64').length, sha256: hash(Buffer.from(b, 'base64')) }])), evidence: firstHashes };
     await writeFile(path.join(outputDir, 'machine-check-report.json'), `${JSON.stringify(report, null, 2)}\n`);
     if (!report.passed) throw new Error(`Machine gates failed; see ${path.join(outputDir, 'machine-check-report.json')}`);
-    console.log(`Ranger proof machine gates passed (${selfTest ? 'self-test' : inputDir}); deterministic=${deterministic}`);
+    console.log(`Ranger proof machine gates passed (${selfTest ? 'self-test' : inputDir}); staticOnly=${staticOnly}; deterministic=${deterministic}`);
   } finally { await browser.close(); }
 }
+
 main().catch(error => { console.error(error.stack || error); process.exitCode = 1; });
