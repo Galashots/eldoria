@@ -12,12 +12,15 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm test
-      - name: Surface crop lab evidence
+      - name: Surface crop lab runtime assets
         if: github.head_ref == 'codex/crop-asset-lab'
         run: |
-          echo CROP_LAB_DENSE_BASE64_BEGIN
-          base64 artifacts/crop-asset-lab-dense-ipad.png
-          echo CROP_LAB_DENSE_BASE64_END
+          for file in assets/iso/crop-*.png; do
+            name="$(basename "$file" .png)"
+            echo "CROP_RUNTIME_${name}_BASE64_BEGIN"
+            base64 "$file"
+            echo "CROP_RUNTIME_${name}_BASE64_END"
+          done
       - name: Upload playtest evidence
         if: always()
         uses: actions/upload-artifact@v4
