@@ -1,5 +1,7 @@
 // Iso engine assertions, evaluated inside the live page. Run: node tools/iso-test.mjs
 import { launch } from './smoke-test.mjs';
+import { mkdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 
 const fails = [];
 const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (!ok) fails.push(name); };
@@ -271,6 +273,45 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('crop visuals: established growing stage', r.middle === 1);
   check('crop visuals: ready produce stage', r.ready === 2);
   await browser.close();
+}
+
+// --- Visual evidence: exact PR render at desktop and phone portrait sizes ---
+{
+  const evidenceDir = new URL('../artifacts/', import.meta.url);
+  await mkdir(evidenceDir, { recursive: true });
+  const viewports = [
+    { name: 'desktop', width: 1363, height: 936 },
+    { name: 'phone-portrait', width: 390, height: 780 }
+  ];
+  for (const viewport of viewports) {
+    const { browser, page } = await launch('?iso=1');
+    await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
+    await page.evaluate(() => {
+      selectProfile('adventurer');
+      activateArea('farm');
+      applyCanvasMode();
+      var now = Date.now();
+      for (var r = 3; r <= 7; r++) {
+        for (var c = 14; c <= 18; c++) {
+          cropData[r + ',' + c] = { status: 'empty', plantedAt: 0, type: null };
+        }
+      }
+      cropData['4,14'] = { status: 'growing', plantedAt: now - 100, type: 'turnip' };
+      cropData['4,15'] = { status: 'growing', plantedAt: now - 10000, type: 'carrot' };
+      cropData['4,16'] = { status: 'ready', plantedAt: now - 25000, type: 'corn' };
+      cropData['4,17'] = { status: 'ready', plantedAt: now - 35000, type: 'pumpkin' };
+      cropData['4,18'] = { status: 'ready', plantedAt: now - 50000, type: 'starfruit' };
+      player.x = 13 * TILE;
+      player.y = 5 * TILE;
+      drawIsoWorld();
+    });
+    await page.screenshot({
+      path: fileURLToPath(new URL('phase15-crops-' + viewport.name + '.png', evidenceDir)),
+      fullPage: true
+    });
+    await browser.close();
+  }
+  check('visual evidence: desktop and phone crop frames captured', true);
 }
 
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
