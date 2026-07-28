@@ -1598,6 +1598,30 @@ function isNearEnemy() {
   return null;
 }
 
+// ---- Shared proximity + direct-world interaction helpers ----
+// Action and direct taps intentionally dispatch through the same gameplay functions.
+// Tapping a distant target gives useful feedback but does not bypass world navigation.
+function isPlayerNearTile(row, col) {
+  var playerCol = Math.floor((player.x + player.size / 2) / TILE);
+  var playerRow = Math.floor((player.y + player.size / 2) / TILE);
+  return Math.abs(playerRow - row) + Math.abs(playerCol - col) <= 1;
+}
+
+function faceWorldTile(row, col) {
+  var playerCol = Math.floor((player.x + player.size / 2) / TILE);
+  var playerRow = Math.floor((player.y + player.size / 2) / TILE);
+  var dc = col - playerCol;
+  var dr = row - playerRow;
+  if (Math.abs(dc) >= Math.abs(dr) && dc !== 0) player.facing = dc < 0 ? 'left' : 'right';
+  else if (dr !== 0) player.facing = dr < 0 ? 'up' : 'down';
+}
+
+function askToWalkCloser(label) {
+  var msg = 'Walk closer to ' + label + '!';
+  showToast(msg);
+  speak(msg);
+}
+
 // ---- Update crop growth ----
 function updateCrops() {
   var now = Date.now();
@@ -1610,28 +1634,10 @@ function updateCrops() {
   }
 }
 
-// ---- Action button: plant or harvest ----
-function doAction() {
-  if (!gameActive) return;         // no play until a profile is chosen
-  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
-  // Tapping Action beside the shop door opens the store.
-  if (isNearDoor() && !shopOpen) { openShop(); return; }
-  // Tapping Action beside any NPC dispatches per role.
-  var nearNpc = isNearNPC();
-  if (nearNpc) { interactNPC(nearNpc); return; }
-  // Tapping Action beside the Farm cooking pot opens the cooking modal.
-  if (isNearCookpot()) { openCooking(); return; }
-  // Tapping Action beside a Wilds enemy starts a battle.
-  var nearEn = isNearEnemy();
-  if (nearEn) { openCombat(nearEn); return; }
-  var tile = getFacingTile();
-  if (!tile) {
-    showToast('Stand near a soil plot!');
-    return;
-  }
-
+function interactCropTile(tile) {
   var key = tile.row + ',' + tile.col;
   var crop = cropData[key];
+  if (!crop) return;
 
   if (crop.status === 'empty') {
     // Figure out which seed types the player has.
@@ -1663,6 +1669,79 @@ function doAction() {
 
   updateHUD();
   saveGame();
+}
+
+// Try the exact tile the player tapped. Returns true when the tile is an
+// interactable target, even if it is currently too far away.
+function interactAtTile(row, col) {
+  if (!gameActive) return false;
+  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return false;
+
+  for (var n = 0; n < NPCS.length; n++) {
+    var npc = NPCS[n];
+    if (npc.area !== currentArea || npc.row !== row || npc.col !== col) continue;
+    faceWorldTile(row, col);
+    if (!isPlayerNearTile(row, col)) askToWalkCloser(npc.name);
+    else interactNPC(npc);
+    return true;
+  }
+
+  if (AREA_ENEMIES[currentArea]) {
+    for (var e = 0; e < currentEnemies.length; e++) {
+      var enemy = currentEnemies[e];
+      if (!enemy.alive || enemy.row !== row || enemy.col !== col) continue;
+      faceWorldTile(row, col);
+      if (!isPlayerNearTile(row, col)) askToWalkCloser(ENEMIES[enemy.type].name);
+      else openCombat(enemy);
+      return true;
+    }
+  }
+
+  if (currentArea === 'farm' && row === FARM_COOKPOT.row && col === FARM_COOKPOT.col) {
+    faceWorldTile(row, col);
+    if (!isPlayerNearTile(row, col)) askToWalkCloser('the cooking pot');
+    else openCooking();
+    return true;
+  }
+
+  if (row >= 0 && row < MAP_H && col >= 0 && col < MAP_W && map[row][col] === DOOR) {
+    faceWorldTile(row, col);
+    if (!isPlayerNearTile(row, col)) askToWalkCloser('the shop');
+    else openShop();
+    return true;
+  }
+
+  var crop = cropData[row + ',' + col];
+  if (crop) {
+    faceWorldTile(row, col);
+    if (!isPlayerNearTile(row, col)) askToWalkCloser('the soil plot');
+    else interactCropTile({ row: row, col: col });
+    return true;
+  }
+
+  return false;
+}
+
+// ---- Action button: plant, harvest, talk, shop, cook, or fight ----
+function doAction() {
+  if (!gameActive) return;         // no play until a profile is chosen
+  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  // Tapping Action beside the shop door opens the store.
+  if (isNearDoor() && !shopOpen) { openShop(); return; }
+  // Tapping Action beside any NPC dispatches per role.
+  var nearNpc = isNearNPC();
+  if (nearNpc) { interactNPC(nearNpc); return; }
+  // Tapping Action beside the Farm cooking pot opens the cooking modal.
+  if (isNearCookpot()) { openCooking(); return; }
+  // Tapping Action beside a Wilds enemy starts a battle.
+  var nearEn = isNearEnemy();
+  if (nearEn) { openCombat(nearEn); return; }
+  var tile = getFacingTile();
+  if (!tile) {
+    showToast('Stand near a soil plot!');
+    return;
+  }
+  interactCropTile(tile);
 }
 
 // ---- Shop ----
@@ -3413,8 +3492,8 @@ function checkTravel() {
   // Land just inside the destination's matching entrance: came from the left →
   // arrive on its right side; came from the right → arrive on its left side.
   activateArea(dest);
-  // Re-entering a combat area respawns its enemies so there's always something to fight.
-  for (var re = 0; re < currentEnemies.length; re++) currentEnemies[re].alive = true;
+  // Enemy arrays persist across travel. Their normal 30-second respawnAt timers are
+  // honored on re-entry; leaving and returning must not instantly revive bosses.
   player.x = goingLeft ? (MAP_W - 2) * TILE : 1 * TILE;
   // Spawn on the exit row of the destination area (find the first EXIT on the entry edge).
   var entryCol = goingLeft ? MAP_W - 1 : 0;
@@ -3704,6 +3783,102 @@ function drawIsoTileDiamond(cx, cy, fillColor) {
   ctx.fill();
 }
 
+function drawIsoSoilTile(cx, cy) {
+  drawIsoTileDiamond(cx, cy, '#70472c');
+  ctx.strokeStyle = '#9a6640';
+  ctx.lineWidth = 1.25;
+  for (var i = -2; i <= 2; i++) {
+    var ox = i * 7;
+    ctx.beginPath();
+    ctx.moveTo(cx - 17 + ox, cy - 4 + ox / 2);
+    ctx.lineTo(cx + 2 + ox, cy + 6 + ox / 2);
+    ctx.stroke();
+  }
+}
+
+function cropVisualStage(crop, now) {
+  if (crop.status === 'ready') return 2;
+  var type = crop.type || 'turnip';
+  var growMs = crop.growMs || CROPS[type].grow;
+  return Math.max(0, Math.min(1, (now - crop.plantedAt) / growMs)) < 0.45 ? 0 : 1;
+}
+
+function drawIsoStar(cx, cy, radius, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  for (var i = 0; i < 8; i++) {
+    var a = -Math.PI / 2 + i * Math.PI / 4;
+    var rr = i % 2 === 0 ? radius : radius * 0.42;
+    var x = cx + Math.cos(a) * rr;
+    var y = cy + Math.sin(a) * rr;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawIsoProduce(type, x, y, color) {
+  ctx.fillStyle = color;
+  if (type === 'carrot') {
+    ctx.beginPath();
+    ctx.moveTo(x - 3, y - 3); ctx.lineTo(x + 3, y - 3); ctx.lineTo(x, y + 5);
+    ctx.closePath(); ctx.fill();
+  } else if (type === 'corn') {
+    ctx.fillRect(x - 2.5, y - 7, 5, 10);
+    ctx.fillStyle = '#fff073';
+    ctx.fillRect(x - 1, y - 5, 2, 6);
+  } else if (type === 'pumpkin') {
+    ctx.beginPath(); ctx.ellipse(x, y, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#9a5b16'; ctx.lineWidth = 1; ctx.stroke();
+  } else if (type === 'starfruit') {
+    drawIsoStar(x, y - 2, 5, color);
+    ctx.fillStyle = '#ffe57a';
+    ctx.fillRect(x - 1, y - 3, 2, 2);
+  } else {
+    ctx.beginPath(); ctx.ellipse(x, y, 4, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e8f2d0';
+    ctx.fillRect(x - 1.5, y - 1, 3, 3);
+  }
+}
+
+// A compact, deterministic crop proof: distinct growth stages and produce silhouettes.
+// Final iso art can replace this without changing crop state or economy logic.
+function drawIsoCrop(cx, cy, crop, now) {
+  var type = crop.type || 'turnip';
+  var info = CROPS[type];
+  var stage = cropVisualStage(crop, now);
+  var positions = stage === 0 ? [[-7, 2], [7, 2]] : [[-11, 3], [0, 7], [11, 3]];
+
+  ctx.save();
+  if (stage === 2) {
+    var glow = 0.10 + (Math.sin(now / 220) + 1) * 0.04;
+    ctx.globalAlpha = glow;
+    ctx.fillStyle = info.readyColor;
+    ctx.beginPath(); ctx.ellipse(cx, cy - 4, 24, 11, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  for (var i = 0; i < positions.length; i++) {
+    var px = cx + positions[i][0];
+    var py = cy + positions[i][1];
+    var stemH = stage === 0 ? 5 : (stage === 1 ? 10 : 13);
+    ctx.strokeStyle = '#285b2e';
+    ctx.lineWidth = stage === 0 ? 1.5 : 2;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py - stemH); ctx.stroke();
+    ctx.fillStyle = '#4f9a45';
+    ctx.beginPath();
+    ctx.ellipse(px - 3, py - stemH + 3, 4, 2, -0.35, 0, Math.PI * 2);
+    ctx.ellipse(px + 3, py - stemH + 5, 4, 2, 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    if (stage === 2) drawIsoProduce(type, px, py - 1, info.readyColor);
+    else if (stage === 1) {
+      ctx.fillStyle = info.color;
+      ctx.beginPath(); ctx.arc(px, py - stemH, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
 function isoUpdateCamera() {
   var pcx = isoPX(player.x + player.size / 2, player.y + player.size / 2);
   var pcy = isoPY(player.x + player.size / 2, player.y + player.size / 2);
@@ -3722,6 +3897,7 @@ function drawIsoWorld() {
   ctx.fillStyle = '#0d0a06';                             // moody void, not pure black
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   isoUpdateCamera();
+  var now = Date.now();
   ctx.setTransform(isoScale, 0, 0, isoScale, -isoCamPX * isoScale, -isoCamPY * isoScale);
   for (var r = 0; r < MAP_H; r++) {
     for (var c = 0; c < MAP_W; c++) {
@@ -3732,13 +3908,10 @@ function drawIsoWorld() {
       var floorColor = TILE_COLOR[t] || '#333333';
       if (t === TREE || t === HOUSE) floorColor = TILE_COLOR[GRASS];
       else if (t === DOOR || t === EXIT) floorColor = TILE_COLOR[PATH];
-      drawIsoTileDiamond(cx, cy, floorColor);
+      if (t === SOIL) drawIsoSoilTile(cx, cy);
+      else drawIsoTileDiamond(cx, cy, floorColor);
       var crop = cropData[r + ',' + c];
-      if (crop && crop.status !== 'empty') {
-        var cc = CROPS[crop.type || 'turnip'];
-        drawIsoTileDiamond(cx, cy - 4,
-          crop.status === 'ready' ? cc.readyColor : cc.color);
-      }
+      if (crop && crop.status !== 'empty') drawIsoCrop(cx, cy, crop, now);
     }
   }
 
@@ -3759,7 +3932,31 @@ function drawIsoWorld() {
       else drawIsoPrism(ocx, ocy, 30, '#4a90d9');
     }
   }
+  drawIsoPops(now);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+function drawIsoPops(now) {
+  var keep = [];
+  ctx.font = 'bold 15px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  for (var i = 0; i < pops.length; i++) {
+    var p = pops[i];
+    var age = now - p.born;
+    if (age > 900) continue;
+    var sx = isoPX(p.wx, p.wy);
+    var sy = isoPY(p.wx, p.wy) - 20 - (age / 900) * 22;
+    ctx.globalAlpha = 1 - age / 900;
+    ctx.strokeStyle = '#1a0a00';
+    ctx.lineWidth = 3;
+    ctx.strokeText(p.text, sx, sy);
+    ctx.fillStyle = p.color || '#fff2b0';
+    ctx.fillText(p.text, sx, sy);
+    ctx.globalAlpha = 1;
+    keep.push(p);
+  }
+  ctx.textAlign = 'left';
+  pops = keep;
 }
 
 // ---- Iso renderer helpers: placeholder prisms (Phase 0) ----
@@ -3819,18 +4016,21 @@ function isoCollectObjects() {
 }
 
 // ---- Draw ----
-function draw() {
-  if (typeof isoActive === 'function' && isoActive()) { drawIsoWorld(); return; }
+function topDownCamera() {
   var camX = player.x + player.size / 2 - canvas.width / 2;
   var camY = player.y + player.size / 2 - canvas.height / 2;
   var maxCamX = MAP_W * TILE - canvas.width;
   var maxCamY = MAP_H * TILE - canvas.height;
-  camX = Math.max(0, Math.min(camX, maxCamX));
-  camY = Math.max(0, Math.min(camY, maxCamY));
-  // Snap the camera to whole pixels so every tile/sprite lands on an integer
-  // coordinate — fractional camX/camY (from player.speed) caused sub-pixel shimmer.
-  camX = Math.round(camX);
-  camY = Math.round(camY);
+  return {
+    x: Math.round(Math.max(0, Math.min(camX, maxCamX))),
+    y: Math.round(Math.max(0, Math.min(camY, maxCamY)))
+  };
+}
+
+function draw() {
+  if (typeof isoActive === 'function' && isoActive()) { drawIsoWorld(); return; }
+  var camera = topDownCamera();
+  var camX = camera.x, camY = camera.y;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -4272,6 +4472,40 @@ joystickZone.addEventListener('pointerup', function(e) {
 });
 joystickZone.addEventListener('pointercancel', function(e) {
   if (e.pointerId === joystickId) joystickReset();
+});
+
+// ---- Direct world taps ----
+// Convert a canvas backing-store point into the world tile under it. Iso uses the
+// same inverse projection and camera as rendering; top-down uses its follow camera.
+function canvasBackingPointToTile(bx, by) {
+  var wx, wy;
+  if (isoActive()) {
+    var projectedX = bx / isoScale + isoCamPX;
+    var projectedY = by / isoScale + isoCamPY;
+    wx = isoInvX(projectedX, projectedY);
+    wy = isoInvY(projectedX, projectedY);
+  } else {
+    var camera = topDownCamera();
+    wx = bx + camera.x;
+    wy = by + camera.y;
+  }
+  var row = Math.floor(wy / TILE);
+  var col = Math.floor(wx / TILE);
+  if (row < 0 || row >= MAP_H || col < 0 || col >= MAP_W) return null;
+  return { row: row, col: col };
+}
+
+function canvasClientPointToTile(clientX, clientY) {
+  var rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+  var bx = (clientX - rect.left) * canvas.width / rect.width;
+  var by = (clientY - rect.top) * canvas.height / rect.height;
+  return canvasBackingPointToTile(bx, by);
+}
+
+canvas.addEventListener('pointerdown', function(e) {
+  var tile = canvasClientPointToTile(e.clientX, e.clientY);
+  if (tile && interactAtTile(tile.row, tile.col)) e.preventDefault();
 });
 
 // ---- Action button ----

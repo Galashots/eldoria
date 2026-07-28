@@ -1,5 +1,7 @@
 // Iso engine assertions, evaluated inside the live page. Run: node tools/iso-test.mjs
 import { launch } from './smoke-test.mjs';
+import { mkdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 
 const fails = [];
 const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (!ok) fails.push(name); };
@@ -152,6 +154,178 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('save: iso-planted crop persists in the schema', r.savedGrowing === true);
   check('save: crop type recorded', r.savedType === 'turnip');
   await browser.close();
+}
+
+// --- Suite 8: direct taps share Action's gameplay paths ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+
+    // Iso crop: stand beside one exact plot and interact with that tapped tile.
+    activateArea('farm');
+    var cropKey = '4,14';
+    cropData[cropKey] = { status: 'empty', plantedAt: 0, type: null };
+    player.x = 13 * TILE; player.y = 4 * TILE;
+    var cropHandled = interactAtTile(4, 14);
+    var cropPlanted = cropData[cropKey].status === 'growing';
+
+    // A distant plot is recognized but cannot bypass navigation.
+    var farKey = '3,18';
+    cropData[farKey] = { status: 'empty', plantedAt: 0, type: null };
+    var farHandled = interactAtTile(3, 18);
+    var farStayedEmpty = cropData[farKey].status === 'empty';
+
+    // Top-down NPC: tapping Bram while adjacent opens the same shop path as Action.
+    localStorage.setItem('eldoria_iso', '0');
+    activateArea('town');
+    var bram = NPCS.filter(n => n.id === 'bram')[0];
+    player.x = (bram.col - 1) * TILE; player.y = bram.row * TILE;
+    var npcHandled = interactAtTile(bram.row, bram.col);
+    var npcOpenedShop = shopOpen;
+    closeShop();
+
+    // Top-down enemy: tapping an adjacent live enemy starts normal combat.
+    activateArea('wilds');
+    var enemy = currentEnemies[0];
+    enemy.alive = true;
+    player.x = (enemy.col - 1) * TILE; player.y = enemy.row * TILE;
+    var enemyHandled = interactAtTile(enemy.row, enemy.col);
+    var enemyOpenedCombat = combatOpen;
+
+    return { cropHandled, cropPlanted, farHandled, farStayedEmpty,
+             npcHandled, npcOpenedShop, enemyHandled, enemyOpenedCombat };
+  });
+  check('tap: exact iso crop uses normal plant path', r.cropHandled && r.cropPlanted);
+  check('tap: distant crop asks for approach without planting', r.farHandled && r.farStayedEmpty);
+  check('tap: adjacent NPC uses normal interaction path', r.npcHandled && r.npcOpenedShop);
+  check('tap: adjacent enemy uses normal combat path', r.enemyHandled && r.enemyOpenedCombat);
+  await browser.close();
+}
+
+// --- Suite 9: direct-tap coordinate conversion in both render modes ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    activateArea('farm');
+    applyCanvasMode();
+    player.x = 14 * TILE; player.y = 4 * TILE;
+    drawIsoWorld();
+    var wx = (14 + 0.5) * TILE, wy = (4 + 0.5) * TILE;
+    var bx = (isoPX(wx, wy) - isoCamPX) * isoScale;
+    var by = (isoPY(wx, wy) - isoCamPY) * isoScale;
+    var isoTile = canvasBackingPointToTile(bx, by);
+    var tapKey = '4,15';
+    cropData[tapKey] = { status: 'empty', plantedAt: 0, type: null };
+    var tapWx = 15.5 * TILE, tapWy = 4.5 * TILE;
+    var tapBx = (isoPX(tapWx, tapWy) - isoCamPX) * isoScale;
+    var tapBy = (isoPY(tapWx, tapWy) - isoCamPY) * isoScale;
+    var rect = canvas.getBoundingClientRect();
+    canvas.dispatchEvent(new PointerEvent('pointerdown', {
+      clientX: rect.left + tapBx * rect.width / canvas.width,
+      clientY: rect.top + tapBy * rect.height / canvas.height,
+      bubbles: true,
+      pointerId: 91
+    }));
+    var pointerPlanted = cropData[tapKey].status === 'growing';
+
+    localStorage.setItem('eldoria_iso', '0');
+    activateArea('town');
+    player.x = 7 * TILE; player.y = 7 * TILE;
+    var cam = topDownCamera();
+    var topTile = canvasBackingPointToTile(7.5 * TILE - cam.x, 7.5 * TILE - cam.y);
+    return { isoTile, pointerPlanted, topTile };
+  });
+  check('tap math: iso screen point resolves exact world tile',
+    r.isoTile.row === 4 && r.isoTile.col === 14);
+  check('tap event: canvas pointer plants the exact adjacent crop', r.pointerPlanted);
+  check('tap math: top-down screen point resolves exact world tile',
+    r.topTile.row === 7 && r.topTile.col === 7);
+  await browser.close();
+}
+
+// --- Suite 10: travel honors enemy respawn timers (dumpling-economy pre-req) ---
+{
+  const { browser, page } = await launch('?iso=0');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    activateArea('wilds');
+    var enemy = currentEnemies[0];
+    enemy.alive = false;
+    enemy.respawnAt = Date.now() + 30000;
+
+    // Leave for Town, then immediately re-enter the Wilds.
+    activateArea('town');
+    player.x = (MAP_W - 1) * TILE;
+    player.y = 10 * TILE;
+    checkTravel();
+    var stayedDead = enemy.alive === false;
+
+    // The existing timer path still revives it once the delay has elapsed.
+    enemy.respawnAt = Date.now() - 1;
+    update();
+    return { stayedDead, revivedOnTimer: enemy.alive === true };
+  });
+  check('economy: re-entry does not instantly revive enemies', r.stayedDead === true);
+  check('economy: elapsed respawn timer still revives enemies', r.revivedOnTimer === true);
+  await browser.close();
+}
+
+// --- Suite 11: crop proof has three deterministic visual stages ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    var now = Date.now();
+    return {
+      early: cropVisualStage({ status: 'growing', plantedAt: now - 100, type: 'turnip' }, now),
+      middle: cropVisualStage({ status: 'growing', plantedAt: now - 6000, type: 'turnip' }, now),
+      ready: cropVisualStage({ status: 'ready', plantedAt: now - 9000, type: 'turnip' }, now)
+    };
+  });
+  check('crop visuals: early seedling stage', r.early === 0);
+  check('crop visuals: established growing stage', r.middle === 1);
+  check('crop visuals: ready produce stage', r.ready === 2);
+  await browser.close();
+}
+
+// --- Visual evidence: exact PR render at desktop and phone portrait sizes ---
+{
+  const evidenceDir = new URL('../artifacts/', import.meta.url);
+  await mkdir(evidenceDir, { recursive: true });
+  const viewports = [
+    { name: 'desktop', width: 1363, height: 936 },
+    { name: 'phone-portrait', width: 390, height: 780 }
+  ];
+  for (const viewport of viewports) {
+    const { browser, page } = await launch('?iso=1');
+    await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
+    await page.evaluate(() => {
+      selectProfile('adventurer');
+      activateArea('farm');
+      applyCanvasMode();
+      var now = Date.now();
+      for (var r = 3; r <= 7; r++) {
+        for (var c = 14; c <= 18; c++) {
+          cropData[r + ',' + c] = { status: 'empty', plantedAt: 0, type: null };
+        }
+      }
+      cropData['4,14'] = { status: 'growing', plantedAt: now - 100, type: 'turnip' };
+      cropData['4,15'] = { status: 'growing', plantedAt: now - 10000, type: 'carrot' };
+      cropData['4,16'] = { status: 'ready', plantedAt: now - 25000, type: 'corn' };
+      cropData['4,17'] = { status: 'ready', plantedAt: now - 35000, type: 'pumpkin' };
+      cropData['4,18'] = { status: 'ready', plantedAt: now - 50000, type: 'starfruit' };
+      player.x = 16 * TILE;
+      player.y = 5 * TILE;
+      drawIsoWorld();
+    });
+    await page.screenshot({
+      path: fileURLToPath(new URL('phase15-crops-' + viewport.name + '.png', evidenceDir)),
+      fullPage: true
+    });
+    await browser.close();
+  }
+  check('visual evidence: desktop and phone crop frames captured', true);
 }
 
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
