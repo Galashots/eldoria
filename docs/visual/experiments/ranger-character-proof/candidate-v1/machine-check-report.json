@@ -24,7 +24,7 @@
         1024
       ],
       "sha256": "f56089d9050f35209d400e97344dc6bc612d17dea74e96badc5c0c306c54b9b2",
-      "archiveTransform": "50% nearest-neighbour downsample, 256-colour indexed archival PNG committed to bound repository size"
+      "archiveTransform": "25% nearest-neighbour downsample, 256-colour indexed archival PNG committed to bound repository size"
     }
   },
   "normalization": {
@@ -135,7 +135,7 @@
         "maxX": 50,
         "maxY": 63,
         "width": 30,
-       "height": 54,
+        "height": 54,
         "centerX": 35.5
       },
       "opaquePixels": 1054,
@@ -172,7 +172,7 @@
       },
       "opaquePixels": 1077,
       "semiTransparentPixels": 0,
-      "footBandCenterX": 32.28787878788789
+      "footBandCenterX": 32.28787878787879
     }
   },
   "metrics": {
@@ -191,7 +191,7 @@
   },
   "walk": {
     "status": "not-generated",
-    "reason": "Static facings require owner visual judgement before animation generation."
+    "reason": "Static facings require owner visual judgment before animation generation."
   },
   "visualSemanticsNotMachineVerified": [
     "identity consistency",
