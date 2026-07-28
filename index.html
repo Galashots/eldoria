@@ -136,6 +136,88 @@
   .btn-sell:disabled { background: #998844; color: #888; cursor: default; box-shadow: none; }
   .btn-close { background: linear-gradient(180deg, #c07a44 0%, #8a5020 100%); color: #fff; border-color: #6a3a10; }
 
+  /* ---- Dumpling collection MVP ---- */
+  .dumpling-modal {
+    width: min(94vw, 560px);
+    max-height: 90dvh;
+    overflow-y: auto;
+  }
+  .dumpling-balance {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: #ffe0a0;
+    font-weight: bold;
+  }
+  .dumpling-pulls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .dumpling-pulls button {
+    padding: 10px 5px;
+    background: linear-gradient(180deg, #ffcf70 0%, #d88932 100%);
+    color: #381b00;
+    border-color: #9b5a1b;
+  }
+  .dumpling-pulls button:disabled {
+    background: #6b5b48;
+    color: #9b8c7a;
+    cursor: default;
+    box-shadow: none;
+  }
+  .dumpling-pulls small { display: block; margin-top: 2px; font-size: 0.76em; }
+  .dumpling-status {
+    min-height: 2.6em;
+    margin: 0;
+    color: #fff4cf;
+    line-height: 1.3;
+  }
+  .dumpling-showcase {
+    padding: 12px;
+    border: 3px solid #92724b;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #5a4b3c, #2f271f);
+  }
+  .dumpling-showcase.rare { border-color: #65b8ff; background: linear-gradient(145deg, #285f91, #152e54); }
+  .dumpling-showcase.epic { border-color: #c88aff; background: linear-gradient(145deg, #643a88, #321b4d); }
+  .dumpling-showcase.legendary { border-color: #ffe06a; background: linear-gradient(145deg, #9c7117, #4d3100); }
+  .dumpling-icon {
+    width: 44px;
+    height: 34px;
+    margin: 0 auto 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #8b755c;
+    border-radius: 52% 52% 44% 44%;
+    background: #f3ddba;
+    color: #4b2c1b;
+    font: bold 12px system-ui, sans-serif;
+    box-shadow: inset 0 5px 0 rgba(255,255,255,0.32), 0 3px 5px rgba(0,0,0,0.35);
+  }
+  .dumpling-icon.rare { background: #b8e2ff; border-color: #4c9ddd; }
+  .dumpling-icon.epic { background: #e2bdff; border-color: #9e58d1; }
+  .dumpling-icon.legendary { background: #ffe477; border-color: #d39a14; }
+  .dumpling-icon.large { width: 100px; height: 74px; font-size: 24px; border-width: 5px; }
+  .dumpling-selected-name { color: #fff; font-size: 1.1rem; font-weight: bold; }
+  .dumpling-selected-rarity { color: #ffe0a0; margin-top: 2px; text-transform: capitalize; }
+  .dumpling-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 7px;
+  }
+  .modal .dumpling-card {
+    min-height: 76px;
+    padding: 7px 3px;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-color: rgba(255,255,255,0.22);
+    font-size: 0.72rem;
+  }
+  .modal .dumpling-card.locked { opacity: 0.48; filter: grayscale(1); }
+  .modal .dumpling-card.selected { outline: 3px solid #ffd666; }
+
   /* ---- Shop crop rows (slice 10a) ---- */
   .shop-hint {
     font-size: 0.95rem;
@@ -594,22 +676,22 @@
     </div>
     <div class="shop-row">
       <span class="crop-dot" style="background:#cc7722"></span>
-      <div class="shop-info"><b>Carrot</b> — 4g<small>15s grow · sells 8g</small></div>
+      <div class="shop-info"><b>Carrot</b> — 4g<small>15s grow · sells 5g</small></div>
       <button class="btn-buy" id="btnBuy_carrot" onclick="buySeeds('carrot')" aria-label="Buy carrot seed for 4 gold">Buy</button>
     </div>
     <div class="shop-row">
       <span class="crop-dot" style="background:#e8c840"></span>
-      <div class="shop-info"><b>Corn</b> — 6g<small>20s grow · sells 12g</small></div>
+      <div class="shop-info"><b>Corn</b> — 6g<small>20s grow · sells 7g</small></div>
       <button class="btn-buy" id="btnBuy_corn" onclick="buySeeds('corn')" aria-label="Buy corn seed for 6 gold">Buy</button>
     </div>
     <div class="shop-row">
       <span class="crop-dot" style="background:#dd9922"></span>
-      <div class="shop-info"><b>Pumpkin</b> — 8g<small>30s grow · sells 20g</small></div>
+      <div class="shop-info"><b>Pumpkin</b> — 8g<small>30s grow · sells 9g</small></div>
       <button class="btn-buy" id="btnBuy_pumpkin" onclick="buySeeds('pumpkin')" aria-label="Buy pumpkin seed for 8 gold">Buy</button>
     </div>
     <div class="shop-row">
       <span class="crop-dot" style="background:#cc55cc"></span>
-      <div class="shop-info"><b>Starfruit</b> — 15g<small>45s grow · sells 40g</small></div>
+      <div class="shop-info"><b>Starfruit</b> — 15g<small>45s grow · sells 17g</small></div>
       <button class="btn-buy" id="btnBuy_starfruit" onclick="buySeeds('starfruit')" aria-label="Buy starfruit seed for 15 gold">Buy</button>
     </div>
     <button class="btn-sell" id="btnSell" onclick="sellCrops()" aria-label="Sell all harvested crops">Sell All Crops</button>
@@ -632,6 +714,37 @@
       <div id="gearSellList"></div>
     </div>
     <button class="btn-close" id="btnClose" onclick="closeShop()" aria-label="Leave the shop">Leave</button>
+  </div>
+</div>
+
+<!-- Dumpling vendor MVP: earned-gold pulls, pity, duplicate dough, and collection shelf.
+     Buddy powers and final art deliberately follow only after this loop playtests well. -->
+<div class="modal-overlay" id="dumplingModal" role="dialog" aria-modal="true" aria-labelledby="dumplingTitle">
+  <div class="modal dumpling-modal">
+    <h2 class="modal-title" id="dumplingTitle">Squishy Dumplings</h2>
+    <div class="dumpling-balance">
+      <span id="dumplingGold">Gold: 0g</span>
+      <span id="dumplingOwned">Collection: 0/18</span>
+    </div>
+    <p class="shop-hint">Every pull uses earned game gold. Save for a bundle to get a better deal!</p>
+    <div class="dumpling-pulls">
+      <button id="dumplingPull1" onclick="buyDumplingBundle(1)" aria-label="Buy one dumpling pull for 20 gold">1 Pull<small>20g each</small></button>
+      <button id="dumplingPull3" onclick="buyDumplingBundle(3)" aria-label="Buy three dumpling pulls for 50 gold">3 Pulls<small>50g · 16.7g each</small></button>
+      <button id="dumplingPull10" onclick="buyDumplingBundle(10)" aria-label="Buy ten dumpling pulls for 150 gold">10 Pulls<small>150g · 15g each</small></button>
+    </div>
+    <p class="dumpling-status" id="dumplingStatus" aria-live="polite">Choose a pull to meet your first dumpling!</p>
+    <div class="dumpling-showcase" id="dumplingShowcase">
+      <div class="dumpling-icon large" id="dumplingLargeIcon"><span>•ᴗ•</span></div>
+      <div class="dumpling-selected-name" id="dumplingSelectedName">No dumpling selected</div>
+      <div class="dumpling-selected-rarity" id="dumplingSelectedRarity">Pull one to begin</div>
+    </div>
+    <div class="dumpling-grid" id="dumplingGrid" aria-label="Dumpling collection"></div>
+    <div class="dumpling-balance">
+      <span id="dumplingDough">Dough: 0</span>
+      <span id="dumplingPity">Legendary in 15 pulls or fewer</span>
+    </div>
+    <p class="shop-hint">Duplicate: +4g refund and +1 dough. Buddy powers are coming next.</p>
+    <button class="btn-close" onclick="closeDumplingVendor()" aria-label="Leave the dumpling stall">Leave</button>
   </div>
 </div>
 
@@ -1022,6 +1135,35 @@ var CROPS = {
 };
 var CROP_TYPES = ['turnip', 'carrot', 'corn', 'pumpkin', 'starfruit'];
 
+// ---- Squishy Dumplings MVP ----
+// This slice proves the earned-gold pull, pity, duplicate, collection, and save loop.
+// Buddy buffs are intentionally not active yet.
+var DUMPLINGS = [
+  { id: 'plain_bun',        name: 'Plain Bun',        rarity: 'common' },
+  { id: 'rice_ball',        name: 'Rice Ball',        rarity: 'common' },
+  { id: 'tofu_cube',        name: 'Tofu Cube',        rarity: 'common' },
+  { id: 'egg_tart',         name: 'Egg Tart',         rarity: 'common' },
+  { id: 'mochi_drop',       name: 'Mochi Drop',       rarity: 'common' },
+  { id: 'pork_bun',         name: 'Pork Bun',         rarity: 'common' },
+  { id: 'custard_bao',      name: 'Custard Bao',      rarity: 'rare' },
+  { id: 'spicy_gyoza',      name: 'Spicy Gyoza',      rarity: 'rare' },
+  { id: 'sesame_ball',      name: 'Sesame Ball',      rarity: 'rare' },
+  { id: 'red_bean_bun',     name: 'Red Bean Bun',     rarity: 'rare' },
+  { id: 'onion_pancake',    name: 'Onion Pancake',    rarity: 'rare' },
+  { id: 'rainbow_mochi',    name: 'Rainbow Mochi',    rarity: 'epic' },
+  { id: 'dragon_dumpling',  name: 'Dragon Dumpling',  rarity: 'epic' },
+  { id: 'golden_gyoza',     name: 'Golden Gyoza',     rarity: 'epic' },
+  { id: 'star_bao',         name: 'Star Bao',         rarity: 'epic' },
+  { id: 'golden_dumpling',  name: 'Golden Dumpling',  rarity: 'legendary' },
+  { id: 'warrior_dumpling', name: 'Warrior Dumpling', rarity: 'legendary' },
+  { id: 'harvest_dumpling', name: 'Harvest Dumpling', rarity: 'legendary' }
+];
+var DUMPLING_BY_ID = {};
+for (var di = 0; di < DUMPLINGS.length; di++) DUMPLING_BY_ID[DUMPLINGS[di].id] = DUMPLINGS[di];
+var DUMPLING_BUNDLES = { 1: 20, 3: 50, 10: 150 };
+var DUMPLING_DUPLICATE_REFUND = 4;
+var DUMPLING_PITY_PULLS = 15;
+
 // ---- Recipes (slice 13a: cooking) ----
 // Each recipe turns crops into a food item that heals HP when eaten. The hidden math
 // is RATIO/efficiency: which dish heals the most HP per crop you spend? (turnip soup is
@@ -1062,7 +1204,10 @@ var player = {
   inventory: [],   // spare (un-equipped) gear item ids you can sell in the shop (slice 18)
   food: { veggie_soup: 0, carrot_stew: 0, corn_chowder: 0, pumpkin_pie: 0, starfruit_elixir: 0 },
   killCounts: {},
-  killQuest: null
+  killQuest: null,
+  dumplings: {},
+  dumplingDough: 0,
+  pullsSinceLegendary: 0
 };
 
 var held = { up: false, down: false, left: false, right: false };
@@ -1073,6 +1218,8 @@ var wasNearDoor = false; // was the player near the door last frame? (so we open
 var wasNearEnemy = false; // same idea for the Wilds enemy (open the battle only on approach)
 var seedPickerOpen = false;  // is the "plant which seed?" picker showing?
 var cookingOpen = false;     // is the cooking modal open?
+var dumplingOpen = false;    // is the dumpling vendor / collection modal open?
+var selectedDumplingId = null;
 
 // Totals across all crop types (for HUD and checks).
 function totalSeeds() {
@@ -1290,7 +1437,9 @@ var AREA_LABEL = {
 var NPCS = [
   { id: 'mira',   name: 'Mira',   area: 'town', row: 10, col: 14, role: 'quests', color: '#9c6cd0' },
   { id: 'bram',   name: 'Bram',   area: 'town', row: 7,  col: 7,  role: 'shop',   color: '#d4a55a' },
-  { id: 'gunnar', name: 'Gunnar', area: 'town', row: 7,  col: 21, role: 'forge',  color: '#7a8a9a' }
+  { id: 'gunnar', name: 'Gunnar', area: 'town', row: 7,  col: 21, role: 'forge',  color: '#7a8a9a' },
+  { id: 'dumpling_vendor', name: 'Dumpling Vendor', area: 'town', row: 14, col: 17,
+    role: 'dumplings', color: '#dc779f' }
 ];
 var TOWN_SHOP = { row: 4, col: 6, w: 4, h: 3 };
 
@@ -1675,7 +1824,7 @@ function interactCropTile(tile) {
 // interactable target, even if it is currently too far away.
 function interactAtTile(row, col) {
   if (!gameActive) return false;
-  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return false;
+  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return false;
 
   for (var n = 0; n < NPCS.length; n++) {
     var npc = NPCS[n];
@@ -1725,7 +1874,7 @@ function interactAtTile(row, col) {
 // ---- Action button: plant, harvest, talk, shop, cook, or fight ----
 function doAction() {
   if (!gameActive) return;         // no play until a profile is chosen
-  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
   // Tapping Action beside the shop door opens the store.
   if (isNearDoor() && !shopOpen) { openShop(); return; }
   // Tapping Action beside any NPC dispatches per role.
@@ -1863,6 +2012,179 @@ function closeSeedPicker() {
   restoreFocus();
 }
 
+// ---- Squishy Dumpling vendor + collection MVP ----
+function dumplingCollectionCount() {
+  var total = 0;
+  for (var i = 0; i < DUMPLINGS.length; i++) {
+    if ((player.dumplings[DUMPLINGS[i].id] || 0) > 0) total++;
+  }
+  return total;
+}
+
+function dumplingPool(rarity) {
+  var pool = [];
+  for (var i = 0; i < DUMPLINGS.length; i++) {
+    if (DUMPLINGS[i].rarity === rarity) pool.push(DUMPLINGS[i]);
+  }
+  return pool;
+}
+
+function firstOwnedDumplingId() {
+  for (var i = 0; i < DUMPLINGS.length; i++) {
+    if ((player.dumplings[DUMPLINGS[i].id] || 0) > 0) return DUMPLINGS[i].id;
+  }
+  return null;
+}
+
+function rollDumpling() {
+  var rarity;
+  if (player.pullsSinceLegendary >= DUMPLING_PITY_PULLS - 1) {
+    rarity = 'legendary';
+  } else {
+    var rarityRoll = Math.random();
+    if (rarityRoll < 0.55) rarity = 'common';
+    else if (rarityRoll < 0.82) rarity = 'rare';
+    else if (rarityRoll < 0.94) rarity = 'epic';
+    else rarity = 'legendary';
+  }
+
+  var pool = dumplingPool(rarity);
+  var picked = pool[Math.min(pool.length - 1, Math.floor(Math.random() * pool.length))];
+  var duplicate = (player.dumplings[picked.id] || 0) > 0;
+  player.dumplings[picked.id] = (player.dumplings[picked.id] || 0) + 1;
+
+  if (rarity === 'legendary') player.pullsSinceLegendary = 0;
+  else player.pullsSinceLegendary++;
+
+  if (duplicate) {
+    player.gold += DUMPLING_DUPLICATE_REFUND;
+    player.dumplingDough++;
+  }
+  return { id: picked.id, name: picked.name, rarity: rarity, duplicate: duplicate };
+}
+
+function selectDumpling(id) {
+  if (!DUMPLING_BY_ID[id] || !(player.dumplings[id] > 0)) return;
+  selectedDumplingId = id;
+  renderDumplingModal();
+}
+
+function renderDumplingModal() {
+  document.getElementById('dumplingGold').textContent = 'Gold: ' + player.gold + 'g';
+  document.getElementById('dumplingOwned').textContent =
+    'Collection: ' + dumplingCollectionCount() + '/' + DUMPLINGS.length;
+  document.getElementById('dumplingDough').textContent = 'Dough: ' + player.dumplingDough;
+  var untilPity = DUMPLING_PITY_PULLS - player.pullsSinceLegendary;
+  document.getElementById('dumplingPity').textContent =
+    'Legendary in ' + untilPity + ' pull' + (untilPity === 1 ? '' : 's') + ' or fewer';
+
+  for (var count in DUMPLING_BUNDLES) {
+    var pullButton = document.getElementById('dumplingPull' + count);
+    if (pullButton) pullButton.disabled = player.gold < DUMPLING_BUNDLES[count];
+  }
+
+  if (!selectedDumplingId || !(player.dumplings[selectedDumplingId] > 0)) {
+    selectedDumplingId = firstOwnedDumplingId();
+  }
+  var selected = selectedDumplingId ? DUMPLING_BY_ID[selectedDumplingId] : null;
+  var showcase = document.getElementById('dumplingShowcase');
+  var largeIcon = document.getElementById('dumplingLargeIcon');
+  showcase.className = 'dumpling-showcase' + (selected ? ' ' + selected.rarity : '');
+  largeIcon.className = 'dumpling-icon large' + (selected ? ' ' + selected.rarity : '');
+  document.getElementById('dumplingSelectedName').textContent =
+    selected ? selected.name : 'No dumpling selected';
+  document.getElementById('dumplingSelectedRarity').textContent =
+    selected ? selected.rarity : 'Pull one to begin';
+
+  var grid = document.getElementById('dumplingGrid');
+  grid.innerHTML = '';
+  for (var i = 0; i < DUMPLINGS.length; i++) {
+    var dumpling = DUMPLINGS[i];
+    var owned = (player.dumplings[dumpling.id] || 0) > 0;
+    var card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'dumpling-card' + (owned ? '' : ' locked') +
+      (selectedDumplingId === dumpling.id ? ' selected' : '');
+    card.dataset.id = dumpling.id;
+    card.disabled = !owned;
+    card.setAttribute('aria-label', owned ? dumpling.name + ', ' + dumpling.rarity : 'Locked dumpling');
+
+    var icon = document.createElement('div');
+    icon.className = 'dumpling-icon ' + dumpling.rarity;
+    var face = document.createElement('span');
+    face.textContent = '•ᴗ•';
+    icon.appendChild(face);
+    card.appendChild(icon);
+
+    var label = document.createElement('div');
+    label.textContent = owned ? dumpling.name : '???';
+    card.appendChild(label);
+    if (owned) card.addEventListener('click', function() { selectDumpling(this.dataset.id); });
+    grid.appendChild(card);
+  }
+}
+
+function openDumplingVendor() {
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen ||
+      combatOpen || cookingOpen || dumplingOpen) return;
+  dumplingOpen = true;
+  if (dumplingCollectionCount() === 0) {
+    document.getElementById('dumplingStatus').textContent =
+      'Choose a pull to meet your first dumpling!';
+  }
+  renderDumplingModal();
+  document.getElementById('dumplingModal').classList.add('open');
+  focusModal('dumplingModal');
+  speak('Welcome to the Squishy Dumpling stall. Save gold for a better bundle deal!');
+}
+
+function closeDumplingVendor() {
+  dumplingOpen = false;
+  document.getElementById('dumplingModal').classList.remove('open');
+  restoreFocus();
+}
+
+function buyDumplingBundle(count) {
+  var cost = DUMPLING_BUNDLES[count];
+  if (!gameActive || !dumplingOpen || !cost) return false;
+  if (player.gold < cost) {
+    showToast('You need ' + cost + ' gold!');
+    speak('You need ' + cost + ' gold.');
+    return false;
+  }
+
+  player.gold -= cost;
+  var results = [];
+  var newCount = 0;
+  var duplicateCount = 0;
+  var foundLegendary = false;
+  for (var i = 0; i < count; i++) {
+    var result = rollDumpling();
+    results.push(result);
+    if (result.duplicate) duplicateCount++; else newCount++;
+    if (result.rarity === 'legendary') foundLegendary = true;
+  }
+
+  var last = results[results.length - 1];
+  selectedDumplingId = last.id;
+  var message;
+  if (count === 1) {
+    message = (last.duplicate ? 'Duplicate! ' : 'NEW! ') + last.name +
+      ' · ' + last.rarity + (last.duplicate ? ' · +4g and +1 dough' : '');
+  } else {
+    message = count + ' pulls: ' + newCount + ' new, ' + duplicateCount +
+      ' duplicate' + (duplicateCount === 1 ? '' : 's') + '. Last: ' + last.name + '!';
+  }
+  document.getElementById('dumplingStatus').textContent = message;
+  if (foundLegendary) soundWin(); else soundCoin();
+  showToast(foundLegendary ? 'Legendary dumpling!' : 'Dumpling pull complete!');
+  speak(message);
+  updateHUD();
+  renderDumplingModal();
+  saveGame();
+  return true;
+}
+
 // ---- Town NPC quest (slice 10b) ----
 // One shared system for both players; only the question + reading level change per profile.
 // The older-reader slot ('adventurer') gets multiplication word problems; the early-reader
@@ -1897,25 +2219,30 @@ function makeQuestProblem() {
 }
 
 // ---- NPC role titles for the quest modal header. ----
-var NPC_TITLES = { mira: 'the Villager', bram: 'the Shopkeeper', gunnar: 'the Smith' };
+var NPC_TITLES = {
+  mira: 'the Villager', bram: 'the Shopkeeper', gunnar: 'the Smith',
+  dumpling_vendor: 'at the Squishy Stall'
+};
 
 // ---- NPC greetings: voiced on first interaction each session. ----
 var NPC_GREETINGS = {
   mira: 'Hello, adventurer! I have a task for you.',
   bram: 'Welcome to my store! Solve this and I will cut you a deal.',
-  gunnar: 'Hmm. Show me your math and I will forge something strong.'
+  gunnar: 'Hmm. Show me your math and I will forge something strong.',
+  dumpling_vendor: 'Welcome! Every dumpling can be earned with game gold.'
 };
 var npcGreeted = {};
 
 function interactNPC(npc) {
   if (npc.role === 'shop') { openShop(); return; }
+  if (npc.role === 'dumplings') { openDumplingVendor(); return; }
   openQuest(npc);
 }
 
 function openQuest(npc) {
   var npcName = npc ? npc.name : 'Mira';
   var npcId = npc ? npc.id : 'mira';
-  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
 
   // Voiced greeting on first interaction this session
   if (!npcGreeted[npcId]) {
@@ -2204,7 +2531,7 @@ function updateCombatBars() {
 
 // Start a fight with a specific Wilds enemy. Makes a COPY so the template stays pristine.
 function openCombat(enemyEntry) {
-  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
   if (!enemyEntry) enemyEntry = isNearEnemy();
   if (!enemyEntry || !enemyEntry.alive) return;
   combatSource = enemyEntry;
@@ -2517,7 +2844,7 @@ function recipeCostText(recipeId) {
 }
 
 function openCooking() {
-  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
   cookingOpen = true;
   document.getElementById('cookingModal').classList.add('open');
   renderCooking();
@@ -2757,7 +3084,7 @@ function makeOptions(answer) {
 }
 
 function openMathBonus() {
-  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
   if (countReady() === 0) { showToast('No crops ready yet!'); return; }
 
   var q = makeQuestion();
@@ -2850,7 +3177,10 @@ function defaultState() {
       hp: 20, maxHp: 20, level: 1, xp: 0, hpUpgrades: 0, atkUpgrades: 0,
       gear: { weapon: null, head: null, body: null, cape: null },
       inventory: [],
-      food: { veggie_soup: 0, carrot_stew: 0, corn_chowder: 0, pumpkin_pie: 0, starfruit_elixir: 0 }
+      food: { veggie_soup: 0, carrot_stew: 0, corn_chowder: 0, pumpkin_pie: 0, starfruit_elixir: 0 },
+      dumplings: {},
+      dumplingDough: 0,
+      pullsSinceLegendary: 0
     },
     areas: { farm: { tiles: null }, town: { tiles: null }, wilds: { tiles: null }, deepwoods: { tiles: null }, mine: { tiles: null } }
   };
@@ -2948,6 +3278,17 @@ function applyState(s) {
   for (var fi2 = 0; fi2 < NPCS.length; fi2++)
     player.friends[NPCS[fi2].id] = (p.friends && p.friends[NPCS[fi2].id]) || 0;
 
+  // Squishy Dumpling collection MVP. Old saves predate it and start with an empty shelf.
+  player.dumplings = {};
+  for (var du = 0; du < DUMPLINGS.length; du++) {
+    var savedCount = p.dumplings && parseInt(p.dumplings[DUMPLINGS[du].id], 10);
+    if (savedCount > 0) player.dumplings[DUMPLINGS[du].id] = savedCount;
+  }
+  player.dumplingDough = Math.max(0, parseInt(p.dumplingDough, 10) || 0);
+  player.pullsSinceLegendary = Math.max(0,
+    Math.min(DUMPLING_PITY_PULLS - 1, parseInt(p.pullsSinceLegendary, 10) || 0));
+  selectedDumplingId = firstOwnedDumplingId();
+
   // Old saves stored seeds/crops as plain numbers → convert to per-type objects.
   if (typeof p.seeds === 'number' || p.seeds == null) {
     var sc = (p.seeds != null) ? p.seeds : 4;
@@ -3007,7 +3348,10 @@ function saveGame() {
       hpUpgrades: player.hpUpgrades, atkUpgrades: player.atkUpgrades,
       gear: player.gear, inventory: player.inventory, food: player.food,
       killCounts: player.killCounts, killQuest: player.killQuest,
-      friends: player.friends
+      friends: player.friends,
+      dumplings: player.dumplings,
+      dumplingDough: player.dumplingDough,
+      pullsSinceLegendary: player.pullsSinceLegendary
     },
     areas: {
       farm:      { tiles: areas.farm.crops },
@@ -3361,7 +3705,9 @@ function updateActionLabel() {
     canAct = true;
   } else if (isNearNPC()) {
     var nn = isNearNPC();
-    btn.textContent = nn.role === 'shop' ? 'Shop' : 'Talk';
+    if (nn.role === 'shop') btn.textContent = 'Shop';
+    else if (nn.role === 'dumplings') btn.textContent = 'Dumplings';
+    else btn.textContent = 'Talk';
     canAct = true;
   } else if (isNearCookpot()) {
     btn.textContent = 'Cook';           // standing by the Farm pot → cooking modal
@@ -3403,7 +3749,7 @@ function update() {
     }
   }
   // Freeze the player while a modal (shop, math bonus, quest, or battle) is open.
-  if (!shopOpen && !mathOpen && !seedPickerOpen && !questOpen && !combatOpen && !cookingOpen) {
+  if (!shopOpen && !mathOpen && !seedPickerOpen && !questOpen && !combatOpen && !cookingOpen && !dumplingOpen) {
     var oldX = player.x, oldY = player.y;
     var dx = 0, dy = 0;
     if (held.left)  dx -= 1;
@@ -3464,7 +3810,8 @@ function update() {
   // wasNearEnemy stops it from re-firing every frame, so fleeing then standing still
   // won't instantly reopen it — you walk away and back to re-trigger.
   var nearEnemy = isNearEnemy();
-  if (nearEnemy && !wasNearEnemy && !combatOpen && !shopOpen && !mathOpen && !questOpen && !seedPickerOpen) openCombat(nearEnemy);
+  if (nearEnemy && !wasNearEnemy && !combatOpen && !shopOpen && !mathOpen &&
+      !questOpen && !seedPickerOpen && !dumplingOpen) openCombat(nearEnemy);
   wasNearEnemy = !!nearEnemy;
 
   // Travel: stepping onto an EXIT road tile carries you to the other area.
@@ -3476,7 +3823,7 @@ function update() {
 
 // ---- Area travel (walk onto an edge EXIT tile) ----
 function checkTravel() {
-  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen) return;
+  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
   var col = Math.floor((player.x + player.size / 2) / TILE);
   var row = Math.floor((player.y + player.size / 2) / TILE);
   if (row < 0 || row >= MAP_H || col < 0 || col >= MAP_W) return;
@@ -3538,7 +3885,16 @@ function drawNpcShape(npc, nx, ny) {
   ctx.fillStyle = '#f0c8a0';
   ctx.fillRect(nx + 10, ny + 2, 12, 10);
   // Hair/hat per NPC
-  if (npc.id === 'bram') {
+  if (npc.id === 'dumpling_vendor') {
+    // White squishy-bun hat makes the placeholder vendor readable before final stall art.
+    ctx.fillStyle = '#f5e4c7';
+    ctx.beginPath();
+    ctx.ellipse(nx + 16, ny + 3, 10, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#5a3725';
+    ctx.fillRect(nx + 13, ny + 3, 2, 2);
+    ctx.fillRect(nx + 18, ny + 3, 2, 2);
+  } else if (npc.id === 'bram') {
     ctx.fillStyle = '#8b6914';
     ctx.fillRect(nx + 8, ny + 1, 16, 4);
   } else if (npc.id === 'gunnar') {
@@ -4544,6 +4900,7 @@ window.addEventListener('keydown', function (e) {
   if (e.key === 'Escape' && mathOpen) closeMathBonus();
   if (e.key === 'Escape' && combatOpen) fleeCombat();
   if (e.key === 'Escape' && cookingOpen) closeCooking();
+  if (e.key === 'Escape' && dumplingOpen) closeDumplingVendor();
   if (e.key === 'Escape' && document.getElementById('saveToolsModal').classList.contains('open')) closeSaveTools();
 });
 window.addEventListener('keyup', function (e) {
