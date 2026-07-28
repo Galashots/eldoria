@@ -348,5 +348,193 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Suite 13: Squishy Dumpling pull-loop MVP ---
+{
+  const { browser, page } = await launch('?iso=0');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    activateArea('town');
+
+    var rarityCounts = {};
+    for (var i = 0; i < DUMPLINGS.length; i++) {
+      rarityCounts[DUMPLINGS[i].rarity] = (rarityCounts[DUMPLINGS[i].rarity] || 0) + 1;
+    }
+
+    var vendor = NPCS.filter(npc => npc.role === 'dumplings')[0];
+    player.x = (vendor.col - 1) * TILE;
+    player.y = vendor.row * TILE;
+    var vendorTapHandled = interactAtTile(vendor.row, vendor.col);
+    var vendorOpened = dumplingOpen;
+
+    player.gold = 19;
+    var insufficientRejected = buyDumplingBundle(1) === false &&
+      player.gold === 19 && dumplingCollectionCount() === 0;
+
+    var originalRandom = Math.random;
+    player.gold = 100;
+    var firstRolls = [0, 0];
+    Math.random = () => firstRolls.shift() || 0;
+    var firstBought = buyDumplingBundle(1);
+    var firstPull = {
+      gold: player.gold,
+      plain: player.dumplings.plain_bun,
+      pity: player.pullsSinceLegendary
+    };
+
+    Math.random = () => 0;
+    var duplicateBought = buyDumplingBundle(1);
+    var duplicatePull = {
+      gold: player.gold,
+      plain: player.dumplings.plain_bun,
+      dough: player.dumplingDough,
+      pity: player.pullsSinceLegendary
+    };
+
+    player.pullsSinceLegendary = 14;
+    var pityBought = buyDumplingBundle(1);
+    var pityPull = {
+      golden: player.dumplings.golden_dumpling,
+      pity: player.pullsSinceLegendary
+    };
+
+    var saved = JSON.parse(localStorage.getItem('eldoria_save_adventurer'));
+    player.dumplings = {};
+    player.dumplingDough = 0;
+    player.pullsSinceLegendary = 0;
+    applyState(saved);
+    var persisted = {
+      plain: player.dumplings.plain_bun,
+      golden: player.dumplings.golden_dumpling,
+      dough: player.dumplingDough,
+      pity: player.pullsSinceLegendary
+    };
+
+    player.gold = 200;
+    player.dumplings = {};
+    player.dumplingDough = 0;
+    player.pullsSinceLegendary = 13;
+    selectedDumplingId = null;
+    Math.random = () => 0;
+    var bundleBought = buyDumplingBundle(3);
+    var bundle = {
+      gold: player.gold,
+      plain: player.dumplings.plain_bun,
+      golden: player.dumplings.golden_dumpling,
+      dough: player.dumplingDough,
+      pity: player.pullsSinceLegendary,
+      owned: dumplingCollectionCount()
+    };
+    Math.random = originalRandom;
+
+    var shopCopy = document.getElementById('shopModal').textContent;
+    closeDumplingVendor();
+    return {
+      catalogSize: DUMPLINGS.length,
+      rarityCounts,
+      pricing: DUMPLING_BUNDLES,
+      refund: DUMPLING_DUPLICATE_REFUND,
+      vendorTapHandled,
+      vendorOpened,
+      insufficientRejected,
+      firstBought,
+      firstPull,
+      duplicateBought,
+      duplicatePull,
+      pityBought,
+      pityPull,
+      persisted,
+      bundleBought,
+      bundle,
+      shopCopy,
+      modalClosed: !dumplingOpen
+    };
+  });
+
+  check('dumplings: catalog has the approved 6/5/4/3 rarity split',
+    r.catalogSize === 18 &&
+    r.rarityCounts.common === 6 && r.rarityCounts.rare === 5 &&
+    r.rarityCounts.epic === 4 && r.rarityCounts.legendary === 3);
+  check('dumplings: approved bundle prices and duplicate refund are locked',
+    r.pricing['1'] === 20 && r.pricing['3'] === 50 && r.pricing['10'] === 150 && r.refund === 4);
+  check('dumplings: direct vendor tap opens the collection modal',
+    r.vendorTapHandled && r.vendorOpened);
+  check('dumplings: insufficient gold cannot buy a pull', r.insufficientRejected);
+  check('dumplings: first pull charges 20g and adds the deterministic common',
+    r.firstBought && r.firstPull.gold === 80 && r.firstPull.plain === 1 && r.firstPull.pity === 1);
+  check('dumplings: duplicate refunds 4g and grants one dough',
+    r.duplicateBought && r.duplicatePull.gold === 64 && r.duplicatePull.plain === 2 &&
+    r.duplicatePull.dough === 1 && r.duplicatePull.pity === 2);
+  check('dumplings: fifteenth dry pull forces and resets a Legendary',
+    r.pityBought && r.pityPull.golden === 1 && r.pityPull.pity === 0);
+  check('dumplings: collection, dough, and pity survive save reload',
+    r.persisted.plain === 2 && r.persisted.golden === 1 &&
+    r.persisted.dough === 1 && r.persisted.pity === 0);
+  check('dumplings: pity resolves sequentially inside a three-pull bundle',
+    r.bundleBought && r.bundle.gold === 154 && r.bundle.plain === 2 &&
+    r.bundle.golden === 1 && r.bundle.dough === 1 &&
+    r.bundle.pity === 1 && r.bundle.owned === 2);
+  check('economy UI: shop copy matches the approved crop values',
+    r.shopCopy.includes('sells 5g') && r.shopCopy.includes('sells 7g') &&
+    r.shopCopy.includes('sells 9g') && r.shopCopy.includes('sells 17g'));
+  check('dumplings: vendor modal closes cleanly', r.modalClosed);
+  await browser.close();
+}
+
+// --- Dumpling MVP visual evidence at desktop and narrow phone sizes ---
+{
+  const evidenceDir = new URL('../artifacts/', import.meta.url);
+  await mkdir(evidenceDir, { recursive: true });
+  const viewports = [
+    { name: 'desktop', width: 1363, height: 936 },
+    { name: 'phone-portrait', width: 390, height: 780 }
+  ];
+  let layoutOk = true;
+  for (const viewport of viewports) {
+    const { browser, page } = await launch('?iso=0');
+    await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
+    await page.evaluate(() => {
+      selectProfile('adventurer');
+      activateArea('town');
+      player.gold = 170;
+      player.dumplings = {
+        plain_bun: 2,
+        custard_bao: 1,
+        rainbow_mochi: 1,
+        golden_dumpling: 1
+      };
+      player.dumplingDough = 3;
+      player.pullsSinceLegendary = 6;
+      selectedDumplingId = 'rainbow_mochi';
+      openDumplingVendor();
+      document.getElementById('dumplingStatus').textContent =
+        '3 pulls: 2 new, 1 duplicate. Last: Rainbow Mochi!';
+    });
+    const layout = await page.evaluate(() => {
+      var modal = document.querySelector('#dumplingModal .dumpling-modal');
+      var pull = document.getElementById('dumplingPull1').getBoundingClientRect();
+      var close = document.querySelector('.dumpling-close-x').getBoundingClientRect();
+      var modalRect = modal.getBoundingClientRect();
+      return {
+        modalHeight: modalRect.height,
+        viewportHeight: window.innerHeight,
+        overflowY: getComputedStyle(modal).overflowY,
+        pullHeight: pull.height,
+        closeHeight: close.height,
+        closeVisible: close.top >= modalRect.top && close.bottom <= modalRect.bottom
+      };
+    });
+    layoutOk = layoutOk && layout.modalHeight <= layout.viewportHeight * 0.91 &&
+      layout.overflowY === 'auto' && layout.pullHeight >= 44 &&
+      layout.closeHeight >= 44 && layout.closeVisible;
+    await page.screenshot({
+      path: fileURLToPath(new URL('dumpling-mvp-' + viewport.name + '.png', evidenceDir)),
+      fullPage: true
+    });
+    await browser.close();
+  }
+  check('visual evidence: desktop and phone dumpling frames captured', true);
+  check('dumplings: modal stays bounded, scrollable, and touch-sized', layoutOk);
+}
+
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');
