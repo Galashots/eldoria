@@ -328,5 +328,25 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('visual evidence: desktop and phone crop frames captured', true);
 }
 
+// --- Suite 12: owner-approved farming-to-dumpling economy preset ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    var costs = CROP_TYPES.map(type => CROPS[type].cost);
+    var sells = CROP_TYPES.map(type => CROPS[type].sell);
+    var fullFarmProfit = CROP_TYPES.map(type => 25 * (CROPS[type].sell - CROPS[type].cost));
+    return { costs, sells, fullFarmProfit };
+  });
+  check('economy: seed costs stay unchanged',
+    JSON.stringify(r.costs) === JSON.stringify([2, 4, 6, 8, 15]));
+  check('economy: approved crop sale values are locked',
+    JSON.stringify(r.sells) === JSON.stringify([3, 5, 7, 9, 17]));
+  check('economy: ordinary full harvests net 25 gold',
+    r.fullFarmProfit.slice(0, 4).every(value => value === 25));
+  check('economy: full starfruit harvest nets 50 gold',
+    r.fullFarmProfit[4] === 50);
+  await browser.close();
+}
+
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');
