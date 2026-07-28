@@ -1,6 +1,6 @@
 # AI Team Role RFC
 
-**Status:** Draft evidence-gathering process  
+**Status:** Round 1 proposals collected; comparison drafted  
 **Owner:** Leo Pinto, Game Director  
 **Repository:** `Galashots/eldoria`  
 **Opened:** 2026-07-28
@@ -49,20 +49,24 @@ Each proposal must distinguish:
 - **Inferred:** a reasonable but unverified expectation.
 - **Untested:** a capability claim requiring a trial.
 
-## Initial proposal files
+## Round 1 artifacts
 
 - `proposals/2026-07-28-gemini-initial.md`
 - `proposals/2026-07-28-chatgpt-initial.md`
-- Claude and Kimi proposals: pending
+- `proposals/2026-07-28-claude-initial.md`
+- `proposals/2026-07-28-kimi-initial.md`
+- `ROUND1_COMPARISON.md`
 
 ## Decision process
 
-1. Collect all four initial proposals without editing them into consensus.
-2. Produce a neutral comparison matrix covering consensus, disagreements, factual conflicts, and trial candidates.
-3. Run small representative trials where role claims materially conflict or remain untested.
-4. Ask each agent for a short final response to the comparison and trial evidence.
-5. Leo approves the final role charter.
-6. Review the charter after the first five material tasks and whenever tools, models, cost, or availability change significantly.
+1. **Complete:** Collect all four initial proposals without editing them into consensus.
+2. **Complete:** Produce a neutral comparison matrix covering consensus, disagreements, factual conflicts, and trial candidates.
+3. **Next:** Leo accepts or edits the provisional role matrix.
+4. Record the accepted provisional matrix in `AI_TEAM_CHARTER.md`.
+5. Run small representative trials through normal project work where role claims materially conflict or remain untested.
+6. Ask each agent for a short final response to the comparison and trial evidence.
+7. Leo approves the final role charter.
+8. Review the charter after the first five material tasks and whenever tools, models, cost, or availability change significantly.
 
 ## Scope of this RFC
 
