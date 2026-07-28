@@ -5,9 +5,18 @@ These instructions apply to every agent working in this repository.
 ## Start here
 
 - Read `README.md` for the product and architecture.
+- Read `docs/ai-team/AI_TEAM_CHARTER.md` before assigning leads, reviewers, approval authority, or merge authority. The charter routes work but does not itself grant task-specific access or permission.
 - Read `docs/VISUAL_NORTH_STAR.md` and inspect its linked image before any repository-wide review or any material decision affecting the visible game.
 - For isometric conversion work, also read `docs/superpowers/specs/2026-07-27-isometric-conversion-design.md`.
 - Preserve the repo's deliberately simple architecture: one self-contained `index.html`, vanilla HTML/CSS/JavaScript, offline operation, and touch-first tablet support unless the owner explicitly authorizes an architectural change.
+
+## AI team rule
+
+Claude Code and ChatGPT may exchange or share planning and implementation leadership according to task fit, tools, context, risk, cost, and availability. Claude is the default implementation seat, not the exclusive implementer. ChatGPT remains the standing visual-direction lead.
+
+Gemini is a standing non-blocking advisory reviewer. Kimi is an on-request provisional specialist reviewer. No agent may treat its title as automatic write, approval, blocking-review, or merge authority.
+
+No agent's self-review is sufficient for its own material work. Use the proportional workflow and authority boundaries in `docs/ai-team/AI_TEAM_CHARTER.md`.
 
 ## Visual North Star rule
 
