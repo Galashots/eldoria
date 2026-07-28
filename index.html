@@ -3653,8 +3653,61 @@ function drawEnemyShape(type, ex, ey, now) {
   ctx.fill();
 }
 
+// ---- Iso renderer, pass 1: ground (Phase 0 placeholders; spec section 7) ----
+// Flat floor diamonds row-major; crops drawn low on their soil tile. Missing iso art
+// falls back to a flat colored diamond — same philosophy as the sprite fallback shapes.
+// Both modes share the ONE tile palette: TILE_COLOR.
+var isoCamPX = 0, isoCamPY = 0;
+
+function drawIsoTileDiamond(cx, cy, fillColor) {
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - ISO_TH / 2);
+  ctx.lineTo(cx + ISO_TW / 2, cy);
+  ctx.lineTo(cx, cy + ISO_TH / 2);
+  ctx.lineTo(cx - ISO_TW / 2, cy);
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+}
+
+function isoUpdateCamera() {
+  var pcx = isoPX(player.x + player.size / 2, player.y + player.size / 2);
+  var pcy = isoPY(player.x + player.size / 2, player.y + player.size / 2);
+  isoCamPX = pcx - isoCamW / 2;
+  isoCamPY = pcy - isoCamH / 2;
+  var totW = (MAP_W + MAP_H) * TILE, totH = (MAP_W + MAP_H) * TILE / 2;
+  if (isoCamPX > totW - isoCamW) isoCamPX = totW - isoCamW;
+  if (isoCamPY > totH - isoCamH) isoCamPY = totH - isoCamH;
+  if (isoCamPX < 0) isoCamPX = 0;
+  if (isoCamPY < -ISO_TH * 3) isoCamPY = -ISO_TH * 3;   // headroom for tall props
+}
+
+function drawIsoWorld() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#0d0a06';                             // moody void, not pure black
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  isoUpdateCamera();
+  ctx.setTransform(isoScale, 0, 0, isoScale, -isoCamPX * isoScale, -isoCamPY * isoScale);
+  for (var r = 0; r < MAP_H; r++) {
+    for (var c = 0; c < MAP_W; c++) {
+      var wx = (c + 0.5) * TILE, wy = (r + 0.5) * TILE;
+      var cx = isoPX(wx, wy), cy = isoPY(wx, wy);
+      var t = map[r][c];
+      drawIsoTileDiamond(cx, cy, TILE_COLOR[t] || '#333333');
+      var crop = cropData[r + ',' + c];
+      if (crop && crop.status !== 'empty') {
+        var cc = CROPS[crop.type || 'turnip'];
+        drawIsoTileDiamond(cx, cy - 4,
+          crop.status === 'ready' ? cc.readyColor : cc.color);
+      }
+    }
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
 // ---- Draw ----
 function draw() {
+  if (typeof isoActive === 'function' && isoActive()) { drawIsoWorld(); return; }
   var camX = player.x + player.size / 2 - canvas.width / 2;
   var camY = player.y + player.size / 2 - canvas.height / 2;
   var maxCamX = MAP_W * TILE - canvas.width;

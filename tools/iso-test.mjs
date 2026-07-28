@@ -59,5 +59,20 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Suite 4: iso ground renders ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    applyCanvasMode();
+    drawIsoWorld();
+    // Sample the canvas center: must not be the untouched black background.
+    var d = ctx.getImageData(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2), 1, 1).data;
+    return { r: d[0], g: d[1], b: d[2] };
+  });
+  check('ground: canvas center is painted (not black)', (r.r + r.g + r.b) > 30);
+  await browser.close();
+}
+
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');
