@@ -13,6 +13,10 @@ npm-debug.log*
 _srv_out.txt
 _srv_err.txt
 
+# Gemini CLI local settings and GitHub App credentials
+.gemini/
+gha-creds-*.json
+
 # Raw ChatGPT sprite exports — large source images, processed into assets/ by
 # tools/process-sprite.mjs. Keep them local; only the processed PNGs get committed.
 art-incoming/
