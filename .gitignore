@@ -17,7 +17,6 @@ _srv_err.txt
 # tools/process-sprite.mjs. Keep them local; only the processed PNGs get committed.
 art-incoming/
 
-# Scratch art / reference images with real names in their filenames.
-# Keep them local; a stray `git add -A` must never stage them.
-eldoria-*luke*
-eldoria-*henrik*
+# Personal scratch art / reference images kept local (filenames may include family
+# names). Store them under art-incoming/ (already ignored above) so a stray
+# `git add -A` never stages them.

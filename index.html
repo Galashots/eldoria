@@ -2867,19 +2867,9 @@ function profileDisplayName(id) {
   return DEFAULT_NAMES[id] || 'Hero';
 }
 
-// Saves from the first version were keyed by old slot ids that contained real names.
-// Copy an old save over to the new neutral id once, so existing progress is never lost.
-// Only runs when the new key is empty and the legacy key exists.
-var LEGACY_SAVE_KEY = { adventurer: 'eldoria_save_\x6c\x75\x6b\x65', mage: 'eldoria_save_\x68\x65\x6e\x72\x69\x6b' };
-function migrateLegacySave(id) {
-  try {
-    var oldKey = LEGACY_SAVE_KEY[id];
-    var newKey = 'eldoria_save_' + id;
-    if (oldKey && !localStorage.getItem(newKey) && localStorage.getItem(oldKey)) {
-      localStorage.setItem(newKey, localStorage.getItem(oldKey));
-    }
-  } catch (e) {}
-}
+// (Legacy name-keyed save migration removed for the public release. The old first-version
+// saves were long since copied onto the neutral profile ids; saves now live only under
+// eldoria_save_adventurer / eldoria_save_mage.)
 
 // Repaint the two title-screen buttons with the current display names.
 function refreshTitleLabels() {
@@ -2907,7 +2897,6 @@ function renameProfile(id) {
 // Pick a slot: migrate any old save, load it (or a fresh start), and begin playing.
 function selectProfile(id) {
   currentProfile = id;
-  migrateLegacySave(id);
   applyState(loadGame(id) || defaultState());
   document.getElementById('profileName').textContent = profileDisplayName(id);
   document.getElementById('titleScreen').classList.add('hide');
