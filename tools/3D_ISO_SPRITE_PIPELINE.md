@@ -57,7 +57,7 @@ From `index.html` (sprite system ~lines 800–940) and `tools/SPRITE_PIPELINE.md
 | Walk | 4-frame horizontal strip, `WALK_FRAME_MS=110` | same frame count + timing |
 | Attack | 4-frame horizontal strip, `ATTACK_FRAME_MS=80` | same |
 | Strip layout | frames laid left→right; `drawSpriteFrame` reads `(frame*TILE, 0, TILE, TILE)` | generalize to `(frame*frameW, 0, frameW, frameH)` (small engine change, see §5G) |
-| Naming | `assets/<profile>-<dir>.png`, `-<dir>-walk.png`, `-<dir>-attack.png`; equipment `-<dir>-<slot>[-walk\|-attack].png`; enemies `assets/enemy_<type>.png` | **keep identical names** so `loadSprite` picks them up with zero code churn |
+| Naming | `assets/<profile>-<dir>.png`, `-<dir>-walk.png`, `-<dir>-attack.png`; equipment `-<dir>-<slot>[-walk\|-attack].png`; enemies `assets/enemy_<type>.png` | **same basenames, under `assets/iso/`** (top-down art keeps its place; both modes coexist during the port — authoritative layout: iso spec §8) |
 | Profiles | `adventurer` (older), `mage` (early) | same two |
 | Layering | paper-doll: cape → body → head → weapon | see §6 — decide before scaling |
 
