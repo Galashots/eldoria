@@ -20,9 +20,9 @@ async function main() {
       const FRAME = 64;
       const STAGES = 3;
       const LIMITS = [
-        { width: 22, height: 20 },
-        { width: 38, height: 36 },
-        { width: 48, height: 48 },
+        { width: 20, height: 14 },
+        { width: 32, height: 22 },
+        { width: 42, height: 30 },
       ];
       const PALETTE = [
         [18, 25, 18], [27, 40, 23], [39, 55, 28], [51, 75, 30],
