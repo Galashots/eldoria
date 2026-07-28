@@ -10,13 +10,21 @@ const CROPS = ['turnip', 'carrot', 'corn', 'pumpkin', 'starfruit'];
 
 async function main() {
   const source = await readFile(SOURCE);
+  const committedAssets = {};
+  for (const crop of CROPS) {
+    try {
+      committedAssets[crop] = (await readFile(`${OUTPUT_DIR}/crop-${crop}.png`)).toString('base64');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
   await mkdir(OUTPUT_DIR, { recursive: true });
   await mkdir(ARTIFACT_DIR, { recursive: true });
   const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   const page = await browser.newPage();
 
   try {
-    const result = await page.evaluate(async ({ sourceBase64, crops }) => {
+    const result = await page.evaluate(async ({ sourceBase64, crops, committedAssets }) => {
       const FRAME = 64;
       const STAGES = 3;
       const LIMITS = [
@@ -176,6 +184,27 @@ async function main() {
         stripCtx.drawImage(frameCanvas, stage * FRAME, shift);
       }
 
+      async function assertPixelEquivalent(strip, crop) {
+        const encoded = committedAssets[crop];
+        if (!encoded) return false;
+        const committedImage = await loadImage(`data:image/png;base64,${encoded}`);
+        if (committedImage.width !== strip.width || committedImage.height !== strip.height) {
+          throw new Error(`${crop} committed dimensions differ: ${committedImage.width}x${committedImage.height}`);
+        }
+        const committedCanvas = canvas(strip.width, strip.height);
+        const committedCtx = committedCanvas.getContext('2d', { willReadFrequently: true });
+        committedCtx.drawImage(committedImage, 0, 0);
+        const expected = committedCtx.getImageData(0, 0, strip.width, strip.height).data;
+        const actual = strip.getContext('2d').getImageData(0, 0, strip.width, strip.height).data;
+        for (let offset = 0; offset < actual.length; offset++) {
+          if (actual[offset] !== expected[offset]) {
+            const pixel = Math.floor(offset / 4);
+            throw new Error(`${crop} committed pixels differ at ${pixel % strip.width},${Math.floor(pixel / strip.width)}`);
+          }
+        }
+        return true;
+      }
+
       function validateStrip(strip, crop) {
         const ctx = strip.getContext('2d');
         const imageData = ctx.getImageData(0, 0, strip.width, strip.height);
@@ -266,7 +295,9 @@ async function main() {
         }
 
         applyPalette(stripCtx, strip.width, strip.height);
-        reports.push(validateStrip(strip, crops[cropIndex]));
+        const report = validateStrip(strip, crops[cropIndex]);
+        report.matchesCommittedPixels = await assertPixelEquivalent(strip, crops[cropIndex]);
+        reports.push(report);
         outputs.push({
           crop: crops[cropIndex],
           dataUrl: strip.toDataURL('image/png'),
@@ -283,6 +314,7 @@ async function main() {
     }, {
       sourceBase64: source.toString('base64'),
       crops: CROPS,
+      committedAssets,
     });
 
     for (const output of result.outputs) {
