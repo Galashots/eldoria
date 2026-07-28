@@ -20,3 +20,6 @@ art-incoming/
 # Personal scratch art / reference images kept local (filenames may include family
 # names). Store them under art-incoming/ (already ignored above) so a stray
 # `git add -A` never stages them.
+
+# Brainstorming visual-companion mockups / scratch (local only)
+.superpowers/

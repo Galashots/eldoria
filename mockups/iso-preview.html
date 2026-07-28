@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eldoria — Isometric preview</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; padding:22px 18px 60px;
+    background:#161009; color:#f3e9dc;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; max-width:900px; margin-inline:auto;
+  }
+  h2 { font-size:22px; margin:0 0 6px; color:#ffd666; }
+  h3 { font-size:14px; letter-spacing:.04em; text-transform:uppercase; opacity:.85; margin:0 0 10px; }
+  h4 { margin:0 0 6px; font-size:14px; }
+  .subtitle { opacity:.8; font-size:15px; margin:0 0 18px; }
+  .label { font-size:12px; letter-spacing:.08em; text-transform:uppercase; opacity:.6; margin:0 0 8px; }
+  .section { margin-top:20px; }
+  em { color:#ffd666; font-style:normal; }
+  b { color:#fff; }
+  .pros-cons { display:flex; gap:16px; flex-wrap:wrap; }
+  .pros, .cons { flex:1 1 240px; background:#20160f; border-radius:10px; padding:14px 16px; }
+  .pros { box-shadow:inset 3px 0 0 #4a9d4a; }
+  .cons { box-shadow:inset 3px 0 0 #c98a3a; }
+  .pros ul, .cons ul { margin:0; padding-left:18px; }
+  .pros li, .cons li { margin:4px 0; font-size:14px; }
+  .isowrap { display:flex; gap:24px; flex-wrap:wrap; }
+  .stage { position:relative; background:#20160f; border-radius:12px; padding:14px;
+           flex:1 1 320px; min-width:280px; overflow:hidden; }
+  .scene { position:relative; margin:0 auto; }
+  .cell, .iso-ground { position:absolute; }
+  .cell { width:34px; height:34px; box-sizing:border-box; border:1px solid rgba(0,0,0,.18); }
+  .iso-ground { clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); }
+  .obj { position:absolute; transform:translate(-50%,-100%); text-align:center; }
+  .tree-top { width:30px; height:34px; background:radial-gradient(circle at 50% 40%,#7ec850,#3f7d2e);
+              border-radius:50% 50% 46% 46%; margin:0 auto; box-shadow:0 3px 0 rgba(0,0,0,.25); }
+  .tree-trunk { width:8px; height:12px; background:#6b4423; margin:-4px auto 0; border-radius:2px; }
+  .house-roof { width:0;height:0;border-left:26px solid transparent;border-right:26px solid transparent;
+                border-bottom:20px solid #b5423a; margin:0 auto; }
+  .house-body { width:44px;height:30px;background:#d9a15a;margin:0 auto;border-radius:2px;
+                box-shadow:inset 0 -6px 0 rgba(0,0,0,.12); }
+  .house-door { width:12px;height:16px;background:#6b4423;margin:8px auto 0;border-radius:2px 2px 0 0; }
+  .hero { width:18px;height:26px; margin:0 auto; position:relative; }
+  .hero-body { width:16px;height:16px;background:#4a90d9;border-radius:6px 6px 4px 4px; margin:6px auto 0;
+               box-shadow:0 2px 0 rgba(0,0,0,.3); }
+  .hero-head { width:12px;height:12px;background:#f2c9a0;border-radius:50%; margin:0 auto -2px;
+               position:relative; z-index:2; box-shadow:inset 0 -2px 0 rgba(0,0,0,.08); }
+  .shadow { position:absolute; width:22px;height:10px;background:rgba(0,0,0,.28);border-radius:50%;
+            left:50%;top:100%;transform:translate(-50%,-6px); filter:blur(1px); }
+  .note { margin-top:26px; font-size:13px; opacity:.6; border-top:1px solid rgba(255,255,255,.1); padding-top:12px; }
+</style>
+</head>
+<body>
+<h2>Realm of Eldoria — top-down → true isometric</h2>
+<p class="subtitle">Same Farm scene, same tile grid underneath. Left is the game today; right is the 2:1 isometric projection we'd build. Watch the depth: the hero stands <em>behind</em> the front tree and <em>in front of</em> the back one.</p>
+
+<div class="isowrap">
+  <div class="stage"><h3>Today · flat top-down</h3><div id="flat" class="scene"></div></div>
+  <div class="stage"><h3>Isometric · 2:1 diamonds</h3><div id="iso" class="scene"></div></div>
+</div>
+
+<div class="section">
+  <p class="label">What actually changes</p>
+  <div class="pros-cons">
+    <div class="pros"><h4>Same underneath</h4><ul>
+      <li>The tile <b>grid + all game logic</b> (farming, combat, quests, dumplings) is untouched</li>
+      <li>Joystick stays <b>screen-relative</b> — up = up on screen</li>
+      <li>Built Farm-first, behind a flag, so the live game keeps working</li>
+    </ul></div>
+    <div class="cons"><h4>New engine work</h4><ul>
+      <li><b>Projection:</b> grid ↔ screen math (diamond tiles)</li>
+      <li><b>Depth-sort:</b> draw back-to-front so trees/houses overlap the hero correctly</li>
+      <li><b>Art:</b> every tile + 4 hero facings re-rendered at the iso angle (3D pipeline)</li>
+    </ul></div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this direction feel right? Tell me in the terminal — and say if you want it <b>chunkier/cozier</b>, a steeper or flatter camera, or different colors. This is a rough CSS mock; real art comes from the 3D render pipeline.</p>
+
+<p class="note">Scratch mockup for design discussion — not part of the game.</p>
+
+<script>
+(function(){
+  var G='grass', S='soil', W='water';
+  var base = [
+    [W,W,G,G,G,G,G],
+    [W,G,G,S,S,S,G],
+    [G,G,G,S,S,S,G],
+    [G,G,G,S,S,S,G],
+    [G,G,G,G,G,G,G],
+    [G,G,G,G,G,G,G],
+  ];
+  var objs = [
+    {r:0,c:5,type:'tree'},
+    {r:1,c:1,type:'house'},
+    {r:3,c:2,type:'hero'},
+    {r:4,c:4,type:'tree'},
+  ];
+  var col = {grass:'#5aa544', soil:'#8a5a33', water:'#3d7fbf'};
+  var ROWS=base.length, COLS=base[0].length;
+
+  function objHTML(type){
+    if(type==='tree')  return '<div class="obj"><div class="tree-top"></div><div class="tree-trunk"></div><div class="shadow"></div></div>';
+    if(type==='house') return '<div class="obj"><div class="house-roof"></div><div class="house-body"><div class="house-door"></div></div><div class="shadow"></div></div>';
+    if(type==='hero')  return '<div class="obj"><div class="hero"><div class="hero-head"></div><div class="hero-body"></div></div><div class="shadow"></div></div>';
+    return '';
+  }
+
+  (function(){
+    var CS=34, el=document.getElementById('flat');
+    el.style.width=(COLS*CS)+'px'; el.style.height=(ROWS*CS)+'px';
+    for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+      var d=document.createElement('div'); d.className='cell';
+      d.style.left=(c*CS)+'px'; d.style.top=(r*CS)+'px'; d.style.background=col[base[r][c]];
+      el.appendChild(d);
+    }
+    objs.forEach(function(o){
+      var w=document.createElement('div'); w.innerHTML=objHTML(o.type);
+      var node=w.firstChild; node.style.left=(o.c*CS+CS/2)+'px'; node.style.top=(o.r*CS+CS/2+6)+'px';
+      node.style.zIndex=100; el.appendChild(node);
+    });
+  })();
+
+  (function(){
+    var TW=48, TH=24, el=document.getElementById('iso');
+    var baseX=(ROWS)*TW/2, baseY=20;
+    var w=(COLS+ROWS)*TW/2, h=(COLS+ROWS)*TH/2 + 60;
+    el.style.width=w+'px'; el.style.height=h+'px';
+    function sx(r,c){return (c-r)*TW/2 + baseX;}
+    function sy(r,c){return (c+r)*TH/2 + baseY;}
+    for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){
+      var g=document.createElement('div'); g.className='iso-ground';
+      g.style.width=TW+'px'; g.style.height=TH+'px';
+      g.style.left=(sx(r,c)-TW/2)+'px'; g.style.top=(sy(r,c)-TH/2)+'px';
+      g.style.background=col[base[r][c]];
+      g.style.boxShadow='inset 0 0 0 1px rgba(0,0,0,.10)';
+      g.style.zIndex=(r+c); el.appendChild(g);
+    }
+    objs.forEach(function(o){
+      var wrap=document.createElement('div'); wrap.innerHTML=objHTML(o.type);
+      var node=wrap.firstChild;
+      node.style.left=sx(o.r,o.c)+'px'; node.style.top=(sy(o.r,o.c)+TH/2)+'px';
+      node.style.zIndex=(o.r+o.c)*10 + 5;
+      el.appendChild(node);
+    });
+  })();
+})();
+</script>
+</body>
+</html>
