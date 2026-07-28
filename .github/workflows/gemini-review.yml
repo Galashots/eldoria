@@ -1,7 +1,7 @@
 name: Gemini advisory PR review
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
 
 concurrency:
@@ -21,8 +21,7 @@ jobs:
     continue-on-error: true
     permissions:
       contents: read
-      issues: write
-      pull-requests: read
+      pull-requests: write
 
     steps:
       # Review the PR through GitHub's API, but keep the checked-out workspace on
@@ -141,7 +140,7 @@ jobs:
                 "core": []
               }
             }
-      - name: Publish advisory comment
+      - name: Publish advisory review
         if: steps.credential.outputs.available == 'true' && steps.gemini_review.outcome == 'success'
         continue-on-error: true
         shell: bash
@@ -158,17 +157,6 @@ jobs:
 
           marker='<!-- gemini-advisory-review -->'
           body="${marker}"$'\n\n'"${REVIEW_BODY}"
-          comment_id="$(
-            gh api "repos/${REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate \
-              --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- gemini-advisory-review -->"))) | .id' \
-              | sed -n '1p'
-          )"
-          payload="$(jq -n --arg body "${body}" '{body: $body}')"
-
-          if [[ -n "${comment_id}" ]]; then
-            gh api --method PATCH "repos/${REPOSITORY}/issues/comments/${comment_id}" \
-              --input - <<<"${payload}"
-          else
-            gh api --method POST "repos/${REPOSITORY}/issues/${PR_NUMBER}/comments" \
-              --input - <<<"${payload}"
-          fi
+          payload="$(jq -n --arg body "${body}" '{body: $body, event: "COMMENT"}')"
+          gh api --method POST "repos/${REPOSITORY}/pulls/${PR_NUMBER}/reviews" \
+            --input - <<<"${payload}"
