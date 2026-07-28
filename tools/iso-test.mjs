@@ -74,5 +74,28 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Suite 5: depth-sorted objects ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    applyCanvasMode();
+    window.__isoDebug = true;
+    // Stand the hero mid-map between the farm's border trees.
+    player.x = 8 * 32; player.y = 5 * 32;
+    drawIsoWorld();
+    var order = window.__isoDrawOrder;
+    var playerIdx = order.indexOf('player');
+    // A border tree NORTH of the hero (row 0) must draw before them,
+    // a border tree SOUTH (row 21) after them.
+    var north = order.indexOf('tree@0,8'), south = order.indexOf('tree@21,8');
+    return { playerIdx: playerIdx, north: north, south: south, n: order.length };
+  });
+  check('objects: some objects collected', r.n > 10);
+  check('objects: north tree draws before player', r.north !== -1 && r.north < r.playerIdx);
+  check('objects: south tree draws after player', r.south !== -1 && r.south > r.playerIdx);
+  await browser.close();
+}
+
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');

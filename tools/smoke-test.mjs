@@ -8,7 +8,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const GAME_URL = pathToFileURL(resolve(root, 'index.html')).href;
 
 export async function launch(urlSuffix = '') {
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+  // --allow-file-access-from-files: game art loads via file:// in tests; without this,
+  // drawImage() taints the canvas and getImageData() assertions throw SecurityError.
+  const browser = await puppeteer.launch({ args: ['--no-sandbox', '--allow-file-access-from-files'] });
   const page = await browser.newPage();
   const errors = [];
   // Missing-asset load failures are EXPECTED: the game registers optional art files and

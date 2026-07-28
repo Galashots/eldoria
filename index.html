@@ -3693,7 +3693,11 @@ function drawIsoWorld() {
       var wx = (c + 0.5) * TILE, wy = (r + 0.5) * TILE;
       var cx = isoPX(wx, wy), cy = isoPY(wx, wy);
       var t = map[r][c];
-      drawIsoTileDiamond(cx, cy, TILE_COLOR[t] || '#333333');
+      // Tall tile types become Pass-2 prisms; their floor shows the ground beneath.
+      var floorColor = TILE_COLOR[t] || '#333333';
+      if (t === TREE || t === HOUSE) floorColor = TILE_COLOR[GRASS];
+      else if (t === DOOR || t === EXIT) floorColor = TILE_COLOR[PATH];
+      drawIsoTileDiamond(cx, cy, floorColor);
       var crop = cropData[r + ',' + c];
       if (crop && crop.status !== 'empty') {
         var cc = CROPS[crop.type || 'turnip'];
@@ -3702,7 +3706,81 @@ function drawIsoWorld() {
       }
     }
   }
+
+  // ---- Pass 2: depth-sorted objects (spec section 7) ----
+  var objs = isoCollectObjects();
+  if (window.__isoDebug) window.__isoDrawOrder = objs.map(function (o) { return o.kind; });
+  for (var oi = 0; oi < objs.length; oi++) {
+    var o = objs[oi];
+    var ocx = isoPX(o.px, o.py), ocy = isoPY(o.px, o.py);
+    if (o.tile) drawIsoPrism(ocx, ocy, ISO_PROP_HEIGHT[o.tile],
+                             TILE_COLOR[o.tile] || '#555555');
+    else if (o.kind === 'npc') drawIsoPrism(ocx, ocy, 28, o.npc.color);
+    else if (o.kind === 'cookpot') drawIsoPrism(ocx, ocy, 16, '#6b4423');
+    else if (o.kind === 'enemy') drawIsoPrism(ocx, ocy, 24, ENEMIES[o.enemy.type].color);
+    else if (o.kind === 'player') {
+      var img = playerSprite();
+      if (img) ctx.drawImage(img, ocx - 24, ocy - 46, 48, 48);
+      else drawIsoPrism(ocx, ocy, 30, '#4a90d9');
+    }
+  }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+// ---- Iso renderer helpers: placeholder prisms (Phase 0) ----
+// Tuned toward the sleek/moody direction: dark faces, lit top, rim edge.
+function isoShade(hex, f) {   // multiply a #rrggbb color's brightness by f
+  var n = parseInt(hex.slice(1), 16);
+  var r = Math.min(255, Math.round(((n >> 16) & 255) * f));
+  var g = Math.min(255, Math.round(((n >> 8) & 255) * f));
+  var b = Math.min(255, Math.round((n & 255) * f));
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+function drawIsoPrism(cx, cy, h, baseColor) {
+  // Left + right faces down from the top diamond's south/west/east points.
+  ctx.fillStyle = isoShade(baseColor, 0.45);
+  ctx.beginPath();
+  ctx.moveTo(cx - ISO_TW / 2, cy - h); ctx.lineTo(cx, cy - h + ISO_TH / 2);
+  ctx.lineTo(cx, cy + ISO_TH / 2); ctx.lineTo(cx - ISO_TW / 2, cy); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = isoShade(baseColor, 0.6);
+  ctx.beginPath();
+  ctx.moveTo(cx + ISO_TW / 2, cy - h); ctx.lineTo(cx, cy - h + ISO_TH / 2);
+  ctx.lineTo(cx, cy + ISO_TH / 2); ctx.lineTo(cx + ISO_TW / 2, cy); ctx.closePath(); ctx.fill();
+  // Lit top diamond with a subtle rim.
+  ctx.strokeStyle = isoShade(baseColor, 1.4);
+  ctx.lineWidth = 1.5;
+  drawIsoTileDiamond(cx, cy - h, isoShade(baseColor, 1.1));
+  ctx.stroke();
+}
+
+var ISO_PROP_HEIGHT = {};
+ISO_PROP_HEIGHT[TREE]  = 40;   // chunky enough to read, short enough not to hide paths
+ISO_PROP_HEIGHT[HOUSE] = 56;
+ISO_PROP_HEIGHT[DOOR]  = 48;
+ISO_PROP_HEIGHT[EXIT]  = 12;
+
+function isoCollectObjects() {
+  var objs = [];
+  for (var r = 0; r < MAP_H; r++) for (var c = 0; c < MAP_W; c++) {
+    var t = map[r][c];
+    if (ISO_PROP_HEIGHT[t]) {
+      objs.push({ px: (c + 0.5) * TILE, py: (r + 0.5) * TILE,
+                  kind: 'tree@' + r + ',' + c, tile: t });
+    }
+  }
+  for (var n = 0; n < NPCS.length; n++) if (NPCS[n].area === currentArea)
+    objs.push({ px: (NPCS[n].col + 0.5) * TILE, py: (NPCS[n].row + 0.5) * TILE,
+                kind: 'npc', npc: NPCS[n] });
+  if (currentArea === 'farm')
+    objs.push({ px: (FARM_COOKPOT.col + 0.5) * TILE, py: (FARM_COOKPOT.row + 0.5) * TILE,
+                kind: 'cookpot' });
+  for (var e = 0; e < currentEnemies.length; e++) if (currentEnemies[e].alive)
+    objs.push({ px: (currentEnemies[e].col + 0.5) * TILE, py: (currentEnemies[e].row + 0.5) * TILE,
+                kind: 'enemy', enemy: currentEnemies[e] });
+  objs.push({ px: player.x + player.size / 2, py: player.y + player.size, kind: 'player' });
+  objs.sort(function (a, b) { return isoDepthKey(a.px, a.py) - isoDepthKey(b.px, b.py); });
+  return objs;
 }
 
 // ---- Draw ----
