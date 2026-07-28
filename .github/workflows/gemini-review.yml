@@ -127,7 +127,7 @@ jobs:
                 "core": []
               }
             }
-- name: Publish advisory comment
+      - name: Publish advisory comment
         if: steps.credential.outputs.available == 'true' && steps.gemini_review.outcome == 'success'
         continue-on-error: true
         shell: bash
