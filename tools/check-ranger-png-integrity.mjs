@@ -9,7 +9,9 @@ const FILES = [
   'art/ranger-proof/normalized/adventurer-down.png',
   'art/ranger-proof/normalized/adventurer-left.png',
   'art/ranger-proof/normalized/adventurer-up.png',
+  'art/ranger-proof/normalized/adventurer-right-walk.png',
   'docs/visual/experiments/ranger-character-proof/candidate-v1/four-facing-contact-sheet.png',
+  'docs/visual/experiments/ranger-character-proof/walk-v1/walk-strip-preview.png',
 ];
 
 const CRC_TABLE = Array.from({ length: 256 }, (_, value) => {

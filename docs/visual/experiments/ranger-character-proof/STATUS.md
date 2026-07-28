@@ -1,147 +1,144 @@
 # Ranger animated-character pipeline proof
 
-**Status:** Static candidate v1 ready for owner review; animation deliberately not started  
+**Status:** Four static facings and one four-frame SE/right walk candidate are ready for owner motion review  
 **Branch:** `work/ranger-character-pipeline-proof`  
-**Scope:** four static Ranger facings at the current review gate; no walk, attack, equipment, enemies, or runtime integration
+**Scope:** bespoke Ranger pipeline proof only; no attacks, equipment variants, enemies, other walk directions, or runtime integration
 
 ## Decision gate
 
-**PROOF READY FOR OWNER REVIEW — STATIC FACINGS ONLY.**
+**PROOF READY FOR OWNER REVIEW — ONE WALK DIRECTION.**
 
-The four normalized static facings exist, the source-to-frame pipeline is reproducible, and all applicable machine gates pass. This is not an art approval. A walk strip will not be generated until Leo accepts or rejects this static identity/camera seed.
+Leo accepted the static set as the experimental identity/camera seed. The branch now adds exactly one whole-strip walk experiment for `right` → SE, as authorized. It remains a proof, not approved production art.
 
-The iteration limit was respected:
+The bounded iteration limit was respected:
 
-1. one four-facing candidate generated from the attached current Visual North Star;
-2. one targeted corrective generation pass requested transparent isolation and crisper treatment;
-3. no further image-generation pass was used;
-4. remaining low-opacity floor shadow and halo contamination was removed through fixed deterministic alpha thresholds.
+1. one initial four-facing static candidate;
+2. one targeted static correction;
+3. one initial four-frame walk strip;
+4. one targeted walk correction;
+5. deterministic cleanup and normalization only after that correction.
+
+No stock or third-party character model was substituted. The candidate remains a bespoke Eldoria Ranger derived from the owner-approved North Star identity.
 
 ## Coordination
 
-- Track 1 is paused at PR #12, head `51421612d6fafefbc14faba014166b873380d205`.
-- Track 2(b) is paused at PR #13, head `7f0768d83ca8d1cf99275354d8e4750ac3e47a5c`.
-- This branch does not modify `index.html`, so no gameplay or Town integration overlap exists.
+- Track 1 remains separate in PR #12.
+- Track 2(b) remains separate in PR #13 and is useful as a feasibility record for the deterministic Blender rig.
+- No `index.html` change exists here, so there is no Town or gameplay integration overlap.
 
-## Candidate source
+## Static candidate
 
-`art/source/characters/ranger-four-facing-source-v001.png`
+Source:
 
-The committed source is a 384×256, 256-colour indexed archival PNG produced as a deterministic 25% nearest-neighbour copy of the exact 1536×1024 generated output. This bounds repository size while preserving sufficient information for the 64×64 proof. Both source hashes are recorded in the machine report.
+- `art/source/characters/ranger-four-facing-source-v001.png`
 
-Source-cell mapping:
-
-| Source cell | Engine slot | Iso facing |
-| --- | --- | --- |
-| top-left | `right` | SE |
-| bottom-left | `down` | SW |
-| bottom-right | `left` | NW |
-| top-right | `up` | NE |
-
-The source contains real transparency plus low-opacity floor shadows and halos. The processor removes the contamination with a fixed alpha threshold; it does not manually repaint the character.
-
-## Normalized outputs
+Normalized 64×64 facings:
 
 - `art/ranger-proof/normalized/adventurer-right.png`
 - `art/ranger-proof/normalized/adventurer-down.png`
 - `art/ranger-proof/normalized/adventurer-left.png`
 - `art/ranger-proof/normalized/adventurer-up.png`
 
-Each output is 64×64 RGBA with binary alpha and a shared bottom-centre foot pivot.
+Engine mapping:
 
-## Deterministic processing
+| Engine slot | Isometric facing |
+| --- | --- |
+| `right` | SE |
+| `down` | SW |
+| `left` | NW |
+| `up` | NE |
 
-`tools/process-ranger-source.mjs` fixes:
+All static machine gates pass. The committed-PNG integrity gate runs before any regeneration so corrupted committed assets cannot be hidden by CI overwriting them.
 
-- 2×2 source-cell mapping;
-- source alpha threshold `224`;
-- one shared scale targeting a maximum visible height of `56` pixels;
-- nearest-neighbour resampling;
-- resized alpha threshold `128`;
-- bottom-six-row opaque centroid aligned to `x=32`;
-- visible bounds anchored to `y=63`;
-- two-run output and evidence hash comparison.
+## Walk candidate
+
+Source:
+
+- `art/source/characters/ranger-right-walk-source-v001.jpeg`
+
+Normalized output:
+
+- `art/ranger-proof/normalized/adventurer-right-walk.png`
+
+Review evidence:
+
+- `walk-v1/walk-strip-preview.png`
+- `walk-v1/machine-check-report.json`
+
+The source is a 1536×512 whole-strip candidate containing four evenly spaced gait frames on a baked light checkerboard. `tools/process-ranger-walk-source.mjs`:
+
+- slices the fixed 4×1 source grid;
+- removes only light, near-neutral checker pixels using fixed thresholds;
+- retains the largest four-connected foreground component in each cell;
+- applies one shared scale targeting a maximum height of 56 pixels;
+- resamples with nearest-neighbour;
+- forces binary alpha;
+- centers the bottom-six-row foot centroid at `x=32`;
+- anchors visible bounds to `y=63`;
+- packs a 256×64 strip;
+- generates dark, magenta, runtime-scale, and anchor-overlay evidence;
+- repeats the process and compares output hashes.
 
 Commands:
 
 ```sh
 npm run ranger-source:process
+npm run ranger-walk:process
 npm run ranger-proof:candidate
 npm run ranger-proof:self-test
+npm test
 ```
 
-The normal CI command regenerates the candidate before validating it, rather than merely syntax-checking the processor.
+## Walk machine result
 
-## Machine result
-
-Report: `docs/visual/experiments/ranger-character-proof/candidate-v1/machine-check-report.json`
-
-- four 64×64 RGBA frames: pass;
-- expected naming and facing order: pass;
-- binary alpha: pass;
-- visible subject in each frame: pass;
+- output dimensions: 256×64;
+- frame count: 4;
+- RGBA with binary alpha: pass;
+- visible subject in every frame: pass;
 - bottom anchor at row 63: pass;
 - horizontal padding: pass;
-- visible-height range: 1 px;
-- visible-width range: 3 px;
-- bottom-band foot-centre range: under 1 px;
-- deterministic rerun: pass;
-- walk dimensions and movement stability: **not assessed because no walk exists**.
+- shared scale: pass;
+- silhouette-centre range: 5.5 px, within the 6 px harness limit;
+- top/head-bob range: 2 px, within the 4 px harness limit;
+- foot-centre range: about 0.54 px;
+- deterministic local rerun: pass.
 
-Machine checks do not establish identity, camera, lighting, facing semantics, pixel quality, or North Star alignment.
+The first frame is intentionally wider and more left-heavy because of the extended gait, cape, and bow. Its foot pivot remains aligned. Recentring each silhouette independently would hide the real pose displacement and introduce foot slide.
 
-## Evidence
-
-Committed review evidence:
-
-- `candidate-v1/four-facing-contact-sheet.png` — enlarged nearest-neighbour review sheet;
-- `candidate-v1/machine-check-report.json` — metrics and hashes.
-
-The processor and validator also regenerate the true 1× runtime sheet, dark-background sheet, magenta transparency sheet, and anchor/bounds overlay into CI artifacts on every run. They are generated rather than duplicated in Git.
+Machine checks do not establish identity, equipment, gait appeal, camera, lighting, pixel quality, or North Star alignment.
 
 ## Visual self-check — not approval
 
-- **Identity consistency:** promising, not exact. The older-child Ranger reads across all cells, but face shape, cloak drape, bow placement, and quiver size drift slightly.
-- **Fixed-camera consistency:** uncertain. The set reads as one diagonal isometric family, but an AI-generated sheet cannot prove one mathematical camera.
-- **Elevated projection:** likely pass for a source proof. Upper planes of hair, shoulders, cloak, and feet are visible; the pitch is gentler than the strongest North Star cues.
-- **Facing readability:** likely pass. SE/SW are toward-facing diagonals; NW/NE are away-facing diagonals.
-- **Upper-left lighting:** likely pass with minor drift.
-- **Silhouette at 1×:** likely pass. Hair, cloak, bow/quiver, boots, and older-explorer role remain readable; small costume details become muddy.
-- **Mage separation:** likely pass through height, green cloak, leather palette, and equipment silhouette.
-- **Foot contact:** static alignment likely pass; movement is untested.
-- **Pixel treatment:** promising but below final North Star quality. It remains softer and more anime-like than deliberately clustered production HD-2D art.
-- **Equipment consistency:** uncertain enough that animation should wait for owner review.
+- **Identity consistency:** likely pass. Hair, face, green cloak, leather gear, bow, quiver, and proportions remain recognizably the accepted Ranger.
+- **Whole-strip coherence:** likely pass. The four frames read as one walk cycle rather than independent character redraws.
+- **Gait readability:** likely pass. The strip contains alternating contact and passing poses.
+- **Equipment consistency:** promising. Bow, quiver, cape, belt, and satchel remain in stable locations, with small frame-to-frame drawing drift.
+- **Foot contact:** likely pass at normalized scale; runtime motion still requires browser review.
+- **Silhouette at 1×:** likely pass. The role and major equipment survive, while facial and costume micro-detail compress.
+- **Pixel treatment:** promising but still softer and more illustrative than final deliberately clustered HD-2D production art.
+- **Fixed-camera consistency:** uncertain. This is a coherent generated whole strip, not a mathematically fixed 3D render.
 
-## Tool and skill result
+## Evidence policy
 
-Used successfully:
+Committed review evidence is intentionally small:
 
-- GitHub connector for branch, PR, exact-head checks, and CI evidence;
-- image generation for one candidate and one bounded correction using the attached North Star;
-- Game Studio routing across 3D source work, sprite normalization, and later runtime playtesting;
-- sprite-pipeline rules for shared scale, pivot, slots, and preview-first review;
-- local deterministic inspection for alpha, bounds, pivots, dimensions, and hashes.
+- static enlarged contact sheet;
+- walk enlarged dark-background preview;
+- static and walk machine reports.
 
-Evaluated but deferred:
-
-- runtime integration;
-- walk generation;
-- GLB optimization.
-
-Blocked or unavailable:
-
-- authenticated TRELLIS generation remains paused with Track 2(b);
-- Blender is unavailable in the ChatGPT container, though Track 2(b) proved the external render rig.
+CI regenerates the true 1× sheet, magenta transparency sheet, dark-background sheet, anchor/bounds overlay, and validator report as downloadable workflow artifacts.
 
 ## North Star alignment
 
 **Intentional interim gap.**
 
-The candidate preserves the older Ranger role, green-and-leather explorer identity, diagonal isometric read, warm upper-left light, child-friendly adventure tone, and clear Mage separation. It does not yet meet the final premium pixel-cluster, exact-camera, or runtime-context bar. No North Star refresh is recommended.
+The proof preserves the older Ranger role, green-and-leather explorer identity, child-friendly adventure tone, readable diagonal facing, warm light, and clear distinction from the Mage. It does not yet prove final production pixel clustering or exact fixed-camera geometry. No North Star refresh is recommended.
 
 ## Owner review question
 
-Judge only the static set:
+Judge only the motion seed:
 
-1. **Accept it as the seed for one four-frame walk proof**, or
-2. **Reject it with one specific correction target**.
+1. **Accept the four-frame SE/right walk as sufficient pipeline proof**, after which the PR can remain a reusable evidence/tooling branch or be merged without runtime integration; or
+2. **Reject it with one specific motion or consistency target**.
+
+Do not expand to other facings or integrate into `index.html` until this review gate is resolved.
