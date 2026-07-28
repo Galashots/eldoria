@@ -7,7 +7,8 @@
     "ranger-source:process": "node tools/process-ranger-source.mjs",
     "ranger-proof:self-test": "node tools/ranger-proof.mjs --self-test",
     "ranger-proof:candidate": "node tools/ranger-proof.mjs --static-only --input-dir art/ranger-proof/normalized --output-dir artifacts/ranger-proof-candidate-v1",
-    "test": "npm run assets:build && npm run ranger-source:process && npm run ranger-proof:self-test && npm run ranger-proof:candidate && node tools/smoke-test.mjs && node tools/iso-test.mjs"
+    "test": "npm run ranger-proof:integrity && npm run assets:build && npm run ranger-source:process && npm run ranger-proof:self-test && npm run ranger-proof:candidate && node tools/smoke-test.mjs && node tools/iso-test.mjs",
+    "ranger-proof:integrity": "node tools/check-ranger-png-integrity.mjs"
   },
   "devDependencies": {
     "puppeteer": "^25.4.0"

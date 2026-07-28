@@ -104,7 +104,7 @@
         "maxY": 63,
         "width": 27,
         "height": 54,
-        "centerX": 32.0
+        "centerX": 32
       },
       "opaquePixels": 971,
       "semiTransparentPixels": 0,
@@ -206,13 +206,18 @@
   "deterministic": true,
   "outputs": {
     "adventurer-right.png": "0901dba6e8c0c6a3cadbf53f7b39f551644c638061893f1e1bd2113df1d7a916",
-    "adventurer-down.png": "8740c5cd0c99b3d8daea6884ee9f750d397f762c240221f7a179b2a987f84802",
+    "adventurer-down.png": "7d466b56c8b4b005bac24e953df32775206437e7677e7eeb1eaeab703dd97f60",
     "adventurer-up.png": "3cfa1d27e71d2dbd972e031e6a1ecb31b11c5854d721a4c3a9e83e722b465b5e",
     "adventurer-left.png": "997dd57b0e50ac36f8f622f0c35fb5d0e6ca6ffd7b9f497d0ed36d3d5a84e957",
     "dark-background-sheet.png": "de40cbbec1d09dc74d8b95f501deaab66423e73a1bab4efa50540d217b141a8c",
     "magenta-sheet.png": "057476b9d93140b08d8da3ba50dc97c45cc127e896d0dc652f379b127ad29a5f",
-    "four-facing-contact-sheet.png": "f8efc708e9600b376acec61d89e01dd631e55c99ae581bf4bba3997391f88859",
+    "four-facing-contact-sheet.png": "7c10693c6afee57142171c302146f7b7983361a19ec402b5abb1f165d8feffe3",
     "runtime-scale-sheet.png": "f3d07e18cf6344aae2eef9297e517e84926662eb150ed9c013fb51b8fa9de004",
     "anchor-bounds-overlay.png": "70529d8575bc72ddbf7825277c94bf947cc2a22bd1da7a376d2bc3d700a80261"
+  },
+  "committedIntegrityRepair": {
+    "reason": "Recovered valid PNGs after committed IDAT corruption/truncation was found before walk generation.",
+    "method": "Rebuilt the SW frame deterministically from the committed source contract and rebuilt the contact sheet from the four accepted normalized frames.",
+    "guard": "npm run ranger-proof:integrity runs before any Ranger regeneration."
   }
 }
