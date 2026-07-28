@@ -512,15 +512,20 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     const layout = await page.evaluate(() => {
       var modal = document.querySelector('#dumplingModal .dumpling-modal');
       var pull = document.getElementById('dumplingPull1').getBoundingClientRect();
+      var close = document.querySelector('.dumpling-close-x').getBoundingClientRect();
+      var modalRect = modal.getBoundingClientRect();
       return {
-        modalHeight: modal.getBoundingClientRect().height,
+        modalHeight: modalRect.height,
         viewportHeight: window.innerHeight,
         overflowY: getComputedStyle(modal).overflowY,
-        pullHeight: pull.height
+        pullHeight: pull.height,
+        closeHeight: close.height,
+        closeVisible: close.top >= modalRect.top && close.bottom <= modalRect.bottom
       };
     });
     layoutOk = layoutOk && layout.modalHeight <= layout.viewportHeight * 0.91 &&
-      layout.overflowY === 'auto' && layout.pullHeight >= 44;
+      layout.overflowY === 'auto' && layout.pullHeight >= 44 &&
+      layout.closeHeight >= 44 && layout.closeVisible;
     await page.screenshot({
       path: fileURLToPath(new URL('dumpling-mvp-' + viewport.name + '.png', evidenceDir)),
       fullPage: true
