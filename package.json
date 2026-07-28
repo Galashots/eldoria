@@ -4,11 +4,10 @@
   "description": "Dev-only test harness. The game itself has zero dependencies.",
   "scripts": {
     "assets:build": "node tools/process-crop-sheet.mjs",
-    "ranger-source:check": "node --check tools/process-ranger-source.mjs",
     "ranger-source:process": "node tools/process-ranger-source.mjs",
     "ranger-proof:self-test": "node tools/ranger-proof.mjs --self-test",
     "ranger-proof:candidate": "node tools/ranger-proof.mjs --static-only --input-dir art/ranger-proof/normalized --output-dir artifacts/ranger-proof-candidate-v1",
-    "test": "npm run assets:build && npm run ranger-source:check && npm run ranger-proof:self-test && npm run ranger-proof:candidate && node tools/smoke-test.mjs && node tools/iso-test.mjs"
+    "test": "npm run assets:build && npm run ranger-source:process && npm run ranger-proof:self-test && npm run ranger-proof:candidate && node tools/smoke-test.mjs && node tools/iso-test.mjs"
   },
   "devDependencies": {
     "puppeteer": "^25.4.0"
