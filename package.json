@@ -3,7 +3,8 @@
   "private": true,
   "description": "Dev-only test harness. The game itself has zero dependencies.",
   "scripts": {
-    "test": "node tools/smoke-test.mjs && node tools/iso-test.mjs"
+    "assets:build": "node tools/process-crop-sheet.mjs",
+    "test": "npm run assets:build && node tools/smoke-test.mjs && node tools/iso-test.mjs"
   },
   "devDependencies": {
     "puppeteer": "^25.4.0"
