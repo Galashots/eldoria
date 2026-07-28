@@ -779,6 +779,8 @@ function applyCanvasMode() {
     isoScale = (cssH / (TARGET_VIEW_ROWS * TILE / 2)) * dpr;
     isoCamW = canvas.width / isoScale;
     isoCamH = canvas.height / isoScale;
+    // Resizing the backing store resets context state — keep pixel art crisp.
+    ctx.imageSmoothingEnabled = false;
   } else {
     canvas.classList.remove('iso-mode');
     if (canvas.width !== 640) canvas.width = 640;
@@ -3714,6 +3716,7 @@ function isoUpdateCamera() {
 
 function drawIsoWorld() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.imageSmoothingEnabled = false;                     // crisp pixel art at any zoom
   ctx.fillStyle = '#0d0a06';                             // moody void, not pure black
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   isoUpdateCamera();
