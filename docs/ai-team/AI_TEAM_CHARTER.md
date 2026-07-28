@@ -167,6 +167,8 @@ Use lower-cost tiers for routine mechanical work when they remain reliable. Use 
 
 ## Provisional trials
 
+Record qualifying work, exact accepted SHAs, and reassessment progress in [`ROLE_TRIAL_EVIDENCE.md`](ROLE_TRIAL_EVIDENCE.md).
+
 Use normal project work rather than pausing for artificial benchmarks.
 
 1. **Reviewer signal:** On the next medium-risk functional PR, compare Gemini, ChatGPT, and Kimi reviews of the same exact head SHA and evidence.
