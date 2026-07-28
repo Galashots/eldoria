@@ -297,7 +297,6 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     { name: 'desktop', width: 1363, height: 936 },
     { name: 'phone-portrait', width: 390, height: 780 }
   ];
-  let layoutOk = true;
   for (const viewport of viewports) {
     const { browser, page } = await launch('?iso=1');
     await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
@@ -489,6 +488,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     { name: 'desktop', width: 1363, height: 936 },
     { name: 'phone-portrait', width: 390, height: 780 }
   ];
+  let layoutOk = true;
   for (const viewport of viewports) {
     const { browser, page } = await launch('?iso=0');
     await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
