@@ -29,5 +29,19 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Suite 2: flag plumbing ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    var on = isoActive();
+    localStorage.removeItem('eldoria_iso');
+    var offDefault = isoActive();            // all ISO_AREAS false in Phase 0
+    return { on: on, offDefault: offDefault };
+  });
+  check('flag: ?iso=1 turns iso on', r.on === true);
+  check('flag: default is off everywhere', r.offDefault === false);
+  await browser.close();
+}
+
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');
