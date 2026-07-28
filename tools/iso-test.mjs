@@ -327,6 +327,34 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     await browser.close();
   }
   check('visual evidence: desktop, iPad, and phone crop frames captured', true);
+
+  const { browser, page } = await launch('?iso=1');
+  await page.setViewport({ width: 1180, height: 820, deviceScaleFactor: 2 });
+  await page.evaluate(() => {
+    selectProfile('adventurer');
+    activateArea('farm');
+    applyCanvasMode();
+    var now = Date.now();
+    for (var r = 3; r <= 7; r++) {
+      for (var c = 14; c <= 18; c++) {
+        var type = CROP_TYPES[(r + c) % CROP_TYPES.length];
+        cropData[r + ',' + c] = {
+          status: 'ready',
+          plantedAt: now - CROPS[type].grow,
+          type: type
+        };
+      }
+    }
+    player.x = 13 * TILE;
+    player.y = 6 * TILE;
+    drawIsoWorld();
+  });
+  await page.screenshot({
+    path: fileURLToPath(new URL('crop-asset-lab-dense-ipad.png', evidenceDir)),
+    fullPage: true
+  });
+  await browser.close();
+  check('visual evidence: dense 25-crop iPad frame captured', true);
 }
 
 // --- Suite 12: owner-approved farming-to-dumpling economy preset ---
