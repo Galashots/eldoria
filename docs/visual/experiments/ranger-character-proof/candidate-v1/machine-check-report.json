@@ -1,0 +1,218 @@
+{
+  "candidate": "v1-static-owner-review",
+  "frameSize": [
+    64,
+    64
+  ],
+  "facingOrder": [
+    "right:SE",
+    "down:SW",
+    "left:NW",
+    "up:NE"
+  ],
+  "source": {
+    "file": "art/source/characters/ranger-four-facing-source-v001.png",
+    "size": [
+      384,
+      256
+    ],
+    "bytes": 12215,
+    "sha256": "ce0b98bb4833e030ebd2da177bdd48f0b2ceda4d244d3eec4bb71c7395be02f2",
+    "fullGeneratedSource": {
+      "size": [
+        1536,
+        1024
+      ],
+      "sha256": "f56089d9050f35209d400e97344dc6bc612d17dea74e96badc5c0c306c54b9b2",
+      "archiveTransform": "50% nearest-neighbour downsample, 256-colour indexed archival PNG committed to bound repository size"
+    }
+  },
+  "normalization": {
+    "sourceGrid": [
+      2,
+      2
+    ],
+    "quadrantMapping": {
+      "right": "top-left",
+      "up": "top-right",
+      "down": "bottom-left",
+      "left": "bottom-right"
+    },
+    "alphaThreshold": 224,
+    "targetMaxHeight": 56,
+    "sharedScale": 0.5957446808510638,
+    "resampling": "nearest-neighbour",
+    "resizedAlphaThreshold": 128,
+    "pivot": "opaque pixels in bottom 6 rows centered at x=32; visible bounds bottom at y=63"
+  },
+  "statics": {
+    "right": {
+      "width": 64,
+      "height": 64,
+      "sourceBounds": {
+        "x": 76,
+        "y": 14,
+        "maxX": 126,
+        "maxY": 107,
+        "width": 51,
+        "height": 94
+      },
+      "resizedSize": [
+        30,
+        56
+      ],
+      "placement": [
+        17,
+        8
+      ],
+      "bounds": {
+        "x": 17,
+        "y": 9,
+        "maxX": 46,
+        "maxY": 63,
+        "width": 30,
+        "height": 55,
+        "centerX": 31.5
+      },
+      "opaquePixels": 1052,
+      "semiTransparentPixels": 0,
+      "footBandCenterX": 31.958333333333332
+    },
+    "down": {
+      "width": 64,
+      "height": 64,
+      "sourceBounds": {
+        "x": 87,
+        "y": 9,
+        "maxX": 132,
+        "maxY": 99,
+        "width": 46,
+        "height": 91
+      },
+      "resizedSize": [
+        27,
+        54
+      ],
+      "placement": [
+        19,
+        10
+      ],
+      "bounds": {
+        "x": 19,
+        "y": 10,
+        "maxX": 45,
+        "maxY": 63,
+        "width": 27,
+        "height": 54,
+        "centerX": 32.0
+      },
+      "opaquePixels": 971,
+      "semiTransparentPixels": 0,
+      "footBandCenterX": 32.29824561403509
+    },
+    "left": {
+      "width": 64,
+      "height": 64,
+      "sourceBounds": {
+        "x": 51,
+        "y": 8,
+        "maxX": 100,
+        "maxY": 98,
+        "width": 50,
+        "height": 91
+      },
+      "resizedSize": [
+        30,
+        54
+      ],
+      "placement": [
+        21,
+        10
+      ],
+      "bounds": {
+        "x": 21,
+        "y": 10,
+        "maxX": 50,
+        "maxY": 63,
+        "width": 30,
+       "height": 54,
+        "centerX": 35.5
+      },
+      "opaquePixels": 1054,
+      "semiTransparentPixels": 0,
+      "footBandCenterX": 31.51388888888889
+    },
+    "up": {
+      "width": 64,
+      "height": 64,
+      "sourceBounds": {
+        "x": 39,
+        "y": 14,
+        "maxX": 89,
+        "maxY": 106,
+        "width": 51,
+        "height": 93
+      },
+      "resizedSize": [
+        30,
+        55
+      ],
+      "placement": [
+        13,
+        9
+      ],
+      "bounds": {
+        "x": 13,
+        "y": 9,
+        "maxX": 42,
+        "maxY": 63,
+        "width": 30,
+        "height": 55,
+        "centerX": 27.5
+      },
+      "opaquePixels": 1077,
+      "semiTransparentPixels": 0,
+      "footBandCenterX": 32.28787878788789
+    }
+  },
+  "metrics": {
+    "staticHeightRange": 1,
+    "staticWidthRange": 3,
+    "footCenterRange": 0.7843567251461998
+  },
+  "gates": {
+    "dimensions": true,
+    "binaryAlpha": true,
+    "visible": true,
+    "bottomAnchor": true,
+    "horizontalPadding": true,
+    "scaleConsistency": true,
+    "footPivotConsistency": true
+  },
+  "walk": {
+    "status": "not-generated",
+    "reason": "Static facings require owner visual judgement before animation generation."
+  },
+  "visualSemanticsNotMachineVerified": [
+    "identity consistency",
+    "fixed-camera consistency",
+    "elevated isometric projection",
+    "facing readability",
+    "upper-left lighting",
+    "pixel treatment",
+    "North Star alignment"
+  ],
+  "passed": true,
+  "deterministic": true,
+  "outputs": {
+    "adventurer-right.png": "0901dba6e8c0c6a3cadbf53f7b39f551644c638061893f1e1bd2113df1d7a916",
+    "adventurer-down.png": "8740c5cd0c99b3d8daea6884ee9f750d397f762c240221f7a179b2a987f84802",
+    "adventurer-up.png": "3cfa1d27e71d2dbd972e031e6a1ecb31b11c5854d721a4c3a9e83e722b465b5e",
+    "adventurer-left.png": "997dd57b0e50ac36f8f622f0c35fb5d0e6ca6ffd7b9f497d0ed36d3d5a84e957",
+    "dark-background-sheet.png": "de40cbbec1d09dc74d8b95f501deaab66423e73a1bab4efa50540d217b141a8c",
+    "magenta-sheet.png": "057476b9d93140b08d8da3ba50dc97c45cc127e896d0dc652f379b127ad29a5f",
+    "four-facing-contact-sheet.png": "f8efc708e9600b376acec61d89e01dd631e55c99ae581bf4bba3997391f88859",
+    "runtime-scale-sheet.png": "f3d07e18cf6344aae2eef9297e517e84926662eb150ed9c013fb51b8fa9de004",
+    "anchor-bounds-overlay.png": "70529d8575bc72ddbf7825277c94bf947cc2a22bd1da7a376d2bc3d700a80261"
+  }
+}
