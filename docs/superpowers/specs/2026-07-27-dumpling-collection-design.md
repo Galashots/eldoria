@@ -31,6 +31,10 @@ there" collection.
 8. **Duplicates → "dumpling dough"** — small gold refund + dough; enough dough lets you hand-pick a
    missing dumpling (guaranteed completion).
 9. **Everything gets balance-tested once running** — no numbers ship tuned by guesswork.
+10. **Dumplings are 2D, permanently** (Leo, 2026-07-27) — even after the isometric conversion, the
+    dumpling art stays 2D sprites and is out of scope for the 3D→iso pipeline. The UI follows the
+    **gear/equip-screen pattern**: browsing and equipping a buddy should feel like selecting a
+    piece of armor from a character-inventory screen.
 
 ## 3. Collection & rarity
 
@@ -149,10 +153,14 @@ could over-power; if the combat fix is greenlit separately, these numbers stay s
   - 🟣 Epic → richer glow + subtle motion
   - 🟡 Legendary → sparkly, animated, clearly special
 - Cute, chunky, squishy art style (7-Eleven vibe).
-- **"Spin" button (PHASE 2):** rotates the dumpling. **Tech caveat:** a cheap CSS `rotateY` on a
-  single 2D sprite reads as a flat "card flip," not a true 3D spin. A convincing squishy spin needs
-  either a multi-frame turnaround (art produces several angles) or a pseudo-3D effect. Decide the
-  approach when we build phase 2; it affects the art request.
+- **"Spin" button (PHASE 2):** animates the dumpling — **2D by decision** (locked decision #10).
+  Rather than a fake 3D rotation (a flat CSS `rotateY` reads as a cheap card-flip), do a **squish
+  bounce/wiggle-spin**: scale/rotate/squash-stretch keyframes on the 2D sprite, which suits a
+  squishy toy better anyway. No turnaround art needed.
+- **UI pattern (locked decision #10):** the collection + showcase is built like the game's
+  **gear/equip screens** — a character-inventory feel where you browse dumplings like armor pieces
+  and equip one, reusing the existing gear-sell/cooking modal layout (`renderGearSell`,
+  `renderCooking`) as the structural template.
 - **"Set as my buddy"** button lives here.
 - Collection grid shows **owned vs. locked** (silhouette) tiles and an **N/18** completion counter —
   the visible-progress motivator.
@@ -217,11 +225,14 @@ with `{ id: { name, rarity, buff, ... } }`, plus a `DUMPLING_RARITIES` band/odds
 
 ## 11. Art production track (parallel to engineering)
 
-- 18 cute dumpling sprites (across the 4 rarities)
+- 18 dumpling sprites (across the 4 rarities) — **2D only** (locked decision #10); produced via
+  the existing 2D pipeline (`tools/SPRITE_PIPELINE.md`), NOT the 3D→iso pipeline
 - 4 rarity background tiles for the showcase
 - 1 vendor/stall sprite (or reuse an NPC placeholder shape initially)
-- Produced via the existing art pipeline; engineering proceeds against placeholders so art never
-  blocks code. Per the playthrough, art is the bulk of the real effort here.
+- Engineering proceeds against placeholders so art never blocks code. Per the playthrough, art is
+  the bulk of the real effort here.
+- Style note: cute/squishy for the dumplings themselves, but sitting inside the game's overall
+  **sleek, slightly-badass** art direction — collectible toys in a cool world, not a cutesy game.
 
 ## 12. Balance testing (required before "done")
 

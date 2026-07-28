@@ -10,6 +10,11 @@ self-contained. The "art" is made *deterministic* by a committed Blender Python 
 picks this up regenerates identical sprites by re-running one command. If you are a model taking
 over, jump to **§9 Handoff checklist**.
 
+**No-chat-history rule:** everything needed to continue lives in **this repository** (this file,
+`tools/SPRITE_PIPELINE.md`, `docs/superpowers/specs/`, and `index.html` itself). Never assume
+knowledge from a previous assistant's conversation or memory; if something isn't written down here,
+ask Leo rather than guessing.
+
 ---
 
 ## 0. TL;DR
@@ -62,10 +67,15 @@ From `index.html` (sprite system ~lines 800–940) and `tools/SPRITE_PIPELINE.md
 
 1. **Concept image** — Foundry / ChatGPT image GPT (existing art guardrail: personal PC only).
    One clean character on a plain, uncluttered background, ¾ front view, full body, neutral pose.
-2. **Image → 3D** — **TRELLIS** (the proven TRELLIS.2 image-to-3D pipeline, already validated for
-   Eldoria). Output: a textured mesh (`.glb`).
+2. **Image → 3D** — **TRELLIS** (image-to-3D). Output: a textured mesh (`.glb`).
+   **Access note for a cold-start agent:** Leo has a working TRELLIS.2 setup proven on his other
+   kid-game project (Ninja Merge Academy) — its location/setup is NOT in this repo, so **ask Leo
+   where it lives** before improvising. If it's unavailable, any image-to-3D tool that outputs a
+   textured `.glb` satisfies this stage.
 3. **Rig + animate** — **Mixamo** (free auto-rig + humanoid idle/walk/attack) for humanoids; hand-keyed
-   loops in Blender for non-humanoids (enemies, dumplings).
+   loops in Blender for non-humanoids (enemies). **Note:** Mixamo needs a free Adobe login — if you
+   (the agent) lack browser/account access, hand this step to Leo with the exact upload/download
+   instructions.
 4. **Model, light, render** — **Blender** (free, Python-scriptable). This is the **portability
    keystone**: a committed `render_iso_sprites.py` does the deterministic iso render + frame export.
 5. **Pack/post-process** — extend the repo's existing `tools/*.mjs` (magenta-knockout, trim, slice,
@@ -93,6 +103,20 @@ Keep motion snappy — this reads better once downscaled.
   2:1 tiles. Pick one and keep it identical everywhere.)
 - **Facings:** keep the camera fixed; **rotate the character** by `0/90/180/270°` and render each →
   the 4 iso facings. (Add `45°` steps later for 8.)
+- **Facing → engine-slot mapping (explicit — do not guess).** The projection is
+  `x_screen = (col−row)·TW/2`, `y_screen = (col+row)·TH/2`, so grid **+col** appears as the
+  screen's **down-right** diagonal (SE) and grid **+row** as **down-left** (SW). The engine's
+  existing slots keep their grid meaning:
+
+  | Engine slot (`player.facing`) | Grid direction | Renders as iso facing |
+  |---|---|---|
+  | `right` | +col | **SE** (down-right, toward viewer) |
+  | `down`  | +row | **SW** (down-left, toward viewer) |
+  | `left`  | −col | **NW** (up-left, away) |
+  | `up`    | −row | **NE** (up-right, away) |
+
+  Sanity check after the first render: `down` and `right` sprites must show the character's
+  **face**; `up` and `left` must show the **back**. If mirrored, your character yaw sign is flipped.
 - **Light rig:** fixed key + fill + rim, documented as constants so every asset matches. The rim
   light is what gives the "sleek/badass" edge.
 - **Render:** each facing × each animation × each frame → PNG **with alpha**, supersampled (e.g.
@@ -130,7 +154,10 @@ Recommendation: **Option 1** for the iso relaunch; revisit if the kids miss mixi
 ## 7. Deterministic reproducibility (the portability guarantee)
 
 - Commit the **source model(s)** and **`render_iso_sprites.py`** into `tools/3d/`. These are the
-  source of truth; the PNGs in `assets/` are generated artifacts.
+  source of truth; the PNGs in `assets/` are generated artifacts. (`tools/3d/` does not exist yet —
+  the first agent to run Stage E creates it, plus a `tools/3d/README.md` recording tool versions.)
+- **Pin the Blender version** (record it in the script header and `tools/3d/README.md`). A
+  committed script is only deterministic if everyone renders with the same Blender release.
 - Put every knob (camera angle, resolution, supersample, light rig, frame counts, pivot rule,
   facing count) as **constants at the top of the script** — one place to tune.
 - Documented regenerate command (example):
@@ -153,8 +180,11 @@ Prove the whole chain on one character first; do not batch-produce before the lo
 ## 9. Handoff checklist — "I'm a different model picking this up"
 
 1. Read, in order: **this file**, `tools/SPRITE_PIPELINE.md` (existing 2D conventions),
-   `docs/superpowers/specs/<date>-isometric-*.md` (the iso engine spec, once written), and
+   `docs/superpowers/specs/<date>-isometric-*.md` (the iso engine spec), and
    `index.html` **lines ~800–940** (sprite loading / `drawSpriteFrame` / facings / frame timing).
+   **If no isometric spec exists in `docs/superpowers/specs/` yet, STOP — do not start rendering.**
+   The engine side isn't defined; help Leo write that spec first (the locked decisions are in §1–§3
+   and §10 here).
 2. Confirm tools available: Blender, TRELLIS access, Mixamo, Node (for the `tools/*.mjs` post-step).
 3. Outputs go to `assets/` using the **exact names in §3**. Source model + render script live in
    `tools/3d/`.
@@ -167,8 +197,7 @@ Prove the whole chain on one character first; do not batch-produce before the lo
 - **4 vs 8 facings** (4 is the recommended start; 8 doubles render + storage).
 - **Equipment approach** (§6 — recommend Option 1).
 - **Target frame size** (recommend 64×64).
-- **Dumpling synergy:** the dumpling-collection showcase's **"Spin" button** (phase 2) can be a
-  **pre-rendered 3D turntable** from *this exact pipeline* — render the dumpling model rotating 360°
-  into a frame strip and play it on tap. That cleanly solves the earlier "a flat CSS rotate looks
-  like a card-flip" caveat with a real 3D spin. See
-  `docs/superpowers/specs/2026-07-27-dumpling-collection-design.md`.
+- ~~Dumpling turntable synergy~~ **DECIDED (Leo, 2026-07-27): dumplings stay 2D** and are out of
+  scope for this pipeline. Their showcase uses a gear/equip-screen-style UI with a 2D spin/squish
+  animation — see `docs/superpowers/specs/2026-07-27-dumpling-collection-design.md`. This pipeline
+  covers characters, enemies, and world art only.
