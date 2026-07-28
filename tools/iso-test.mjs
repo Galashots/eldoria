@@ -289,12 +289,13 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- Visual evidence: exact PR render at desktop and phone portrait sizes ---
+// --- Visual evidence: exact PR render at desktop, iPad, and phone sizes ---
 {
   const evidenceDir = new URL('../artifacts/', import.meta.url);
   await mkdir(evidenceDir, { recursive: true });
   const viewports = [
     { name: 'desktop', width: 1363, height: 936 },
+    { name: 'ipad-landscape', width: 1180, height: 820 },
     { name: 'phone-portrait', width: 390, height: 780 }
   ];
   for (const viewport of viewports) {
@@ -325,7 +326,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     });
     await browser.close();
   }
-  check('visual evidence: desktop and phone crop frames captured', true);
+  check('visual evidence: desktop, iPad, and phone crop frames captured', true);
 }
 
 // --- Suite 12: owner-approved farming-to-dumpling economy preset ---

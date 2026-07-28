@@ -20,9 +20,9 @@ async function main() {
       const FRAME = 64;
       const STAGES = 3;
       const LIMITS = [
-        { width: 28, height: 26 },
-        { width: 48, height: 46 },
-        { width: 60, height: 60 },
+        { width: 22, height: 20 },
+        { width: 38, height: 36 },
+        { width: 48, height: 48 },
       ];
       const PALETTE = [
         [18, 25, 18], [27, 40, 23], [39, 55, 28], [51, 75, 30],
@@ -52,7 +52,7 @@ async function main() {
       }
 
       function backgroundCandidate(r, g, b) {
-        return Math.min(r, g, b) >= 150 && Math.max(r, g, b) - Math.min(r, g, b) <= 30;
+        return Math.min(r, g, b) >= 120 && Math.max(r, g, b) - Math.min(r, g, b) <= 50;
       }
 
       function clearConnectedBackground(imageData) {
@@ -88,6 +88,23 @@ async function main() {
           if (x + 1 < width) enqueue(index + 1);
           if (y > 0) enqueue(index - width);
           if (y + 1 < height) enqueue(index + width);
+          if (x > 0 && y > 0) enqueue(index - width - 1);
+          if (x + 1 < width && y > 0) enqueue(index - width + 1);
+          if (x > 0 && y + 1 < height) enqueue(index + width - 1);
+          if (x + 1 < width && y + 1 < height) enqueue(index + width + 1);
+        }
+      }
+
+      function clearCellMargins(imageData) {
+        const { data, width, height } = imageData;
+        const marginX = Math.max(2, Math.round(width * 0.05));
+        const marginY = Math.max(2, Math.round(height * 0.05));
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            if (x < marginX || x >= width - marginX || y < marginY || y >= height - marginY) {
+              data[(y * width + x) * 4 + 3] = 0;
+            }
+          }
         }
       }
 
@@ -213,6 +230,7 @@ async function main() {
           const top = Math.round(stage * clean.height / STAGES);
           const bottom = Math.round((stage + 1) * clean.height / STAGES);
           const cellData = cleanCtx.getImageData(left, top, right - left, bottom - top);
+          clearCellMargins(cellData);
           const bounds = visibleBounds(cellData);
           if (!bounds) throw new Error(`${crops[cropIndex]} stage ${stage} is empty`);
           const limit = LIMITS[stage];
