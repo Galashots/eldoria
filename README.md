@@ -22,6 +22,15 @@ step, no install, no network — it works fully offline.
 - Saves live in `localStorage`, one save per player profile.
 - Art assets sit next to the file in `assets/` and are referenced with relative paths.
 
+## Visual direction
+
+The owner-approved [Visual North Star](docs/VISUAL_NORTH_STAR.md) guides isometric
+projection, world spacing, environment and character art, farming presentation, and the
+touch-first HUD. Agents must inspect it for visually relevant reviews and follow its
+versioned supersession protocol when the game's evolving direction needs a new reference.
+
+[![Current Eldoria Visual North Star](docs/visual/eldoria-visual-north-star-v1.png)](docs/VISUAL_NORTH_STAR.md)
+
 ## Two profiles, one engine
 
 The game ships with two play profiles that share one world and engine. The only thing that
@@ -43,8 +52,9 @@ differs per profile is **difficulty** — the math grade level and reading level
 
 ## Development
 
-Built in small, testable slices — see [`PROGRESS.md`](PROGRESS.md) for the running log and
-[`CLAUDE.md`](CLAUDE.md) for the design rules and constraints.
+Built in small, testable slices — see [`AGENTS.md`](AGENTS.md) for shared agent rules,
+[`CLAUDE.md`](CLAUDE.md) for the Claude entry point, and [`PROGRESS.md`](PROGRESS.md)
+for the running log.
 
 Every push runs three checks (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
 
