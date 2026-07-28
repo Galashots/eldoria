@@ -216,16 +216,30 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     var bx = (isoPX(wx, wy) - isoCamPX) * isoScale;
     var by = (isoPY(wx, wy) - isoCamPY) * isoScale;
     var isoTile = canvasBackingPointToTile(bx, by);
+    var tapKey = '4,15';
+    cropData[tapKey] = { status: 'empty', plantedAt: 0, type: null };
+    var tapWx = 15.5 * TILE, tapWy = 4.5 * TILE;
+    var tapBx = (isoPX(tapWx, tapWy) - isoCamPX) * isoScale;
+    var tapBy = (isoPY(tapWx, tapWy) - isoCamPY) * isoScale;
+    var rect = canvas.getBoundingClientRect();
+    canvas.dispatchEvent(new PointerEvent('pointerdown', {
+      clientX: rect.left + tapBx * rect.width / canvas.width,
+      clientY: rect.top + tapBy * rect.height / canvas.height,
+      bubbles: true,
+      pointerId: 91
+    }));
+    var pointerPlanted = cropData[tapKey].status === 'growing';
 
     localStorage.setItem('eldoria_iso', '0');
     activateArea('town');
     player.x = 7 * TILE; player.y = 7 * TILE;
     var cam = topDownCamera();
     var topTile = canvasBackingPointToTile(7.5 * TILE - cam.x, 7.5 * TILE - cam.y);
-    return { isoTile, topTile };
+    return { isoTile, pointerPlanted, topTile };
   });
   check('tap math: iso screen point resolves exact world tile',
     r.isoTile.row === 4 && r.isoTile.col === 14);
+  check('tap event: canvas pointer plants the exact adjacent crop', r.pointerPlanted);
   check('tap math: top-down screen point resolves exact world tile',
     r.topTile.row === 7 && r.topTile.col === 7);
   await browser.close();
@@ -301,7 +315,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
       cropData['4,16'] = { status: 'ready', plantedAt: now - 25000, type: 'corn' };
       cropData['4,17'] = { status: 'ready', plantedAt: now - 35000, type: 'pumpkin' };
       cropData['4,18'] = { status: 'ready', plantedAt: now - 50000, type: 'starfruit' };
-      player.x = 13 * TILE;
+      player.x = 16 * TILE;
       player.y = 5 * TILE;
       drawIsoWorld();
     });
