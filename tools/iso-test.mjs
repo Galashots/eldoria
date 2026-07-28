@@ -43,5 +43,21 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Suite 3: responsive canvas ---
+{
+  const { browser, page } = await launch('?iso=1');
+  await page.setViewport({ width: 390, height: 780, deviceScaleFactor: 3 });
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    applyCanvasMode();
+    var rect = canvas.getBoundingClientRect();
+    return { w: canvas.width, cssW: rect.width, scale: isoScale,
+             expectW: Math.round(rect.width * 2) };  // DPR capped at 2, not 3
+  });
+  check('canvas: backing store = css width x capped DPR', r.w === r.expectW);
+  check('canvas: isoScale set and positive', r.scale > 0);
+  await browser.close();
+}
+
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');

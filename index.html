@@ -65,6 +65,14 @@
     touch-action: none;
   }
 
+  /* Iso mode: the canvas fills the screen; HUD & controls already float above it. */
+  #game.iso-mode {
+    width: 100vw;
+    height: 100dvh;
+    border: none;
+    border-radius: 0;
+  }
+
   /* ---- Shop modal (opens when you walk into the building) ---- */
   .modal-overlay {
     position: fixed;
@@ -753,6 +761,32 @@
 <script>
 var canvas = document.getElementById('game');
 var ctx = canvas.getContext('2d');
+
+// ---- Responsive canvas (iso only; spec section 5b) ----
+// Same vertical field of view on every device: TARGET_VIEW_ROWS world rows always fit
+// vertically, so a phone simply sees fewer columns than the iPad. Legacy top-down mode
+// keeps its original fixed 640x480 store untouched.
+var isoScale = 1, isoCamW = 0, isoCamH = 0;
+function applyCanvasMode() {
+  if (typeof isoActive === 'function' && isoActive()) {
+    canvas.classList.add('iso-mode');
+    var rect = canvas.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var cssW = rect.width || 640, cssH = rect.height || 480;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    // Projected px per world row is TILE/2; fit TARGET_VIEW_ROWS of them into the css height.
+    isoScale = (cssH / (TARGET_VIEW_ROWS * TILE / 2)) * dpr;
+    isoCamW = canvas.width / isoScale;
+    isoCamH = canvas.height / isoScale;
+  } else {
+    canvas.classList.remove('iso-mode');
+    if (canvas.width !== 640) canvas.width = 640;
+    if (canvas.height !== 480) canvas.height = 480;
+  }
+}
+window.addEventListener('resize', applyCanvasMode);
+window.addEventListener('orientationchange', applyCanvasMode);
 // Crisp pixel art: never bilinear-smooth our 32px sprites when drawImage scales/samples.
 // (CSS image-rendering: pixelated only governs the final CSS upscale, not canvas sampling.)
 ctx.imageSmoothingEnabled = false;
@@ -1436,6 +1470,7 @@ function activateArea(name) {
   map = areas[name].map;
   cropData = areas[name].crops;
   currentEnemies = AREA_ENEMIES[name] || [];
+  applyCanvasMode();   // iso areas resize the canvas; legacy areas restore 640x480
 }
 
 // ---- Collision ----
