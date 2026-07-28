@@ -31,7 +31,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- Suite 2: flag plumbing (Phase 1: farm defaults ON, other areas still top-down) ---
+// --- Suite 2: flag plumbing (Phase 1 farm + Phase 2 town ON, later areas still top-down) ---
 {
   const { browser, page } = await launch('?iso=1');
   const r = await page.evaluate(() => {
@@ -39,13 +39,17 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     localStorage.removeItem('eldoria_iso');
     var farmDefault = isoActive();           // currentArea is 'farm' at boot
     currentArea = 'town';
-    var townDefault = isoActive();           // town not ported yet
+    var townDefault = isoActive();           // ported by the Phase 2 first slice
+    currentArea = 'wilds';
+    var wildsDefault = isoActive();          // not ported yet
     currentArea = 'farm';
-    return { on: on, farmDefault: farmDefault, townDefault: townDefault };
+    return { on: on, farmDefault: farmDefault, townDefault: townDefault,
+             wildsDefault: wildsDefault };
   });
   check('flag: ?iso=1 turns iso on', r.on === true);
   check('flag: farm defaults to iso (Phase 1)', r.farmDefault === true);
-  check('flag: unported areas default to top-down', r.townDefault === false);
+  check('flag: town defaults to iso (Phase 2 slice)', r.townDefault === true);
+  check('flag: unported areas default to top-down', r.wildsDefault === false);
   await browser.close();
 }
 
@@ -563,6 +567,227 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   }
   check('visual evidence: desktop and phone dumpling frames captured', true);
   check('dumplings: modal stays bounded, scrollable, and touch-sized', layoutOk);
+}
+
+// --- Suite 14: Phase 2 Town slice — General Store + Mira on placeholder geometry ---
+// The slice is bounded to ONE building (the General Store, the only Town building with a
+// DOOR tile) and ONE villager (Mira, the only Town NPC clear of a DOOR — doAction() tests
+// isNearDoor() before isNearNPC(), so a villager beside the door cannot exercise Action).
+{
+  const { browser, page, errors } = await launch();     // no override: exercise the real defaults
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    activateArea('town');
+    applyCanvasMode();
+    window.__isoDebug = true;
+
+    var iso = isoActive();
+    // Town renders through the iso path with the store standing on placeholder geometry.
+    player.x = 7 * TILE; player.y = 7 * TILE;
+    drawIsoWorld();
+    var mid = ctx.getImageData(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2), 1, 1).data;
+
+    // The store's own tiles are still collected in iso even though top-down art exists for
+    // it. Top-down skips those tiles when shop_building.png loads; iso must not inherit that.
+    var order = window.__isoDrawOrder;
+    var storeTiles = order.filter(k => /^building@[456],[6789]$/.test(k));
+    var topDownArt = !!spr('shop_building');
+    var isoArt = !!spr('iso_shop_building');            // no iso art exists: placeholders only
+
+    // Depth: the hero south of the store draws after it (in front)...
+    player.x = 7 * TILE; player.y = 7 * TILE;
+    drawIsoWorld();
+    var front = window.__isoDrawOrder;
+    var frontOk = front.indexOf('building@6,7') < front.indexOf('player');
+    // ...and north of it draws before it (behind the wall).
+    player.x = 7 * TILE; player.y = 3 * TILE;
+    drawIsoWorld();
+    var back = window.__isoDrawOrder;
+    var backOk = back.indexOf('building@6,7') > back.indexOf('player');
+
+    // Depth: same two-sided check for Mira. One world step along both axes is one step
+    // straight up or down the screen, so these are the positions that actually overlap her.
+    var mira = NPCS.filter(n => n.id === 'mira')[0];
+    player.x = (mira.col - 1) * TILE; player.y = (mira.row - 1) * TILE;
+    drawIsoWorld();
+    var npcBehind = window.__isoDrawOrder;
+    var npcBehindOk = npcBehind.indexOf('npc@mira') > npcBehind.indexOf('player');
+    player.x = (mira.col + 1) * TILE; player.y = (mira.row + 1) * TILE;
+    drawIsoWorld();
+    var npcFront = window.__isoDrawOrder;
+    var npcFrontOk = npcFront.indexOf('npc@mira') < npcFront.indexOf('player');
+    var miraDrawn = npcFront.indexOf('npc@mira') !== -1;
+
+    // Action beside Mira opens her quest, and a direct tap opens the very same modal.
+    player.x = (mira.col - 1) * TILE; player.y = mira.row * TILE;
+    doAction();
+    var actionOpened = questOpen;
+    closeQuest();
+    var tapHandled = interactAtTile(mira.row, mira.col);
+    var tapOpened = questOpen;
+    closeQuest();
+
+    // Tapping her from across the plaza is recognized but must not teleport the interaction.
+    player.x = (mira.col - 6) * TILE; player.y = (mira.row + 4) * TILE;
+    var farHandled = interactAtTile(mira.row, mira.col);
+    var farStayedClosed = !questOpen;
+
+    // The store's DOOR tile keeps its existing shop entry, by tap and by Action.
+    player.x = 7 * TILE; player.y = 7 * TILE;
+    var doorTapHandled = interactAtTile(6, 7);
+    var doorTapOpened = shopOpen;
+    closeShop();
+    doAction();
+    var doorActionOpened = shopOpen;
+    closeShop();
+
+    return { iso, mid: mid[0] + mid[1] + mid[2], storeTiles: storeTiles.length,
+             topDownArt, isoArt, frontOk, backOk, miraDrawn, npcBehindOk, npcFrontOk,
+             actionOpened, tapHandled, tapOpened, farHandled, farStayedClosed,
+             doorTapHandled, doorTapOpened, doorActionOpened };
+  });
+  check('town: iso is the default render mode for Town', r.iso === true);
+  check('town: iso Town paints the canvas', r.mid > 30);
+  check('town: boot and Town render raise zero console errors', errors.length === 0);
+  if (errors.length) console.log('  errors: ' + errors.join(' | '));
+  check('town: all 12 General Store tiles participate in the object pass', r.storeTiles === 12);
+  check('town: store renders from placeholders, not the top-down building art',
+    r.topDownArt === true && r.isoArt === false);
+  check('depth: hero south of the store draws in front of it', r.frontOk === true);
+  check('depth: hero north of the store is occluded by it', r.backOk === true);
+  check('npc: Mira is collected at her projected tile', r.miraDrawn === true);
+  check('depth: Mira draws in front of a hero standing north of her', r.npcBehindOk === true);
+  check('depth: Mira draws behind a hero standing south of her', r.npcFrontOk === true);
+  check('npc: Action beside Mira opens her existing quest', r.actionOpened === true);
+  check('npc: direct tap on Mira opens the same quest path',
+    r.tapHandled === true && r.tapOpened === true);
+  check('npc: a distant Mira tap does not bypass walking to her',
+    r.farHandled === true && r.farStayedClosed === true);
+  check('door: tapping the store door opens the existing shop',
+    r.doorTapHandled === true && r.doorTapOpened === true);
+  check('door: Action at the store door opens the existing shop', r.doorActionOpened === true);
+  await browser.close();
+}
+
+// --- Suite 15: Farm <-> Town travel and save/world-space integrity in iso ---
+{
+  const { browser, page } = await launch();
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+
+    // Farm -> Town across the farm's right-edge EXIT.
+    activateArea('farm');
+    player.x = (MAP_W - 1) * TILE; player.y = 8 * TILE;
+    checkTravel();
+    var toTown = currentArea;
+    var townPos = { x: player.x, y: player.y };
+    var townInside = player.x > 0 && player.x < MAP_W * TILE &&
+                     player.y > 0 && player.y < MAP_H * TILE;
+    var townIso = isoActive();
+
+    // Town -> Farm across the town's left-edge EXIT.
+    player.x = 0; player.y = 10 * TILE;
+    checkTravel();
+    var toFarm = currentArea;
+    var farmInside = player.x > 0 && player.x < MAP_W * TILE &&
+                     player.y > 0 && player.y < MAP_H * TILE;
+
+    // World space is untouched by the render mode: the same Town position saves and
+    // reloads identically with iso on and with iso forced off. No migration, no new fields.
+    activateArea('town');
+    player.x = 14 * TILE + 7; player.y = 11 * TILE + 3;
+    saveGame();
+    var isoSave = JSON.parse(localStorage.getItem('eldoria_save_adventurer'));
+    localStorage.setItem('eldoria_iso', '0');
+    activateArea('town');
+    saveGame();
+    var topSave = JSON.parse(localStorage.getItem('eldoria_save_adventurer'));
+    localStorage.removeItem('eldoria_iso');
+
+    player.x = 0; player.y = 0;
+    applyState(isoSave);
+    var restored = { x: player.x, y: player.y, area: isoSave.area };
+
+    return { toTown, townPos, townInside, townIso, toFarm, farmInside,
+             sameSchema: JSON.stringify(Object.keys(isoSave)) === JSON.stringify(Object.keys(topSave)),
+             samePosition: isoSave.x === topSave.x && isoSave.y === topSave.y,
+             version: isoSave.version, saveVersion: SAVE_VERSION, restored };
+  });
+  check('travel: the farm exit still lands the hero in Town', r.toTown === 'town');
+  check('travel: Town arrival is inside the map bounds', r.townInside === true);
+  check('travel: arriving in Town switches to the iso renderer', r.townIso === true);
+  check('travel: the town exit still lands the hero back on the Farm', r.toFarm === 'farm');
+  check('travel: Farm arrival is inside the map bounds', r.farmInside === true);
+  check('save: iso and top-down Town saves share one schema', r.sameSchema === true);
+  check('save: world-space position is render-mode independent', r.samePosition === true);
+  // 2 is the schema version this slice started from; porting Town must not migrate saves.
+  check('save: iso Town does not bump the save version',
+    r.saveVersion === 2 && r.version === 2);
+  check('save: a Town save reloads to the exact same world position',
+    r.restored.x === 14 * 32 + 7 && r.restored.y === 11 * 32 + 3 && r.restored.area === 'town');
+  await browser.close();
+}
+
+// --- Phase 2 Town slice visual evidence ---
+{
+  const evidenceDir = new URL('../artifacts/', import.meta.url);
+  await mkdir(evidenceDir, { recursive: true });
+  const viewports = [
+    { name: 'desktop', width: 1363, height: 936 },
+    { name: 'ipad-landscape', width: 1180, height: 820 },
+    { name: 'phone-portrait', width: 390, height: 780 }
+  ];
+  // Device frames plus the depth and interaction states a reviewer needs to see.
+  // x/y are tile col/row. The behind/front pair steps one tile along BOTH world axes,
+  // which is one step straight up or down the screen — so the hero genuinely overlaps Mira.
+  const frames = [
+    { name: 'store', x: 7, y: 8, act: null },
+    { name: 'store-behind', x: 7, y: 3, act: null },
+    { name: 'behind', x: 13, y: 9, act: null },
+    { name: 'front', x: 15, y: 11, act: null },
+    { name: 'interaction', x: 13, y: 10, act: 'quest' },
+    { name: 'arrival', x: null, y: null, act: 'travel' }
+  ];
+  for (const viewport of viewports) {
+    const { browser, page } = await launch();
+    await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
+    await page.evaluate(() => {
+      selectProfile('adventurer');
+      activateArea('town');
+      applyCanvasMode();
+      player.x = 7 * TILE; player.y = 8 * TILE;
+      drawIsoWorld();
+    });
+    await page.screenshot({
+      path: fileURLToPath(new URL('iso-town-' + viewport.name + '.png', evidenceDir)),
+      fullPage: true
+    });
+    await browser.close();
+  }
+  for (const frame of frames.slice(1)) {
+    const { browser, page } = await launch();
+    await page.setViewport({ width: 1180, height: 820, deviceScaleFactor: 2 });
+    await page.evaluate((frame) => {
+      selectProfile('adventurer');
+      if (frame.act === 'travel') {
+        activateArea('farm');
+        player.x = (MAP_W - 1) * TILE; player.y = 8 * TILE;
+        checkTravel();                       // real Farm -> Town transition
+      } else {
+        activateArea('town');
+        player.x = frame.x * TILE; player.y = frame.y * TILE;
+      }
+      applyCanvasMode();
+      if (frame.act === 'quest') doAction();  // Mira's existing quest modal
+      drawIsoWorld();
+    }, frame);
+    await page.screenshot({
+      path: fileURLToPath(new URL('iso-town-' + frame.name + '.png', evidenceDir)),
+      fullPage: true
+    });
+    await browser.close();
+  }
+  check('visual evidence: Town device, depth, interaction, and travel frames captured', true);
 }
 
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
