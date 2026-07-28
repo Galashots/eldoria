@@ -187,6 +187,13 @@ with `{ id: { name, rarity, buff, ... } }`, plus a `DUMPLING_RARITIES` band/odds
 
 ## 10. Scope, phasing & non-goals
 
+**Pre-req (ships before or with the MVP):**
+- **Close the boss-farm gold spigot.** Re-entering an area currently revives all enemies instantly
+  (`checkTravel` ~line 3328 ignores `respawnAt`), so bosses can be farmed for a guaranteed 60g
+  gear-dupe + 300–600 XP per lap. With infinite gold, a 20g gacha pull is meaningless — the
+  collection only feels earned if gold stays somewhat scarce. Fix: honor `respawnAt` on re-entry
+  (a few lines). The broader combat rebalance (tap-dominance) remains a separate initiative.
+
 **MVP (phase 1):**
 - `DUMPLINGS` catalog + rarity/odds tables (all 18 defined)
 - Town dumpling vendor NPC + gacha modal (single + 3 + 10 bundles)
