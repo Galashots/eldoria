@@ -93,6 +93,32 @@ py = sy - sx/2
   then works in non-negative coordinates. (Remember the matching `−704` in the inverse if you
   invert helper output rather than raw `sx`.)
 
+## 5b. Responsive viewport (phone-first playtesting — Leo, 2026-07-27)
+
+Leo playtests on his **phone** regularly; the kids play on **iPad**. Today's canvas is a fixed
+640×480 backing store CSS-scaled to `min(96vw, 960px)` at a locked 4:3 aspect (`#game`, ~line 58)
+— on a portrait phone that letterboxes into a small window. In **iso mode** the canvas becomes
+fully responsive:
+
+- **Backing store = container size × devicePixelRatio** (DPR capped at 2 to bound fill cost on
+  3× phones), recomputed on `resize` / `orientationchange`. CSS size fills the available viewport
+  (minus HUD/controls), any aspect — portrait, landscape, notch and all (`viewport-fit=cover` +
+  `env(safe-area-inset-*)` padding on the joystick/Action button if needed).
+- **Zoom rule — fixed world height, variable width:** choose scale so a constant
+  `TARGET_VIEW_ROWS` (~14 diamond-rows ≈ 448 world px, tune at the Phase 1 gate) always fits
+  vertically: `scale = canvasCssHeight / (TARGET_VIEW_ROWS · ISO_TH/2 …)` — implemented as a
+  single `ctx.setTransform(scale·dpr, 0, 0, scale·dpr, …)` before the camera translate. A phone
+  simply *sees fewer columns* than the iPad; the follow camera already handles any viewport size.
+  Nothing about the world, speeds, or logic changes — same sacred-world principle.
+- **Same experience guarantee:** identical vertical field of view on every device means combat
+  cues, crops, and enemies stay the same on-screen size; only horizontal reach differs. No
+  device-specific art or layouts.
+- **Mode switching:** entering an iso area applies responsive sizing; entering a still-top-down
+  area restores the legacy fixed 640×480 store (one `applyCanvasMode()` on area change). The
+  legacy path is never touched beyond that restore call.
+- **DOM UI:** modals/HUD are already viewport-positioned and touch-first; verify small-phone
+  fit (modal `max-height` + scroll) in the §11 device matrix rather than redesigning them.
+
 ## 6. Input: screen-relative joystick
 
 The joystick produces a screen-space vector `(jx, jy)`. In iso mode, transform it through the
@@ -157,6 +183,8 @@ Engine code changes (complete list — anything beyond this is scope creep):
    anchoring; existing top-down call sites pass `TILE, TILE` — zero behavioral change outside iso.
 5. The iso draw path (two-pass renderer, §7) selected per-area by the flag.
 6. `loadSprite` registrations for `assets/iso/*` names (missing files fall back per §7).
+7. Responsive canvas in iso mode (§5b): DPR-aware backing store, fixed-view-rows zoom transform,
+   resize/orientation listeners, and `applyCanvasMode()` on area transitions.
 
 ## 9. Phased rollout (kid-playtest-gated)
 
@@ -189,6 +217,9 @@ and the dumpling feature (2D, DOM-based, fully insulated).
   (the exact scenario in the approved mock).
 - **Input feel check:** push-up moves hero straight up-screen in iso Farm; door transitions
   preserve position sanity.
+- **Device matrix (every phase gate):** Leo's phone portrait + landscape, iPad Safari, desktop —
+  identical vertical FOV, crisp rendering at device DPR, no letterboxing, modals fully reachable,
+  joystick/Action clear of safe-area insets, orientation change mid-play doesn't break the camera.
 - **Save round-trip:** save in iso Farm, reload with flag off → identical world state top-down.
 
 ## 12. Risks & mitigations
@@ -204,6 +235,6 @@ and the dumpling feature (2D, DOM-based, fully insulated).
 ## 13. Open items
 
 1. Defaults **D1/D2/D3** (§2) — standing unless Leo vetoes before Phase 3.
-2. Camera zoom feel (640×480 shows ~10×15 iso tiles vs the whole farm today) — evaluate at the
-   Phase 1 kid gate; a modest zoom-out is a one-constant change.
+2. Zoom feel: `TARGET_VIEW_ROWS` (§5b) is the one constant that decides how much world is visible
+   on every device — tune at the Phase 1 gate on Leo's phone AND the iPad together.
 3. `mockups/iso-preview.html` — delete from the public repo once Phase 0 exists to look at.
