@@ -819,7 +819,8 @@ var MAP_H = 22;
 // See docs/superpowers/specs/2026-07-27-isometric-conversion-design.md (sections 5, 5b, 6).
 var ISO_TW = 64, ISO_TH = 32;            // ground diamond size in projected px
 var ISO_X_OFF = MAP_H * TILE;            // shifts projected x non-negative (704)
-var TARGET_VIEW_ROWS = 14;               // vertical FOV in world rows — the ONE zoom knob
+var TARGET_VIEW_ROWS = 18;               // vertical FOV in world rows — the ONE zoom knob
+                                         // (14 felt zoomed-in on Leo's phone, 2026-07-27)
 
 function isoPX(px, py) { return (px - py) + ISO_X_OFF; }
 function isoPY(px, py) { return (px + py) / 2; }

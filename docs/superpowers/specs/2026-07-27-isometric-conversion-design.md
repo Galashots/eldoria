@@ -191,6 +191,8 @@ Engine code changes (complete list — anything beyond this is scope creep):
 - **Phase 0 — Engine + placeholder Farm.** Items 1–6 above; Farm renders iso on placeholder
   diamonds/prisms behind the flag. *Gate:* full farm loop (plant → grow → harvest → cook → travel
   to Town and back) playable in iso; headless boot smoke stays clean.
+  **DONE 2026-07-27** — 20 automated tests green, CI green, Leo's phone device-check passed
+  (placeholders read as "more is coming", collision solid; zoom tuned 14→18 rows on feedback).
 - **Phase 1 — Kid playtest on the Farm.** Flag on for the boys; tune movement feel, camera, tile
   readability. *Gate: the kids prefer it (or at worst don't mind it).*
 - **Phase 2 — Port remaining areas.** Town (NPCs, buildings) → Wilds → Deep Woods → Mine (enemies,
