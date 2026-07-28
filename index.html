@@ -1160,6 +1160,10 @@ var CROPS = {
   starfruit: { name: 'Starfruit', cost: 15, grow: 45000, sell: 17, color: '#cc55cc', readyColor: '#ee88ee' }
 };
 var CROP_TYPES = ['turnip', 'carrot', 'corn', 'pumpkin', 'starfruit'];
+// Crop Asset Lab: one three-frame iso strip per crop (sprout, growing, ready).
+// Missing lab art keeps the existing deterministic canvas crop proof.
+for (var ic = 0; ic < CROP_TYPES.length; ic++)
+  loadSprite('iso_crop_' + CROP_TYPES[ic], 'assets/iso/crop-' + CROP_TYPES[ic] + '.png');
 
 // ---- Squishy Dumplings MVP ----
 // This slice proves the earned-gold pull, pity, duplicate, collection, and save loop.
@@ -4229,6 +4233,22 @@ function drawIsoCrop(cx, cy, crop, now) {
   var type = crop.type || 'turnip';
   var info = CROPS[type];
   var stage = cropVisualStage(crop, now);
+  var cropImg = spr('iso_crop_' + type);
+
+  if (cropImg) {
+    ctx.save();
+    if (stage === 2) {
+      var assetGlow = 0.10 + (Math.sin(now / 220) + 1) * 0.04;
+      ctx.globalAlpha = assetGlow;
+      ctx.fillStyle = info.readyColor;
+      ctx.beginPath(); ctx.ellipse(cx, cy - 4, 24, 11, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.drawImage(cropImg, stage * 64, 0, 64, 64, cx - 32, cy - 63, 64, 64);
+    ctx.restore();
+    return;
+  }
+
   var positions = stage === 0 ? [[-7, 2], [7, 2]] : [[-11, 3], [0, 7], [11, 3]];
 
   ctx.save();
