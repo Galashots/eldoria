@@ -1,0 +1,198 @@
+{
+  "candidate": "v1-right-se-four-frame-walk-owner-review",
+  "facing": "right:SE",
+  "frameSize": [
+    64,
+    64
+  ],
+  "frameCount": 4,
+  "sourceGrid": [
+    4,
+    1
+  ],
+  "source": {
+    "file": "art/source/characters/ranger-right-walk-source-v001.jpeg",
+    "dimensions": [
+      1536,
+      512
+    ],
+    "bytes": 190816,
+    "sha256": "3e8ac63f18a758bdc8f33f2485ccb2f12c4ff64c7649d5637c24fa4b8d1f6eae",
+    "note": "Owner-accepted corrected whole-strip source; baked checkerboard removed deterministically."
+  },
+  "normalization": {
+    "sourceCellSize": [
+      384,
+      512
+    ],
+    "lightNeutralMinimum": 218,
+    "lightNeutralMaximumSpread": 24,
+    "componentRule": "largest 4-connected non-background component per source cell",
+    "targetMaxHeight": 56,
+    "sharedScale": 0.17834394904458598,
+    "resampling": "nearest-neighbour",
+    "resizedAlphaThreshold": 128,
+    "pivot": "opaque pixels in bottom 6 rows centered at x=32; visible bounds bottom at y=63"
+  },
+  "frames": [
+    {
+      "index": 0,
+      "sourceBounds": {
+        "x": 114,
+        "y": 98,
+        "maxX": 314,
+        "maxY": 411,
+        "width": 201,
+        "height": 314,
+        "centerX": 214
+      },
+      "resizedSize": [
+        36,
+        56
+      ],
+      "placement": [
+        7,
+        8
+      ],
+      "bounds": {
+        "x": 7,
+        "y": 8,
+        "maxX": 42,
+        "maxY": 63,
+        "width": 36,
+        "height": 56,
+        "centerX": 24.5
+      },
+      "opaquePixels": 1180,
+      "semiTransparentPixels": 0,
+      "footBandCenterX": 31.6984126984127
+    },
+    {
+      "index": 1,
+      "sourceBounds": {
+        "x": 102,
+        "y": 97,
+        "maxX": 277,
+        "maxY": 401,
+        "width": 176,
+        "height": 305,
+        "centerX": 189.5
+      },
+      "resizedSize": [
+        31,
+        54
+      ],
+      "placement": [
+        15,
+        10
+      ],
+      "bounds": {
+        "x": 15,
+        "y": 10,
+        "maxX": 45,
+        "maxY": 63,
+        "width": 31,
+        "height": 54,
+        "centerX": 30
+      },
+      "opaquePixels": 1046,
+      "semiTransparentPixels": 0,
+      "footBandCenterX": 32.23255813953488
+    },
+    {
+      "index": 2,
+      "sourceBounds": {
+        "x": 90,
+        "y": 97,
+        "maxX": 282,
+        "maxY": 406,
+        "width": 193,
+        "height": 310,
+        "centerX": 186
+      },
+      "resizedSize": [
+        34,
+        55
+      ],
+      "placement": [
+        10,
+        9
+      ],
+      "bounds": {
+        "x": 10,
+        "y": 9,
+        "maxX": 43,
+        "maxY": 63,
+        "width": 34,
+        "height": 55,
+        "centerX": 26.5
+      },
+      "opaquePixels": 1145,
+      "semiTransparentPixels": 0,
+      "footBandCenterX": 32
+    },
+    {
+      "index": 3,
+      "sourceBounds": {
+        "x": 67,
+        "y": 97,
+        "maxX": 245,
+        "maxY": 401,
+        "width": 179,
+        "height": 305,
+        "centerX": 156
+      },
+      "resizedSize": [
+        32,
+        54
+      ],
+      "placement": [
+        14,
+        10
+      ],
+      "bounds": {
+        "x": 14,
+        "y": 10,
+        "maxX": 45,
+        "maxY": 63,
+        "width": 32,
+        "height": 54,
+        "centerX": 29.5
+      },
+      "opaquePixels": 1038,
+      "semiTransparentPixels": 0,
+      "footBandCenterX": 31.75
+    }
+  ],
+  "metrics": {
+    "walkCenterRange": 5.5,
+    "walkTopRange": 2,
+    "footCenterRange": 0.5341454411221813
+  },
+  "gates": {
+    "dimensions": true,
+    "frameCount": true,
+    "binaryAlpha": true,
+    "visible": true,
+    "bottomAnchor": true,
+    "horizontalPadding": true,
+    "walkStability": true,
+    "footPivotConsistency": true
+  },
+  "passed": true,
+  "deterministic": true,
+  "outputs": {
+    "adventurer-right-walk.png": "82f193dbf88c9f27f9f58190458a0a0dd459a8c22f2927f45a6875b6e3cba33a",
+    "walk-strip-preview.png": "9d82f84a84231d0f9c66935ee9e2dc855c3a24d06927541eab427db4717f9877"
+  },
+  "visualSemanticsNotMachineVerified": [
+    "identity consistency",
+    "equipment consistency",
+    "gait quality",
+    "directional readability",
+    "upper-left lighting",
+    "pixel treatment",
+    "North Star alignment"
+  ],
+  "reviewNote": "Machine gates prove the file contract and stability tolerances, not production-art approval. No runtime integration or merge is included."
+}

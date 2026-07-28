@@ -17,5 +17,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playtest-evidence
-          path: artifacts/*.png
+          path: |
+            artifacts/*.png
+            artifacts/**/*.png
+            artifacts/**/*.json
           if-no-files-found: ignore
