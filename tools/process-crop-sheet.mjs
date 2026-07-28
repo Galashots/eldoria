@@ -164,6 +164,18 @@ async function main() {
         ctx.putImageData(imageData, 0, 0);
       }
 
+      function enforceBottomAnchor(stripCtx, stage) {
+        const frameData = stripCtx.getImageData(stage * FRAME, 0, FRAME, FRAME);
+        const bounds = visibleBounds(frameData);
+        if (!bounds) return;
+        const shift = FRAME - (bounds.y + bounds.height);
+        if (shift <= 0) return;
+        const frameCanvas = canvas(FRAME, FRAME);
+        frameCanvas.getContext('2d').putImageData(frameData, 0, 0);
+        stripCtx.clearRect(stage * FRAME, 0, FRAME, FRAME);
+        stripCtx.drawImage(frameCanvas, stage * FRAME, shift);
+      }
+
       function validateStrip(strip, crop) {
         const ctx = strip.getContext('2d');
         const imageData = ctx.getImageData(0, 0, strip.width, strip.height);
@@ -250,6 +262,7 @@ async function main() {
             width,
             height,
           );
+          enforceBottomAnchor(stripCtx, stage);
         }
 
         applyPalette(stripCtx, strip.width, strip.height);
