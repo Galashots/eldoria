@@ -1115,12 +1115,13 @@ if (gameMuted) document.getElementById('muteBtn').innerHTML = '&#x1f507;';
 bgMusic.volume = 0.35;
 
 // ---- Build a map ----
-// ---- Iso mode flag (Phase 0) ----
-// Per-area rollout switch. All false until an area's iso port passes its kid gate.
-// Dev/playtest override: visit ?iso=1 once (persists via localStorage), ?iso=0 to clear.
-var ISO_AREAS = { farm: false, town: false, wilds: false, deepwoods: false, mine: false };
+// ---- Iso mode flag ----
+// Per-area rollout switch. An area flips true once its iso port passes the kid gate.
+// farm: true since Phase 1 (2026-07-27) — the boys playtest iso Farm by default.
+// Override: ?iso=1 forces iso everywhere, ?iso=0 forces top-down; both persist via localStorage.
+var ISO_AREAS = { farm: true, town: false, wilds: false, deepwoods: false, mine: false };
 if (location.search.indexOf('iso=1') !== -1) { try { localStorage.setItem('eldoria_iso', '1'); } catch (e) {} }
-if (location.search.indexOf('iso=0') !== -1) { try { localStorage.removeItem('eldoria_iso'); } catch (e) {} }
+if (location.search.indexOf('iso=0') !== -1) { try { localStorage.setItem('eldoria_iso', '0'); } catch (e) {} }
 function isoActive() {
   var ov = null;
   try { ov = localStorage.getItem('eldoria_iso'); } catch (e) {}

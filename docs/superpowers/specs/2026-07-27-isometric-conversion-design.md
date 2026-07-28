@@ -195,6 +195,9 @@ Engine code changes (complete list — anything beyond this is scope creep):
   (placeholders read as "more is coming", collision solid; zoom tuned 14→18 rows on feedback).
 - **Phase 1 — Kid playtest on the Farm.** Flag on for the boys; tune movement feel, camera, tile
   readability. *Gate: the kids prefer it (or at worst don't mind it).*
+  **STARTED 2026-07-27** — `ISO_AREAS.farm = true` on the live site; `?iso=0` hardened to
+  persist a forced top-down opt-out (it previously only cleared the override, which would have
+  fallen through to the new iso default). Gate awaits the boys' verdict.
 - **Phase 2 — Port remaining areas.** Town (NPCs, buildings) → Wilds → Deep Woods → Mine (enemies,
   combat entry cues). *Gate:* every area playable in iso; combat/quests verified in-world.
 - **Phase 3 — Real art.** Run the 3D pipeline proof slice (pipeline doc §8: adventurer, 4 facings,

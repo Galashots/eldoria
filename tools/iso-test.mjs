@@ -29,17 +29,32 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- Suite 2: flag plumbing ---
+// --- Suite 2: flag plumbing (Phase 1: farm defaults ON, other areas still top-down) ---
 {
   const { browser, page } = await launch('?iso=1');
   const r = await page.evaluate(() => {
     var on = isoActive();
     localStorage.removeItem('eldoria_iso');
-    var offDefault = isoActive();            // all ISO_AREAS false in Phase 0
-    return { on: on, offDefault: offDefault };
+    var farmDefault = isoActive();           // currentArea is 'farm' at boot
+    currentArea = 'town';
+    var townDefault = isoActive();           // town not ported yet
+    currentArea = 'farm';
+    return { on: on, farmDefault: farmDefault, townDefault: townDefault };
   });
   check('flag: ?iso=1 turns iso on', r.on === true);
-  check('flag: default is off everywhere', r.offDefault === false);
+  check('flag: farm defaults to iso (Phase 1)', r.farmDefault === true);
+  check('flag: unported areas default to top-down', r.townDefault === false);
+  await browser.close();
+}
+
+// --- Suite 2b: escape hatch — ?iso=0 must force top-down even where iso is the default ---
+{
+  const { browser, page } = await launch('?iso=0');
+  const r = await page.evaluate(() => {
+    return { off: isoActive(), stored: localStorage.getItem('eldoria_iso') };
+  });
+  check('flag: ?iso=0 forces top-down on farm', r.off === false);
+  check('flag: ?iso=0 persists the opt-out', r.stored === '0');
   await browser.close();
 }
 
