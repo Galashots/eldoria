@@ -26,6 +26,18 @@ It does **not** replace the deterministic download, normalization, validation,
 contact-sheet, North Star review, or owner-approval stages already proven in
 `tools/pipeline/`.
 
+## Current operating roles and direction retention
+
+- Claude is the default PixelLab generation seat for bounded approved batches.
+- ChatGPT reviews exported candidates for identity, camera, direction order,
+  motion, transparency, framing, North Star alignment, and 64px readability.
+- Leo retains final product and visual authority.
+- PixelLab's full 8-direction character output is retained. The current engine's
+  SE/SW/NW/NE slots are a compatibility subset; south/east/north/west remain
+  production sources for the owner-intended later eight-direction runtime.
+- No agent may delete or replace remote PixelLab material without explicit
+  approval.
+
 ## Secrets: what is and is not committed
 
 The repository contains only the variable name `${PIXELLAB_SECRET}`. It never
