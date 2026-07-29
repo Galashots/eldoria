@@ -1,0 +1,161 @@
+# Eldoria Asset Pipeline v2 — PixelLab + deterministic post-process
+
+**Status: proposed (draft PR). Owner decision required before adoption.**
+
+This is the consolidated asset pipeline for Realm of Eldoria's 2.5D relaunch.
+It replaces the generation stages of the two earlier pipeline docs and keeps
+their proven parts:
+
+| Earlier doc | What happens to it |
+|---|---|
+| `tools/SPRITE_PIPELINE.md` (ChatGPT + magenta key, 32×32 top-down) | Still valid for the live top-down game. Its **deterministic post-process** idea carries into v2 unchanged. |
+| `tools/3D_ISO_SPRITE_PIPELINE.md` (TRELLIS → Mixamo → Blender) | Generation stages **superseded** — probed on PR #13 and blocked (TRELLIS quota/input gaps; blockout quality far below North Star). Its **engine contract** (§3) and camera constants carry into v2 unchanged. |
+
+## Decision record (2026-07-28)
+
+Options weighed for producing character facings + animation frames:
+
+1. **PixelLab API** *(chosen)* — purpose-trained pixel-art models with
+   first-class 4/8-direction characters, rotation of existing sprites,
+   template/text/skeleton animation, palette forcing, isometric flag, and
+   diagonal directions that map 1:1 onto our engine slots. Credit-priced
+   (~$0.012 per 64×64 4-direction character; cents per animation). Official
+   REST API + Python SDK + MCP server. Community consensus: best-in-class
+   pipeline for rotations + animation.
+2. **Retro Diffusion API** — output-quality leader for single images; weaker
+   rotation/animation story. Kept as an optional *base-image* source later;
+   not needed for v1.
+3. **Local Stable Diffusion + ControlNet** — evaluated for this machine
+   (GTX 1060 6 GB, 16 GB RAM): SD1.5-class only, LoRA training impractical,
+   days of tuning to reach what hosted purpose-trained models do out of the
+   box for cents. **Rejected.** Local image-to-3D (TRELLIS-class) needs
+   ≥16 GB VRAM — **not feasible at all** on this hardware.
+4. **ChatGPT-only art** (status quo) — remains the **identity/North-Star
+   authority** and the source of hero concept art, but rotations and
+   animation frames by hand-prompting were the reliability pain point this
+   pipeline exists to remove.
+
+## The pipeline
+
+```
+IDENTITY (human + ChatGPT, North Star controlled)
+   concept / approved sprite  ── ChatGPT stays visual-direction lead
+        │
+        ▼
+GENERATE (PixelLab API, scripted, pennies)          tools/pipeline/pixellab_client.py
+   pixelate    HD art → pixel art             (/image-to-pixelart)
+   create4     4 facings from description     (/create-character-with-4-directions)
+   rotate      approved sprite → other facing (/rotate)
+   animate     walk/attack frames             (/animate-character)
+        │   raw PNGs → _probe_local/pipeline/<name>/raw/   (never committed)
+        ▼
+NORMALIZE (deterministic, local)                    tools/pipeline/normalize_sprite.py
+   premultiplied-alpha downscale → 64×64, binary alpha, foot pivot row 63,
+   one shared scale per profile, 256×64 walk strips
+        │
+        ▼
+VALIDATE (machine gates, exit code)                 tools/pipeline/validate_sprites.py
+   size / alpha / anchor / padding / scale spread / walk stability
+        │
+        ▼
+REVIEW (human + North Star)   →   commit to assets/
+```
+
+The generate stage is swappable by design — if PixelLab disappoints, the
+normalize/validate contract doesn't change; only the client does.
+
+## Camera + direction mapping (locked)
+
+Engine slots map to PixelLab directions with `--isometric`:
+
+| Engine slot | Iso facing | PixelLab direction |
+|---|---|---|
+| `right` | SE | `south-east` |
+| `down`  | SW | `south-west` |
+| `left`  | NW | `north-west` |
+| `up`    | NE | `north-east` |
+
+PixelLab `view` is `low top-down` (closest to our locked elevation of
+26.565° = atan 0.5). **First-run calibration must verify** both that the
+diagonal directions render as our facings and that `low top-down` reads
+correctly against the engine's 64×32 diamonds — see checklist below.
+
+Walk animation is **4 frames** at `WALK_FRAME_MS=110`; the engine resets
+`walkFrame` to 0 when stationary, so **frame 0 must be the standing pose** and
+frames 0/2 are the same stand pose (stand, step A, stand, step B). If a
+generated cycle returns 4 distinct poses, keep frames {stand, A, stand-copy, B}.
+
+## Setup (one-time, ~2 minutes)
+
+1. Create an account at <https://pixellab.ai/account> (free trial: 40
+   generations, no credit card) and copy the API token.
+2. Save it to `_probe_local/pixellab.token` (gitignored) or set
+   `PIXELLAB_SECRET`.
+3. `python tools/pipeline/pixellab_client.py balance` should print credits.
+
+## Commands (Ranger example)
+
+```bash
+# 4 static facings, isometric diagonals, 64px
+python tools/pipeline/pixellab_client.py create4 \
+  --description "older ranger adventurer, weathered green hooded cloak, leather bracers, longbow and quiver, determined expression" \
+  --size 64 --isometric \
+  --directions south-east,south-west,north-west,north-east \
+  --out-dir _probe_local/pipeline/ranger
+
+# walk cycle for the character created above (id printed / in character.json)
+python tools/pipeline/pixellab_client.py animate \
+  --character-id <id> --action "walking" --frames 4 --isometric \
+  --out-dir _probe_local/pipeline/ranger
+
+# alternative identity-preserving route: rotate an APPROVED sprite to a new facing
+python tools/pipeline/pixellab_client.py rotate \
+  --from-image art-incoming/ranger-down.png \
+  --from-direction south-west --to-direction south-east --isometric \
+  --size 64 --out _probe_local/pipeline/ranger/raw/right.png
+
+# arrange raw frames as <slot>.png / <slot>-walk-<i>.png, then:
+python tools/pipeline/normalize_sprite.py \
+  --source _probe_local/pipeline/ranger/raw \
+  --out _probe_local/pipeline/ranger/normalized --profile adventurer
+
+python tools/pipeline/validate_sprites.py \
+  --dir _probe_local/pipeline/ranger/normalized --profile adventurer
+```
+
+Add `--dry-run` before the subcommand's flags to print the exact request
+without spending credits. Add `--seed` for reproducible generations.
+
+## First-run calibration checklist
+
+Run once with trial credits before trusting the pipeline:
+
+- [ ] `create4` with the four diagonal directions → do the sprites read as
+      SE/SW/NW/NE at our camera, feet at a shared pivot?
+- [ ] `low top-down` vs `high top-down` → which sits better on the 64×32
+      diamonds in-game? (Screenshot both over the town map.)
+- [ ] `animate --frames 4 "walking"` → is frame 0 a stand pose? If not,
+      reorder to {stand, A, stand, B} before normalizing.
+- [ ] Palette: does output need `--color-image` (North Star palette swatch)
+      + `--force-colors` to stay on-palette?
+- [ ] `rotate` from PR #11's approved down-facing Ranger → does identity
+      survive rotation? If yes, this becomes the preferred route (identity
+      stays ChatGPT/North-Star-controlled; PixelLab only turns the character).
+- [ ] Normalize + validate → all gates pass → screenshot in-game at 1× and
+      compare against the North Star.
+
+## Cost reality
+
+At list prices a full character (4 facings + 4-direction walk + attack) is
+roughly **$0.05–0.30**. The entire cast of Eldoria is a few dollars. The free
+trial covers the whole calibration checklist.
+
+## North Star alignment
+
+This PR establishes **process, not art** — no visible game change, no change
+to the visual direction. Alignment is enforced structurally: identity stays
+with ChatGPT (standing visual-direction lead), the palette can be forced from
+a North Star swatch, the camera contract is pinned in the normalize/validate
+gates, and nothing reaches `assets/` without the human + North Star review
+step. First generated art must be reviewed against
+`docs/VISUAL_NORTH_STAR.md` before commit, per repo `CLAUDE.md`.
