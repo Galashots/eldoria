@@ -267,6 +267,40 @@ def cmd_isotile(args):
             print(f"[save] {args.out}")
 
 
+def cmd_tilespro(args):
+    """Terrain via tiles-pro: numbered variations, autotile sets, buildings."""
+    payload = {
+        "description": args.description,
+        "tile_type": args.tile_type,
+        "tile_size": args.tile_size,
+    }
+    if args.tile_view:
+        payload["tile_view"] = args.tile_view
+    if args.flat_top_px:
+        payload["tile_flat_top_px"] = args.flat_top_px
+    if args.feature:
+        payload["tile_feature"] = args.feature
+    if args.seed is not None:
+        payload["seed"] = args.seed
+    resp = post("/create-tiles-pro", payload, args.dry_run)
+    if resp is None:
+        return
+    print(json.dumps(resp, indent=2)[:400])
+    job_id = resp.get("background_job_id")
+    if job_id:
+        poll_job(job_id)
+    tile_id = resp.get("tile_id") or resp.get("tiles_pro_id") or resp.get("id")
+    detail = api("GET", f"/tiles-pro/{tile_id}")
+    os.makedirs(args.out_dir, exist_ok=True)
+    with open(os.path.join(args.out_dir, "tiles.json"), "w", encoding="utf-8") as fh:
+        json.dump({k: v for k, v in detail.items() if k != "storage_urls"}, fh, indent=2)
+    for key, url in (detail.get("storage_urls") or {}).items():
+        blob = requests.get(url, timeout=120).content
+        with open(os.path.join(args.out_dir, f"{key}.png"), "wb") as fh:
+            fh.write(blob)
+        print(f"[save] {args.out_dir}/{key}.png")
+
+
 def cmd_mapobject(args):
     payload = {
         "description": args.description,
@@ -448,6 +482,23 @@ def main():
     p.add_argument("--seed", type=int)
     p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_isotile)
+
+    p = sub.add_parser("tilespro", help="terrain tiles pro (variations/autotiles/buildings)")
+    p.add_argument("--description", required=True,
+                   help="number variations: '1). grass 2). soil ...'; for "
+                        "--feature tileset describe a transition: 'grass to water'")
+    p.add_argument("--tile-type", default="isometric",
+                   choices=["hex", "hex_pointy", "isometric", "oblique",
+                            "octagon", "square_topdown"])
+    p.add_argument("--tile-size", type=int, default=64)
+    p.add_argument("--tile-view",
+                   choices=["top-down", "high top-down", "low top-down", "side"])
+    p.add_argument("--flat-top-px", type=int, choices=[2, 4],
+                   help="2 = classic pointed diamond (engine style)")
+    p.add_argument("--feature", choices=["roads", "tileset", "building"])
+    p.add_argument("--seed", type=int)
+    p.add_argument("--out-dir", required=True)
+    p.set_defaults(fn=cmd_tilespro)
 
     p = sub.add_parser("mapobject", help="map object / prop")
     p.add_argument("--description", required=True)

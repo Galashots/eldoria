@@ -181,6 +181,20 @@ Run once with trial credits before trusting the pipeline:
   bg, ¾ front, full body) → 256² → v3 rotation → keep 4 diagonals →
   normalize → validate.
 
+**Round 3 (landscape, after reading PixelLab's map-tiles guide):**
+
+- **Terrain production route is `/create-tiles-pro`**, not single isometric
+  tiles: `tile_type=isometric`, `tile_size=64`, `tile_flat_top_px=2`
+  (classic pointed diamond = engine shape), numbered variations in one
+  call, `tile_feature=tileset` for 16-tile terrain *transitions* with
+  machine-readable placement rules, `roads` for path autotiles, `building`
+  for wall/floor construction kits, `style_images` for cross-batch style
+  lock. Single `/create-isometric-tile` calls are style probes only; the
+  default `isometric_tile_shape` is a tall "block" — pass "thin tile".
+- PixelLab's guide workflow for maps is init-image + overlapping inpainting
+  (never inpaint the whole selection; describe the middle of the selected
+  area) — relevant when we compose full map scenes rather than tiles.
+
 ## Cost reality
 
 At list prices a full character (4 facings + 4-direction walk + attack) is

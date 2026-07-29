@@ -104,10 +104,17 @@ output, concepts, and tokens stay in `_probe_local/` / `art-incoming/`
 
 ## Landscape (tiles + props)
 
-Terrain tiles: `isotile --size 64 --tile-size 32 --tile-shape "thin tile"`
-— the engine draws FLAT 64×32 diamonds; the default shape "block" produces a
-tall cube that will not sit on the grid. Props/deco: `mapobject --size 64`
-(96 for trees). Append the style suffix to every description: "premium crisp
+**Terrain: use `tilespro` (per PixelLab's own map-tiles guidance), not
+single tiles.** `tilespro --tile-type isometric --tile-size 64
+--flat-top-px 2` gives engine-shaped diamonds; number variations in one
+description ("1). grass 2). soil ..."); `--feature tileset` generates a
+16-tile TRANSITION set with placement rules in `tiles.json` (describe as
+"grass to water", first terrain is the main one); `--feature roads` gives
+18-config path autotiles; `--feature building` gives wall/floor kits
+(farmhouse, shop). `style_images` keeps later batches consistent with
+approved tiles. Single `isotile --tile-shape "thin tile"` is for quick
+style probes only — it cannot produce transitions. Props/deco:
+`mapobject --size 64` (96 for trees). Append the style suffix to every description: "premium crisp
 pixel art, warm upper-left light, down-right shadow, rich saturated warm
 fantasy palette, child-friendly adventure". Map-object results come back via
 a no-auth `download_url` (already handled by the client). The iso engine
