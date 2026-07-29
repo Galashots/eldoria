@@ -115,6 +115,12 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
   flagged: goblin (reads as village kid), rock_golem (reads as knight).
   Next: owner review of sheets → v3-rotate Mira + bosses → walk cycles →
   normalize → validate → in-game screenshot.
+- 2026-07-28 (late): **owner approved the full cast sheet as-is** ("I love
+  all of em") — goblin/rock_golem rerolls waived. Landscape work started:
+  isometric tiles use `--tile-shape "thin tile"` (matches the engine's flat
+  64×32 diamonds; the default "block" is a tall cube), props via
+  `mapobject`. Farm set generating: grass/soil/water/path +
+  tree/boulder/flowers/stump/fence/cookpot.
 
 ## North Star alignment
 

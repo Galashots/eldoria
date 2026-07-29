@@ -240,6 +240,60 @@ def cmd_create8(args):
                  args.out_dir, "create8")
 
 
+def cmd_isotile(args):
+    payload = {
+        "description": args.description,
+        "image_size": {"width": args.size, "height": args.size},
+        "isometric_tile_size": args.tile_size,
+        "isometric_tile_shape": args.tile_shape,
+    }
+    if args.seed is not None:
+        payload["seed"] = args.seed
+    resp = post("/create-isometric-tile", payload, args.dry_run)
+    if resp is None:
+        return
+    print(json.dumps(resp, indent=2)[:400])
+    job_id = resp.get("background_job_id")
+    if job_id:
+        poll_job(job_id)
+    tile_id = resp.get("tile_id") or resp.get("isometric_tile_id") or resp.get("id")
+    if tile_id:
+        detail = api("GET", f"/isometric-tiles/{tile_id}")
+        n = save_images(detail, os.path.dirname(os.path.abspath(args.out)),
+                        os.path.splitext(os.path.basename(args.out))[0])
+        if n == 1:
+            base = os.path.splitext(os.path.abspath(args.out))[0]
+            os.replace(base + "-0.png", os.path.abspath(args.out))
+            print(f"[save] {args.out}")
+
+
+def cmd_mapobject(args):
+    payload = {
+        "description": args.description,
+        "image_size": {"width": args.size, "height": args.size},
+        "view": args.view,
+    }
+    if args.seed is not None:
+        payload["seed"] = args.seed
+    resp = post("/map-objects", payload, args.dry_run)
+    if resp is None:
+        return
+    print(json.dumps(resp, indent=2)[:400])
+    job_id = resp.get("background_job_id")
+    if job_id:
+        poll_job(job_id)
+    detail = api("GET", f"/map-objects/{resp['object_id']}")
+    url = detail.get("download_url")
+    if url:
+        blob = requests.get(url, timeout=120).content
+        os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
+        with open(args.out, "wb") as fh:
+            fh.write(blob)
+        print(f"[save] {args.out} ({len(blob)} bytes)")
+    else:
+        print(f"[warn] no download_url; status={detail.get('status')}")
+
+
 def cmd_create_v3(args):
     """v3: highest quality; with --reference-image it ROTATES that identity."""
     payload = {
@@ -382,6 +436,27 @@ def main():
     p.add_argument("--force-colors", action="store_true")
     p.add_argument("--out-dir", required=True)
     p.set_defaults(fn=cmd_create8)
+
+    p = sub.add_parser("isotile", help="isometric terrain tile")
+    p.add_argument("--description", required=True)
+    p.add_argument("--size", type=int, default=64)
+    p.add_argument("--tile-size", type=int, default=32,
+                   help="isometric tile size (16 or 32 recommended)")
+    p.add_argument("--tile-shape", default="thin tile",
+                   choices=["thin tile", "thick tile", "block"],
+                   help="engine draws flat 64x32 diamonds -> thin tile")
+    p.add_argument("--seed", type=int)
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_isotile)
+
+    p = sub.add_parser("mapobject", help="map object / prop")
+    p.add_argument("--description", required=True)
+    p.add_argument("--size", type=int, default=64)
+    p.add_argument("--view", default="low top-down",
+                   choices=["side", "low top-down", "high top-down"])
+    p.add_argument("--seed", type=int)
+    p.add_argument("--out", required=True)
+    p.set_defaults(fn=cmd_mapobject)
 
     p = sub.add_parser("create-v3", help="v3 character; reference image is rotated")
     p.add_argument("--description", required=True)

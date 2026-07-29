@@ -102,6 +102,19 @@ North Star review of the sheet. Commit normalized PNGs only — raw API
 output, concepts, and tokens stay in `_probe_local/` / `art-incoming/`
 (gitignored). Report with a **North Star alignment** heading.
 
+## Landscape (tiles + props)
+
+Terrain tiles: `isotile --size 64 --tile-size 32 --tile-shape "thin tile"`
+— the engine draws FLAT 64×32 diamonds; the default shape "block" produces a
+tall cube that will not sit on the grid. Props/deco: `mapobject --size 64`
+(96 for trees). Append the style suffix to every description: "premium crisp
+pixel art, warm upper-left light, down-right shadow, rich saturated warm
+fantasy palette, child-friendly adventure". Map-object results come back via
+a no-auth `download_url` (already handled by the client). The iso engine
+loads only `assets/iso/crop-*.png` so far — landscape art is review-then-park
+until the iso spec's Phase 3 wires up tile/prop loading; do NOT edit
+`index.html` as part of asset generation.
+
 ## Traps that already burned a session
 
 - Local `npm test` fails on this Windows box by design (canvas golden files
