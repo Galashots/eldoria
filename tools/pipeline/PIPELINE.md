@@ -166,6 +166,21 @@ Run once with trial credits before trusting the pipeline:
   identity-preserving input for hero characters.
 - Description-only generation quality is high (Mage candidate, seed 11).
 
+**Round 2 (same day, hybrid ChatGPT + PixelLab):**
+
+- **`create-character-v3` with `reference_image` is the identity route.**
+  Fed the ChatGPT Mage concept (downscaled to the 256×256 cap, LANCZOS), it
+  produced 8 rotations that kept the staff + glowing crystal, satchel, trim,
+  hair and scale in every frame. Decisively better than `--direction-ref`
+  on `create8`, which uses the south reference as-is but loses props and
+  scale in the generated frames.
+- **Default mannequin template makes every creature humanoid** (slime-person,
+  bat-man). Quadrupeds: `--template-id bear/cat/dog/horse/lion`. Blobs,
+  slugs, serpents, flyers: `--mode pro` (20–40 gens each).
+- Full identity chain, proven end-to-end: ChatGPT concept (flat light-grey
+  bg, ¾ front, full body) → 256² → v3 rotation → keep 4 diagonals →
+  normalize → validate.
+
 ## Cost reality
 
 At list prices a full character (4 facings + 4-direction walk + attack) is

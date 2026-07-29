@@ -240,6 +240,23 @@ def cmd_create8(args):
                  args.out_dir, "create8")
 
 
+def cmd_create_v3(args):
+    """v3: highest quality; with --reference-image it ROTATES that identity."""
+    payload = {
+        "description": args.description,
+        "view": args.view,
+        "no_background": True,
+    }
+    if args.reference_image:
+        payload["reference_image"] = b64_image(args.reference_image)
+    if args.template_id:
+        payload["template_id"] = args.template_id
+    if args.seed is not None:
+        payload["seed"] = args.seed
+    finish_async(post("/create-character-v3", payload, args.dry_run),
+                 args.out_dir, "create-v3")
+
+
 def cmd_animate_text(args):
     """Animate OUR reference image directly — no PixelLab character needed."""
     payload = {
@@ -365,6 +382,16 @@ def main():
     p.add_argument("--force-colors", action="store_true")
     p.add_argument("--out-dir", required=True)
     p.set_defaults(fn=cmd_create8)
+
+    p = sub.add_parser("create-v3", help="v3 character; reference image is rotated")
+    p.add_argument("--description", required=True)
+    p.add_argument("--reference-image", help="south-facing identity concept (any size)")
+    p.add_argument("--view", default="low top-down",
+                   choices=["side", "low top-down", "high top-down"])
+    p.add_argument("--template-id")
+    p.add_argument("--seed", type=int)
+    p.add_argument("--out-dir", required=True)
+    p.set_defaults(fn=cmd_create_v3)
 
     p = sub.add_parser("animate-text",
                        help="animate a reference image via text (no character id)")

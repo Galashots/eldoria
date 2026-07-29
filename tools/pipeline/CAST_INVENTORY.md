@@ -104,6 +104,17 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
 - 2026-07-28: inventory established. Ranger in flight on PR #11; Mage
   description-only candidate generated during calibration (seed 11,
   `_probe_local/pipeline/calibration/mage/`).
+- 2026-07-28 (evening): all four route-A concepts generated via ChatGPT and
+  banked in `art-incoming/` (`mage`, `mira`, `shadow-warden`,
+  `crystal-wyrm`, each ~1254², flat light-grey bg). Mage identity proven
+  through v3 reference rotation (staff + satchel + trim held in all 8
+  directions — `_probe_local/pipeline/mage-v3/v3-sheet.png`). Full enemy
+  cast generated 8-directional (quadruped templates for wolf/bear, pro mode
+  for slime/bat/slug/wyrm); review sheet at
+  `_probe_local/pipeline/cast/cast-review-sheet.png`. Reroll candidates
+  flagged: goblin (reads as village kid), rock_golem (reads as knight).
+  Next: owner review of sheets → v3-rotate Mira + bosses → walk cycles →
+  normalize → validate → in-game screenshot.
 
 ## North Star alignment
 
