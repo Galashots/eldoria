@@ -144,6 +144,28 @@ Run once with trial credits before trusting the pipeline:
 - [ ] Normalize + validate → all gates pass → screenshot in-game at 1× and
       compare against the North Star.
 
+## Calibration results (2026-07-28, run on trial + Tier 1)
+
+- **Identity rotation: PASS.** `/rotate` on PR #11's approved SE Ranger → SW
+  kept hair, cloak, palette, proportions and pose; moved the bow to the
+  correct hip. The identity-preserving route is viable.
+- **Walk from reference: PASS with caveats.** `animate-with-text` (reference
+  image + "walking", 4 frames) held identity, but frame 0 is not guaranteed
+  to be a stand pose and small gear details wobble between frames. Fix: pin
+  frame 0 via `init_images` (client TODO) and expect to curate frames.
+- **Machine gates caught a real defect:** the rotated SW came back 6 px
+  shorter than the SE source → G5 height-spread FAIL. Reroll or nudge with
+  `init_image` when this happens; do not relax the gate.
+- **`create4` facings are CARDINAL** (pure front/side/back), even with
+  `isometric: true` — not the 3/4 diagonals our camera wants. For diagonal
+  facings use `create-character-with-8-directions` and keep the 4 diagonals.
+  Also: `isometric: true` outputs a 92×92 canvas, not 64 — harmless, the
+  normalizer downscales.
+- **`directions` param is reference images per direction** (provide some
+  facings, the AI generates the rest) — not a direction selector. This is the
+  identity-preserving input for hero characters.
+- Description-only generation quality is high (Mage candidate, seed 11).
+
 ## Cost reality
 
 At list prices a full character (4 facings + 4-direction walk + attack) is

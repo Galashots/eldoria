@@ -212,6 +212,24 @@ def cmd_animate(args):
                  args.out_dir, "animate")
 
 
+def cmd_animate_text(args):
+    """Animate OUR reference image directly — no PixelLab character needed."""
+    payload = {
+        "image_size": {"width": args.size, "height": args.size},
+        "description": args.description,
+        "action": args.action,
+        "n_frames": args.frames,
+        "view": args.view,
+        "direction": args.direction,
+        "reference_image": b64_image(args.reference_image),
+    }
+    if args.seed is not None:
+        payload["seed"] = args.seed
+    resp = post("/animate-with-text", payload, args.dry_run)
+    if resp is not None:
+        save_images(resp, args.out_dir, args.prefix)
+
+
 def cmd_rotate(args):
     payload = {
         "from_image": b64_image(args.from_image),
@@ -298,6 +316,21 @@ def main():
     p.add_argument("--seed", type=int)
     p.add_argument("--out-dir", required=True)
     p.set_defaults(fn=cmd_animate)
+
+    p = sub.add_parser("animate-text",
+                       help="animate a reference image via text (no character id)")
+    p.add_argument("--reference-image", required=True)
+    p.add_argument("--description", required=True, help="who the character is")
+    p.add_argument("--action", required=True, help='e.g. "walk"')
+    p.add_argument("--frames", type=int, default=4)
+    p.add_argument("--size", type=int, default=64)
+    p.add_argument("--view", default="low top-down",
+                   choices=["side", "low top-down", "high top-down"])
+    p.add_argument("--direction", default="south-east")
+    p.add_argument("--seed", type=int)
+    p.add_argument("--prefix", default="frame")
+    p.add_argument("--out-dir", required=True)
+    p.set_defaults(fn=cmd_animate_text)
 
     p = sub.add_parser("rotate", help="rotate an existing sprite to a new facing")
     p.add_argument("--from-image", required=True)
