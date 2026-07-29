@@ -95,11 +95,25 @@ Python client does not expose that flag yet, and `frame_000` doubling as the
 engine's required stand pose is desirable anyway, so leave it. Curate the
 4-frame `{stand, A, stand-copy, B}` set from the 5 raw files as:
 `walk-0=frame_000, walk-1=frame_001, walk-2=frame_000 (duplicated),
-walk-3=frame_003`. Frames 001 and 003 were the consistently clearest "step"
-poses across every direction/character checked 2026-07-29 (Ranger, Mage); 002
-and 004 read closer to a passing/return-to-neutral pose. This is a reproducible,
-evenly-spaced rule (1st and 3rd of four generated frames) — not a
-per-character subjective pick.
+walk-3=frame_003`.
+
+**Treat 001/003 as the default *candidates*, not a production rule.** They were
+the clearest "step" poses in every direction of the two characters checked on
+2026-07-29 (Ranger, Mage), with 002/004 reading closer to a passing/return-to-
+neutral pose — a sample of two, which is a starting guess, not a law. Confirm
+per set, by eye, before normalizing:
+
+- **alternating contacts** — the two chosen frames must plant opposite feet, not
+  the same one twice;
+- **readable gait** — the stride must be legible at 64×64, not only on the
+  magnified sheet;
+- **stable root** — the character must not bob, drift or change height between
+  frames (G6 checks centre/top stability, but check it visually too);
+- **preserved equipment** — bows, staffs, satchels and baskets must stay put,
+  the same size, in the same hand.
+
+If any of those fail, pick different frames or reject the set. Never assume the
+1st-and-3rd rule transfers to a new character.
 
 ## Setup (one-time, ~2 minutes)
 
@@ -183,12 +197,14 @@ Run once with trial credits before trusting the pipeline:
       diamonds in-game? (Screenshot both over the town map.)
 - [ ] `animate --frames 4 "walking"` → is frame 0 a stand pose? If not,
       reorder to {stand, A, stand, B} before normalizing. **Always eyeball the
-      raw walk sheet before normalizing** — a hallucinated prop/companion or
-      artifact is a valid, gate-passing PNG; only your eyes catch it.
+      raw walk sheet before normalizing** — check heading fidelity per
+      direction first, then semantic drift. A back-facing `south-west` or a
+      hallucinated companion is a valid, gate-passing PNG; only your eyes
+      catch either.
 - [ ] Try `animate --template-id walk` (skeleton-based, 1 gen/direction)
-      before spending more on custom-text walks — untested as of 2026-07-29,
-      but plausibly the fix for the hallucination trap below at a third of
-      the cost.
+      before spending more on custom-text walks — untested as of 2026-07-29;
+      it may reduce semantic drift at a third of the cost, but it is not
+      immune and the visual gate still applies.
 - [ ] Palette: does output need `--color-image` (North Star palette swatch)
       + `--force-colors` to stay on-palette?
 - [ ] `rotate` from PR #11's approved down-facing Ranger → does identity
@@ -263,6 +279,20 @@ docs review):**
   sized, alpha-clean PNG: **machine structure gates cannot catch this failure
   class.** Raw direction-labelled walk sheets must get human visual
   inspection before normalization, every time.
+- **Write the action description for the character's actual equipment.** The
+  generic `"arms swinging naturally"` phrase above is wrong for anyone holding
+  or wearing something: a bow, a staff, a satchel, Mira's basket. Telling the
+  model to swing both arms naturally invites it to free up the occupied hand,
+  which is one way props mutate or vanish. Every action description must be
+  asset-specific and state:
+  - what the character **holds and in which hand** ("bow carried in the left
+    hand, held steady");
+  - what is **attached and must not move** ("quiver on the back", "satchel on
+    the right hip");
+  - which arm may actually swing ("right arm swinging, left arm steady");
+  - an explicit prohibition: **"no new objects, companions, creatures or
+    effects."**
+  Keep the seed fixed so a good phrasing is reproducible.
 - **Animation sets append server-side**, named after the slugified action
   description (e.g. `animations/walking/` vs.
   `animations/walking_with_a_steady_stride_legs_stepping_arms_sw/`). A bad set
@@ -276,8 +306,36 @@ docs review):**
   35 px opaque-bbox width facing `right` (bow held out to the side) vs. 25 px
   facing `up` (bow tucked, back-ish view) — a real 10 px per-direction
   silhouette difference from equipment posture, exceeding the 8 px limit.
-  Reported as a gate FAIL, not loosened or forced through; a reroll or
-  mirror-repair decision is an owner/lead call, not something to self-resolve.
+  Reported as a gate FAIL, not loosened or forced through.
+- **The Ranger's real defect was HEADING FIDELITY, not silhouette variance,
+  and no machine gate looks for it.** Runtime-size review then showed the
+  source labelled `south-west` — which maps to engine slot **`down`** — is
+  **back-facing**: at runtime the hero would walk *away* from the camera when
+  the player moves down. Re-inspection found the collapse is broader still:
+  **four of the eight directions (`north`, `north-west`, `west`,
+  `south-west`) are near-identical back views.** The control proving this is
+  the asset and not the sheet tooling is the Mage, produced by the same
+  `make_cast_sheet.py` run, which rotates correctly with `south-west`
+  front-facing. **The lineage was rejected** (PR #19); auto-mirroring,
+  rerolling and threshold relaxation were all explicitly refused.
+
+  **Process lesson, and the reason this is recorded here rather than only in
+  the review:** the first visual pass checked *identity* consistency — cloak,
+  bow, quiver, hair, palette, scale, all of which genuinely held — and passed
+  the set. Identity stability and rotation correctness are **separate
+  properties**, and a set can pass one while failing the other. The
+  raw-sheet visual gate defined above was therefore underspecified: it caught
+  hallucinated content but would have waved a wrongly-oriented set straight
+  through to the engine.
+
+  **Mandatory addition to the raw-sheet visual gate — check heading fidelity
+  per direction, before anything else:** for each of the four engine slots,
+  confirm the frame actually faces where its label claims. Fastest reliable
+  check: **`south`, `south-east` and `south-west` must all show the face;
+  `north`, `north-east` and `north-west` must not.** If two adjacent
+  directions look near-identical, the rotation has collapsed — reject the set.
+  A reroll or replacement decision is an owner/lead call, not something to
+  self-resolve.
 - **Confirmed from PixelLab's own MCP tool docs** (`api.pixellab.ai/mcp/docs`,
   reviewed 2026-07-29) and the live OpenAPI spec
   (`api.pixellab.ai/v2/openapi.json`):
@@ -293,18 +351,22 @@ docs review):**
     `walking`, `walk-1..10`, `crouched-walking`, `sad-walk`, `scary-walk`,
     plus non-walk templates like `attack`, `backflip`, `breathing-idle`) is
     skeleton-based and priced at **1 generation/direction** — far cheaper
-    than the custom v3 route used above (~3 gen/direction) and, being
-    rig-constrained rather than free-text-driven, plausibly immune to the
-    hallucination trap. **Not yet tested in this pipeline** — recommended as
-    the first experiment before spending more custom-text walk generations.
-    Our client already supports it end-to-end via `animate --template-id`
-    (added earlier, never exercised until this review).
+    than the custom v3 route used above (~3 gen/direction). Being
+    rig-constrained rather than free-text-driven, it **may reduce semantic
+    drift**. Skeleton constraints do **not** establish immunity: the renderer
+    still paints equipment and clothing onto the rig, so props can still
+    mutate. **The mandatory raw-sheet visual gate applies to template-mode
+    output exactly as it does to custom-text output — no exceptions.**
+    **Not yet tested in this pipeline** — recommended as the first experiment
+    before spending more custom-text walk generations. Our client already
+    supports it end-to-end via `animate --template-id` (added earlier, never
+    exercised until this review).
   - `enhance_prompt=true` (on both `create-character-v3` and
     `animate-character`) auto-expands a terse description/action into a
     richer one server-side for +0.05 generations — a cheaper alternative to
     hand-writing a fix like the steady-stride phrase above, though it is
-    still free-text-driven so it likely mitigates rather than eliminates the
-    hallucination risk. Untested here.
+    still free-text-driven, so at best it may reduce the hallucination risk
+    rather than remove it. Untested here.
   - `reference_image`/`reference_image_url` should be preferred over inline
     base64 "for anything above ~32×32" when going through an MCP client —
     PixelLab's own docs warn MCP transports "routinely truncate large inline

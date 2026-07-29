@@ -110,21 +110,44 @@ python tools/pipeline/pixellab_client.py character --id ID --out-dir _probe_loca
   (confirmed: grew an animal companion + projectile-trail artifacts on one
   character while an identical call on another came out clean — stochastic,
   not universal). Always pass a specific action description + `--seed`.
-- **Mandatory visual gate:** open the raw direction-labelled walk sheet and
-  eyeball it before normalizing. A hallucinated prop is a valid, correctly
-  sized, alpha-clean PNG — no machine gate in `validate_sprites.py` catches
-  semantic drift, only your eyes do.
+- **Write the action for THAT character's equipment.** The steady-stride
+  phrase above says "arms swinging naturally", which is wrong for anyone
+  holding something — a bow, a staff, Mira's basket. Inviting both arms to
+  swing invites the model to free up the occupied hand. State what is held
+  and in which hand, what is attached and must not move, which arm may swing,
+  and end with **"no new objects, companions, creatures or effects."**
+- **Mandatory visual gate — TWO things, not one.** Open the raw
+  direction-labelled sheet before normalizing and check:
+  1. **Heading fidelity.** Does each frame face where its label says? Quick
+     test: **`south`/`south-east`/`south-west` must show the face;
+     `north`/`north-east`/`north-west` must not.** If two adjacent directions
+     look near-identical the rotation has collapsed — reject the set. This is
+     what a real Ranger set failed after passing every other check: its
+     `south-west` (engine slot `down`) was back-facing, so the hero would have
+     walked away from the camera. Four of its eight directions were the same
+     back view.
+  2. **Semantic drift.** Hallucinated props, companions, trails.
+
+  Neither is machine-checkable. A wrongly-oriented or hallucinated frame is a
+  valid, correctly sized, alpha-clean PNG and every gate in
+  `validate_sprites.py` passes it. **Identity stability and rotation
+  correctness are separate properties — a set can pass one and fail the other.**
 - **`--frames N` returns N+1 files per direction** (`frame_000`=reference/
   stand, `frame_001..N`=generated). Curate the engine's required
   `{stand, A, stand-copy, B}` 4-frame set as
-  `walk-0=frame_000, walk-1=frame_001, walk-2=frame_000 (dup), walk-3=frame_003`
-  — frames 001/003 are consistently the clearest step poses.
+  `walk-0=frame_000, walk-1=frame_001, walk-2=frame_000 (dup), walk-3=frame_003`.
+  Treat 001/003 as **default candidates observed in two characters, not a
+  rule**: confirm per set that the two frames plant **opposite** feet, the gait
+  reads at 64×64, the root does not bob or drift, and equipment stays in the
+  same hand at the same size. Otherwise pick different frames.
 - **Worth trying first (untested as of 2026-07-29):** `--template-id walk`
   (or `walking`, `crouched-walking`, etc.) uses PixelLab's skeleton-based
-  template mode — 1 generation/direction (vs. ~3 for the custom route above)
-  and likely immune to the hallucination trap since motion is rig-constrained
-  rather than free-text-generated. Confirm the resulting frame structure
-  still gives a usable stand pose before trusting it in production.
+  template mode — 1 generation/direction (vs. ~3 for the custom route above).
+  Being rig-constrained rather than free-text-driven it **may reduce semantic
+  drift**, but that is not immunity: the renderer still paints equipment onto
+  the rig, so props can still mutate. **The visual gate above applies
+  unchanged.** Confirm the resulting frame structure still gives a usable
+  stand pose before trusting it in production.
 
 ## 4. Review sheet, then normalize + validate
 
@@ -145,6 +168,12 @@ be a standing pose and frames 0/2 are byte-identical (stand, step A, stand,
 step B) — only 3 distinct poses are ever generated. A validator FAIL is a
 real defect (G5 once caught a 6px shrink from `/rotate`): reroll or fix, do
 not relax gates.
+
+**A validator PASS is not a visual pass.** The gates check size, alpha,
+anchor, padding, scale spread and walk stability — nothing about whether the
+art is right. A set has been rejected after passing almost every gate because
+its `south-west` frame faced backwards. Machine-clean means "eligible for
+review", never "approved".
 
 ## 5. Ship
 
