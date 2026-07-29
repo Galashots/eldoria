@@ -9,7 +9,8 @@ Follow these steps exactly. Every command runs from the repo root
 (`C:\Users\Leo\Desktop\eldoria-public`). **Always `Set-Location` / `cd` to the
 repo root first — background jobs and other tools change the cwd.** Do not
 improvise endpoint parameters; the decision table below encodes tested
-behavior (calibrated 2026-07-28, see `tools/pipeline/PIPELINE.md`).
+behavior (calibrated 2026-07-28, walk-animation guidance added 2026-07-29,
+see `tools/pipeline/PIPELINE.md`).
 
 Read `tools/pipeline/PIXELLAB_MCP.md` before using PixelLab MCP tools. If
 PixelLab MCP is connected, it is an interactive front end to the same service;
@@ -83,10 +84,47 @@ Known behaviors (do not re-derive):
 - `isometric: true` outputs a 92×92 canvas — fine, the normalizer handles it.
 - `--direction-ref south=...` uses the reference AS-IS for south and
   generates the rest — expect a detail/scale gap and lost props (staff).
-  v3 reference rotation is the better identity route.
+  v3 reference rotation is the better identity route. (PixelLab's own docs
+  confirm why: object rotation "can lose the salience contest"; v3 character
+  reference mode "reproduces the input faithfully.")
 - `--seed` makes reruns reproducible; rerolls = change seed.
 - Results also live server-side: `pixellab_client.py characters` lists them,
-  `character --id X --out-dir Y` re-downloads.
+  `character --id X --out-dir Y` re-downloads. **Animation sets accumulate on
+  the character** (named after the slugified action description) — a bad set
+  is never deleted, so re-downloads must pick the right folder by name.
+
+**(c) Walk animation:**
+
+```powershell
+python tools/pipeline/pixellab_client.py animate --character-id ID `
+  --action "walking with a steady stride, legs stepping, arms swinging naturally" `
+  --frames 4 --isometric --seed 11 `
+  --directions south-east,south-west,north-west,north-east `
+  --out-dir _probe_local/pipeline/NAME-walk
+# `animate` does NOT auto-download — the API response has no character_id
+# for finish_async to key off. Always follow with:
+python tools/pipeline/pixellab_client.py character --id ID --out-dir _probe_local/pipeline/NAME-walk
+```
+
+- **Never use a bare `--action "walking"`** — it can hallucinate new content
+  (confirmed: grew an animal companion + projectile-trail artifacts on one
+  character while an identical call on another came out clean — stochastic,
+  not universal). Always pass a specific action description + `--seed`.
+- **Mandatory visual gate:** open the raw direction-labelled walk sheet and
+  eyeball it before normalizing. A hallucinated prop is a valid, correctly
+  sized, alpha-clean PNG — no machine gate in `validate_sprites.py` catches
+  semantic drift, only your eyes do.
+- **`--frames N` returns N+1 files per direction** (`frame_000`=reference/
+  stand, `frame_001..N`=generated). Curate the engine's required
+  `{stand, A, stand-copy, B}` 4-frame set as
+  `walk-0=frame_000, walk-1=frame_001, walk-2=frame_000 (dup), walk-3=frame_003`
+  — frames 001/003 are consistently the clearest step poses.
+- **Worth trying first (untested as of 2026-07-29):** `--template-id walk`
+  (or `walking`, `crouched-walking`, etc.) uses PixelLab's skeleton-based
+  template mode — 1 generation/direction (vs. ~3 for the custom route above)
+  and likely immune to the hallucination trap since motion is rig-constrained
+  rather than free-text-generated. Confirm the resulting frame structure
+  still gives a usable stand pose before trusting it in production.
 
 ## 4. Review sheet, then normalize + validate
 
@@ -145,3 +183,8 @@ until the iso spec's Phase 3 wires up tile/prop loading; do NOT edit
   other's out-dirs (last writer wins).
 - `make_cast_sheet.py` already handles stale duplicate folders by trusting
   each character's `metadata.json`.
+- `animate` does not auto-download its result — always follow with the
+  `character` subcommand (see §3c). A prior version of this doc claimed the
+  client "re-downloads the zip"; it does not.
+- A validator PASS is not a visual pass: the walk-hallucination trap (§3c)
+  produces gate-clean PNGs. Eyeball every raw walk sheet before normalizing.

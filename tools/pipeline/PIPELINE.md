@@ -87,6 +87,20 @@ Walk animation is **4 frames** at `WALK_FRAME_MS=110`; the engine resets
 frames 0/2 are the same stand pose (stand, step A, stand, step B). If a
 generated cycle returns 4 distinct poses, keep frames {stand, A, stand-copy, B}.
 
+**`animate --frames N` returns N+1 files per direction, not N.** PixelLab's
+`/animate-character` request schema (`keep_first_frame`, default `true`)
+keeps the reference frame as `frame_000` alongside the `N` generated frames —
+setting it `false` would strip the reference and store exactly `N`, but our
+Python client does not expose that flag yet, and `frame_000` doubling as the
+engine's required stand pose is desirable anyway, so leave it. Curate the
+4-frame `{stand, A, stand-copy, B}` set from the 5 raw files as:
+`walk-0=frame_000, walk-1=frame_001, walk-2=frame_000 (duplicated),
+walk-3=frame_003`. Frames 001 and 003 were the consistently clearest "step"
+poses across every direction/character checked 2026-07-29 (Ranger, Mage); 002
+and 004 read closer to a passing/return-to-neutral pose. This is a reproducible,
+evenly-spaced rule (1st and 3rd of four generated frames) — not a
+per-character subjective pick.
+
 ## Setup (one-time, ~2 minutes)
 
 1. Create an account at <https://pixellab.ai/account> (free trial: 40
@@ -114,11 +128,35 @@ python tools/pipeline/pixellab_client.py create8 \
   --out-dir _probe_local/pipeline/cast/NAME
 
 # walk cycle for a created character (id in character.json; one job per
-# direction — the client polls background_job_ids and re-downloads the zip)
+# direction). KNOWN CLIENT GAP: finish_async only auto-downloads when the API
+# RESPONSE itself contains character_id — /animate-character's response only
+# has background_job_ids, so nothing downloads after polling. Always follow
+# with the `character` subcommand (below) to fetch the zip. Not yet fixed in
+# pixellab_client.py; PIPELINE.md previously claimed otherwise, which was
+# false (corrected 2026-07-29).
 python tools/pipeline/pixellab_client.py animate \
-  --character-id <id> --action "walking" --frames 4 --isometric \
+  --character-id <id> --action "walking with a steady stride, legs stepping, arms swinging naturally" \
+  --frames 4 --isometric --seed 11 \
   --directions south-east,south-west,north-west,north-east \
   --out-dir _probe_local/pipeline/ranger-walk
+python tools/pipeline/pixellab_client.py character \
+  --id <id> --out-dir _probe_local/pipeline/ranger-walk
+
+# UNTESTED, RECOMMENDED NEXT EXPERIMENT: PixelLab's own template library
+# (mode=template, e.g. --template-id walk / walking / walk-1..10 / crouched-walking)
+# is skeleton-driven and priced at 1 generation/direction — a fraction of the
+# ~3 gen/direction custom v3 cost above — and should be far less prone to the
+# hallucination failure below since motion is constrained to a rig rather than
+# invented from free text. `keep_first_frame`, `custom_start_frame`, and
+# `end_frame` are explicitly NOT supported in template mode, so the frame_000
+# =stand convention above needs separate verification before adopting this
+# route. The full live template-ID list is intentionally not copied here (the
+# vendor's own OpenAPI description truncates it, and it can change) — pull it
+# fresh from the PixelLab MCP docs or interactive docs before relying on it.
+python tools/pipeline/pixellab_client.py animate \
+  --character-id <id> --template-id walk --isometric \
+  --directions south-east,south-west,north-west,north-east \
+  --out-dir _probe_local/pipeline/ranger-walk-template
 
 # arrange raw frames as <slot>.png / <slot>-walk-<i>.png, then:
 python tools/pipeline/normalize_sprite.py \
@@ -144,7 +182,13 @@ Run once with trial credits before trusting the pipeline:
 - [ ] `low top-down` vs `high top-down` → which sits better on the 64×32
       diamonds in-game? (Screenshot both over the town map.)
 - [ ] `animate --frames 4 "walking"` → is frame 0 a stand pose? If not,
-      reorder to {stand, A, stand, B} before normalizing.
+      reorder to {stand, A, stand, B} before normalizing. **Always eyeball the
+      raw walk sheet before normalizing** — a hallucinated prop/companion or
+      artifact is a valid, gate-passing PNG; only your eyes catch it.
+- [ ] Try `animate --template-id walk` (skeleton-based, 1 gen/direction)
+      before spending more on custom-text walks — untested as of 2026-07-29,
+      but plausibly the fix for the hallucination trap below at a third of
+      the cost.
 - [ ] Palette: does output need `--color-image` (North Star palette swatch)
       + `--force-colors` to stay on-palette?
 - [ ] `rotate` from PR #11's approved down-facing Ranger → does identity
@@ -203,6 +247,71 @@ Run once with trial credits before trusting the pipeline:
 - PixelLab's guide workflow for maps is init-image + overlapping inpainting
   (never inpaint the whole selection; describe the middle of the selected
   area) — relevant when we compose full map scenes rather than tiles.
+
+**Round 4 (2026-07-29, hero v3 rotations + walks, then a full PixelLab MCP/API
+docs review):**
+
+- **Walk-generation hallucination trap, confirmed real:** a bare
+  `--action "walking"` on the Ranger v3 character mutated the bow/quiver into
+  a growing animal-companion-like object (SE/SW) and added dashed
+  projectile-trail artifacts (NW) — while the *Mage's* bare `"walking"` run
+  from the identical endpoint came out clean. This is **stochastic risk, not
+  a deterministic property of the bare action.** Fix used: an explicit action
+  description + fixed seed (`"walking with a steady stride, legs stepping,
+  arms swinging naturally"`, `--seed 11`) produced a clean retry — mitigation,
+  not a proven guarantee. Every failed frame was still a valid, correctly
+  sized, alpha-clean PNG: **machine structure gates cannot catch this failure
+  class.** Raw direction-labelled walk sheets must get human visual
+  inspection before normalization, every time.
+- **Animation sets append server-side**, named after the slugified action
+  description (e.g. `animations/walking/` vs.
+  `animations/walking_with_a_steady_stride_legs_stepping_arms_sw/`). A bad set
+  is never removed from the character — future ZIP downloads must select the
+  correct folder by name.
+- **Seeds are not recorded in server-side `character.json`** (it stores id,
+  prompt, view, directions, status — no seed). The exact command used is the
+  only durable record; keep it in a batch script or session log.
+- **G5 width-spread gate caught a second real defect** (the first was the
+  6 px `/rotate` height shrink above): the Ranger v3 rotation set measured
+  35 px opaque-bbox width facing `right` (bow held out to the side) vs. 25 px
+  facing `up` (bow tucked, back-ish view) — a real 10 px per-direction
+  silhouette difference from equipment posture, exceeding the 8 px limit.
+  Reported as a gate FAIL, not loosened or forced through; a reroll or
+  mirror-repair decision is an owner/lead call, not something to self-resolve.
+- **Confirmed from PixelLab's own MCP tool docs** (`api.pixellab.ai/mcp/docs`,
+  reviewed 2026-07-29) and the live OpenAPI spec
+  (`api.pixellab.ai/v2/openapi.json`):
+  - `keep_first_frame` (default `true`) is the exact mechanism behind the
+    "N+1 files per direction" behavior noted above — see the walk-cycle note
+    earlier in this file.
+  - Official confirmation of our create-v3-over-create8 identity decision:
+    for a character sprite, v3 reference-image mode "reproduces the input
+    faithfully," while 8-direction *object* rotation "can lose the salience
+    contest" when multiple reference elements compete — validates Round 2's
+    finding, now with PixelLab's own stated reason.
+  - **`mode="template"` with `template_animation_id`** (e.g. `walk`,
+    `walking`, `walk-1..10`, `crouched-walking`, `sad-walk`, `scary-walk`,
+    plus non-walk templates like `attack`, `backflip`, `breathing-idle`) is
+    skeleton-based and priced at **1 generation/direction** — far cheaper
+    than the custom v3 route used above (~3 gen/direction) and, being
+    rig-constrained rather than free-text-driven, plausibly immune to the
+    hallucination trap. **Not yet tested in this pipeline** — recommended as
+    the first experiment before spending more custom-text walk generations.
+    Our client already supports it end-to-end via `animate --template-id`
+    (added earlier, never exercised until this review).
+  - `enhance_prompt=true` (on both `create-character-v3` and
+    `animate-character`) auto-expands a terse description/action into a
+    richer one server-side for +0.05 generations — a cheaper alternative to
+    hand-writing a fix like the steady-stride phrase above, though it is
+    still free-text-driven so it likely mitigates rather than eliminates the
+    hallucination risk. Untested here.
+  - `reference_image`/`reference_image_url` should be preferred over inline
+    base64 "for anything above ~32×32" when going through an MCP client —
+    PixelLab's own docs warn MCP transports "routinely truncate large inline
+    base64." Our Python client posts directly to the REST API (not through
+    an MCP transport), so this specific truncation risk does not apply to it;
+    it matters if/when agents drive PixelLab through the MCP server instead
+    (see `tools/pipeline/PIXELLAB_MCP.md`).
 
 ## Cost reality
 
