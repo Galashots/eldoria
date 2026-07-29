@@ -18,6 +18,14 @@ it does not replace Eldoria's routes, local normalization/validation, review
 sheet, North Star review, or owner approval. If MCP is unavailable, continue
 with the proven Python client below.
 
+**Vendor behaviour lives in one place.** Costs, sizing, the identity route,
+repair techniques, and API-vs-web-tool traps are in
+[`tools/pipeline/PIXELLAB_API.md`](../../../tools/pipeline/PIXELLAB_API.md) and
+the portable `pixellab` skill. **Read those before your first call** — they are
+what stop a 64×64 sprite being billed at 256×256. This file is the Eldoria
+run-book: engine contract, commands, gates, review. Where they overlap, the repo
+docs win.
+
 ## 0. Preconditions
 
 1. `python tools/pipeline/pixellab_client.py balance` must print a
@@ -61,14 +69,25 @@ triggering an `<a download>` click; the file lands in `~/Downloads`.
 
 Run long calls with `run_in_background` and ABSOLUTE paths.
 
-**(a) Identity route** — reference must be ≤256×256 (downscale with LANCZOS):
+**(a) Identity route (heroes, named NPCs, bosses)** — a concept reference is
+**mandatory**, not optional. Generating a hero from a description alone is the
+route that produced Eldoria's one rejected character; see `PIXELLAB_API.md` §3.
 
 ```powershell
 python -c "from PIL import Image; Image.open('art-incoming/NAME-concept-v1.png').convert('RGBA').resize((256,256), Image.LANCZOS).save('_probe_local/pipeline/NAME/ref-256.png')"
 python tools/pipeline/pixellab_client.py create-v3 --description "..." `
-  --reference-image _probe_local/pipeline/NAME/ref-256.png --seed 11 `
+  --reference-image _probe_local/pipeline/NAME/ref-256.png --size 64 --seed 11 `
   --out-dir _probe_local/pipeline/NAME
 ```
+
+**Always pass `--size 64`.** With a reference image the API otherwise inherits
+the reference's own dimensions — a 256×256 concept silently produces a 256 px
+character, costing 8 generations instead of 1 and billing every future animation
+on that character at 256 px too. It is also worse art: Eldoria renders at 64×64,
+and downscaling 4× blends 4×4 blocks into one pixel. See `PIXELLAB_API.md` §1.
+
+> The reference stays ≤256×256 (that is the API's input cap) — it is the
+> **output** `--size` that must match the engine.
 
 **(b) Description route:**
 
@@ -106,48 +125,33 @@ python tools/pipeline/pixellab_client.py animate --character-id ID `
 python tools/pipeline/pixellab_client.py character --id ID --out-dir _probe_local/pipeline/NAME-walk
 ```
 
-- **Never use a bare `--action "walking"`** — it can hallucinate new content
-  (confirmed: grew an animal companion + projectile-trail artifacts on one
-  character while an identical call on another came out clean — stochastic,
-  not universal). Always pass a specific action description + `--seed`.
-- **Write the action for THAT character's equipment.** The steady-stride
-  phrase above says "arms swinging naturally", which is wrong for anyone
-  holding something — a bow, a staff, Mira's basket. Inviting both arms to
-  swing invites the model to free up the occupied hand. State what is held
-  and in which hand, what is attached and must not move, which arm may swing,
-  and end with **"no new objects, companions, creatures or effects."**
-- **Mandatory visual gate — TWO things, not one.** Open the raw
-  direction-labelled sheet before normalizing and check:
-  1. **Heading fidelity.** Does each frame face where its label says? Quick
-     test: **`south`/`south-east`/`south-west` must show the face;
-     `north`/`north-east`/`north-west` must not.** If two adjacent directions
-     look near-identical the rotation has collapsed — reject the set. This is
-     what a real Ranger set failed after passing every other check: its
-     `south-west` (engine slot `down`) was back-facing, so the hero would have
-     walked away from the camera. Four of its eight directions were the same
-     back view.
-  2. **Semantic drift.** Hallucinated props, companions, trails.
+**Writing the action, and choosing template vs custom mode:** see
+`PIXELLAB_API.md` §5. In short — never a bare `--action "walking"`, always
+`--seed`, and write the action for *that character's* equipment (the
+"arms swinging naturally" phrase above is wrong for anyone holding a bow, staff
+or basket). `--template-id walk` is 1 gen/direction and worth trying first.
 
-  Neither is machine-checkable. A wrongly-oriented or hallucinated frame is a
-  valid, correctly sized, alpha-clean PNG and every gate in
-  `validate_sprites.py` passes it. **Identity stability and rotation
-  correctness are separate properties — a set can pass one and fail the other.**
-- **`--frames N` returns N+1 files per direction** (`frame_000`=reference/
-  stand, `frame_001..N`=generated). Curate the engine's required
-  `{stand, A, stand-copy, B}` 4-frame set as
-  `walk-0=frame_000, walk-1=frame_001, walk-2=frame_000 (dup), walk-3=frame_003`.
-  Treat 001/003 as **default candidates observed in two characters, not a
-  rule**: confirm per set that the two frames plant **opposite** feet, the gait
-  reads at 64×64, the root does not bob or drift, and equipment stays in the
-  same hand at the same size. Otherwise pick different frames.
-- **Worth trying first (untested as of 2026-07-29):** `--template-id walk`
-  (or `walking`, `crouched-walking`, etc.) uses PixelLab's skeleton-based
-  template mode — 1 generation/direction (vs. ~3 for the custom route above).
-  Being rig-constrained rather than free-text-driven it **may reduce semantic
-  drift**, but that is not immunity: the renderer still paints equipment onto
-  the rig, so props can still mutate. **The visual gate above applies
-  unchanged.** Confirm the resulting frame structure still gives a usable
-  stand pose before trusting it in production.
+**Mandatory visual gate before normalizing** — open the raw direction-labelled
+sheet and check **heading fidelity first, then semantic drift**
+(`PIXELLAB_API.md` §4, or the `pixellab` skill §3). Eldoria's stake in this:
+`south-west` is engine slot **`down`**, so a back-facing `south-west` means the
+hero walks *away* from the camera when the player moves down. That is exactly
+how the rejected Ranger set failed while passing every gate in
+`validate_sprites.py`.
+
+**Engine walk contract — Eldoria-specific, keep here.** `--frames N` returns
+N+1 files per direction (`frame_000`=stand, `frame_001..N`=generated). The
+engine needs `{stand, A, stand-copy, B}`, curated as:
+
+```
+walk-0 = frame_000    walk-1 = frame_001
+walk-2 = frame_000    walk-3 = frame_003   (walk-2 duplicates the stand)
+```
+
+Treat 001/003 as **default candidates observed in two characters, not a rule.**
+Confirm per set that the two frames plant **opposite** feet, the gait reads at
+64×64, the root does not bob or drift, and equipment stays in the same hand at
+the same size. Otherwise pick different frames.
 
 ## 4. Review sheet, then normalize + validate
 

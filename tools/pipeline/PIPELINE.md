@@ -361,12 +361,14 @@ docs review):**
     before spending more custom-text walk generations. Our client already
     supports it end-to-end via `animate --template-id` (added earlier, never
     exercised until this review).
-  - `enhance_prompt=true` (on both `create-character-v3` and
-    `animate-character`) auto-expands a terse description/action into a
-    richer one server-side for +0.05 generations — a cheaper alternative to
-    hand-writing a fix like the steady-stride phrase above, though it is
-    still free-text-driven, so at best it may reduce the hallucination risk
-    rather than remove it. Untested here.
+  - `enhance_prompt=true` auto-expands a terse description/action server-side
+    for +0.05 generations. **Correction (2026-07-29 detailed docs pass): on
+    `create-character-v3` it is valid in FROM-SCRATCH mode only — passing it
+    together with `reference_image` returns 422.** Since Eldoria's hero route
+    always supplies a reference, it is unavailable there. It does work on
+    `animate-character`, where it expands `action_description` and reuses the
+    expansion across every requested direction. Still free-text-driven, so at
+    best it may reduce hallucination risk rather than remove it. Untested here.
   - `reference_image`/`reference_image_url` should be preferred over inline
     base64 "for anything above ~32×32" when going through an MCP client —
     PixelLab's own docs warn MCP transports "routinely truncate large inline
@@ -380,6 +382,25 @@ docs review):**
 At list prices a full character (4 facings + 4-direction walk + attack) is
 roughly **$0.05–0.30**. The entire cast of Eldoria is a few dollars. The free
 trial covers the whole calibration checklist.
+
+**…but only if the character is sized to the engine.** Rotation cost is
+`ceil(w × h × 8 / 65536)` generations and animation cost scales the same way,
+so a 256 px character costs **8×** a 64 px one — on its rotations *and* on every
+animation it ever receives:
+
+| Size | Rotation set | Custom walk, 4 directions |
+|---|---|---|
+| 256 px | 8 gens | ~32 gens |
+| 128 px | 2 gens | ~8 gens |
+| **64 px (Eldoria's target)** | **1 gen** | **~4 gens** |
+
+`size` defaults to 48 px **except when a reference image is supplied, where it
+silently inherits the reference's dimensions.** Eldoria's heroes were generated
+at 192–256 px for exactly that reason, then downscaled 4× to 64 — paying more
+for worse pixels, since a 4× downscale blends 4×4 blocks into one output pixel.
+
+**Always pass an explicit output size.** Full cost model, route table and repair
+playbook: [`PIXELLAB_API.md`](PIXELLAB_API.md).
 
 ## North Star alignment
 
