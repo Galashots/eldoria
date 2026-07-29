@@ -212,6 +212,34 @@ def cmd_animate(args):
                  args.out_dir, "animate")
 
 
+def cmd_create8(args):
+    payload = {
+        "description": args.description,
+        "image_size": {"width": args.size, "height": args.size},
+        "view": args.view,
+        "isometric": args.isometric,
+    }
+    if args.template_id:
+        payload["template_id"] = args.template_id
+    if args.mode:
+        payload["mode"] = args.mode
+    if args.direction_ref:
+        refs = {}
+        for spec in args.direction_ref:
+            direction, path = spec.split("=", 1)
+            refs[direction] = b64_image(path)
+        payload["directions"] = refs
+    if args.proportions:
+        payload["proportions"] = args.proportions
+    if args.seed is not None:
+        payload["seed"] = args.seed
+    if args.color_image:
+        payload["color_image"] = b64_image(args.color_image)
+        payload["force_colors"] = args.force_colors
+    finish_async(post("/create-character-with-8-directions", payload, args.dry_run),
+                 args.out_dir, "create8")
+
+
 def cmd_animate_text(args):
     """Animate OUR reference image directly — no PixelLab character needed."""
     payload = {
@@ -316,6 +344,27 @@ def main():
     p.add_argument("--seed", type=int)
     p.add_argument("--out-dir", required=True)
     p.set_defaults(fn=cmd_animate)
+
+    p = sub.add_parser("create8", help="character with 8 directions")
+    p.add_argument("--description", required=True)
+    p.add_argument("--size", type=int, default=64)
+    p.add_argument("--view", default="low top-down",
+                   choices=["side", "low top-down", "high top-down"])
+    p.add_argument("--isometric", action="store_true")
+    p.add_argument("--template-id",
+                   help="'mannequin' (default), or quadrupeds: bear/cat/dog/horse/lion")
+    p.add_argument("--mode", choices=["standard", "pro"],
+                   help="pro = AI reference-based, for non-template body shapes "
+                        "(blobs, serpents, flyers); costs 20-40 generations")
+    p.add_argument("--direction-ref", action="append",
+                   help="direction=path reference image (repeatable); bipeds "
+                        "need at least south=... ; image must match --size")
+    p.add_argument("--proportions")
+    p.add_argument("--seed", type=int)
+    p.add_argument("--color-image")
+    p.add_argument("--force-colors", action="store_true")
+    p.add_argument("--out-dir", required=True)
+    p.set_defaults(fn=cmd_create8)
 
     p = sub.add_parser("animate-text",
                        help="animate a reference image via text (no character id)")
