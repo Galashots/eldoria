@@ -2638,11 +2638,21 @@ function onCombatAnswerClick(e) {
 }
 
 // Combat slash phase: answer math, then mash SLASH for BONUS damage.
-// Getting the question right is what wins fights: a correct answer always lands one
-// guaranteed hit before the timer starts, so a player who never taps still makes real
-// progress. Tapping adds extra hits on top — a bonus, never a requirement (ELD-PT-002).
+//
+// The invariant this enforces (ELD-PT-002): **answering correctly always beats answering
+// wrongly, no matter how fast anyone taps.**
+//
+//   correct, zero taps  = 2 x baseDmg   (banked before the window even opens)
+//   wrong,  any taps    <= 1 x baseDmg  (hard cap, see slashDamageCap)
+//
+// So the floor on a right answer is strictly above the ceiling on a wrong one. Tapping
+// still rewards a correct answer without limit, but it can never turn a wrong answer into
+// the better play. A wrong answer keeps a small consolation payout because losing is
+// deliberately never punitive in this game — it just cannot out-earn knowing the answer.
 var slashDmgPerHit = 0;
 var slashHits = 0;
+var slashDamageDone = 0;        // damage dealt so far this window (respects the cap)
+var slashDamageCap = Infinity;  // total damage this window may ever deal
 var slashTimerId = 0;
 var slashActive = false;
 var SLASH_TIME_ADV = 3000;
@@ -2657,12 +2667,16 @@ function answerCombat(value) {
   if (correct) {
     soundCorrect();
     slashDmgPerHit = baseDmg * 2;
+    slashDamageCap = Infinity;
     // One free hit is banked immediately: right answer => damage, guaranteed.
     startSlashPhase(slashTime(), 'RIGHT! Free hit! Slash for more!', 1);
   } else {
-    slashDmgPerHit = baseDmg;
+    // Half damage per tap, and the whole window is capped at one baseDmg — strictly less
+    // than the 2 x baseDmg a correct answer banks for free.
+    slashDmgPerHit = Math.max(1, Math.floor(baseDmg / 2));
+    slashDamageCap = baseDmg;
     if (typeof HTMLElement !== 'undefined') {
-      startSlashPhase(slashTime(), 'Slash away!', 0);
+      startSlashPhase(slashTime(), 'Not quite — slash for a little damage!', 0);
     } else {
       player.hp -= combatEnemy.attack;
       if (player.hp <= 0) { player.hp = 0; loseCombat(); return; }
@@ -2676,6 +2690,7 @@ function answerCombat(value) {
 // slashHits so the on-screen tally and the end-of-turn total stay honest.
 function startSlashPhase(duration, msg, freeHits) {
   slashHits = 0;
+  slashDamageDone = 0;
   slashActive = true;
   if (typeof HTMLElement !== 'undefined') {
     document.getElementById('combatAnswers').innerHTML = '';
@@ -2704,13 +2719,22 @@ function startSlashPhase(duration, msg, freeHits) {
 
 function executeSlash() {
   if (!slashActive || !combatOpen || !combatEnemy) return;
+  // A wrong answer's window is capped. Once it is spent, further taps are acknowledged on
+  // screen but deal nothing — the player is told plainly what would have earned more.
+  var dmg = Math.min(slashDmgPerHit, slashDamageCap - slashDamageDone);
+  if (dmg <= 0) {
+    var cappedEl = document.getElementById('slashCount');
+    if (cappedEl) cappedEl.textContent = slashDamageDone + ' dmg — answer right for a big free hit!';
+    return;
+  }
   slashHits++;
-  combatEnemy.hp -= slashDmgPerHit;
+  slashDamageDone += dmg;
+  combatEnemy.hp -= dmg;
   soundCorrect();
   // Floating damage number over the player's position
   var pr = Math.floor(player.y / TILE);
   var pc = Math.floor(player.x / TILE);
-  addPop(pr, pc, '-' + slashDmgPerHit, slashDmgPerHit > playerDamage() ? '#ffdd44' : '#ff6644');
+  addPop(pr, pc, '-' + dmg, dmg > playerDamage() ? '#ffdd44' : '#ff6644');
   triggerShake();
   player.attacking = true;
   player.attackFrame = 0;
@@ -2723,7 +2747,7 @@ function executeSlash() {
   }
   updateCombatBars();
   var countEl = document.getElementById('slashCount');
-  if (countEl) countEl.textContent = 'Hits: ' + slashHits + ' (' + (slashHits * slashDmgPerHit) + ' dmg)';
+  if (countEl) countEl.textContent = 'Hits: ' + slashHits + ' (' + slashDamageDone + ' dmg)';
   if (combatEnemy.hp <= 0) {
     combatEnemy.hp = 0;
     slashActive = false;
@@ -2744,7 +2768,7 @@ function endSlashPhase() {
   var zone = document.getElementById('slashZone');
   if (zone) zone.style.display = 'none';
   if (!combatOpen || !combatEnemy) return;
-  var totalDmg = slashHits * slashDmgPerHit;
+  var totalDmg = slashDamageDone;
   player.hp -= combatEnemy.attack;
   // Enemy hit-back damage pop (red)
   var pr = Math.floor(player.y / TILE);

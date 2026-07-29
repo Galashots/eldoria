@@ -28,24 +28,53 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     endSlashPhase();
     closeCombat();
 
-    // Same again with a wrong answer: still no free hit, so tapping remains the only
-    // way a miss deals damage. This is what keeps the answer worth more than the tap.
+    // Same again with a wrong answer and no taps: no free hit.
     openCombat(target);
     combatEnemy.hp = combatEnemy.maxHp = 999;
     var beforeWrong = combatEnemy.hp;
     answerCombat(combatAnswer + 1);
-    var wrongDamage = beforeWrong - combatEnemy.hp;
-    var wrongHits = slashHits;
+    var wrongUntappedDamage = beforeWrong - combatEnemy.hp;
+    var wrongUntappedHits = slashHits;
     endSlashPhase();
     closeCombat();
 
-    return { correctDamage, correctHits, wrongDamage, wrongHits, base: playerDamage() };
+    // THE ORIGINAL DEFECT: a wrong answer MASHED as hard as a player possibly could.
+    // 200 taps is far beyond any human rate inside the window, so if the invariant holds
+    // here it holds for every real player.
+    openCombat(target);
+    combatEnemy.hp = combatEnemy.maxHp = 9999;
+    var beforeMash = combatEnemy.hp;
+    answerCombat(combatAnswer + 1);
+    for (var i = 0; i < 200; i++) executeSlash();
+    var wrongMashedDamage = beforeMash - combatEnemy.hp;
+    endSlashPhase();
+    closeCombat();
+
+    // And a correct answer mashed the same way must still scale without limit, so
+    // tapping stays rewarding for the player who answered right.
+    openCombat(target);
+    combatEnemy.hp = combatEnemy.maxHp = 99999;
+    var beforeCorrectMash = combatEnemy.hp;
+    answerCombat(combatAnswer);
+    for (var j = 0; j < 20; j++) executeSlash();
+    var correctMashedDamage = beforeCorrectMash - combatEnemy.hp;
+    endSlashPhase();
+    closeCombat();
+
+    return { correctDamage, correctHits, wrongUntappedDamage, wrongUntappedHits,
+             wrongMashedDamage, correctMashedDamage, base: playerDamage() };
   });
   check('ELD-PT-002: a correct answer damages the enemy with zero taps', r.correctDamage > 0);
   check('ELD-PT-002: the free hit is worth the full correct-answer bonus', r.correctDamage === r.base * 2);
   check('ELD-PT-002: the free hit counts as exactly one hit', r.correctHits === 1);
-  check('ELD-PT-002: a wrong answer gets no free hit', r.wrongDamage === 0 && r.wrongHits === 0);
-  check('ELD-PT-002: answering beats tapping (correct untapped > wrong untapped)', r.correctDamage > r.wrongDamage);
+  check('ELD-PT-002: a wrong answer gets no free hit', r.wrongUntappedDamage === 0 && r.wrongUntappedHits === 0);
+  // The invariant the finding is actually about: knowing the answer beats tapping fast.
+  check('ELD-PT-002: INVARIANT — 200 mashed taps on a WRONG answer cannot beat one untapped correct answer',
+        r.wrongMashedDamage < r.correctDamage);
+  check('ELD-PT-002: a wrong answer is capped at one baseDmg', r.wrongMashedDamage === r.base);
+  check('ELD-PT-002: a wrong answer still pays some consolation damage', r.wrongMashedDamage > 0);
+  check('ELD-PT-002: tapping still scales without limit on a correct answer',
+        r.correctMashedDamage > r.correctDamage * 10);
   check('ELD-PT-002: no console errors', errors.length === 0);
   await browser.close();
 }
@@ -161,6 +190,69 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- ELD-PT-005 (cont.): the OTHER named interaction class — a ready crop, on the Farm ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    activateArea('farm');
+    // Find a soil tile whose up-screen iso neighbour (row-1, col-1) is NOT itself soil,
+    // so the overhang tap starts on genuinely empty ground and can only succeed by
+    // falling through to the crop's base tile.
+    var target = null;
+    for (var key in cropData) {
+      var parts = key.split(',');
+      var row = parseInt(parts[0], 10), col = parseInt(parts[1], 10);
+      if (row < 1 || col < 1) continue;
+      if (cropData[(row - 1) + ',' + (col - 1)]) continue;
+      target = { row: row, col: col };
+      break;
+    }
+    if (!target) return { found: false };
+
+    var crop = cropData[target.row + ',' + target.col];
+    crop.status = 'ready';
+    crop.type = 'turnip';
+    player.crops.turnip = 0;
+    player.x = target.col * TILE;
+    player.y = (target.row + 1) * TILE;
+
+    var overhang = interactAtVisibleTile(target.row - 1, target.col - 1);
+    return {
+      found: true, overhang: overhang,
+      harvested: player.crops.turnip, status: crop.status
+    };
+  });
+  check('ELD-PT-005: a ready crop with a clear overhang tile exists to test', r.found === true);
+  check('ELD-PT-005: tapping a ready crop-s body harvests it', r.overhang === true && r.harvested === 1);
+  check('ELD-PT-005: the harvested crop tile is emptied', r.status === 'empty');
+  await browser.close();
+}
+
+// --- ELD-PT-005 (cont.): the TOP-DOWN projection, where one step down-screen is row+1 only ---
+{
+  const { browser, page } = await launch('?iso=0');
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    activateArea('wilds');           // not ported to iso, so this exercises the top-down path
+    var isIso = isoActive();
+    var enemy = currentEnemies[0];
+    enemy.alive = true;
+    player.x = enemy.col * TILE;
+    player.y = (enemy.row + 1) * TILE;
+
+    // Top-down: the tile the enemy's body overhangs is directly above it, same column.
+    var overhang = interactAtVisibleTile(enemy.row - 1, enemy.col);
+    var opened = combatOpen;
+    closeCombat();
+    return { isIso: isIso, overhang: overhang, opened: opened };
+  });
+  check('ELD-PT-005: the Wilds really is the top-down renderer', r.isIso === false);
+  check('ELD-PT-005: top-down overhang tap opens combat (row+1, same column)',
+        r.overhang === true && r.opened === true);
+  await browser.close();
+}
+
 // --- ELD-PT-007: what the hero wears is derived from saved gear, never stored twice ---
 {
   const { browser, page } = await launch();
@@ -215,8 +307,10 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
 }
 
 // --- Visual evidence: the Mine, so a reviewer can see it is a cavern and not a forest ---
+// Written to docs/playtest/ (committed) rather than artifacts/ (gitignored): a reviewer needs
+// a raw-content URL at the exact head, not a PNG stranded inside a CI artifact ZIP.
 {
-  const evidenceDir = new URL('../artifacts/', import.meta.url);
+  const evidenceDir = new URL('../docs/playtest/', import.meta.url);
   await mkdir(evidenceDir, { recursive: true });
   for (const viewport of [
     { name: 'desktop', width: 1363, height: 936 },
