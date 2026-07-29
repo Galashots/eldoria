@@ -121,6 +121,15 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
   64×32 diamonds; the default "block" is a tall cube), props via
   `mapobject`. Farm set generating: grass/soil/water/path +
   tree/boulder/flowers/stump/fence/cookpot.
+- 2026-07-28 (night): **Farm landscape set complete**, all in
+  `_probe_local/pipeline/landscape/`: 16 tiles-pro ground tiles (4
+  variations × grass/soil/water/path, engine-shaped diamonds), 6 props
+  (tree/boulder/flowers/stump/fence/cookpot), and the composability layer —
+  grass→water / grass→soil / grass→path 16-tile transition tilesets plus an
+  18-config road autotile set, each with machine-readable `tile_rules`.
+  ~180/2000 monthly generations used in total. Awaiting owner review;
+  next: building kits (farmhouse/shop) with `style_images` locked to
+  approved tiles, then Phase-3 engine wiring for tile/prop loading.
 
 ## North Star alignment
 
