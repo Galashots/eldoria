@@ -1,9 +1,16 @@
 # Phase 3 character evidence — Ranger & Mage v3 (review pack)
 
 **Date:** 2026-07-29 (UTC) · **Purpose:** evidence delivery only, for ChatGPT's visual/North-Star
-review and Leo's disposition. Nothing here is normalized, validated, promoted to `assets/`, wired
-into `index.html`, or approved. Everything is staged from existing gitignored `_probe_local/`
-outputs; **zero PixelLab credits were spent producing this pack.**
+review and Leo's disposition. Nothing here is promoted to `assets/`, wired into `index.html`, or
+approved for runtime. Everything is staged from existing gitignored `_probe_local/` outputs;
+**zero PixelLab credits were spent producing this pack.**
+
+> **Read this file in two parts.** Everything down to "North Star alignment" describes the pack as
+> it stood at head `6ccc0617afb0404f5863db94f2cf85e8b504f4cb`, which is the head ChatGPT's visual
+> verdict is pinned to. The "Update 2026-07-29" section at the end describes what the *authorized*
+> normalize/validate gate then produced, at head `eac70b096db7d589d5745ca71832acc6ee108dd5`.
+> Where the two differ — most importantly, runtime-size views now exist — the update section is
+> current. The earlier text is preserved rather than rewritten so the reviewed head stays legible.
 
 ## Sheets in this directory
 
@@ -15,10 +22,13 @@ outputs; **zero PixelLab credits were spent producing this pack.**
 | `ranger-walk1-failed.png` | Ranger walk attempt 1, raw sheet | **FAILED** — see findings below; retained as evidence only |
 | `ranger-walk2-steady-stride.png` | Ranger walk attempt 2 (steady-stride action, seed 11) | Review-ready; Claude's inspection found clean strides, identity held |
 | `ranger-walk-failed-vs-success.png` | Per-direction comparison: failed row (red) above successful row (green) | The key exhibit for findings 1–4 |
+| `runtime-size-review.png` | *(added at `eac70b0`, after the verdict)* every engine slot at true 1× 64×64 plus its walk strip at 4× | Produced by the authorized normalize/validate gate — see the update section |
 
-Sheets are nearest-neighbour upscales of the raw generation frames (Ranger 192², Mage 256²);
-no runtime-size (64×64 normalized) views exist yet because normalization is deliberately
-deferred until after this review.
+The six sheets above `runtime-size-review.png` are nearest-neighbour upscales of the raw
+generation frames (Ranger 192², Mage 256²). At the reviewed head `6ccc061` no runtime-size
+(64×64 normalized) views existed, because normalization was deliberately deferred until after
+the visual review. That review has since happened and authorized the gate, so a runtime-size
+sheet now exists; see "Update 2026-07-29" below.
 
 ## Provenance
 
