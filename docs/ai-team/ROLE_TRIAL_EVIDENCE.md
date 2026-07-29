@@ -3,6 +3,7 @@
 **Status:** Active evidence register  
 **Charter:** [`AI_TEAM_CHARTER.md`](AI_TEAM_CHARTER.md)  
 **Started:** 2026-07-28  
+**Last updated:** 2026-07-29  
 **Owner:** Leo Pinto, Game Director
 
 ## Purpose
@@ -37,55 +38,95 @@ Related parallel tracks count separately only when each produces an independentl
 
 ## Current reassessment count
 
-**Completed material tasks since charter approval: 0 / 5**
+**Completed material tasks since charter approval: 4 / 5**
 
-The open work below remains candidate evidence and must not be counted until it meets a counting rule.
+The fifth qualifying task triggers charter reassessment even if Trials A–C are still incomplete.
 
 ## Charter trial status
 
 | Trial | Status | Qualification rule | Current note |
 | --- | --- | --- | --- |
-| A — Reviewer signal | Not started | Gemini, ChatGPT, and Kimi independently review the same medium-risk functional PR head and evidence; retain findings, false positives, misses, actionable specificity, time/cost, and owner triage effort | Draft PRs have not yet supplied the required same-head three-reviewer comparison |
-| B — ChatGPT bounded engine delivery | Not started | ChatGPT delivers a tightly bounded real engine slice affecting `index.html`, with tests, runtime evidence, and non-author review | Ranger PR #11 is relevant visual/asset-delivery evidence but is not the specified engine slice and must not be relabelled as Trial B |
-| C — Kimi verification | Not started | Kimi, Claude, and ChatGPT receive the same deterministic economy, save, or migration facts; compare calculations, edge cases, and test design | No qualifying decision has been run |
-
-## Candidate real-work evidence
-
-These entries record coordination context only. They are not completed trial results.
-
-| Work | Lead | Latest observed state at register creation | Potential evidence | Current disposition |
-| --- | --- | --- | --- | --- |
-| [PR #11 — Ranger character proof](https://github.com/Galashots/eldoria/pull/11) | ChatGPT | Draft; observed head `9261eb44d3c56d6b8ed68837e4ec5f019a11bece` | Visual production, deterministic asset tooling, exact-head CI, owner-gated iteration | In progress; does not satisfy Trial B because it is not an `index.html` engine slice |
-| [PR #12 — first Town isometric slice](https://github.com/Galashots/eldoria/pull/12) | Claude Code | Draft; observed head `51421612d6fafefbc14faba014166b873380d205` | Engine delivery, test/runtime evidence, repository hygiene, exact-head reporting | In progress; possible baseline evidence for Claude's default implementation seat |
-| [PR #13 — TRELLIS/Blender probe](https://github.com/Galashots/eldoria/pull/13) | Claude Code | Draft and paused; observed head `7f0768d83ca8d1cf99275354d8e4750ac3e47a5c` | Honest blocked-route decision, deterministic Blender rig, validator reuse, tool-access limits | Pending owner disposition; does not count while paused and unaccepted |
-
-The observed heads above are snapshots, not permanent review targets. Replace them with the exact final reviewed or accepted SHAs when recording completed evidence.
+| A — Reviewer signal | Not started | Gemini, ChatGPT, and Kimi independently review the same medium-risk functional PR head and evidence; retain findings, false positives, misses, actionable specificity, time/cost, and owner triage effort | Recent PRs supplied useful reviews but not the required same-head three-reviewer comparison. |
+| B — ChatGPT bounded engine delivery | Not started | ChatGPT delivers a tightly bounded real engine slice affecting `index.html`, with tests, runtime evidence, and non-author review | PR #11 is accepted visual/asset-pipeline evidence, not the specified engine slice. Do not relabel it. |
+| C — Kimi verification | Not started | Kimi, Claude, and ChatGPT receive the same deterministic economy, save, or migration facts; compare calculations, edge cases, and test design | No qualifying comparison has been run. |
 
 ## Completed evidence records
 
-None yet.
+### Task 1 — Ranger animated-character proof
 
-When a task qualifies, add one record using this structure:
+- **Outcome:** merged bounded Ranger statics plus one four-frame SE/right walk proof and deterministic processing/validation harness.
+- **PR:** [#11](https://github.com/Galashots/eldoria/pull/11)
+- **Exact accepted SHA:** `b065a224e74a264b5c66518dd62c38e0948162f1`
+- **Lead agent/seat:** ChatGPT; visual and asset-pipeline delivery.
+- **Task classification:** visual / asset pipeline.
+- **Charter trial:** none; explicitly not Trial B because `index.html` was untouched.
+- **Tests and machine evidence:** CI run 88 passed committed PNG integrity, deterministic static/walk processing, synthetic and real-candidate harnesses, smoke tests, isometric tests, and evidence retention. The output met 64×64/256×64, alpha, shared-scale, pivot, stability, and repeat-hash gates.
+- **Runtime or visual evidence:** runtime-, dark-, magenta-, anchor-, and walk-preview sheets were committed; owner accepted the experimental source and corrected walk strip.
+- **Non-author review:** Gemini reviewed the final head and reported no material finding. Owner acceptance and merge completed the bounded proof; final production-art approval was not implied.
+- **Correct material findings:** machine gates were explicitly limited to structure and stability, not identity, gait appeal, camera, lighting, or North Star quality.
+- **False positives or review noise:** none retained.
+- **Known misses or escaped issues:** no runtime integration; only one walk direction; the proof remained softer than final production pixel treatment.
+- **Tool/context/cost/usage constraints:** one primary walk-generation attempt and one corrective pass; deterministic cleanup handled a baked checkerboard source.
+- **Owner effort and decision:** Leo accepted the static seed and corrected walk proof; PR merged 2026-07-28.
+- **Role-routing implication:** ChatGPT can deliver bounded visual/asset tooling with machine evidence, but this does not establish ChatGPT engine-delivery Trial B.
+- **Counts toward five-task trigger:** yes — merged, independently useful proof and tooling.
 
-### Task N — Short name
+### Task 2 — TRELLIS/Blender feasibility decision
 
-- **Outcome:**
-- **PR/branch:**
-- **Exact accepted SHA:**
-- **Lead agent/seat:**
-- **Task classification:** engine / visual / asset pipeline / review / economy / save-migration / other
-- **Charter trial:** A / B / C / none
-- **Scope completed:**
-- **Tests and machine evidence:**
-- **Runtime or visual evidence:**
-- **Non-author review:**
-- **Correct material findings:**
-- **False positives or review noise:**
-- **Known misses or escaped issues:**
-- **Tool/context/cost/usage constraints:**
-- **Owner effort and decision:**
-- **Role-routing implication:**
-- **Counts toward five-task trigger:** yes / no, with reason
+- **Outcome:** deliberately closed, not merged, as a reusable decision record. The downstream fixed-camera render, normalization, and validation harness worked; the available generated-mesh/blockout source route was blocked and visibly below the North Star.
+- **PR:** [#13](https://github.com/Galashots/eldoria/pull/13)
+- **Exact accepted SHA:** `91bf0de2784e0ec355bb2907f3ee7d2f67d8b6b5`
+- **Lead agent/seat:** Claude Code; feasibility probe.
+- **Task classification:** asset-pipeline research / technical decision.
+- **Charter trial:** none.
+- **Tests and machine evidence:** Blender 4.2.22 headless rendering, Python normalization, and the unchanged Ranger proof harness passed for four statics plus one walk strip. The branch was intentionally not merged.
+- **Runtime or visual evidence:** committed contact sheets and runtime-scale evidence showed the primitive blockout was a muddy, inadequate character source despite contract-valid output.
+- **Non-author review:** closure recorded that no branch code should enter `main`; the adopted PR #15 decision record independently superseded this route.
+- **Correct material findings:** the probe separated reproducible downstream mechanics from the upstream source-quality/access blocker and respected the one-correction stop limit.
+- **False positives or review noise:** an early claim that `main` CI was red was wrong; the final head corrected it to a Windows-local rasterization mismatch while CI remained green.
+- **Known misses or escaped issues:** no clean full-body Ranger concept and no usable TRELLIS generation quota/token; no production-quality mesh was tested.
+- **Tool/context/cost/usage constraints:** anonymous ZeroGPU quota blocked `/image_to_3d`; the available North Star crop was unsuitable as a standing-character input.
+- **Owner effort and decision:** closed 2026-07-29 as the do-not-merge feasibility record; retained only for historical evidence and selected contract facts.
+- **Role-routing implication:** future asset work should use the adopted PixelLab path; do not revive the 3D generation route without materially new tools and an explicit owner decision.
+- **Counts toward five-task trigger:** yes — deliberately closed with a reusable documented decision.
+
+### Task 3 — Production asset pipeline v2
+
+- **Outcome:** merged the PixelLab client, deterministic premultiplied-alpha normalizer, fail-closed validator, labelled cast-sheet builder, complete cast inventory/prompt pack, and model-agnostic asset-generation skill. No runtime or production assets changed.
+- **PR:** [#15](https://github.com/Galashots/eldoria/pull/15)
+- **Exact accepted SHA:** `1c6be80d672609923647150fdd28413015269019`
+- **Lead agent/seat:** Claude Code; tooling and documentation delivery.
+- **Task classification:** asset pipeline / documentation.
+- **Charter trial:** none.
+- **Tests and machine evidence:** CI run 99 passed. Calibration exercised eight-direction identity rotation, cast/landscape generation, premultiplied-alpha normalization, PNG verification, G7 stand-frame checks, G8 completeness, empty-directory failure, and mandatory `--require-walks` for walking profiles.
+- **Runtime or visual evidence:** Leo approved the Mage identity rotation, full cast sheet, and Farm landscape sheet; the engine consumes the four diagonal directions from eight-direction generation.
+- **Non-author review:** ChatGPT requested material code/documentation changes at two exact heads, then approved exact head `1c6be80…` after both rounds were resolved. Gemini later reported no material finding.
+- **Correct material findings:** fail-open validation, background-job exit handling, PNG verification, missing direction labels, unsupported examples, absent `--style-image`, dry-run parsing, camera/slope wording, landscape status, normalizer assumptions, `--require-walks`, and machine-vs-visual gate claims were corrected before merge.
+- **False positives or review noise:** none retained; requested fixes were bounded and accepted.
+- **Known misses or escaped issues:** generation outputs remain candidates until normalized, validated, committed, wired, and inspected in-game; building kits and Phase 3 wiring remain.
+- **Tool/context/cost/usage constraints:** hosted credit-priced generation; local GTX 1060 route rejected as inefficient for this need.
+- **Owner effort and decision:** Leo approved the calibration sheets; final exact-head approval and green CI authorized merge on 2026-07-29.
+- **Role-routing implication:** Claude is effective for bounded production tooling when paired with rigorous non-author code and visual-process review.
+- **Counts toward five-task trigger:** yes — merged, independently useful production process.
+
+### Task 4 — First Town isometric slice
+
+- **Outcome:** merged the General Store and Mira as the first bounded Town isometric slice using validated placeholder geometry, per-tile building depth, doorway/travel cues, and both Action/direct-tap interaction paths.
+- **PR:** [#12](https://github.com/Galashots/eldoria/pull/12)
+- **Exact accepted SHA:** `078476822768d88aade4e9a0dcf3f8f689b09154`
+- **Lead agent/seat:** Claude Code; engine delivery.
+- **Task classification:** engine / gameplay-preserving visual integration.
+- **Charter trial:** none; useful evidence for Claude's default implementation seat, but not one of Trials A–C.
+- **Tests and machine evidence:** CI run 101 passed. `npm test` reported 80 checks, including 25 new Town, depth, interaction, travel, save-invariance, fallback, and evidence assertions.
+- **Runtime or visual evidence:** desktop, iPad landscape, phone portrait, building/NPC overlap, interaction, and Farm→Town arrival frames were committed and reviewed.
+- **Non-author review:** ChatGPT approved the exact final head after reconciling `.gitignore` with merged PR #15; Gemini subsequently reported no material finding.
+- **Correct material findings:** per-tile depth was retained for a wide footprint; direct tap and Action reached the same existing paths; world-space saves and schema version were unchanged.
+- **False positives or review noise:** none retained.
+- **Known misses or escaped issues:** the Forge and other villagers remain generic placeholders; a hero directly north of the store can be fully occluded; production art is intentionally deferred.
+- **Tool/context/cost/usage constraints:** the branch required a small `.gitignore` restack after PR #15; no shared gameplay file conflict remained.
+- **Owner effort and decision:** Leo delegated review/merge; exact-head approval plus green CI completed the merge on 2026-07-29.
+- **Role-routing implication:** Claude's default implementation seat is supported for bounded engine slices with strong automated and visual evidence.
+- **Counts toward five-task trigger:** yes — merged, independently useful engine slice.
 
 ## Reassessment trigger
 
