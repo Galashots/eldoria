@@ -125,8 +125,11 @@ python tools/pipeline/normalize_sprite.py \
   --source _probe_local/pipeline/ranger/raw \
   --out _probe_local/pipeline/ranger/normalized --profile adventurer
 
+# --require-walks whenever validating a character that walks: without it a
+# missing walk strip would not fail the run
 python tools/pipeline/validate_sprites.py \
-  --dir _probe_local/pipeline/ranger/normalized --profile adventurer
+  --dir _probe_local/pipeline/ranger/normalized --profile adventurer \
+  --require-walks
 ```
 
 Add `--dry-run` before the subcommand's flags to print the exact request

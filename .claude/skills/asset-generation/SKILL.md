@@ -86,8 +86,13 @@ Known behaviors (do not re-derive):
 python tools/pipeline/make_cast_sheet.py --cast-dir _probe_local/pipeline/cast --out _probe_local/pipeline/cast/cast-review-sheet.png --cell 96
 # arrange chosen frames as <slot>.png / <slot>-walk-<i>.png, then:
 python tools/pipeline/normalize_sprite.py --source RAWDIR --out NORMDIR --profile PROFILE
-python tools/pipeline/validate_sprites.py --dir NORMDIR --profile PROFILE
+python tools/pipeline/validate_sprites.py --dir NORMDIR --profile PROFILE --require-walks
 ```
+
+`--require-walks` is mandatory for any character that walks (heroes; any
+enemy that later gains a walk) — without it a missing strip cannot fail the
+run. Drop it only for statics-only characters; `--allow-partial` only for
+intentionally partial profiles.
 
 Walk strips: engine resets `walkFrame` to 0 when stationary, so frame 0 MUST
 be a standing pose and frames 0/2 are byte-identical (stand, step A, stand,
