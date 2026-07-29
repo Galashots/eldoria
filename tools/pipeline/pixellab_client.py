@@ -349,12 +349,25 @@ def cmd_mapobject(args):
 
 
 def cmd_create_v3(args):
-    """v3: highest quality; with --reference-image it ROTATES that identity."""
+    """v3: highest quality; with --reference-image it ROTATES that identity.
+
+    SIZE MATTERS FOR COST. Rotation is billed ceil(w*h*8/65536) generations and
+    every later animation on the character is billed against the same canvas, so
+    a 256px character costs 8x a 64px one both now and forever after.
+
+    Caveat worth knowing: in REFERENCE mode the API documents image_size as
+    *advisory* ("model picks its own size") and the output otherwise follows the
+    reference image's own dimensions. So the reliable lever is to downscale the
+    reference to the target size; --size is sent as well, belt and braces.
+    Always check the actual output dimensions in character.json afterwards.
+    """
     payload = {
         "description": args.description,
         "view": args.view,
         "no_background": True,
     }
+    if args.size:
+        payload["image_size"] = {"width": args.size, "height": args.size}
     if args.reference_image:
         payload["reference_image"] = b64_image(args.reference_image)
     if args.template_id:
@@ -533,7 +546,12 @@ def main():
 
     p = sub.add_parser("create-v3", help="v3 character; reference image is rotated")
     p.add_argument("--description", required=True)
-    p.add_argument("--reference-image", help="south-facing identity concept (any size)")
+    p.add_argument("--size", type=int,
+                   help="output frame size, e.g. 64. STRONGLY RECOMMENDED: cost is "
+                        "ceil(w*h*8/65536) gens and later animations bill against the "
+                        "same canvas. Advisory in reference mode - also downscale the "
+                        "reference itself. See tools/pipeline/PIXELLAB_API.md")
+    p.add_argument("--reference-image", help="south-facing identity concept (<=256px)")
     p.add_argument("--view", default="low top-down",
                    choices=["side", "low top-down", "high top-down"])
     p.add_argument("--template-id")
