@@ -550,7 +550,7 @@ Preserve:
 - persistent collection;
 - no missed-day punishment.
 
-Recommended additions:
+Additions — **decided 2026-07-29, see §21**:
 
 - show rarity odds in plain language;
 - give every owned Dumpling a description and personality;
@@ -558,6 +558,14 @@ Recommended additions:
 - eventually show favorites at the Farm or following the hero;
 - make Buddy abilities optional, readable, and useful without becoming mandatory;
 - use quest rewards or dough crafting to provide deterministic paths to specific missing Dumplings later.
+
+Removals — **decided 2026-07-29, see §21**:
+
+- the discounted multi-pull bundle;
+- the "save up for a better deal" nudge.
+
+Both are monetisation-shaped mechanics that teach a child to spend in blocks and to
+hold back rather than play. Neither survives in a game with no real-money purchase.
 
 ## 15. The eighteen Squishy Dumplings
 
@@ -772,29 +780,41 @@ Do not combine:
 
 into one PR.
 
-## 21. Continuity conflicts requiring an explicit decision
+## 21. Continuity conflicts — decided
 
-### Mira's role
+All four conflicts below were put to the owner and **decided on 2026-07-29**. They
+are now canon: build to the **Decision** lines, not to the original recommendations.
+Reopening any of them needs a new owner decision, not an agent's judgement.
+
+### Mira's role — decided
 
 The approved Mira concept was described as a town shopkeeper, while current `index.html` makes Mira the quest giver and Bram the shopkeeper.
 
-**Recommendation:** keep the runtime roles. Treat Mira as Town steward/market coordinator, which preserves her apron-and-basket visual design, and keep Bram as the General Store keeper. This avoids renaming IDs or rewriting shop behavior.
+**Decision:** keep the runtime roles. Mira is Town steward / market coordinator — which preserves her apron-and-basket visual design — and Bram stays the General Store keeper. No ID renames, no shop-behavior rewrite.
 
-### Hero names
+### Hero names — decided
 
 The proposed framework names the heroes Leo and Pip. Current profiles are renameable and the North Star establishes roles, not fixed names.
 
-**Recommendation:** keep Ranger and Mage as the canonical identities and let families name them.
+**Decision:** Ranger and Mage are the canonical identities; families name their own heroes. Written material refers to the roles, never to fixed given names.
 
-### Dumpling acquisition
+### Dumpling acquisition — decided
 
 The supplied proposal and current game both use earned-gold pulls, rarity, pity, and eighteen collectibles. Older V2 guidance argued for fully deterministic companion invitations.
 
-**Recommendation:** preserve the current earned-gold pull loop because it is already implemented and central to the current North Star, while adding visible odds, deterministic dough-based paths, personalities, favorites, and no real-money or daily pressure.
+**Decision — keep the pulls, strip the pressure.** The earned-gold pull loop stays, and so do rarity, pity, and the eighteen collectibles. The monetisation-shaped scaffolding around it goes:
 
-### Campaign naming
+- **show the odds** on the pull screen, in words a child can read;
+- **keep a deterministic dough-based path** to every dumpling, so no companion is ever gated behind luck alone;
+- **remove the discounted multi-pull bundle** — one pull costs what one pull costs;
+- **remove the "save up for a better deal" nudge**;
+- no real-money purchase, no daily-login pressure, no timed offer, ever.
 
-**Recommendation:** approve the naming set:
+Personalities and favorites stay as the affection layer.
+
+### Campaign naming — decided
+
+**Decision:** the naming set is adopted:
 
 - Rootsong;
 - the Fading;
@@ -803,7 +823,7 @@ The supplied proposal and current game both use earned-gold pulls, rarity, pity,
 
 ## 22. Recommended next sequence
 
-1. Owner reviews the four continuity decisions above.
+1. ~~Owner reviews the four continuity decisions above.~~ Done 2026-07-29; all four decided in §21.
 2. Claude performs a read-only feasibility review of this document against the current exact `main`.
 3. Merge the documentation-only creative direction after accepted amendments.
 4. Resolve and adopt the PixelLab pipeline through its own PR.
