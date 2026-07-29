@@ -56,7 +56,9 @@ Built in small, testable slices — see [`AGENTS.md`](AGENTS.md) for shared agen
 [`CLAUDE.md`](CLAUDE.md) for the Claude entry point, and
 [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) for the current implementation state and next
 accepted outcome. Owner-designated large deliveries also follow
-[`docs/LARGE_PR_EXECUTION.md`](docs/LARGE_PR_EXECUTION.md).
+[`docs/LARGE_PR_EXECUTION.md`](docs/LARGE_PR_EXECUTION.md), and
+[`docs/CREATIVE_DIRECTION.md`](docs/CREATIVE_DIRECTION.md) holds the owner-approved story, quest,
+Squishy Dumpling, learning, and content-driven asset direction.
 
 Every push to `main` and every pull request runs `npm test` in the single CI job defined by
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml). The current script chain is the source of
