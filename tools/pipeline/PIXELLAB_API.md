@@ -331,7 +331,7 @@ from the REST API. Verified absent — do not go looking for them again:
 
 | Not in the REST API | What it would have done |
 |---|---|
-| `direction_type: ordinal` | Generate only the 4 diagonals we actually use |
+| `direction_type: ordinal` | Would generate only four diagonals; not desired because Eldoria retains all eight directions |
 | `rotation` / `tilt` angles | Explicit per-frame angle control |
 | "Create animations (automatic)" | Character + animation in all directions in one call (≤64×64, Tier 1) |
 
