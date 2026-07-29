@@ -119,3 +119,59 @@ restrained-palette treatment as the approved cast; the brotherly duo silhouette 
 soft-neutral key-light question raised in the four-character pack applies here too and remains
 the lead's call. The failed sheet is excluded from any alignment claim; it exists only as
 process evidence.
+
+## Update 2026-07-29 — ChatGPT's verdict and the resulting normalize/validate gate
+
+ChatGPT (visual-direction lead) reviewed all six sheets above via embedded raw-content links in
+[PR #19 issue comment](https://github.com/Galashots/eldoria/pull/19#issuecomment-5113656604) and
+posted a [formal verdict](https://github.com/Galashots/eldoria/pull/19) at this same head
+(`6ccc0617afb0404f5863db94f2cf85e8b504f4cb`):
+
+- `ranger-walk1-failed.png` — **rejected, never normalize.**
+- `ranger-v3-rotations.png` + `ranger-walk2-steady-stride.png`, and
+  `mage-v3-rotations.png` + `mage-walk.png` — **approved to proceed to
+  normalize → validate → runtime-size review views only** (no `assets/`, no `index.html`, no
+  further generation, no merge).
+- Roster-wide key light: do **not** adopt a soft-neutral direction; the North Star's warm
+  upper-left key stands. No refresh warranted.
+
+Per that authorization, Claude ran the two approved sets through the merged pipeline. All
+working files (raw source staging, normalized 64×64 statics, 256×64 walk strips) live in
+gitignored `_probe_local/pipeline/phase3-normalize-review/` and are **not** committed — only
+this review sheet is:
+
+- **`runtime-size-review.png`** — every engine slot (`right`/`down`/`left`/`up`) for both
+  characters at true 1× 64×64 scale plus its 4-frame walk strip magnified 4× for visibility.
+
+### Walk-cycle frame curation
+
+PixelLab returns 5 files per direction (`frame_000`=confirmed stand, `frame_001..004`=generated
+stride). Visual inspection across all 8 direction/character combinations found `frame_001` and
+`frame_003` are consistently the two clearest "step" poses (leg/arm swung from neutral) in every
+case, while `frame_002`/`frame_004` read closer to a passing/return-to-neutral pose. Per
+PIPELINE.md's `{stand, A, stand-copy, B}` contract, both characters used:
+`walk-0=frame_000, walk-1=frame_001, walk-2=frame_000 (duplicated), walk-3=frame_003`.
+This is a reproducible, evenly-spaced selection rule (1st and 3rd of four generated frames), not
+a per-character subjective pick — recorded here so it is inspectable and repeatable.
+
+### Validator gate results (`validate_sprites.py --require-walks`)
+
+- **Mage: ALL GATES PASS** (G1–G7 clean; height spread 1px, width spread 2px).
+- **Ranger: 1 GATE FAILED — G5 width spread ≤8px (actual 10px).** All other gates (G1–G4,
+  G6, G7, stand-frame match) pass, including the bottom-anchor/alpha/walk-stability checks. Root
+  cause measured directly: opaque bbox width is 35px facing `right` (bow held out to the side)
+  vs. 25px facing `up` (bow tucked near the body from behind) — a real per-direction silhouette
+  difference from how the bow/quiver reads at each rotation angle, not a normalization bug. This
+  is the same class of issue as the Mira-basket flag in the four-character pack: the gate is
+  doing its job and this has **not** been forced through or the threshold loosened. The Ranger
+  set is visually approved but **not yet machine-gate-clean**; a reroll or mirror-repair
+  decision (no new generation without separate authorization) is the lead's/owner's call before
+  this specific set could ever be promoted toward `assets/`.
+
+### What this update does and does not authorize
+
+Produces runtime-size review evidence only, exactly as authorized. It does **not** promote
+anything to `assets/`, touch `index.html`, spend credits, or generate replacements. The Ranger
+gate failure means that even after a future promotion decision, this specific Ranger rotation
+set would need a resolved G5 width-spread repair before it could pass the pipeline's own bar —
+that decision is not made here.
