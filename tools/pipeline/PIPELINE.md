@@ -64,23 +64,41 @@ REVIEW (human + North Star)   →   commit to assets/
 The generate stage is swappable by design — if PixelLab disappoints, the
 normalize/validate contract doesn't change; only the client does.
 
-## Camera + direction mapping (locked)
+## Camera + direction policy (source locked; runtime subset current)
 
-Engine slots map to PixelLab directions with `--isometric`:
+PixelLab generation uses `view=high top-down` (approximately 35°), and the
+approved reference is already drawn at that camera. PixelLab rotates direction;
+it is not responsible for converting an eye-level reference to the game camera.
 
-| Engine slot | Iso facing | PixelLab direction |
-|---|---|---|
-| `right` | SE | `south-east` |
-| `down`  | SW | `south-west` |
-| `left`  | NW | `north-west` |
-| `up`    | NE | `north-east` |
+Retain every generated direction as canonical production source material:
 
-PixelLab `view` is `low top-down`. Note on the projection constant: 26.565°
-(= atan 0.5) is the **screen slope of the 2:1 diamond edge** carried over
-from the prior 3D contract — it is not, without qualification, a camera
-elevation. Whether `low top-down` sits correctly on the engine's 64×32
-diamonds is a **visual calibration gate** (in-game screenshot against the
-grid), not something the machine gates check — see checklist below.
+| PixelLab direction | Current engine use |
+|---|---|
+| `south` | retained; reserved for later 8-direction runtime |
+| `south-east` | current `right` slot |
+| `east` | retained; reserved for later 8-direction runtime |
+| `north-east` | current `up` slot |
+| `north` | retained; reserved for later 8-direction runtime |
+| `north-west` | current `left` slot |
+| `west` | retained; reserved for later 8-direction runtime |
+| `south-west` | current `down` slot |
+
+The four diagonal slots are the current runtime compatibility subset, not the
+production-source limit. The owner intends a later bounded eight-direction
+runtime upgrade for heroes and moving NPCs/enemies. That work needs its own
+movement/input mapping, animation contract, tests, and runtime inspection.
+
+The 26.565° constant (= atan 0.5) is the **screen slope of the 2:1 diamond
+edge** carried over from the prior 3D contract; it is not, without
+qualification, camera elevation. Camera and heading remain visual calibration
+gates against the grid and North Star, not machine-only checks.
+
+Manual PixelLab Creator evidence from 2026-07-29 produced an 8-frame
+transparent 256×256 South walk GIF at 200 ms/frame. Keep all raw frames. Before
+current-engine use, bottom-center normalize, inspect opposing foot-contact
+phases and 64px readability, then derive a 4-frame compatibility strip
+deliberately. Do not inherit the GIF delay, hard-code an unreviewed 8→4
+selection, or delete the source frames.
 
 Walk animation is **4 frames** at `WALK_FRAME_MS=110`; the engine resets
 `walkFrame` to 0 when stationary, so **frame 0 must be the standing pose** and
@@ -132,7 +150,7 @@ python tools/pipeline/pixellab_client.py create-v3 \
   --description "older ranger adventurer, weathered green hooded cloak, leather bracers, longbow and quiver" \
   --reference-image _probe_local/pipeline/ranger/ref-256.png --seed 11 \
   --out-dir _probe_local/pipeline/ranger
-# -> 8 rotations; keep the 4 diagonals for the engine slots
+# -> 8 rotations; retain all 8 directions (the current engine consumes the four diagonals) for the engine slots
 
 # DESCRIPTION ROUTE: 8 directions (create4 yields cardinals only — do not
 # use it for the engine's diagonal facings; its `directions` field is
@@ -228,7 +246,7 @@ Run once with trial credits before trusting the pipeline:
   `init_image` when this happens; do not relax the gate.
 - **`create4` facings are CARDINAL** (pure front/side/back), even with
   `isometric: true` — not the 3/4 diagonals our camera wants. For diagonal
-  facings use `create-character-with-8-directions` and keep the 4 diagonals.
+  facings use `create-character-with-8-directions` and retain all 8 directions (the current engine consumes the four diagonals).
   Also: `isometric: true` outputs a 92×92 canvas, not 64 — harmless, the
   normalizer downscales.
 - **`directions` param is reference images per direction** (provide some
@@ -251,8 +269,9 @@ Run once with trial credits before trusting the pipeline:
   slugs, serpents, flyers: `--mode pro` (20–40 gens each).
 - Full identity chain, proven end-to-end: ChatGPT concept (flat light-grey
   bg, ¾ front, full body) → 256² → v3 rotation → keep 4 diagonals →
-  normalize → validate. (Note: the adopted reference default is now flat
-  front-on at eye level — see `PIXELLAB_API.md` §3.)
+  normalize → validate. (Historical concepts did not always establish the target camera; the adopted
+  default is now South-facing at high top-down, approximately 35° — see
+  `PIXELLAB_API.md` §3.)
 
 **Round 3 (landscape, after reading PixelLab's map-tiles guide):**
 
@@ -334,7 +353,8 @@ docs review):**
   through to the engine.
 
   **Mandatory addition to the raw-sheet visual gate — check heading fidelity
-  per direction, before anything else:** for each of the four engine slots,
+  per direction, before anything else:** inspect all eight retained directions;
+  for the current four engine slots,
   confirm the frame actually faces where its label claims. Fastest reliable
   check: **`south`, `south-east` and `south-west` must all show the face;
   `north`, `north-east` and `north-west` must not.** If two adjacent
@@ -382,10 +402,27 @@ docs review):**
     it matters if/when agents drive PixelLab through the MCP server instead
     (see `tools/pipeline/PIXELLAB_MCP.md`).
 
+## Round 5 — manual high-top-down Ranger evidence (2026-07-29)
+
+- PixelLab Character ID:
+  `add36c36-295d-4626-94fd-179a4102d1ea`.
+- Tested description stated that the South reference already used the 35°
+  high-top-down camera and requested rotations only.
+- The manual Character route returned 8 transparent 256×256 rotations with
+  coherent identity, camera, palette and heading.
+- Opaque figure heights were 215–227 source pixels, approximately 54–57 pixels
+  after a 64px downscale. ChatGPT recommended the set through the source-art
+  gate; North Star result: **Aligned**.
+- The manual route's cost was not measured. This evidence does not overwrite
+  the API reference-size billing measurements below.
+- The South walk export contained 8 transparent 256×256 frames at 200 ms.
+  It passed as candidate source motion, pending bottom-center normalization,
+  phase selection, complete direction coverage, and runtime inspection.
+
 ## Cost reality
 
-At list prices a full character (4 facings + 4-direction walk + attack) is
-roughly **$0.05–0.30**. The entire cast of Eldoria is a few dollars.
+At list prices a current-runtime character (8 retained rotation sources plus
+the four-direction compatibility walk/attack set) is roughly **$0.05–0.30**. The entire cast of Eldoria is a few dollars.
 
 **…but only if the character is sized to the engine.** Two cost rules apply,
 with different evidence classes:
@@ -397,7 +434,7 @@ with different evidence classes:
   canvas** size. A character returned at 216 px canvas stays expensive for
   every walk and attack it ever receives.
 
-| Size | Rotation set | Custom walk, 4 directions |
+| Size | Rotation set | Custom walk, current 4-direction runtime subset |
 |---|---|---|
 | 256 px | 8 gens (projected) | ~32 gens |
 | 128 px | 2 gens (measured) | ~8 gens |
@@ -407,8 +444,11 @@ Early heroes were generated at 192–256 px references (silently inheriting the
 concept's dimensions) instead of 64 px, then downscaled 4× — paying more for
 worse pixels, since a 4× downscale blends 4×4 blocks into one output pixel.
 
-**Size the reference to the engine target.** Full cost model, route table and
-repair playbook: [`PIXELLAB_API.md`](PIXELLAB_API.md).
+**For the cost-optimized API route, size the reference to the engine target
+when visual quality holds.** The successful manual Creator route used a 256px
+reference/export and then preserved readability under deterministic downscale;
+its cost is unmeasured and must remain a separate route-specific observation.
+Full cost model, route table and repair playbook: [`PIXELLAB_API.md`](PIXELLAB_API.md).
 
 ## North Star alignment
 
