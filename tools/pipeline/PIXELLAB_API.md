@@ -85,9 +85,22 @@ at **1 generation**. That is the standard for Eldoria heroes.
 | 128 px | ~104 px (measured) | 2 gens (measured) | 1.9× downscale. Only if fine props must survive (§3) |
 | 256 px | ~208 px (projected, unmeasured) | **8 gens** (projected from formula) | Avoid: expensive, requires destructive downscale to reach 64 px |
 
-Bigger references are not "better sizing" — they buy a bigger figure that must
-then be downscaled further, blending the pixel grid. Generating at target is
-cheaper *and* sharper.
+For the measured **API reference-mode route**, bigger references buy a bigger
+figure that must be downscaled and cost more. Generating near target is the
+cost-optimized standard when it preserves the required identity.
+
+### Separate manual Creator result — measured visually, cost unmeasured
+
+A 2026-07-29 manual PixelLab Character run used a 256×256 South-facing Ranger
+reference already drawn at the target high-top-down camera (approximately 35°).
+It returned 8 transparent 256×256 rotations whose figures measured 215–227 px
+tall, or approximately 54–57 px after deterministic 64px downscale. Identity,
+heading and camera held, and the downscaled set remained readable.
+
+This proves that the manual 256px Creator route can be a valid quality route. It
+does **not** prove its cost, does not change the API billing table above, and does
+not make 256px mandatory. Record the route used and judge cost, fidelity and
+runtime downscale separately.
 
 ### What is still unverified
 
@@ -164,30 +177,36 @@ Constraints: reference max **256×256**; requires `mode=v3`; `outline`/`detail`
 hints are ignored when a reference is supplied; `proportions` is ignored by v3
 entirely (it applies to standard/pro only).
 
-### Eldoria's tested default: flat front-on reference
+### Eldoria's tested default: South-facing at the target camera
 
-**[VENDOR-DOCUMENTED]** `reference_image` requires only *"South-facing reference
-image… Max 256x256 pixels."* There is no camera-elevation requirement on the
-reference anywhere in the spec.
+**[VENDOR-DOCUMENTED]** PixelLab defines `south` as facing the camera and
+`high top-down` as looking down at approximately 35°. Its view and direction
+controls are weak. Its rotation guide further states that changing camera
+perspective is not what the rotation model was trained to do.
 
-**[MEASURED IN ELDORIA]** A flat, eye-level, front-on concept was fed to
-`create-character-v3` with `view=high top-down` (≈35°), and the rotation came
-back correct in all eight directions — faces on south/SE/SW, no face on
-north/NE/NW, no collapsed pairs, consistent scale (51–53 px across the set).
+**[MEASURED IN ELDORIA]** The manual Ranger Character workflow supplied a
+South-facing reference already drawn at the 35° high-top-down camera and asked
+for rotations only. PixelLab returned all 8 directions with consistent identity,
+scale and camera.
 
-> **Plain front-on at eye level is Eldoria's current tested reference default.**
-> It is what the API documents, and it produced correct rotations in practice.
-> An elevated reference is unnecessary for this tested route, though it is not
-> universally wrong — it simply has not been tested and is harder for image
-> generators to produce reliably from a text prompt.
+> **Production default:** establish Eldoria's high-top-down camera in the
+> approved South-facing reference. Use PixelLab to rotate direction, not to
+> convert an eye-level concept to the game camera.
 
-Two related facts: `view` is a **single** field *"used by both generation and
-skeleton reconstruction"* **[VENDOR-DOCUMENTED]** — there is no from/to split on
-this endpoint, so one value covers reference and output. (The **web** Rotate tool
-does have a separate `From view`; that split does not exist in the REST API.) The
-vendor's rotate guide warns that changing camera view is *"not something the model
-has been trained to do"* — so match `view` to the game's camera and let the
-reference be plain.
+A prior API run fed a flat eye-level concept to
+`create-character-v3(view=high top-down)` and happened to rotate correctly in
+all 8 directions (51–53 px figure height). Keep this as historical measured
+fallback evidence. It does not supersede the target-camera default because the
+vendor describes the camera transformation as weak/untrained.
+
+The REST endpoint exposes one `view` field used by generation and skeleton
+reconstruction rather than separate from/to camera fields. The reference and
+declared view must therefore describe the same target camera.
+
+All 8 directions are retained as canonical production sources. The current
+engine consumes SE/SW/NW/NE as right/down/left/up, but south/east/north/west are
+not discarded. The owner intends a later bounded eight-direction runtime for
+heroes and moving NPCs/enemies.
 
 ### Do not bake weapons into a hero's base sprite
 
@@ -256,12 +275,20 @@ proven causation.
 
 ## 5. Animation specifics
 
+**[MEASURED IN ELDORIA — manual Creator route]** The Ranger South walk export
+contains 8 transparent 256×256 GIF frames at 200 ms/frame. It passed as
+candidate source motion. Retain the 8 raw frames; bottom-center normalize,
+inspect opposite foot contacts and 64px readability, and choose any current
+4-frame compatibility strip deliberately. Do not inherit GIF timing or
+hard-code an unreviewed 8→4 selection.
+
 - **`--frames N` returns N+1 files per direction.** `keep_first_frame` (v3 only,
   default `true`) keeps the reference as `frame_000`. Convenient for us: the
   engine's walk contract needs frame 0 to be a stand pose.
 - **`directions` defaults differ by mode.** Template mode animates every
   character direction; **custom mode animates `south` only.** Always pass
-  `directions` explicitly.
+  `directions` explicitly. Retain every completed direction. A partial proof
+  is not the final motion set for a character intended to move in 8 directions.
 - **Animation sets append server-side**, named after the slugified action.
   **[VENDOR-DOCUMENTED]** PixelLab exposes animation deletion, but Eldoria's
   current client and workflow do not automatically delete bad sets — later
@@ -317,7 +344,8 @@ Other traps:
   there has not been exercised in this pipeline.
 - **`create-character-with-4-directions` is cardinal-only** (`south`, `east`,
   `north`, `west`). Its `directions` field takes reference *images*, not a
-  selector. For diagonals use an 8-direction route and keep the four you need.
+  selector. Use an 8-direction route and retain all 8 results; the current engine consumes
+  the four diagonals as a compatibility subset.
 - **`estimate-skeleton` accepts only 16/32/64/128/256 px.**
 - **`oblique` view** is BETA: max 128 px, 4-direction, standard mode only.
 - An **official Python SDK** exists (`pip install pixellab`). Eldoria hand-rolled
