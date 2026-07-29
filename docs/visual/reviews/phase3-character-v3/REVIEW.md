@@ -5,22 +5,24 @@ review and Leo's disposition. Nothing here is promoted to `assets/`, wired into 
 approved for runtime. Everything is staged from existing gitignored `_probe_local/` outputs;
 **zero PixelLab credits were spent producing this pack.**
 
-> **Read this file in two parts.** Everything down to "North Star alignment" describes the pack as
-> it stood at head `6ccc0617afb0404f5863db94f2cf85e8b504f4cb`, which is the head ChatGPT's visual
-> verdict is pinned to. The "Update 2026-07-29" section at the end describes what the *authorized*
-> normalize/validate gate then produced, at head `eac70b096db7d589d5745ca71832acc6ee108dd5`.
-> Where the two differ — most importantly, runtime-size views now exist — the update section is
-> current. The earlier text is preserved rather than rewritten so the reviewed head stays legible.
+> **Read this file back to front.** The final section, **"SUPERSEDING VERDICT 2026-07-29 — Ranger
+> lineage rejected"**, is the current state and overrides everything before it. In particular the
+> Ranger is **rejected**, not "visually approved".
+>
+> The earlier sections are preserved, not rewritten, because each verdict is pinned to the head it
+> was given at: the original evidence and ChatGPT's first verdict at
+> `6ccc0617afb0404f5863db94f2cf85e8b504f4cb`, the authorized normalize/validate gate at
+> `eac70b096db7d589d5745ca71832acc6ee108dd5`. Rewriting them would break that pinning.
 
 ## Sheets in this directory
 
 | File | What it shows | Claude's read |
 | --- | --- | --- |
-| `ranger-v3-rotations.png` | Ranger v3, 8 labelled directions (`make_cast_sheet.py`) | Review-ready |
+| `ranger-v3-rotations.png` | Ranger v3, 8 labelled directions (`make_cast_sheet.py`) | ~~Review-ready~~ **SUPERSEDED — rejected**, see final section: `south-west` is back-facing and 4 of 8 directions collapse to back views |
 | `mage-v3-rotations.png` | Mage v3, 8 labelled directions | Review-ready (identity previously accepted by Leo during calibration) |
 | `mage-walk.png` | Mage walk, 4 engine directions × 5 frames (frame_000 = stand) | Review-ready; Claude's inspection found clean strides, identity held |
 | `ranger-walk1-failed.png` | Ranger walk attempt 1, raw sheet | **FAILED** — see findings below; retained as evidence only |
-| `ranger-walk2-steady-stride.png` | Ranger walk attempt 2 (steady-stride action, seed 11) | Review-ready; Claude's inspection found clean strides, identity held |
+| `ranger-walk2-steady-stride.png` | Ranger walk attempt 2 (steady-stride action, seed 11) | ~~Review-ready~~ **SUPERSEDED — rejected** with its lineage; the retry removed the hallucinations but cannot rescue an incorrect standing-direction source |
 | `ranger-walk-failed-vs-success.png` | Per-direction comparison: failed row (red) above successful row (green) | The key exhibit for findings 1–4 |
 | `runtime-size-review.png` | *(added at `eac70b0`, after the verdict)* every engine slot at true 1× 64×64 plus its walk strip at 4× | Produced by the authorized normalize/validate gate — see the update section |
 
@@ -185,3 +187,59 @@ anything to `assets/`, touch `index.html`, spend credits, or generate replacemen
 gate failure means that even after a future promotion decision, this specific Ranger rotation
 set would need a resolved G5 width-spread repair before it could pass the pipeline's own bar —
 that decision is not made here.
+
+## SUPERSEDING VERDICT 2026-07-29 — Ranger lineage rejected (read this before anything above)
+
+> **This section supersedes every earlier statement in this file about the Ranger.** Where the
+> text above calls the Ranger rotations "review-ready" or the steady-stride walk "approved to
+> proceed", that is **no longer true**. Those statements are preserved only because they describe
+> the pack at the heads their verdicts are pinned to.
+
+ChatGPT (visual-direction lead) reviewed `runtime-size-review.png` at true 64×64 and posted a
+[superseding verdict](https://github.com/Galashots/eldoria/pull/19) at head
+`eac70b096db7d589d5745ca71832acc6ee108dd5`:
+
+- **Mage — PASS as a Phase 3 candidate.** Coherent engine facings, identity and equipment held
+  through the walk, validator clean. Authorization to *retain as candidate evidence only* — not to
+  promote to `assets/`, edit `index.html`, or bypass the remaining repository gates.
+- **Ranger — REJECT this rotation/walk lineage as a Phase 3 production candidate.**
+  **Do not repair it by weakening G5.**
+
+### The directional defect (independent of, and more serious than, G5)
+
+The source frame labelled `south-west` — which maps to engine slot **`down`** — is **back-facing**.
+At runtime the hero would walk *away from the camera* when the player moves down. The eight-direction
+set is also not an evenly faithful rotation: the west/south-west region collapses toward back views.
+
+**Claude verified this independently before recording it**, because it contradicted this file's own
+earlier "review-ready" read. Confirmed, and the collapse is broader than a single frame: in
+`ranger-v3-rotations.png`, **four of the eight directions — `north`, `north-west`, `west` and
+`south-west` — are near-identical back views with no face visible.** A correct set would show
+`south-west` as a three-quarter *front* view.
+
+The control that proves this is an asset defect rather than a sheet-generation artifact is the Mage:
+`mage-v3-rotations.png` was produced by the same `make_cast_sheet.py` run and rotates correctly
+through all eight headings, with `south-west` clearly front-facing and the face visible.
+
+**Why the earlier read missed it:** the initial inspection checked *identity* consistency — cloak,
+bow, quiver, hair, palette, scale held across every frame, which they genuinely do — but never
+checked *heading fidelity*, i.e. whether each frame actually faces the direction its label claims.
+Identity stability and rotation correctness are separate properties and a set can pass one while
+failing the other. **Recorded as a pipeline finding: the raw-sheet visual gate must check heading
+fidelity per direction, not only identity and artifact-freedom.**
+
+### Disposition
+
+| Set | Disposition |
+|---|---|
+| Mage rotations + walk | **May proceed** as a retained Phase 3 candidate, subject to the remaining repository gates. |
+| Ranger rotations + steady-stride walk | **May not proceed.** Rejected lineage. |
+| Ranger bare-`walking` set | Rejected previously and permanently; never normalize. |
+
+**Explicitly not authorized:** auto-mirroring the opposing angle to manufacture a `south-west`,
+rerolling, spending credits, or relaxing any validator threshold. A replacement Ranger lineage or a
+corrected direction set requires a **separate scoped decision**, followed by normalize → validate →
+fresh runtime-size evidence.
+
+The G5 width-spread failure recorded above remains true, but it is no longer the deciding issue and
+must not be described as the Ranger's only problem.
