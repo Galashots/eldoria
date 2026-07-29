@@ -71,12 +71,12 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
 > isometric adventure RPG (ages 7–11, sleek not cutesy). Younger brother of a
 > seasoned ranger in a weathered green hooded cloak — design them as a
 > complementary duo with clearly distinct silhouettes: the mage is smaller,
-> rounder, brighter. Deep-blue hooded robe with silver trim, small wooden
-> staff with a softly glowing crystal, satchel of scrolls, big friendly eyes,
-> brown hair. Premium crisp pixel art, warm upper-left light, down-right
-> shadow on the figure only. One character, full body, three-quarter front
-> view, neutral standing pose, plain flat light-grey background, no ground
-> shadow, no text, square image.
+> rounder, brighter. Deep-blue hooded robe with silver trim, satchel of
+> scrolls, big friendly eyes, brown hair, **empty hands** (no staff — weapons
+> are generated as a separate equipment-slot overlay). Premium crisp pixel art,
+> warm upper-left light, down-right shadow on the figure only. One character,
+> full body, **flat front-on view at eye level**, neutral standing pose, plain
+> flat light-grey background, no ground shadow, no text, square image.
 
 **Mira (town shopkeeper):**
 > Full-body pixel-art concept of Mira, a warm, capable young shopkeeper for a
@@ -85,8 +85,9 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
 > holding a small basket of produce, welcoming expression with a hint of
 > mischief. Rich warm palette that fits a fantasy farm town. Premium crisp
 > pixel art, warm upper-left light, down-right shadow on the figure only. One
-> character, full body, three-quarter front view, neutral standing pose,
-> plain flat light-grey background, no ground shadow, no text, square image.
+> character, full body, **flat front-on view at eye level**, neutral standing
+> pose, plain flat light-grey background, no ground shadow, no text, square
+> image.
 
 **Shadow Warden (Deep Woods boss):**
 > Full-body pixel-art concept of the Shadow Warden, the forest boss of a
@@ -97,8 +98,8 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
 > point-down. Menacing but beatable — a trophy fight a 9-year-old is proud
 > of, not scared of. Premium crisp pixel art, warm upper-left key against
 > cool shadow tones, down-right shadow on the figure only. One character,
-> full body, three-quarter front view, neutral standing pose, plain flat
-> light-grey background, no ground shadow, no text, square image.
+> full body, **flat front-on view at eye level**, neutral standing pose,
+> plain flat light-grey background, no ground shadow, no text, square image.
 
 **Crystal Wyrm (Mine boss):**
 > Full-body pixel-art concept of the Crystal Wyrm, the endgame cavern boss of
@@ -108,8 +109,9 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
 > magical glow from the crystal ridges lighting the cavern-dark body.
 > Impressive final-boss presence with a treasure-guardian feel. Premium crisp
 > pixel art, warm upper-left key with cool crystal accents, down-right shadow
-> on the figure only. One creature, full body, three-quarter front view,
-> plain flat light-grey background, no ground shadow, no text, square image.
+> on the figure only. One creature, full body, **flat front-on view at eye
+> level**, plain flat light-grey background, no ground shadow, no text,
+> square image.
 
 ## Status log
 

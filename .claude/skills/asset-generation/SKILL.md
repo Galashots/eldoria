@@ -59,18 +59,18 @@ body, **flat front-on view at eye level**, neutral standing pose, feet visible,
 plain flat light-grey background, no ground shadow, no text, square image. Save
 results to `art-incoming/<name>-concept-v1.png` (gitignored).
 
-### 2a. Do NOT ask for an elevated camera — verified 2026-07-29
+### 2a. Plain front-on is Eldoria's tested default — verified 2026-07-29
 
-**PixelLab documents no camera-elevation requirement on the reference** — only
-*"South-facing reference image… Max 256x256 pixels."* A flat eye-level concept
-was fed to `create-v3` with `view=high top-down` (≈35°) and rotated correctly in
-all eight directions.
+**[VENDOR-DOCUMENTED]** PixelLab requires only *"South-facing reference image…
+Max 256x256 pixels."* — no camera-elevation requirement exists. A flat eye-level
+concept was fed to `create-v3` with `view=high top-down` (≈35°) and rotated
+correctly in all eight directions.
 
-This matters practically: image generators **will not obey a 35° camera from
-prompt text alone.** Two independent reviews of the Ranger concept agreed it came
-back eye-level despite the prompt asking for elevation. Asking for the elevated
-view buys nothing, and spends iterations failing to get it. Ask for plain
-front-on; set the camera with `--view` on the PixelLab call instead.
+Plain front-on at eye level is Eldoria's current tested reference default. An
+elevated reference is unnecessary for this tested route, though it is not
+universally wrong — it simply has not been tested and is harder for image
+generators to produce reliably from a text prompt. Ask for plain front-on; set
+the camera with `--view` on the PixelLab call instead.
 
 ### 2b. Concepts for heroes must be UNARMED
 
@@ -115,20 +115,25 @@ python tools/pipeline/pixellab_client.py create-v3 --description "..." `
 > evidence that `image_size` does anything in reference mode — the spec calls it
 > *advisory ("model picks its own size")*, and neither measured run sent it.
 
-**MEASURED 2026-07-29 — the reference is the only proven size lever.**
+**[MEASURED IN ELDORIA] 2026-07-29, three runs — the reference is the only
+proven size lever.**
 
 | Reference | Figure out | Canvas | Charged |
 |---|---|---|---|
 | **64×64** | **~52 px** | 108 | **1 gen** |
+| **64×64** (unarmed) | **~52–56 px** | 112 | **1 gen** |
 | 128×128 | ~104 px | 216 | 2 gens |
 
-The figure's pixel height is preserved **1:1** from the reference; the canvas is
-padded ×1.6875 for animation room (that is why output "looks bigger" — it is
-padding, not enlargement). Rotation is billed on the **reference** dimensions.
+Across three runs, figure height was preserved approximately 1:1 from the
+reference (current measured working rule, not a universal vendor guarantee). The
+canvas is padded approximately ~1.7× for animation room — two 64 px references
+produced 108 and 112 canvases, so the exact size is not predictable. Rotation is
+billed on the **reference** dimensions, not the output canvas.
 
 So a 64 px reference lands the figure on Eldoria's ~52–56 px target for a 64×64
 frame, at 1 generation, with no destructive resampling. **256 is the input
-ceiling, never a target** — it costs 8 generations and needs a ~3.7× downscale.
+ceiling, never a target** — it costs 8 generations (projected) and requires a
+destructive downscale.
 
 Step up to a 128 px reference (2 gens) **only** when a fine prop must survive
 rotation — and prefer removing the prop from the base sprite entirely (§2b).
@@ -154,8 +159,9 @@ Known behaviors (do not re-derive):
 - `--seed` makes reruns reproducible; rerolls = change seed.
 - Results also live server-side: `pixellab_client.py characters` lists them,
   `character --id X --out-dir Y` re-downloads. **Animation sets accumulate on
-  the character** (named after the slugified action description) — a bad set
-  is never deleted, so re-downloads must pick the right folder by name.
+  the character** (named after the slugified action description). PixelLab
+  exposes animation deletion, but Eldoria's current client/workflow does not
+  automatically delete bad sets — re-downloads must pick the right folder.
 
 **(c) Walk animation:**
 
@@ -174,7 +180,9 @@ python tools/pipeline/pixellab_client.py character --id ID --out-dir _probe_loca
 `PIXELLAB_API.md` §5. In short — never a bare `--action "walking"`, always
 `--seed`, and write the action for *that character's* equipment (the
 "arms swinging naturally" phrase above is wrong for anyone holding a bow, staff
-or basket). `--template-id walk` is 1 gen/direction and worth trying first.
+or basket). `--template-id walk` is [VENDOR-DOCUMENTED] skeleton-driven and
+1 gen/direction — [UNTESTED IN ELDORIA] but worth trying first; may reduce
+semantic drift but is not immune (visual gate still applies).
 
 **Mandatory visual gate before normalizing** — open the raw direction-labelled
 sheet and check **heading fidelity first, then semantic drift**

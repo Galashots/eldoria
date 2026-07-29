@@ -156,12 +156,13 @@ python tools/pipeline/pixellab_client.py animate \
 python tools/pipeline/pixellab_client.py character \
   --id <id> --out-dir _probe_local/pipeline/ranger-walk
 
-# UNTESTED, RECOMMENDED NEXT EXPERIMENT: PixelLab's own template library
-# (mode=template, e.g. --template-id walk / walking / walk-1..10 / crouched-walking)
-# is skeleton-driven and priced at 1 generation/direction — a fraction of the
-# ~3 gen/direction custom v3 cost above — and should be far less prone to the
-# hallucination failure below since motion is constrained to a rig rather than
-# invented from free text. `keep_first_frame`, `custom_start_frame`, and
+# UNTESTED IN ELDORIA, RECOMMENDED NEXT EXPERIMENT: PixelLab's own template
+# library (mode=template, e.g. --template-id walk / walking / walk-1..10 /
+# crouched-walking) is VENDOR-DOCUMENTED as skeleton-driven and priced at
+# 1 generation/direction — a fraction of the ~3 gen/direction custom v3 cost
+# above — and may reduce semantic drift since motion is constrained to a rig
+# rather than invented from free text, but is NOT immune (the renderer still
+# paints equipment onto the rig). `keep_first_frame`, `custom_start_frame`, and
 # `end_frame` are explicitly NOT supported in template mode, so the frame_000
 # =stand convention above needs separate verification before adopting this
 # route. The full live template-ID list is intentionally not copied here (the
@@ -201,10 +202,10 @@ Run once with trial credits before trusting the pipeline:
       direction first, then semantic drift. A back-facing `south-west` or a
       hallucinated companion is a valid, gate-passing PNG; only your eyes
       catch either.
-- [ ] Try `animate --template-id walk` (skeleton-based, 1 gen/direction)
-      before spending more on custom-text walks — untested as of 2026-07-29;
-      it may reduce semantic drift at a third of the cost, but it is not
-      immune and the visual gate still applies.
+- [ ] Try `animate --template-id walk` ([VENDOR-DOCUMENTED] skeleton-driven,
+      1 gen/direction) before spending more on custom-text walks —
+      [UNTESTED IN ELDORIA] as of 2026-07-29; may reduce semantic drift at a
+      third of the cost, but is not immune — the visual gate still applies.
 - [ ] Palette: does output need `--color-image` (North Star palette swatch)
       + `--force-colors` to stay on-palette?
 - [ ] `rotate` from PR #11's approved down-facing Ranger → does identity
@@ -233,7 +234,9 @@ Run once with trial credits before trusting the pipeline:
 - **`directions` param is reference images per direction** (provide some
   facings, the AI generates the rest) — not a direction selector. This is the
   identity-preserving input for hero characters.
-- Description-only generation quality is high (Mage candidate, seed 11).
+- Description-only generation produced a good Mage candidate (seed 11), but
+  Eldoria rejected it as the hero identity route in favour of reference-based
+  v3 rotation, which proved more reliable (see Round 2 and §7).
 
 **Round 2 (same day, hybrid ChatGPT + PixelLab):**
 
@@ -248,7 +251,8 @@ Run once with trial credits before trusting the pipeline:
   slugs, serpents, flyers: `--mode pro` (20–40 gens each).
 - Full identity chain, proven end-to-end: ChatGPT concept (flat light-grey
   bg, ¾ front, full body) → 256² → v3 rotation → keep 4 diagonals →
-  normalize → validate.
+  normalize → validate. (Note: the adopted reference default is now flat
+  front-on at eye level — see `PIXELLAB_API.md` §3.)
 
 **Round 3 (landscape, after reading PixelLab's map-tiles guide):**
 
@@ -295,9 +299,10 @@ docs review):**
   Keep the seed fixed so a good phrasing is reproducible.
 - **Animation sets append server-side**, named after the slugified action
   description (e.g. `animations/walking/` vs.
-  `animations/walking_with_a_steady_stride_legs_stepping_arms_sw/`). A bad set
-  is never removed from the character — future ZIP downloads must select the
-  correct folder by name.
+  `animations/walking_with_a_steady_stride_legs_stepping_arms_sw/`).
+  **[VENDOR-DOCUMENTED]** PixelLab exposes animation deletion, but Eldoria's
+  current client and workflow do not automatically delete bad sets — future ZIP
+  downloads must select the correct folder by name.
 - **Seeds are not recorded in server-side `character.json`** (it stores id,
   prompt, view, directions, status — no seed). The exact command used is the
   only durable record; keep it in a batch script or session log.
@@ -347,28 +352,28 @@ docs review):**
     faithfully," while 8-direction *object* rotation "can lose the salience
     contest" when multiple reference elements compete — validates Round 2's
     finding, now with PixelLab's own stated reason.
-  - **`mode="template"` with `template_animation_id`** (e.g. `walk`,
-    `walking`, `walk-1..10`, `crouched-walking`, `sad-walk`, `scary-walk`,
-    plus non-walk templates like `attack`, `backflip`, `breathing-idle`) is
-    skeleton-based and priced at **1 generation/direction** — far cheaper
-    than the custom v3 route used above (~3 gen/direction). Being
-    rig-constrained rather than free-text-driven, it **may reduce semantic
-    drift**. Skeleton constraints do **not** establish immunity: the renderer
-    still paints equipment and clothing onto the rig, so props can still
-    mutate. **The mandatory raw-sheet visual gate applies to template-mode
-    output exactly as it does to custom-text output — no exceptions.**
-    **Not yet tested in this pipeline** — recommended as the first experiment
-    before spending more custom-text walk generations. Our client already
-    supports it end-to-end via `animate --template-id` (added earlier, never
-    exercised until this review).
+  - **[VENDOR-DOCUMENTED]** `mode="template"` with `template_animation_id`
+    (e.g. `walk`, `walking`, `walk-1..10`, `crouched-walking`, `sad-walk`,
+    `scary-walk`, plus non-walk templates like `attack`, `backflip`,
+    `breathing-idle`) is skeleton-driven and priced at **1 generation/
+    direction** — far cheaper than the custom v3 route (~3 gen/direction).
+    Being rig-constrained rather than free-text-driven, it **may reduce
+    semantic drift** — but it is **not immune**: the renderer still paints
+    equipment and clothing onto the rig, so props can still mutate.
+    **The mandatory raw-sheet visual gate applies to template-mode output
+    exactly as it does to custom-text output — no exceptions.**
+    **[UNTESTED IN ELDORIA]** — recommended as the first experiment before
+    spending more custom-text walk generations. Our client already supports
+    it end-to-end via `animate --template-id` (added earlier, never
+    exercised).
   - `enhance_prompt=true` auto-expands a terse description/action server-side
-    for +0.05 generations. **Correction (2026-07-29 detailed docs pass): on
-    `create-character-v3` it is valid in FROM-SCRATCH mode only — passing it
-    together with `reference_image` returns 422.** Since Eldoria's hero route
-    always supplies a reference, it is unavailable there. It does work on
-    `animate-character`, where it expands `action_description` and reuses the
-    expansion across every requested direction. Still free-text-driven, so at
-    best it may reduce hallucination risk rather than remove it. Untested here.
+    for +0.05 generations. **[VENDOR-DOCUMENTED]** On `create-character-v3` it
+    is valid in from-scratch mode only — passing it together with
+    `reference_image` returns 422. Since Eldoria's hero route always supplies a
+    reference, it is unavailable there. **[UNTESTED IN ELDORIA]** On
+    `animate-character`, it expands `action_description` and reuses the
+    expansion across every requested direction — behavior not exercised in this
+    pipeline.
   - `reference_image`/`reference_image_url` should be preferred over inline
     base64 "for anything above ~32×32" when going through an MCP client —
     PixelLab's own docs warn MCP transports "routinely truncate large inline
@@ -380,27 +385,30 @@ docs review):**
 ## Cost reality
 
 At list prices a full character (4 facings + 4-direction walk + attack) is
-roughly **$0.05–0.30**. The entire cast of Eldoria is a few dollars. The free
-trial covers the whole calibration checklist.
+roughly **$0.05–0.30**. The entire cast of Eldoria is a few dollars.
 
-**…but only if the character is sized to the engine.** Rotation cost is
-`ceil(w × h × 8 / 65536)` generations and animation cost scales the same way,
-so a 256 px character costs **8×** a 64 px one — on its rotations *and* on every
-animation it ever receives:
+**…but only if the character is sized to the engine.** Two cost rules apply,
+with different evidence classes:
+
+- **[MEASURED IN ELDORIA]** Rotation cost is billed on the **reference**
+  dimensions: `ceil(ref_w × ref_h × 8 / 65536)`. Three runs confirmed this —
+  a 64 px reference cost 1 gen (twice), a 128 px reference cost 2 gens.
+- **[VENDOR-DOCUMENTED]** Animation cost scales with the character's **returned
+  canvas** size. A character returned at 216 px canvas stays expensive for
+  every walk and attack it ever receives.
 
 | Size | Rotation set | Custom walk, 4 directions |
 |---|---|---|
-| 256 px | 8 gens | ~32 gens |
-| 128 px | 2 gens | ~8 gens |
-| **64 px (Eldoria's target)** | **1 gen** | **~4 gens** |
+| 256 px | 8 gens (projected) | ~32 gens |
+| 128 px | 2 gens (measured) | ~8 gens |
+| **64 px (Eldoria's target)** | **1 gen** (measured) | **~4 gens** |
 
-`size` defaults to 48 px **except when a reference image is supplied, where it
-silently inherits the reference's dimensions.** Eldoria's heroes were generated
-at 192–256 px for exactly that reason, then downscaled 4× to 64 — paying more
-for worse pixels, since a 4× downscale blends 4×4 blocks into one output pixel.
+Early heroes were generated at 192–256 px references (silently inheriting the
+concept's dimensions) instead of 64 px, then downscaled 4× — paying more for
+worse pixels, since a 4× downscale blends 4×4 blocks into one output pixel.
 
-**Always pass an explicit output size.** Full cost model, route table and repair
-playbook: [`PIXELLAB_API.md`](PIXELLAB_API.md).
+**Size the reference to the engine target.** Full cost model, route table and
+repair playbook: [`PIXELLAB_API.md`](PIXELLAB_API.md).
 
 ## North Star alignment
 

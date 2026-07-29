@@ -4,6 +4,12 @@
 `api.pixellab.ai/mcp/docs`, `api.pixellab.ai/v2/llms.txt`, and the
 `pixellab.ai/docs` guide pages.
 
+**Source authority:** Live PixelLab sources control current vendor parameters,
+service capabilities, validation rules, and pricing. Eldoria repository docs
+control accepted routes, engine contracts, security policy, normalization,
+validation, and review gates. If they conflict, stop and repair the stale
+repository guidance before spending credits.
+
 **How to re-verify:** `curl` the spec and parse it with a script. Do **not** use a
 summarizing fetch — two earlier passes over these same docs produced wrong
 answers that way (see §7).
@@ -15,8 +21,9 @@ PixelLab's documentation — read the live guide when exact parameters, costs, o
 newly released tools matter."* That policy is correct for parameter minutiae and
 newly shipped tools, and this file does not overturn it.
 
-But the policy failed in practice: nobody read the cost model, and the project
-spent roughly **eight times** what it needed to on every hero (§7). So this file
+But the policy failed in practice: nobody read the cost model, and early heroes
+were generated at 192–256 px references (silently inheriting the concept's
+dimensions) instead of the 64 px that the engine actually needs (§7). So this file
 records the small set of **durable decisions and rules derived from** those docs
 — the ones that change what we spend and whether the art is usable. It is a
 decision record, not a mirror of the vendor reference.
@@ -44,12 +51,15 @@ state which one won until step 3 has actually been done." Step 3 is now done.
 | 128×128 | 104 px tall | **104.6 px** | 216×216 | **2 gens** |
 | 64×64 (3rd run, unarmed) | 54 px tall | **52–56 px** | 112×112 | **1 gen** |
 
-Two rules fall out, and both held on all three runs:
+Two working rules fall out; both held on all three runs, but they are current
+measured observations, not universal vendor guarantees:
 
-1. **The figure's pixel height is preserved 1:1 from the reference.** PixelLab
-   does not rescale your character. Figure occupancy was 48.7%, 48.4% and 48.2%
-   of canvas — the same operation every time.
-2. **Rotation is billed on the REFERENCE dimensions, not the output canvas.**
+1. **[MEASURED IN ELDORIA] The figure's pixel height was preserved approximately
+   1:1 from the reference across three runs.** Figure occupancy was 48.7%,
+   48.4%, and 48.2% of canvas — consistent but not a documented vendor
+   commitment.
+2. **[MEASURED IN ELDORIA] Rotation is billed on the REFERENCE dimensions, not
+   the output canvas.**
    `ceil(ref_w × ref_h × 8 / 65536)` predicted 1, 2 and 1; 1, 2 and 1 were
    charged. Billing on the *output* would have predicted 2, 6 and 2. It did not.
 
@@ -71,9 +81,9 @@ at **1 generation**. That is the standard for Eldoria heroes.
 
 | Reference | Figure out | Rotation cost | Verdict for a 64px frame |
 |---|---|---|---|
-| **64 px** | **~52 px** | **1 gen** | **Standard.** Lands on target, no resampling |
-| 128 px | ~104 px | 2 gens | 1.9× downscale. Only if fine props must survive (§3) |
-| 256 px | ~208 px | **8 gens** | Avoid: 8× the price, ~3.7× downscale, **and** the 256 canvas cap squeezes animation padding from 1.69× to 1.23×, risking limb clipping in animation |
+| **64 px** | **~52 px** (measured) | **1 gen** (measured) | **Standard.** Lands on target, no resampling |
+| 128 px | ~104 px (measured) | 2 gens (measured) | 1.9× downscale. Only if fine props must survive (§3) |
+| 256 px | ~208 px (projected, unmeasured) | **8 gens** (projected from formula) | Avoid: expensive, requires destructive downscale to reach 64 px |
 
 Bigger references are not "better sizing" — they buy a bigger figure that must
 then be downscaled further, blending the pixel grid. Generating at target is
@@ -119,9 +129,11 @@ above.
 | Fill in directions a partial animation missed | `animation_group_id` | Appends to the existing group instead of regenerating the set |
 | Download everything | `GET /characters/{id}/zip` | Rotations, animation frames, `metadata.json`, and per-frame keypoints |
 
-**Downloads need no authentication — the UUID is the access key, and PixelLab
-says to share those links freely.** That is the cheapest way to give an external
-reviewer (e.g. ChatGPT) real image bytes without committing PNGs anywhere.
+**[VENDOR-DOCUMENTED] Downloads need no authentication — the UUID is the access
+key, and PixelLab permits sharing those links.** Eldoria permits public sharing
+of download links **only** for assets intentionally released for public review.
+Private, confidential, or unapproved outputs remain unlisted — treat their UUIDs
+as unlisted credentials until the asset is approved for sharing.
 
 **Creation is non-blocking.** Every create returns a job id immediately; queue
 animations straight away rather than waiting for the character to finish.
@@ -142,36 +154,40 @@ The vendor is explicit that the guidance knobs are weak:
 > "The view and direction controls are **quite weak** in this tool, and you can
 > often get better results if you also use an init image."
 
-So relying on text alone to produce a faithful eight-direction wheel is the
-**unsupported** path. Every hero gets a concept first. `view` is likewise a weak
+Description-only generation is supported by PixelLab, but Eldoria rejected it as
+the hero identity route because it proved less reliable: the from-scratch Ranger
+produced four near-identical back views, while the reference-based Mage rotated
+correctly in the same session. Every hero gets a concept first. `view` is a weak
 hint: `low top-down` ≈ 20° above, `high top-down` ≈ 35°.
 
 Constraints: reference max **256×256**; requires `mode=v3`; `outline`/`detail`
 hints are ignored when a reference is supplied; `proportions` is ignored by v3
 entirely (it applies to standard/pro only).
 
-### The reference should be flat front-on, NOT elevated — verified 2026-07-29
+### Eldoria's tested default: flat front-on reference
 
-**PixelLab does not ask for an elevated reference.** `reference_image` documents
-exactly one requirement: *"South-facing reference image… Max 256x256 pixels."*
-There is no camera-elevation requirement on the reference anywhere in the spec.
+**[VENDOR-DOCUMENTED]** `reference_image` requires only *"South-facing reference
+image… Max 256x256 pixels."* There is no camera-elevation requirement on the
+reference anywhere in the spec.
 
-This was tested rather than assumed. A **flat, eye-level, front-on** concept was
-fed to `create-character-v3` with `view=high top-down` (≈35°), and the rotation
-came back correct in all eight directions — faces on south/SE/SW, no face on
+**[MEASURED IN ELDORIA]** A flat, eye-level, front-on concept was fed to
+`create-character-v3` with `view=high top-down` (≈35°), and the rotation came
+back correct in all eight directions — faces on south/SE/SW, no face on
 north/NE/NW, no collapsed pairs, consistent scale (51–53 px across the set).
 
-> **Ask concept artists for a plain front-on view at eye level.** It is what the
-> API documents, it is markedly easier for an image generator to produce, and it
-> is now measured to rotate correctly.
+> **Plain front-on at eye level is Eldoria's current tested reference default.**
+> It is what the API documents, and it produced correct rotations in practice.
+> An elevated reference is unnecessary for this tested route, though it is not
+> universally wrong — it simply has not been tested and is harder for image
+> generators to produce reliably from a text prompt.
 
-Two related facts that make this safe: `view` is a **single** field *"used by
-both generation and skeleton reconstruction"* — there is no from/to split on this
-endpoint, so one value covers reference and output. (The **web** Rotate tool does
-have a separate `From view`; that split does not exist in the REST API.) And the
-vendor's rotate guide warns that changing camera view is *"not something the
-model has been trained to do"* — so do not try to make the model re-shoot the
-camera. Match `view` to the game's camera and let the reference be plain.
+Two related facts: `view` is a **single** field *"used by both generation and
+skeleton reconstruction"* **[VENDOR-DOCUMENTED]** — there is no from/to split on
+this endpoint, so one value covers reference and output. (The **web** Rotate tool
+does have a separate `From view`; that split does not exist in the REST API.) The
+vendor's rotate guide warns that changing camera view is *"not something the model
+has been trained to do"* — so match `view` to the game's camera and let the
+reference be plain.
 
 ### Do not bake weapons into a hero's base sprite
 
@@ -188,15 +204,19 @@ same bow survived in all eight. Fine props are the thing that breaks first when
 you shrink a reference.
 
 Generate the hero **unarmed**, and treat the weapon as a `weapon`-slot overlay.
-PixelLab has **no** equipment-layer endpoint — nothing attaches an item to a
-character — but Eldoria's overlays are full-frame aligned layers, not
-hand-anchored, so none is needed. (There is no hand keypoint to anchor to in any
-case: the skeleton enum stops at `LEFT ARM`/`RIGHT ARM`, and `skeletons` came
-back `null` on both v3 reference-mode characters.)
 
-For gear variants, use **`create-character-state`** (§2) — one text edit applied
-consistently across all rotations, keeping identity and proportions, with
-`use_color_palette_from_reference` to stay on-palette.
+**[UNTESTED]** `create-character-state` (§2) applies one edit consistently across
+all rotations, keeping identity and proportions — but it returns a **complete
+edited character**, not an engine-ready transparent equipment-slot overlay.
+Producing transparent per-slot overlays (weapon, body, head, cape) that composite
+correctly with Eldoria's layer pipeline is a separate, untested calibration need.
+Do not assume the overlay pipeline is solved.
+
+PixelLab has no equipment-layer endpoint that attaches an item to a specific
+limb. Eldoria's overlays are full-frame aligned layers, not hand-anchored.
+(There is no hand keypoint to anchor to: the skeleton enum stops at
+`LEFT ARM`/`RIGHT ARM`, and `skeletons` came back `null` on both v3
+reference-mode characters.)
 
 ---
 
@@ -226,8 +246,11 @@ The vendor documents four fixes, in rough order of cost:
 better at each individual step, but *"any errors will accumulate."* Generating
 all directions from one camera-facing reference is more robust for a full set.
 
-Known weakness: the model **"struggles with hats and accessories."** That is the
-documented explanation for the Mira-basket drift flag, not a one-off.
+**[VENDOR-DOCUMENTED]** Known weakness: the model *"struggles with hats and
+accessories."* This is a plausible risk factor for accessory drift (such as the
+Mira-basket flag), but not a measured diagnosis of any specific failure — the
+vendor's general warning and a particular observed drift share a category without
+proven causation.
 
 ---
 
@@ -239,8 +262,10 @@ documented explanation for the Mira-basket drift flag, not a one-off.
 - **`directions` defaults differ by mode.** Template mode animates every
   character direction; **custom mode animates `south` only.** Always pass
   `directions` explicitly.
-- **Animation sets append server-side**, named after the slugified action. A bad
-  set is never deleted — later downloads must select the right folder by name.
+- **Animation sets append server-side**, named after the slugified action.
+  **[VENDOR-DOCUMENTED]** PixelLab exposes animation deletion, but Eldoria's
+  current client and workflow do not automatically delete bad sets — later
+  downloads must select the right folder by name.
 - **`frame_count`** 4–16, even, **v3 only.** Pro ignores it: frame count is fixed
   by size (≤64 px → 16 frames, >64 px → 4).
 - **`ai_freedom`** (0–900) is **template mode only**; 0 follows the template rigidly.
@@ -285,9 +310,11 @@ from the REST API. Verified absent — do not go looking for them again:
 
 Other traps:
 
-- **`enhance_prompt` on `create-character-v3` is from-scratch only.** Passing it
-  together with `reference_image` returns **422**. On `animate-character` it
-  expands `action_description` and reuses the expansion across all directions.
+- **[VENDOR-DOCUMENTED]** `enhance_prompt` on `create-character-v3` is
+  from-scratch only — passing it together with `reference_image` returns **422**.
+  **[UNTESTED IN ELDORIA]** On `animate-character` it expands
+  `action_description` and reuses the expansion across all directions; behavior
+  there has not been exercised in this pipeline.
 - **`create-character-with-4-directions` is cardinal-only** (`south`, `east`,
   `north`, `west`). Its `directions` field takes reference *images*, not a
   selector. For diagonals use an 8-direction route and keep the four you need.
