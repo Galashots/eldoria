@@ -1,6 +1,7 @@
 # Realm of Eldoria — Creative Direction, Story, Quest, and Content Framework
 
-**Status:** Creative Director recommended draft  
+**Status:** Owner-approved creative direction  
+**Approved:** 2026-07-29  
 **Repository:** `Galashots/eldoria`  
 **Applies to:** the current single-file isometric relaunch  
 **Scope:** product fantasy, lore, characters, campaign, quests, learning integration, Squishy Dumplings, and content-driven asset priorities  
@@ -232,7 +233,7 @@ Sample voice:
 
 ### Auntie Momo — Squishy Stall keeper
 
-**Recommended name for the currently unnamed Dumpling Vendor**
+**Canonical name — decided 2026-07-29, see §21**
 
 Momo treats each Dumpling as a visitor with a personality, not merchandise. She understands the collection system's odds, pity, and dough exchange and explains them plainly.
 
@@ -515,14 +516,16 @@ Examples:
 
 The current combat loop makes every attack depend on a math answer. It is playable and non-terminal, but it puts learning closer to a gate than the product promise intends.
 
-**Recommended future direction:**
+The current immediate combat slice is player-paced with no timer and diminishing-returns difficulty. That existing combat is what ships until a separate, tested redesign replaces it.
+
+**Long-term aspirational direction** (does not replace the immediate combat slice):
 
 - baseline attack always available;
 - optional math or literacy action becomes a Power Strike, spell boost, defense, heal, status effect, or extra loot chance;
 - wrong answers preserve the baseline turn and provide a useful hint;
 - bosses mix observation and tactics with optional learning advantages.
 
-This should be a separate, carefully tested gameplay slice—not bundled into the first story quest.
+This aspirational model should be a separate, carefully tested gameplay slice — not bundled into the first story quest and not assumed as shipped behavior.
 
 ## 14. Squishy Dumpling lore
 
@@ -641,23 +644,23 @@ Contests may be entered whenever unlocked. They are story events, not real-calen
 
 This is creative priority. Technical generation, normalization, validation, and approval remain governed by the adopted pipeline and current isometric contracts.
 
-### Gate 0 — Adopt and calibrate the PixelLab pipeline
+### Gate 0 — PixelLab pipeline (adopted)
 
-Complete the owner decision and merge process for the PixelLab pipeline separately.
+The PixelLab pipeline was adopted in PR #15 and the MCP connection was established in PR #18. Current work is measured refinement and correction, not initial adoption.
 
-The current evidence indicates:
+The adopted route:
 
-- `create-character-v3` with a reference image is the preferred identity route;
-- eight directions are needed to obtain the four diagonal isometric facings;
-- hero concepts remain ChatGPT/North-Star-controlled;
+- `create-character-v3` with a reference image is the identity route;
+- eight directions are generated to obtain the four diagonal isometric facings;
+- hero concepts remain ChatGPT-led and North-Star-controlled;
 - PixelLab handles rotation and animation;
 - deterministic normalization and machine gates remain mandatory;
 - buildings and terrain use the tiles/building routes rather than character endpoints.
 
 ### Wave 1 — Hero identity and motion
 
-1. Ranger: preserve the accepted identity, validate the four diagonal facings, then walk.
-2. Mage: use the approved concept, validate the same camera and scale, then walk/cast.
+1. Ranger: the unarmed v2 rotation has been generated at 64 px and passed Claude's heading-fidelity and semantic-drift gates. ChatGPT's pixel inspection of the contact sheet is pending before visual approval. Walk animation is next after approval.
+2. Mage: concept evidence exists (PR #19). Generation has not started; the Mage prompt must be updated to match the adopted unarmed, flat-front-on reference route before spending credits.
 3. Confirm the two brothers read as one world and different roles at actual runtime size.
 4. Lock contact points and animation conventions before equipment-look families.
 
@@ -750,9 +753,11 @@ This creative-direction PR should be the single review surface for this reconcil
 
 ### ChatGPT
 
-- owns the recommended product fantasy, lore, dialogue, quest fiction, asset narrative priority, and visual interpretation;
+- leads and recommends the product fantasy, lore, dialogue, quest fiction, asset narrative priority, and visual interpretation;
 - responds to owner direction and revises creative choices;
 - reviews generated candidates against identity and the North Star.
+
+Leo remains the final authority on all creative decisions (see AI Team Charter §Owner authority).
 
 ### Claude Code
 
@@ -785,6 +790,12 @@ into one PR.
 All four conflicts below were put to the owner and **decided on 2026-07-29**. They
 are now canon: build to the **Decision** lines, not to the original recommendations.
 Reopening any of them needs a new owner decision, not an agent's judgement.
+
+### Auntie Momo — decided
+
+The Dumpling Vendor had no canonical name.
+
+**Decision:** "Auntie Momo" is the canonical name for the Squishy Dumpling Vendor. Use it throughout creative direction, dialogue, and asset briefs.
 
 ### Mira's role — decided
 
@@ -823,18 +834,19 @@ Personalities and favorites stay as the affection layer.
 
 ## 22. Recommended next sequence
 
-1. ~~Owner reviews the four continuity decisions above.~~ Done 2026-07-29; all four decided in §21.
-2. Claude performs a read-only feasibility review of this document against the current exact `main`.
-3. Merge the documentation-only creative direction after accepted amendments.
-4. Resolve and adopt the PixelLab pipeline through its own PR.
-5. Finish the current Town isometric slice through its own PR.
-6. Produce the Ranger and Mage motion lock.
-7. Implement the first three-quest story slice:
+1. ~~Owner reviews the five continuity decisions above.~~ Done 2026-07-29; all five decided in §21.
+2. ~~Adopt the PixelLab pipeline.~~ Done — PR #15 (pipeline) and PR #18 (MCP).
+3. Merge this creative-direction document after accepted non-author amendments.
+4. Complete the Ranger visual approval: ChatGPT inspects the contact sheet.
+5. Update the Mage prompt to match the adopted unarmed, flat-front-on reference route and generate.
+6. Finish the current Town isometric slice through its own PR.
+7. Produce the Ranger and Mage motion lock (walk animations).
+8. Implement the first three-quest story slice:
    - First Furrow;
    - Mira's Market Day;
    - The Squishy Stall.
-8. Produce Town relationship assets in narrative priority.
-9. Playtest with both children before writing the whole campaign into code.
+9. Produce Town relationship assets in narrative priority.
+10. Playtest with both children before writing the whole campaign into code.
 
 ## 23. Creative acceptance test
 
