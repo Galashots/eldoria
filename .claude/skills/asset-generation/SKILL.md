@@ -48,29 +48,39 @@ docs win.
 | Quadruped (wolf, bear, big cat, horse) | `create8 --template-id dog|bear|cat|horse|lion` (§3b) |
 | Non-template body (blob, slug, serpent, flyer) | `create8 --mode pro` (§3b) — costs 20-40 gens |
 
-Engine slot mapping (locked): right=SE, down=SW, left=NW, up=NE. Keep the
-four diagonal frames from any 8-direction set.
+PixelLab's complete eight-direction output is retained as canonical production
+source material. The current runtime consumes the compatibility subset
+right=SE, down=SW, left=NW, up=NE; do not discard south/east/north/west.
+The owner intends a later bounded eight-direction runtime upgrade for heroes and
+moving NPCs/enemies. That upgrade is not part of this documentation PR.
 
 ## 2. Identity concepts (ChatGPT)
 
 Ready-to-paste prompts live in `tools/pipeline/CAST_INVENTORY.md`. Rules that
 make concepts PixelLab-ready — every prompt must demand: one character, full
-body, **flat front-on view at eye level**, neutral standing pose, feet visible,
-plain flat light-grey background, no ground shadow, no text, square image. Save
+body, **South-facing at Eldoria's high-top-down camera (approximately 35°)**,
+neutral standing pose, feet visible, plain flat light-grey background, no ground
+shadow, no text, square image. Save
 results to `art-incoming/<name>-concept-v1.png` (gitignored).
 
-### 2a. Plain front-on is Eldoria's tested default — verified 2026-07-29
+### 2a. South-facing at the target camera is Eldoria's default — verified 2026-07-29
 
-**[VENDOR-DOCUMENTED]** PixelLab requires only *"South-facing reference image…
-Max 256x256 pixels."* — no camera-elevation requirement exists. A flat eye-level
-concept was fed to `create-v3` with `view=high top-down` (≈35°) and rotated
-correctly in all eight directions.
+**[VENDOR-DOCUMENTED]** PixelLab defines `south` as facing the camera and
+`high top-down` as approximately 35°. Its view/direction controls are weak,
+and its rotation guide says changing camera perspective is not what the model
+was trained to do.
 
-Plain front-on at eye level is Eldoria's current tested reference default. An
-elevated reference is unnecessary for this tested route, though it is not
-universally wrong — it simply has not been tested and is harder for image
-generators to produce reliably from a text prompt. Ask for plain front-on; set
-the camera with `--view` on the PixelLab call instead.
+**[MEASURED IN ELDORIA]** The manual PixelLab Character workflow accepted a
+South-facing Ranger reference already drawn at the 35° high-top-down camera and
+produced eight coherent rotations with identity and camera preserved.
+
+> Establish the camera in the approved reference. Ask PixelLab to rotate
+> direction, not to re-shoot an eye-level character from above.
+
+A prior API run did rotate a flat eye-level concept successfully when supplied
+`view=high top-down`. Preserve that as a historical measured fallback, not the
+production default; success once does not override the vendor's stated camera
+limitation or the stronger target-camera result.
 
 ### 2b. Concepts for heroes must be UNARMED
 
@@ -148,8 +158,10 @@ python tools/pipeline/pixellab_client.py create8 --description "..." `
 ```
 
 Known behaviors (do not re-derive):
-- `create4` yields CARDINAL facings (front/side/back) — Eldoria needs the
-  diagonals, so always use 8-direction endpoints and keep the 4 diagonals.
+- `create4` yields CARDINAL facings (front/side/back). Use 8-direction
+  endpoints and retain all eight outputs. The current engine consumes four
+  diagonal facings as a compatibility subset; the other four remain production
+  source assets for the owner-intended later eight-direction runtime.
 - `isometric: true` outputs a 92×92 canvas — fine, the normalizer handles it.
 - `--direction-ref south=...` uses the reference AS-IS for south and
   generates the rest — expect a detail/scale gap and lost props (staff).
@@ -191,6 +203,14 @@ sheet and check **heading fidelity first, then semantic drift**
 hero walks *away* from the camera when the player moves down. That is exactly
 how the rejected Ranger set failed while passing every gate in
 `validate_sprites.py`.
+
+**Manual Creator animation evidence — 2026-07-29.** The Ranger's South
+walk export contains eight transparent 256×256 frames at 200 ms each. Retain all
+eight raw frames. Before engine use, normalize to a stable bottom-center contact
+point, inspect opposing foot contacts and 64px readability, and choose a
+compatibility animation deliberately. Do not inherit the GIF timing or hard-code
+an unreviewed 8→4 frame selection. Do not delete the eight-frame source after a
+four-frame strip is produced.
 
 **Engine walk contract — Eldoria-specific, keep here.** `--frames N` returns
 N+1 files per direction (`frame_000`=stand, `frame_001..N`=generated). The
