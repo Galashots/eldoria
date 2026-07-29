@@ -44,7 +44,7 @@ IDENTITY (human + ChatGPT, North Star controlled)
         ▼
 GENERATE (PixelLab API, scripted, pennies)          tools/pipeline/pixellab_client.py
    pixelate    HD art → pixel art             (/image-to-pixelart)
-   create4     4 facings from description     (/create-character-with-4-directions)
+   create8     8 facings from description     (/create-character-with-8-directions)
    rotate      approved sprite → other facing (/rotate)
    animate     walk/attack frames             (/animate-character)
         │   raw PNGs → _probe_local/pipeline/<name>/raw/   (never committed)
@@ -210,10 +210,11 @@ without spending credits. Add `--seed` for reproducible generations.
 
 Run once with trial credits before trusting the pipeline:
 
-- [ ] `create4` with the four diagonal directions → do the sprites read as
-      SE/SW/NW/NE at our camera, feet at a shared pivot?
-- [ ] `low top-down` vs `high top-down` → which sits better on the 64×32
-      diamonds in-game? (Screenshot both over the town map.)
+- [ ] `create8` → do all eight labelled headings read correctly, remain
+      coherent, and keep their feet at a shared pivot?
+- [ ] `high top-down` with a South-facing reference already drawn at the
+      target ~35° camera → does the set sit correctly on the 64×32 diamonds
+      in-game?
 - [ ] `animate --frames 4 "walking"` → is frame 0 a stand pose? If not,
       reorder to {stand, A, stand, B} before normalizing. **Always eyeball the
       raw walk sheet before normalizing** — check heading fidelity per
@@ -268,7 +269,7 @@ Run once with trial credits before trusting the pipeline:
   bat-man). Quadrupeds: `--template-id bear/cat/dog/horse/lion`. Blobs,
   slugs, serpents, flyers: `--mode pro` (20–40 gens each).
 - Full identity chain, proven end-to-end: ChatGPT concept (flat light-grey
-  bg, ¾ front, full body) → 256² → v3 rotation → keep 4 diagonals →
+  bg, ¾ front, full body) → 256² → v3 rotation → retain all 8 directions →
   normalize → validate. (Historical concepts did not always establish the target camera; the adopted
   default is now South-facing at high top-down, approximately 35° — see
   `PIXELLAB_API.md` §3.)
