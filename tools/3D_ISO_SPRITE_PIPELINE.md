@@ -1,4 +1,10 @@
-# 3D → Isometric Sprite Animation Pipeline (portable handoff)
+# 3D → Isometric Sprite Animation Pipeline (historical)
+
+> **SUPERSEDED FOR GENERATION. DO NOT EXECUTE THIS ROUTE.** PR #13 proved that the
+> available TRELLIS/primitive-blockout path could not meet the Visual North Star, and PR #15
+> adopted [`tools/pipeline/PIPELINE.md`](pipeline/PIPELINE.md) as the production route. This file
+> remains only as a historical decision record and for engine-contract facts that the adopted
+> pipeline explicitly references.
 
 **Purpose:** a reproducible way to produce *sleek, slightly badass* animated sprites for the
 isometric relaunch of Realm of Eldoria by modelling and animating characters in **3D**, then
@@ -98,9 +104,10 @@ Keep motion snappy — this reads better once downscaled.
 
 **Stage E — Iso camera + light (the deterministic heart).**
 - **Orthographic** camera (no perspective — that's what makes tiles/sprites tile cleanly).
-- **Angle:** for the **2:1 pixel-iso** we chose (2:1 diamond tiles), use camera elevation
-  `atan(1/2) ≈ 26.57°`, azimuth `45°`. (Note: "true isometric" is `30°`; we want `26.57°` to match
-  2:1 tiles. Pick one and keep it identical everywhere.)
+- **Historical angle note:** `atan(1/2) ≈ 26.57°` describes the **2:1 diamond's screen slope**;
+  it is not, without qualification, a 3D camera elevation. Any future 3D experiment would need a
+  separately chosen, fixed orthographic camera and visual validation against the engine's 64×32
+  projection. The adopted PixelLab route treats camera/facing correctness as a visual gate.
 - **Facings:** keep the camera fixed; **rotate the character** by `0/90/180/270°` and render each →
   the 4 iso facings. (Add `45°` steps later for 8.)
 - **Facing → engine-slot mapping (explicit — do not guess).** The projection is
@@ -130,7 +137,7 @@ Keep motion snappy — this reads better once downscaled.
 - Pack frames left→right into strips; name per §3.
 
 **Stage G — Integrate.**
-- Drop PNGs into `assets/` — `loadSprite` auto-picks them; missing files fall back to shapes, so
+- Drop isometric PNGs into `assets/iso/` — `loadSprite` auto-picks them; missing files fall back to shapes, so
   partial installs never break the build.
 - **Engine change for iso:** generalize `drawSpriteFrame` from hardcoded `TILE` to a `frameW/frameH`
   + **bottom-center (foot) anchor** so a 64-tall sprite stands correctly on a 2:1 tile. This is the
@@ -192,11 +199,11 @@ Prove the whole chain on one character first; do not batch-produce before the lo
    crash). Check the sprite stands on the tile (foot anchor) and doesn't jitter between frames.
 5. Follow **§8** — one character, full chain, in-game check — before scaling.
 
-## 10. Open decisions for Leo
+## 10. Historical decisions (resolved by the adopted v2 pipeline)
 
-- **4 vs 8 facings** (4 is the recommended start; 8 doubles render + storage).
-- **Equipment approach** (§6 — recommend Option 1).
-- **Target frame size** (recommend 64×64).
+- PixelLab produces eight-direction reference rotations where identity matters; the current engine consumes the four diagonal directions mapped to its existing slots.
+- Cohesive gear-tier looks remain the isometric target rather than per-slot overlays.
+- The production character-frame contract is 64×64.
 - ~~Dumpling turntable synergy~~ **DECIDED (Leo, 2026-07-27): dumplings stay 2D** and are out of
   scope for this pipeline. Their showcase uses a gear/equip-screen-style UI with a 2D spin/squish
   animation — see `docs/superpowers/specs/2026-07-27-dumpling-collection-design.md`. This pipeline
