@@ -27,3 +27,9 @@ art-incoming/
 
 # Brainstorming visual-companion mockups / scratch (local only)
 .superpowers/
+
+# Local-only pipeline working area: raw API outputs, renders, API tokens.
+# tools/pipeline/* reads and writes here; only normalized+validated art is
+# ever committed, and never from this directory directly.
+_probe_local/
+__pycache__/
