@@ -11,7 +11,7 @@ overlays).
 - **A — identity-first (heroes, bosses, NPCs):** ChatGPT concept on a plain
   background (North Star identity control) → PixelLab reference rotation
   (`create-character-v3` or `directions` reference on the 8-direction
-  endpoint, keep the 4 diagonals) → walk/attack animation → normalize →
+  endpoint, retain all 8 directions) → walk/attack animation → normalize →
   validate → review.
 - **B — description-only (simple monsters):** PixelLab
   `create-character-with-8-directions` from a text description (the Mage
@@ -20,11 +20,16 @@ overlays).
   `map-objects` for terrain and props; not characters, tracked separately at
   iso Phase 2/3.
 
-Every character needs: 4 diagonal facings (engine slots right=SE, down=SW,
-left=NW, up=NE), a 4-frame walk strip per facing (frame 0 = stand; only 3
-distinct poses needed), and heroes additionally a 4-frame attack strip per
-facing. Overworld enemies render as a single static sprite today — enemy
-facings/walks are a later polish, statics unblock Phase 3.
+Every moving character retains all 8 PixelLab facings as canonical production
+source material. The current runtime consumes four diagonal slots
+(right=SE, down=SW, left=NW, up=NE) and a 4-frame walk strip per consumed facing
+(frame 0 = stand; only 3 distinct poses needed). Heroes additionally need the
+current 4-frame attack strip per consumed facing. Do not discard the cardinal
+sources or raw animation frames: the owner intends a later bounded
+eight-direction runtime upgrade for heroes and moving NPCs/enemies. Overworld
+enemies render as a single static sprite today — engine-facing animation remains
+a later implementation slice, while retained source coverage keeps that path
+open.
 
 ## Characters
 
@@ -32,7 +37,7 @@ facings/walks are a later polish, statics unblock Phase 3.
 |---|---|---|---|
 | `adventurer` (Ranger, older brother) | A | P0 — in flight | Identity approved on PR #11; PixelLab rotation + walk calibration passed 2026-07-28 |
 | `mage` (younger brother) | A | P0 | Calibration candidate generated (seed 11) looks strong; regenerate as 8-direction with Ranger palette shared, brotherly duo per North Star |
-| `npc_mira` (shopkeeper) | A | P1 | Kids interact with her every session; identity worth a concept |
+| `npc_mira` (Town steward / market coordinator) | A | P1 | Kids interact with her every session; identity worth a concept |
 | Slime (Wilds t1) | B | P1 | `#5fa860` green; simple blob, description-only |
 | Bat (Wilds t1) | B | P1 | `#8866bb` purple |
 | Goblin (Wilds t1) | B | P1 | `#bb7744` tan leathers |
@@ -46,35 +51,59 @@ facings/walks are a later polish, statics unblock Phase 3.
 
 ## ChatGPT concept prompt pack (route A)
 
-Conventions (all prompts): one character, full body, three-quarter FRONT view,
-neutral standing pose, feet visible, plain flat light-grey background, no
-shadow on the ground, no text, square image. Style: premium crisp pixel-art
+Conventions (all prompts): one character, full body, **South-facing at Eldoria's
+high-top-down camera (approximately 35°)**, neutral standing pose, feet visible,
+plain flat light-grey background, no shadow on the ground, no text, square image. Style: premium crisp pixel-art
 concept for a child-friendly adventure (ages 7–11, sleek not cutesy, not
 preschool), rich saturated-but-moody palette, warm upper-left key light with
 down-right shadows, bold readable silhouette. These concepts are *identity
 references* for PixelLab rotation — silhouette clarity beats detail density.
+
+**Reference and equipment rules verified 2026-07-29 — see
+`PIXELLAB_API.md` §1 and §3:**
+
+1. **Establish the target camera in the reference.** Ask for South-facing at
+   Eldoria's high-top-down camera (approximately 35°). PixelLab rotates
+   direction; do not rely on it to convert an eye-level concept to the game
+   camera. Retain all eight rotations.
+2. **Player heroes are drawn UNARMED.** Eldoria composites swappable weapons as
+   a `weapon`-slot layer. A unique non-swappable boss or NPC may retain a
+   silhouette-critical held prop only when the exception is explicit and the
+   full rotation/animation set passes visual review. The Shadow Warden's
+   greatsword and Mira's basket use that exception; they are not hero equipment.
+
+**Tested Ranger description (manual PixelLab Character workflow):**
+
+> Ranger hero for my 2.5D High Top-Down (35 degrees) kids RPG game,
+> Eldoria-V1. Reference image is already provided at the 35 degree top-down
+> angle, so vertical perspective shift is not needed, only rotations. The game
+> sprites are meant to be no larger than 64x64 pixels in the final product.
+
+This 256×256 manual route produced eight transparent, coherent rotations. Its
+cost was not measured; it does not replace the API sizing/cost rules.
 
 **Mage (younger brother of the approved Ranger):**
 > Full-body pixel-art concept of a young apprentice mage for a child-friendly
 > isometric adventure RPG (ages 7–11, sleek not cutesy). Younger brother of a
 > seasoned ranger in a weathered green hooded cloak — design them as a
 > complementary duo with clearly distinct silhouettes: the mage is smaller,
-> rounder, brighter. Deep-blue hooded robe with silver trim, small wooden
-> staff with a softly glowing crystal, satchel of scrolls, big friendly eyes,
-> brown hair. Premium crisp pixel art, warm upper-left light, down-right
-> shadow on the figure only. One character, full body, three-quarter front
-> view, neutral standing pose, plain flat light-grey background, no ground
-> shadow, no text, square image.
+> rounder, brighter. Deep-blue hooded robe with silver trim, satchel of
+> scrolls, big friendly eyes, brown hair, **empty hands** (no staff — weapons
+> are generated as a separate equipment-slot overlay). Premium crisp pixel art,
+> warm upper-left light, down-right shadow on the figure only. One character,
+> full body, **South-facing at Eldoria's high-top-down camera (approximately 35°)**, neutral standing pose, plain
+> flat light-grey background, no ground shadow, no text, square image.
 
-**Mira (town shopkeeper):**
-> Full-body pixel-art concept of Mira, a warm, capable young shopkeeper for a
+**Mira (Town steward / market coordinator):**
+> Full-body pixel-art concept of Mira, a warm, capable Town steward and market coordinator for a
 > child-friendly isometric adventure RPG (ages 7–11, sleek not cutesy).
 > Practical market apron over adventurer-ish travel clothes, hair tied back,
 > holding a small basket of produce, welcoming expression with a hint of
 > mischief. Rich warm palette that fits a fantasy farm town. Premium crisp
 > pixel art, warm upper-left light, down-right shadow on the figure only. One
-> character, full body, three-quarter front view, neutral standing pose,
-> plain flat light-grey background, no ground shadow, no text, square image.
+> character, full body, **South-facing at Eldoria's high-top-down camera (approximately 35°)**, neutral standing
+> pose, plain flat light-grey background, no ground shadow, no text, square
+> image.
 
 **Shadow Warden (Deep Woods boss):**
 > Full-body pixel-art concept of the Shadow Warden, the forest boss of a
@@ -85,8 +114,8 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
 > point-down. Menacing but beatable — a trophy fight a 9-year-old is proud
 > of, not scared of. Premium crisp pixel art, warm upper-left key against
 > cool shadow tones, down-right shadow on the figure only. One character,
-> full body, three-quarter front view, neutral standing pose, plain flat
-> light-grey background, no ground shadow, no text, square image.
+> full body, **South-facing at Eldoria's high-top-down camera (approximately 35°)**, neutral standing pose,
+> plain flat light-grey background, no ground shadow, no text, square image.
 
 **Crystal Wyrm (Mine boss):**
 > Full-body pixel-art concept of the Crystal Wyrm, the endgame cavern boss of
@@ -96,10 +125,19 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
 > magical glow from the crystal ridges lighting the cavern-dark body.
 > Impressive final-boss presence with a treasure-guardian feel. Premium crisp
 > pixel art, warm upper-left key with cool crystal accents, down-right shadow
-> on the figure only. One creature, full body, three-quarter front view,
-> plain flat light-grey background, no ground shadow, no text, square image.
+> on the figure only. One creature, full body, **South-facing at Eldoria's high-top-down camera
+> (approximately 35°)**, plain flat light-grey background, no ground shadow, no text,
+> square image.
 
 ## Status log
+
+- 2026-07-29: manual Ranger Character export `add36c36-295d-4626-94fd-179a4102d1ea`
+  produced all 8 transparent 256×256 high-top-down rotations. ChatGPT's
+  source-art review recommended the rotation set through the source gate; all
+  eight directions remain retained. The South walk export contains 8
+  transparent 256×256 frames at 200 ms and is a candidate source animation,
+  pending deterministic bottom-center normalization, foot-phase selection,
+  complete direction coverage, and runtime inspection.
 
 - 2026-07-28: inventory established. Ranger in flight on PR #11; Mage
   description-only candidate generated during calibration (seed 11,

@@ -1,9 +1,14 @@
 # PixelLab MCP companion for Eldoria
 
 **Last verified:** 2026-07-29  
-**Live authority:** <https://api.pixellab.ai/mcp/docs>  
-**Eldoria production authority:** [`PIPELINE.md`](PIPELINE.md) and
-[`../../.claude/skills/asset-generation/SKILL.md`](../../.claude/skills/asset-generation/SKILL.md)
+**Live PixelLab sources** (control vendor parameters, capabilities, validation,
+and pricing): <https://api.pixellab.ai/mcp/docs>,
+<https://api.pixellab.ai/v2/openapi.json>, <https://api.pixellab.ai/v2/llms.txt>  
+**Eldoria production authority** (controls accepted routes, engine contracts,
+security, normalization, validation, and review gates): [`PIPELINE.md`](PIPELINE.md)
+and [`../../.claude/skills/asset-generation/SKILL.md`](../../.claude/skills/asset-generation/SKILL.md)  
+**If they conflict:** stop and repair the stale repository guidance before
+spending credits.
 
 This is a small, repository-owned bridge between PixelLab's changing MCP tool
 surface and Eldoria's tested asset pipeline. It is not a copy of PixelLab's
@@ -21,6 +26,18 @@ It does **not** replace the deterministic download, normalization, validation,
 contact-sheet, North Star review, or owner-approval stages already proven in
 `tools/pipeline/`.
 
+## Current operating roles and direction retention
+
+- Claude is the default PixelLab generation seat for bounded approved batches.
+- ChatGPT reviews exported candidates for identity, camera, direction order,
+  motion, transparency, framing, North Star alignment, and 64px readability.
+- Leo retains final product and visual authority.
+- PixelLab's full 8-direction character output is retained. The current engine's
+  SE/SW/NW/NE slots are a compatibility subset; south/east/north/west remain
+  production sources for the owner-intended later eight-direction runtime.
+- No agent may delete or replace remote PixelLab material without explicit
+  approval.
+
 ## Secrets: what is and is not committed
 
 The repository contains only the variable name `${PIXELLAB_SECRET}`. It never
@@ -30,9 +47,12 @@ Store the token in the local environment or the host application's secret
 store. Do not put it in Markdown, `.mcp.json`, shell history, screenshots,
 issues, pull requests, logs, or chat messages.
 
-PixelLab download URLs are not authenticated; their UUID acts as the access
-key. Treat raw download URLs as unlisted credentials: use them to retrieve
-work, but do not publish them in repo docs or public discussion.
+**[VENDOR-DOCUMENTED]** PixelLab download URLs are not authenticated; their UUID
+acts as the access key, and PixelLab permits sharing links. **Eldoria policy:**
+public sharing of download links is permitted **only** for assets intentionally
+released for public review. Private, confidential, or unapproved outputs remain
+unlisted — treat their UUIDs as unlisted credentials until the asset is approved
+for sharing.
 
 ## Connect Claude Code
 
