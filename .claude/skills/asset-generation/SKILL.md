@@ -74,20 +74,27 @@ Run long calls with `run_in_background` and ABSOLUTE paths.
 route that produced Eldoria's one rejected character; see `PIXELLAB_API.md` §3.
 
 ```powershell
-python -c "from PIL import Image; Image.open('art-incoming/NAME-concept-v1.png').convert('RGBA').resize((256,256), Image.LANCZOS).save('_probe_local/pipeline/NAME/ref-256.png')"
+python -c "from PIL import Image; Image.open('art-incoming/NAME-concept-v1.png').convert('RGBA').resize((64,64), Image.LANCZOS).save('_probe_local/pipeline/NAME/ref-64.png')"
 python tools/pipeline/pixellab_client.py create-v3 --description "..." `
-  --reference-image _probe_local/pipeline/NAME/ref-256.png --size 64 --seed 11 `
+  --reference-image _probe_local/pipeline/NAME/ref-64.png --size 64 --seed 11 `
   --out-dir _probe_local/pipeline/NAME
 ```
 
-**Always pass `--size 64`.** With a reference image the API otherwise inherits
-the reference's own dimensions — a 256×256 concept silently produces a 256 px
-character, costing 8 generations instead of 1 and billing every future animation
-on that character at 256 px too. It is also worse art: Eldoria renders at 64×64,
-and downscaling 4× blends 4×4 blocks into one pixel. See `PIXELLAB_API.md` §1.
+**Size the output to the engine — 64 px.** With a reference image the output
+follows the reference's dimensions, so the old 256×256 reference produced a
+256 px character: 8 generations instead of 1, and every future animation on that
+character billed at 256 px too. It was also worse art — Eldoria renders at 64×64,
+and a 4× downscale blends 4×4 blocks into one output pixel.
 
-> The reference stays ≤256×256 (that is the API's input cap) — it is the
-> **output** `--size` that must match the engine.
+**256 is the input *ceiling*, not a target.** The two doc sources disagree on
+whether `--size` alone controls output (`PIXELLAB_API.md` §1), so do both:
+downscale the reference *and* pass `--size`.
+
+**Unverified as of 2026-07-29** — nothing has been generated this way yet. On the
+first run: check the real output size in `character.json`, and judge whether
+identity survives a 64 px reference. If detail is too thin, step up to `128`
+(2 generations, still a quarter of 256) rather than going back to 256. Record
+what actually happened in `PIXELLAB_API.md` §1.
 
 **(b) Description route:**
 

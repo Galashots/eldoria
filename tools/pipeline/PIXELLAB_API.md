@@ -48,12 +48,25 @@ per direction at ≤96 px, rising to ~8 per direction at 256 px.
 
 ### The rule
 
-> **Set `size` to the engine's target resolution. Never let it default.**
+> **Drive the output to the engine's target resolution. Never let it default.**
 
-`size` defaults to 48 px — *except* when you pass a reference image, where it
-**silently inherits the reference's own dimensions**. Feed a 256×256 concept and
-you get a 256 px character, an 8× bill, and every future animation on that
-character billed at 256 px too.
+`size` defaults to 48 px — *except* when you pass a reference image, where output
+**follows the reference's own dimensions**. Feed a 256×256 concept and you get a
+256 px character, an 8× bill, and every future animation on that character billed
+at 256 px too.
+
+**The two sources disagree on how to control this, so do both.** The MCP docs say
+output "defaults to the reference's own dimensions unless `size` is set", while
+the OpenAPI spec calls `image_size` *"advisory (model picks its own size)"* in
+reference mode. Until we have measured it ourselves:
+
+1. **Downscale the reference to the target size** — this is the lever both
+   sources agree on;
+2. **also pass `--size`** — costs nothing if it is ignored;
+3. **check the actual dimensions in `character.json` after the first run** and
+   record the answer here.
+
+Do not state which one won until step 3 has actually been done.
 
 This is not only a cost argument. Eldoria renders at **64×64**. Generating at
 256 px and downscaling 4× blends 4×4 blocks into one output pixel, which is
