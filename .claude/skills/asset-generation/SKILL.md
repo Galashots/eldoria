@@ -23,10 +23,10 @@ with the proven Python client below.
    subscription. If it errors: the token lives in
    `_probe_local/pixellab.token` (one line). If the file is missing but
    `_probe_local/pixellab.token.txt` exists, rename it (Notepad adds `.txt`).
-   The shared `.mcp.json` instead reads the same token from the local
-   `PIXELLAB_SECRET` environment variable. If the token is invalid, ask Leo
-   for a fresh one from https://pixellab.ai/account — do NOT create accounts,
-   expose credentials, or commit token values.
+   If the token is invalid, ask Leo for a fresh one from
+   https://pixellab.ai/account — do NOT create accounts or credentials.
+   The shared `.mcp.json` reads the same token from the local
+   `PIXELLAB_SECRET` environment variable; never commit its value.
 2. For any visually relevant work, open `docs/VISUAL_NORTH_STAR.md` and
    include a **North Star alignment** note in your report (repo CLAUDE.md).
 
@@ -127,13 +127,13 @@ description ("1). grass 2). soil ..."); `--feature tileset` generates a
 (farmhouse, shop). `style_images` keeps later batches consistent with
 approved tiles. Single `isotile --tile-shape "thin tile"` is for quick
 style probes only — it cannot produce transitions. Props/deco:
-`mapobject --size 64` (96 for trees). Append the style suffix to every
-description: "premium crisp pixel art, warm upper-left light, down-right
-shadow, rich saturated warm fantasy palette, child-friendly adventure".
-Map-object results come back via a no-auth `download_url` (already handled
-by the client). The iso engine loads only `assets/iso/crop-*.png` so far —
-landscape art is review-then-park until the iso spec's Phase 3 wires up
-tile/prop loading; do NOT edit `index.html` as part of asset generation.
+`mapobject --size 64` (96 for trees). Append the style suffix to every description: "premium crisp
+pixel art, warm upper-left light, down-right shadow, rich saturated warm
+fantasy palette, child-friendly adventure". Map-object results come back via
+a no-auth `download_url` (already handled by the client). The iso engine
+loads only `assets/iso/crop-*.png` so far — landscape art is review-then-park
+until the iso spec's Phase 3 wires up tile/prop loading; do NOT edit
+`index.html` as part of asset generation.
 
 ## Traps that already burned a session
 
