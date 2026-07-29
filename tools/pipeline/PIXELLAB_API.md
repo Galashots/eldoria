@@ -42,19 +42,23 @@ state which one won until step 3 has actually been done." Step 3 is now done.
 |---|---|---|---|---|
 | 64×64 | 52 px tall | **52.6 px** | 108×108 | **1 gen** |
 | 128×128 | 104 px tall | **104.6 px** | 216×216 | **2 gens** |
+| 64×64 (3rd run, unarmed) | 54 px tall | **52–56 px** | 112×112 | **1 gen** |
 
-Three rules fall out, and all three held on both runs:
+Two rules fall out, and both held on all three runs:
 
 1. **The figure's pixel height is preserved 1:1 from the reference.** PixelLab
-   does not rescale your character. Figure occupancy was 48.7% and 48.4% of
-   canvas — the same operation both times.
-2. **The output canvas is the reference × 1.6875, capped at 256.** This is
-   padding, not enlargement. The spec says so: *"Final canvas is padded ~2x for
-   animation room (capped at 256)."* A character that looks like it "came back
-   bigger" is a padded canvas around a same-size figure.
-3. **Rotation is billed on the REFERENCE dimensions, not the output canvas.**
-   `ceil(ref_w × ref_h × 8 / 65536)` predicted 1 and 2; 1 and 2 were charged.
-   Billing on the *output* would have predicted 2 and 6. It did not.
+   does not rescale your character. Figure occupancy was 48.7%, 48.4% and 48.2%
+   of canvas — the same operation every time.
+2. **Rotation is billed on the REFERENCE dimensions, not the output canvas.**
+   `ceil(ref_w × ref_h × 8 / 65536)` predicted 1, 2 and 1; 1, 2 and 1 were
+   charged. Billing on the *output* would have predicted 2, 6 and 2. It did not.
+
+**The canvas size is padding, and it is not exactly predictable.** The spec says
+*"Final canvas is padded ~2x for animation room (capped at 256)"*, and a
+character that looks like it "came back bigger" is a padded canvas around a
+same-size figure. But two 64 px references produced **108** and **112** canvases,
+so the padding is approximate — do not treat any multiplier as exact. Budget for
+animation against the canvas you actually receive, not a predicted one.
 
 > ### The rule
 >
@@ -77,7 +81,7 @@ cheaper *and* sharper.
 
 ### What is still unverified
 
-`image_size` was **not sent** on either run, so output was determined entirely by
+`image_size` was **not sent** on any run, so output was determined entirely by
 the reference. That is consistent with the spec calling it *"advisory (model
 picks its own size)"* in reference mode, but **we have not tested whether passing
 it overrides the reference.** Do not assume it does. The reference's own
