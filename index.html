@@ -22,6 +22,9 @@
     position: relative;
     width: 100vw;
     height: 100vh;
+    /* dvh tracks the mobile URL bar, so the column is never taller than what is on
+       screen. Declared second so browsers without dvh keep the vh value. */
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -65,10 +68,16 @@
     touch-action: none;
   }
 
-  /* Iso mode: the canvas fills the screen; HUD & controls already float above it. */
+  /* Iso mode: the canvas fills what is left under the in-flow HUD. It used to ask for a
+     full 100dvh inside a 100vh column that already had the HUD in it, which pushed the
+     bottom of the playfield off-screen by exactly the HUD's height (ELD-PT-015).
+     flex sizing lets #stage hand it the remainder; applyCanvasMode() reads the resulting
+     box, so the backing store and view rows follow automatically. */
   #game.iso-mode {
     width: 100vw;
-    height: 100dvh;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
     border: none;
     border-radius: 0;
   }
@@ -691,7 +700,7 @@
 <div class="modal-overlay" id="shopModal" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
   <div class="modal">
     <h2 class="modal-title" id="shopTitle">General Store</h2>
-    <p class="shop-hint" id="shopHint">Which seed makes you the most gold? Do the math!</p>
+    <p class="shop-hint" id="shopHint">Which seed earns the most gold profit per harvest? (sell price &minus; seed cost)</p>
     <div class="shop-row">
       <span class="crop-dot" style="background:#66aa33"></span>
       <div class="shop-info"><b>Turnip</b> — 2g<small>8s grow · sells 3g</small></div>
@@ -989,12 +998,18 @@ function __isoTestMove(jx, jy, frames) {
 }
 
 // ---- Tile types ----
-var GRASS = 0, WATER = 1, TREE = 2, SOIL = 3, PATH = 4, HOUSE = 5, DOOR = 6, EXIT = 7;
+// ROCK/CAVE exist so the Mine can read as an underground cavern instead of borrowing the
+// forest's TREE tiles for its walls, which made the endgame zone look like a hedge maze
+// (ELD-PT-003). Tile ids are never serialized — area maps are rebuilt from their build*Map()
+// function on every load and only crop state is saved — so appending ids is save-safe.
+var GRASS = 0, WATER = 1, TREE = 2, SOIL = 3, PATH = 4, HOUSE = 5, DOOR = 6, EXIT = 7,
+    ROCK = 8, CAVE = 9;
 
 var BLOCKED = {};
 BLOCKED[WATER] = true;
 BLOCKED[TREE]  = true;
 BLOCKED[HOUSE] = true;
+BLOCKED[ROCK]  = true;
 
 var TILE_COLOR = {};
 TILE_COLOR[GRASS] = '#4f8a35';
@@ -1005,6 +1020,8 @@ TILE_COLOR[PATH]  = '#c9a86a';
 TILE_COLOR[HOUSE] = '#8a8a8a';
 TILE_COLOR[DOOR]  = '#7a4a1a';   // a wooden door you can walk onto (not blocked)
 TILE_COLOR[EXIT]  = '#d4b483';   // a road tile at the map edge: step on it to travel
+TILE_COLOR[ROCK]  = '#4a4152';   // cavern wall: cool violet-grey, clearly not foliage
+TILE_COLOR[CAVE]  = '#2e2733';   // cavern floor: darker than the wall so the track reads
 
 // ---- Sprite art (slice 8) ----
 // Drop PNG files into the ./assets folder and they replace the gray boxes automatically.
@@ -1032,6 +1049,10 @@ TILE_SPRITE[PATH]  = 'assets/path.png';
 TILE_SPRITE[HOUSE] = 'assets/house.png';
 TILE_SPRITE[DOOR]  = 'assets/door.png';
 TILE_SPRITE[EXIT]  = 'assets/exit.png';
+// Optional cavern art. Absent today, so both fall back to their drawn shapes (below);
+// dropping the PNGs in later upgrades the Mine with no code change.
+TILE_SPRITE[ROCK]  = 'assets/rock.png';
+TILE_SPRITE[CAVE]  = 'assets/cave-floor.png';
 
 // Kick off loading everything up front (async; sprites pop in as they finish).
 for (var ts in TILE_SPRITE) loadSprite('tile_' + ts, TILE_SPRITE[ts]);
@@ -1083,16 +1104,13 @@ loadSprite('deco_boulder', 'assets/boulder.png');
 loadSprite('deco_stump', 'assets/tree_stump.png');
 loadSprite('deco_stone', 'assets/stone.png');
 
-// Temporary visual-only equipment state. Combat, inventory, and saving deliberately
-// do not touch this yet; later systems can call setVisualEquipment when gear changes.
-var VISUAL_EQUIPMENT = {
-  adventurer: { head: false, body: false, weapon: false, cape: false },
-  mage:       { head: false, body: false, weapon: false, cape: false }
-};
-
-function setVisualEquipment(profile, slot, equipped) {
-  if (!VISUAL_EQUIPMENT[profile] || EQUIPMENT_SLOTS.indexOf(slot) === -1) return;
-  VISUAL_EQUIPMENT[profile][slot] = !!equipped;
+// Which equipment layers to draw. This is DERIVED from player.gear rather than stored,
+// so the hero on screen can never disagree with the saved gear that combat and the shop
+// actually use (ELD-PT-007). There is one source of truth; boot, import, equip and
+// profile-switch all get the right answer for free because they all set player.gear.
+function hasVisualEquipment(slot) {
+  if (!currentProfile || EQUIPMENT_SLOTS.indexOf(slot) === -1) return false;
+  return !!(player.gear && player.gear[slot]);
 }
 
 // Profile art is kept separate so equipment never lands on the legacy fallback sprite.
@@ -1117,17 +1135,17 @@ var ATTACK_FRAMES = 4;
 var ATTACK_FRAME_MS = 80;
 
 function equipmentAttackSprite(slot) {
-  if (!currentProfile || !player.attacking || !VISUAL_EQUIPMENT[currentProfile][slot]) return null;
+  if (!player.attacking || !hasVisualEquipment(slot)) return null;
   return spr('equipment_attack_' + currentProfile + '_' + player.facing + '_' + slot);
 }
 
 function equipmentSprite(slot) {
-  if (!currentProfile || !VISUAL_EQUIPMENT[currentProfile][slot]) return null;
+  if (!hasVisualEquipment(slot)) return null;
   return spr('equipment_' + currentProfile + '_' + player.facing + '_' + slot);
 }
 
 function equipmentWalkSprite(slot) {
-  if (!currentProfile || !player.walking || !VISUAL_EQUIPMENT[currentProfile][slot]) return null;
+  if (!player.walking || !hasVisualEquipment(slot)) return null;
   return spr('equipment_walk_' + currentProfile + '_' + player.facing + '_' + slot);
 }
 
@@ -1430,18 +1448,19 @@ function buildDeepWoodsMap() {
 
 // ---- The Mine area (slice 20): the underground endgame zone past the Deep Woods boss.
 // Reached from the Deep Woods' right-edge EXIT; its left edge returns to the Deep Woods.
-// No grass — the floor is PATH (mine track) walled in by TREE "rock" pillars, so it reads
-// as a cramped cavern. Two tier-3 enemies then the Crystal Wyrm boss at the end of the track. ----
+// No grass and no foliage — ROCK walls enclose a CAVE-floor track, so the zone reads as a
+// cramped cavern rather than the forest it used to borrow its tiles from (ELD-PT-003).
+// Two tier-3 enemies then the Crystal Wyrm boss at the end of the track. ----
 function buildMineMap() {
   var m = blankMap();
-  // Flood the whole cavern with rock (TREE blocks movement) so only the carved track is walkable.
+  // Flood the whole cavern with rock (ROCK blocks movement) so only the carved track is walkable.
   // fillRect is (m, x=col, y=row, w=cols, h=rows).
-  fillRect(m, 0, 0, MAP_W, MAP_H, TREE);
+  fillRect(m, 0, 0, MAP_W, MAP_H, ROCK);
   // Carve the mine track: the main horizontal tunnel (rows 8-9) the enemies stand in...
-  fillRect(m, 0, 8, MAP_W, 2, PATH);
+  fillRect(m, 0, 8, MAP_W, 2, CAVE);
   // ...plus a couple of side pockets off the track so it doesn't feel like one straight line.
-  fillRect(m, 4, 6, 3, 4, PATH);    // cols 4-6, rows 6-9 — opens upward off the track
-  fillRect(m, 14, 9, 3, 4, PATH);   // cols 14-16, rows 9-12 — opens downward off the track
+  fillRect(m, 4, 6, 3, 4, CAVE);    // cols 4-6, rows 6-9 — opens upward off the track
+  fillRect(m, 14, 9, 3, 4, CAVE);   // cols 14-16, rows 9-12 — opens downward off the track
   m[8][0] = EXIT;                   // left edge → back to the Deep Woods
   m[9][0] = EXIT;
   return m;
@@ -1522,7 +1541,8 @@ var ENEMIES = {
 
 // ---- Gear (slice 10c-ii): dropped by enemies, auto-equipped, gives a damage bonus.
 // Each item fills one equipment slot. If you already have something better in that slot
-// the drop is acknowledged but not equipped. Visual overlay toggled via setVisualEquipment.
+// the drop is acknowledged but not equipped. The sprite's visual overlay follows player.gear
+// automatically (hasVisualEquipment), so there is nothing separate to keep in step.
 var GEAR = {
   // Tier 1 (Wilds drops)
   wooden_sword:  { name: 'Wooden Sword',  slot: 'weapon', damage: 2 },
@@ -2448,7 +2468,6 @@ function equipGear(itemId) {
   // It's an upgrade: the old item (if any) drops into the bag so it's not lost.
   if (current) player.inventory.push(current);
   player.gear[item.slot] = itemId;
-  if (currentProfile) setVisualEquipment(currentProfile, item.slot, true);
   showToast('Equipped ' + item.name + '! +' + item.damage + ' damage');
   speak('You found a ' + item.name + '! Plus ' + item.damage + ' damage!');
 }
@@ -2578,8 +2597,11 @@ function openCombat(enemyEntry) {
 }
 
 // Show the next question (and the result of the last turn) and refresh the bars.
+// The world HUD is refreshed too: combat changes HP and food, and leaving those to be
+// picked up by some later call meant the HUD could sit stale for a whole fight (ELD-PT-004).
 function nextCombatTurn(message) {
   updateCombatBars();
+  updateHUD();
   document.getElementById('combatMsg').textContent = message || '';
 
   var q = makeCombatQuestion();
@@ -2615,8 +2637,10 @@ function onCombatAnswerClick(e) {
   answerCombat(parseInt(e.currentTarget.dataset.value, 10));
 }
 
-// Combat slash phase: answer math, then mash SLASH to deal damage.
-// Correct = full damage + 3s window. Wrong = half damage + 1.5s window.
+// Combat slash phase: answer math, then mash SLASH for BONUS damage.
+// Getting the question right is what wins fights: a correct answer always lands one
+// guaranteed hit before the timer starts, so a player who never taps still makes real
+// progress. Tapping adds extra hits on top — a bonus, never a requirement (ELD-PT-002).
 var slashDmgPerHit = 0;
 var slashHits = 0;
 var slashTimerId = 0;
@@ -2633,11 +2657,12 @@ function answerCombat(value) {
   if (correct) {
     soundCorrect();
     slashDmgPerHit = baseDmg * 2;
-    startSlashPhase(slashTime(), 'POWER BOOST! Slash away!');
+    // One free hit is banked immediately: right answer => damage, guaranteed.
+    startSlashPhase(slashTime(), 'RIGHT! Free hit! Slash for more!', 1);
   } else {
     slashDmgPerHit = baseDmg;
     if (typeof HTMLElement !== 'undefined') {
-      startSlashPhase(slashTime(), 'Slash away!');
+      startSlashPhase(slashTime(), 'Slash away!', 0);
     } else {
       player.hp -= combatEnemy.attack;
       if (player.hp <= 0) { player.hp = 0; loseCombat(); return; }
@@ -2646,7 +2671,10 @@ function answerCombat(value) {
   }
 }
 
-function startSlashPhase(duration, msg) {
+// freeHits: hits awarded up front for answering correctly. They are applied AFTER the
+// window is set up so a lethal free hit can close combat cleanly, and they count toward
+// slashHits so the on-screen tally and the end-of-turn total stay honest.
+function startSlashPhase(duration, msg, freeHits) {
   slashHits = 0;
   slashActive = true;
   if (typeof HTMLElement !== 'undefined') {
@@ -2666,9 +2694,11 @@ function startSlashPhase(duration, msg) {
     timerBar.style.width = '0%';
     document.getElementById('combatFoodRow').style.display = 'none';
     slashTimerId = setTimeout(endSlashPhase, duration);
+    for (var f = 0; f < (freeHits || 0) && slashActive; f++) executeSlash();
   } else {
-    executeSlash();
-    endSlashPhase();
+    for (var f2 = 0; f2 < (freeHits || 0) && slashActive; f2++) executeSlash();
+    if (slashActive) executeSlash();
+    if (slashActive) endSlashPhase();
   }
 }
 
@@ -2830,12 +2860,18 @@ function eatInCombat() {
     return;
   }
   msg += combatEnemy.name + ' hits you ' + combatEnemy.attack + '.';
+  // Eating spends a real item and real HP — persist it immediately so a reload mid-fight
+  // can never hand the food back (ELD-PT-004).
+  saveGame();
   nextCombatTurn(msg);
 }
 
 // Flee: close the battle, no harm done. The player can always walk back to retry.
+// Anything spent or taken during the fight is committed on the way out.
 function fleeCombat() {
   closeCombat();
+  updateHUD();
+  saveGame();
   showToast('You backed away.');
 }
 
@@ -3052,10 +3088,14 @@ function openShop() {
       var ci = CROPS[CROP_TYPES[si]];
       lines += ci.name + ' costs ' + ci.cost + ' gold and sells for ' + ci.sell + '. ';
     }
-    lines += 'You can also buy a Heart Crystal for more health, or Training for more attack power. Which seed makes you the most gold?';
+    // Name the measure: "most gold" alone can mean profit, profit per second, or return on
+    // cost, and most crops share the same margin, so the old wording had no single right
+    // answer (ELD-PT-014). Profit for one harvest is the one the shop's numbers support.
+    lines += 'You can also buy a Heart Crystal for more health, or Training for more attack power. ';
+    lines += 'Which seed earns the most gold profit from one harvest? Take away the seed cost from the sell price.';
     speak(lines);
   } else {
-    speakToAll('Which seed makes you the most gold? Do the math!');
+    speakToAll('Which seed earns the most gold profit per harvest? Sell price take away seed cost.');
   }
   focusModal('shopModal');
 }
@@ -3354,11 +3394,8 @@ function applyState(s) {
   player.x = (n.x != null) ? n.x : 5 * TILE;
   player.y = (n.y != null) ? n.y : 8 * TILE;
 
-  // Toggle visual overlays so saved gear shows on the sprite.
-  if (currentProfile) {
-    for (var vs = 0; vs < EQUIPMENT_SLOTS.length; vs++)
-      setVisualEquipment(currentProfile, EQUIPMENT_SLOTS[vs], !!player.gear[EQUIPMENT_SLOTS[vs]]);
-  }
+  // Visual overlays need no sync step: they read player.gear directly, which this
+  // function has already restored (see hasVisualEquipment).
 }
 
 function loadGame(profile) {
@@ -4317,6 +4354,7 @@ function drawIsoWorld() {
       // Tall tile types become Pass-2 prisms; their floor shows the ground beneath.
       var floorColor = TILE_COLOR[t] || '#333333';
       if (t === TREE || t === HOUSE) floorColor = TILE_COLOR[GRASS];
+      else if (t === ROCK) floorColor = TILE_COLOR[CAVE];   // rock stands on cavern floor, not grass
       else if (t === DOOR || t === EXIT) floorColor = TILE_COLOR[PATH];
       if (t === SOIL) drawIsoSoilTile(cx, cy);
       else drawIsoTileDiamond(cx, cy, floorColor);
@@ -4417,6 +4455,7 @@ ISO_PROP_HEIGHT[TREE]  = 40;   // chunky enough to read, short enough not to hid
 ISO_PROP_HEIGHT[HOUSE] = 56;
 ISO_PROP_HEIGHT[DOOR]  = 56;   // same as HOUSE: a door is a hole in a wall, not a short block
 ISO_PROP_HEIGHT[EXIT]  = 12;
+ISO_PROP_HEIGHT[ROCK]  = 44;   // cavern wall: taller than a tree so tunnels feel enclosed
 
 // ---- Buildings (Phase 2 Town slice) ----
 // The doorway sits on the south-west wall face, which the tile's eastern neighbour never
@@ -4523,6 +4562,61 @@ function isoCollectObjects() {
   return objs;
 }
 
+// ---- Cavern tile shapes (ELD-PT-003) ----
+// Drawn fallbacks for the Mine, in the same spirit as every other placeholder here: if the
+// real art lands in assets/ these never run. A cheap deterministic hash per tile keeps the
+// variation stable frame to frame (no flicker) without storing anything.
+function tileHash(r, c, salt) { return ((r * 73856093) ^ (c * 19349663) ^ (salt * 83492791)) >>> 0; }
+
+// A faceted rock mass: lit upper-left face, shadowed lower-right, occasional crystal glint.
+// The light direction matches the Visual North Star's warm upper-left key.
+function drawRockTile(sx, sy, r, c) {
+  var h = tileHash(r, c, 1);
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';   // upper-left lit face
+  ctx.beginPath();
+  ctx.moveTo(sx, sy + TILE);
+  ctx.lineTo(sx, sy + 4 + (h % 5));
+  ctx.lineTo(sx + TILE / 2, sy);
+  ctx.lineTo(sx + TILE / 2, sy + TILE);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';         // lower-right shadowed face
+  ctx.beginPath();
+  ctx.moveTo(sx + TILE, sy + TILE);
+  ctx.lineTo(sx + TILE, sy + 6 + (h >> 3) % 5);
+  ctx.lineTo(sx + TILE / 2, sy);
+  ctx.lineTo(sx + TILE / 2, sy + TILE);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.30)';       // seam between neighbouring rock masses
+  ctx.lineWidth = 1;
+  ctx.strokeRect(sx + 0.5, sy + 0.5, TILE - 1, TILE - 1);
+  if (h % 7 === 0) {                          // a seam of teal crystal, matching the Wyrm
+    ctx.fillStyle = 'rgba(120,230,220,0.75)';
+    var gx = sx + 8 + (h >> 6) % (TILE - 18), gy = sy + 8 + (h >> 11) % (TILE - 18);
+    ctx.beginPath();
+    ctx.moveTo(gx, gy - 4); ctx.lineTo(gx + 3, gy); ctx.lineTo(gx, gy + 5); ctx.lineTo(gx - 3, gy);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+// Cavern floor: dark packed ground with scattered grit and the odd mine-track sleeper.
+function drawCaveFloorTile(sx, sy, r, c) {
+  var h = tileHash(r, c, 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.fillRect(sx, sy, TILE, TILE / 2);       // faint bounce light off the ceiling
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  for (var g = 0; g < 3; g++) {
+    var gx = sx + ((h >> (g * 5)) % (TILE - 4)), gy = sy + ((h >> (g * 5 + 3)) % (TILE - 4));
+    ctx.fillRect(gx, gy, 2, 2);
+  }
+  if (h % 4 === 0) {                          // rail sleeper across the track
+    ctx.fillStyle = 'rgba(90,70,50,0.45)';
+    ctx.fillRect(sx + 2, sy + TILE / 2 - 1, TILE - 4, 3);
+  }
+}
+
 // ---- Draw ----
 function topDownCamera() {
   var camX = player.x + player.size / 2 - canvas.width / 2;
@@ -4560,7 +4654,9 @@ function draw() {
 
       var tileType = map[r][c];
       // Draw grass under tiles that have transparency (trees, houses, doors, exits)
-      if (tileType !== GRASS && tileType !== WATER && tileType !== SOIL && tileType !== PATH) {
+      // Cavern tiles are their own ground: never lay grass under them.
+      if (tileType !== GRASS && tileType !== WATER && tileType !== SOIL && tileType !== PATH &&
+          tileType !== ROCK && tileType !== CAVE) {
         var grassImg = spr('tile_' + GRASS);
         if (grassImg) ctx.drawImage(grassImg, sx, sy, TILE, TILE);
         else { ctx.fillStyle = TILE_COLOR[GRASS]; ctx.fillRect(sx, sy, TILE, TILE); }
@@ -4591,6 +4687,10 @@ function draw() {
         ctx.ellipse(sx + TILE / 2, sy + TILE - 3, 12, 4, 0, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // Cavern detailing, only while the real Mine art is still missing.
+      if (tileType === ROCK && !tileImg) drawRockTile(sx, sy, r, c);
+      else if (tileType === CAVE && !tileImg) drawCaveFloorTile(sx, sy, r, c);
 
       // Water shimmer: a gentle moving highlight on water tiles
       if (tileType === WATER) {
@@ -5011,9 +5111,33 @@ function canvasClientPointToTile(clientX, clientY) {
   return canvasBackingPointToTile(bx, by);
 }
 
+// Tapping a tall thing (an NPC, a ready crop, a shopfront) should work anywhere on the
+// part you can SEE. Sprites and prisms are drawn taller than the tile they stand on, so a
+// head or body hangs over the ground behind it and a tap there used to resolve to empty
+// ground (ELD-PT-005).
+//
+// The fix walks back down the screen from the tapped tile to find the base of whatever
+// silhouette the finger actually landed on. One step down-screen is a different tile step
+// in each projection: top-down it is simply the next row, but iso screen-y is (px+py)/2,
+// so moving down-screen advances row AND col together.
+//
+// The tapped tile is always tried first, so a base tile beats anything overhanging it and
+// two neighbours can never steal each other's taps. The search stops at TAP_REACH steps —
+// far enough to cover our tallest sprite, close enough not to grab unrelated objects.
+var TAP_REACH = 2;
+function interactAtVisibleTile(row, col) {
+  var dCol = (typeof isoActive === 'function' && isoActive()) ? 1 : 0;
+  for (var step = 0; step <= TAP_REACH; step++) {
+    var r = row + step, c = col + step * dCol;
+    if (r >= MAP_H || c >= MAP_W) break;
+    if (interactAtTile(r, c)) return true;
+  }
+  return false;
+}
+
 canvas.addEventListener('pointerdown', function(e) {
   var tile = canvasClientPointToTile(e.clientX, e.clientY);
-  if (tile && interactAtTile(tile.row, tile.col)) e.preventDefault();
+  if (tile && interactAtVisibleTile(tile.row, tile.col)) e.preventDefault();
 });
 
 // ---- Action button ----
