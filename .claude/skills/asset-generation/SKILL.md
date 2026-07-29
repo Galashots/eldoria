@@ -11,6 +11,12 @@ repo root first — background jobs and other tools change the cwd.** Do not
 improvise endpoint parameters; the decision table below encodes tested
 behavior (calibrated 2026-07-28, see `tools/pipeline/PIPELINE.md`).
 
+Read `tools/pipeline/PIXELLAB_MCP.md` before using PixelLab MCP tools. If
+PixelLab MCP is connected, it is an interactive front end to the same service;
+it does not replace Eldoria's routes, local normalization/validation, review
+sheet, North Star review, or owner approval. If MCP is unavailable, continue
+with the proven Python client below.
+
 ## 0. Preconditions
 
 1. `python tools/pipeline/pixellab_client.py balance` must print a
@@ -19,6 +25,8 @@ behavior (calibrated 2026-07-28, see `tools/pipeline/PIPELINE.md`).
    `_probe_local/pixellab.token.txt` exists, rename it (Notepad adds `.txt`).
    If the token is invalid, ask Leo for a fresh one from
    https://pixellab.ai/account — do NOT create accounts or credentials.
+   The shared `.mcp.json` reads the same token from the local
+   `PIXELLAB_SECRET` environment variable; never commit its value.
 2. For any visually relevant work, open `docs/VISUAL_NORTH_STAR.md` and
    include a **North Star alignment** note in your report (repo CLAUDE.md).
 
