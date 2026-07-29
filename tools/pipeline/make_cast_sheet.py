@@ -34,8 +34,9 @@ def character_rows(cast_dir):
         frames = {}
         for fn in os.listdir(folder):
             frames[os.path.splitext(fn)[0]] = os.path.join(folder, fn)
-        ordered = [frames[d] for d in ORDER if d in frames]
-        yield name, ordered
+        # Fixed 8 labelled columns; None marks a missing direction so columns
+        # never silently shift (the sheet must support direction review).
+        yield name, [frames.get(d) for d in ORDER]
 
 
 def main():
@@ -48,20 +49,28 @@ def main():
     rows = list(character_rows(args.cast_dir))
     if not rows:
         raise SystemExit(f"no characters with metadata.json under {args.cast_dir}")
-    cell, pad, label_h = args.cell, 8, 22
-    cols = max(len(r[1]) for r in rows)
+    cell, pad, label_h, header_h = args.cell, 8, 22, 20
+    cols = len(ORDER)
     W = pad + cols * (cell + pad)
-    H = pad + len(rows) * (cell + label_h + pad)
+    H = header_h + pad + len(rows) * (cell + label_h + pad)
     sheet = Image.new("RGB", (W, H), (30, 32, 38))
     d = ImageDraw.Draw(sheet)
-    y = pad
+    for i, direction in enumerate(ORDER):
+        d.text((pad + i * (cell + pad), 4), direction, fill=(150, 158, 172))
+    y = header_h + pad
     for name, paths in rows:
         d.text((pad, y), name, fill=(235, 235, 235))
         for i, p in enumerate(paths):
-            img = Image.open(p).convert("RGBA").resize((cell, cell), Image.NEAREST)
             x = pad + i * (cell + pad)
             cellim = Image.new("RGB", (cell, cell), (30, 32, 38))
-            cellim.paste(img, (0, 0), img)
+            if p is None:
+                cd = ImageDraw.Draw(cellim)
+                cd.line([(4, 4), (cell - 4, cell - 4)], fill=(198, 92, 76), width=3)
+                cd.line([(cell - 4, 4), (4, cell - 4)], fill=(198, 92, 76), width=3)
+                cd.text((8, cell // 2 - 6), "missing", fill=(198, 92, 76))
+            else:
+                img = Image.open(p).convert("RGBA").resize((cell, cell), Image.NEAREST)
+                cellim.paste(img, (0, 0), img)
             sheet.paste(cellim, (x, y + label_h))
         y += cell + label_h + pad
     sheet.save(args.out)

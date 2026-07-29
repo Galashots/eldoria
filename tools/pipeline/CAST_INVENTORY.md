@@ -127,9 +127,15 @@ references* for PixelLab rotation — silhouette clarity beats detail density.
   (tree/boulder/flowers/stump/fence/cookpot), and the composability layer —
   grass→water / grass→soil / grass→path 16-tile transition tilesets plus an
   18-config road autotile set, each with machine-readable `tile_rules`.
-  ~180/2000 monthly generations used in total. Awaiting owner review;
-  next: building kits (farmhouse/shop) with `style_images` locked to
-  approved tiles, then Phase-3 engine wiring for tile/prop loading.
+  ~180/2000 monthly generations used in total. **Owner approved the
+  landscape set** ("everything looks lovely"); next: building kits
+  (farmhouse/shop) with `--style-image` locked to approved tiles, then
+  Phase-3 engine wiring for tile/prop loading (separate iso-spec work).
+- 2026-07-29: ChatGPT non-author review of PR #15 returned REQUEST CHANGES
+  (fail-open validator, silent job failures, unverified downloads,
+  direction-unsafe sheets, stale create4 example, unimplemented
+  style_images, camera-claim overreach). All addressed same night; see
+  PIPELINE.md and the PR thread.
 
 ## North Star alignment
 

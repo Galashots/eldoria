@@ -10,6 +10,11 @@ against the engine contract (tools/pipeline/PIPELINE.md):
   G5 scale spread    opaque bbox height range across statics <= 4 px,
                      width range <= 8 px (facings must read as one character)
   G6 walk stability  within a strip: centre-x range <= 2 px, top-y range <= 4 px
+  G7 stand identity  walk frames 0 and 2 are byte-identical (engine resets
+                     walkFrame to 0 when stationary; 0/2 are the stand pose)
+  G8 completeness    all four static slots must exist (relax with
+                     --allow-partial); --require-walks demands all four
+                     strips; an empty directory always FAILS
 
 These are the same gates the Track 2 harness (tools/ranger-proof.mjs on
 work/ranger-character-pipeline-proof) proved out, in a dependency-light Python
@@ -64,14 +69,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", required=True)
     ap.add_argument("--profile", required=True)
+    ap.add_argument("--allow-partial", action="store_true",
+                    help="do not fail on missing static slots")
+    ap.add_argument("--require-walks", action="store_true",
+                    help="fail unless all four walk strips exist")
     args = ap.parse_args()
 
+    found_any = False
     boxes = {}
     for slot in ENGINE_SLOTS:
         path = os.path.join(args.dir, f"{args.profile}-{slot}.png")
         if not os.path.isfile(path):
-            print(f"SKIP {slot} (no static file)")
+            if args.allow_partial:
+                print(f"SKIP {slot} (no static file; --allow-partial)")
+            else:
+                gate(False, f"G8 static missing       {slot}")
             continue
+        found_any = True
         frames, img = frames_of(path)
         gate(img.shape[:2] == (FRAME, FRAME) and len(frames) == 1,
              f"G1 static size 64x64   {slot} ({img.shape[1]}x{img.shape[0]})")
@@ -88,10 +102,16 @@ def main():
     for slot in ENGINE_SLOTS:
         path = os.path.join(args.dir, f"{args.profile}-{slot}-walk.png")
         if not os.path.isfile(path):
+            if args.require_walks:
+                gate(False, f"G8 walk strip missing   {slot}")
             continue
+        found_any = True
         frames, img = frames_of(path)
         gate(img.shape[0] == FRAME and img.shape[1] == FRAME * WALK_FRAMES,
              f"G1 walk strip 256x64   {slot} ({img.shape[1]}x{img.shape[0]})")
+        if len(frames) == WALK_FRAMES:
+            gate(np.array_equal(frames[0], frames[2]),
+                 f"G7 stand frames 0==2   {slot}")
         stats = [frame_gates(f, f"{slot}-walk-{i}") for i, f in enumerate(frames)]
         stats = [s for s in stats if s]
         if len(stats) > 1:
@@ -101,6 +121,9 @@ def main():
                  f"G6 walk centre <=2     {slot} ({max(cxs)-min(cxs):.1f} px)")
             gate(max(tops) - min(tops) <= 4,
                  f"G6 walk top <=4        {slot} ({max(tops)-min(tops)} px)")
+
+    if not found_any:
+        gate(False, "G8 no artifacts found  (empty or wrong --dir/--profile)")
 
     print(f"\n{'ALL GATES PASS' if not failures else f'{len(failures)} GATE(S) FAILED'}")
     sys.exit(0 if not failures else 1)

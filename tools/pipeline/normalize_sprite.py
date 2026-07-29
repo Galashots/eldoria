@@ -99,6 +99,13 @@ def main():
             walks[slot] = frames
     if not sources:
         raise SystemExit(f"no <slot>.png / <slot>-walk-<i>.png files in {args.source}")
+    # The shared crop window + shared scale assume every frame lives in ONE
+    # canvas coordinate system. Mixed source dimensions would silently break
+    # that, so they are rejected rather than resized.
+    dims = {img.shape[:2] for img in sources.values()}
+    if len(dims) > 1:
+        raise SystemExit(f"mixed source dimensions {sorted(dims)}; all frames "
+                         "must share one canvas before normalizing")
     missing = [s for s in ENGINE_SLOTS if s not in statics]
     if missing:
         print(f"[norm] WARNING: missing static slots: {', '.join(missing)}")

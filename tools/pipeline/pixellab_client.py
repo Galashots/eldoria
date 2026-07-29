@@ -129,11 +129,27 @@ def poll_job(job_id):
         job = api("GET", f"/background-jobs/{job_id}")
         status = job.get("status")
         print(f"[job {job_id}] {status}")
-        if status in ("completed", "failed"):
+        if status == "completed":
             return job
+        if status == "failed":
+            # Fail closed: a failed generation must not exit 0.
+            sys.exit(f"job {job_id} FAILED: {str(job)[:500]}")
         if time.time() - start > POLL_TIMEOUT:
             sys.exit(f"job {job_id} still {status} after {POLL_TIMEOUT}s; giving up")
         time.sleep(POLL_SECONDS)
+
+
+PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+
+
+def fetch_binary(url):
+    """Download a result file; verify HTTP status and PNG magic before use."""
+    resp = requests.get(url, timeout=120)
+    resp.raise_for_status()
+    if not resp.content.startswith(PNG_MAGIC):
+        sys.exit(f"download from {url[:80]}... is not a PNG "
+                 f"({resp.headers.get('content-type')}, {len(resp.content)} bytes)")
+    return resp.content
 
 
 def download_character(character_id, out_dir):
@@ -160,6 +176,8 @@ def finish_async(resp, out_dir, prefix):
     job_id = resp.get("background_job_id")
     if job_id:
         poll_job(job_id)
+    for jid in resp.get("background_job_ids") or []:   # e.g. one per direction
+        poll_job(jid)
     character_id = resp.get("character_id")
     if character_id:
         download_character(character_id, out_dir)
@@ -280,6 +298,8 @@ def cmd_tilespro(args):
         payload["tile_flat_top_px"] = args.flat_top_px
     if args.feature:
         payload["tile_feature"] = args.feature
+    if args.style_image:
+        payload["style_images"] = [b64_image(p) for p in args.style_image]
     if args.seed is not None:
         payload["seed"] = args.seed
     resp = post("/create-tiles-pro", payload, args.dry_run)
@@ -295,7 +315,7 @@ def cmd_tilespro(args):
     with open(os.path.join(args.out_dir, "tiles.json"), "w", encoding="utf-8") as fh:
         json.dump({k: v for k, v in detail.items() if k != "storage_urls"}, fh, indent=2)
     for key, url in (detail.get("storage_urls") or {}).items():
-        blob = requests.get(url, timeout=120).content
+        blob = fetch_binary(url)
         with open(os.path.join(args.out_dir, f"{key}.png"), "wb") as fh:
             fh.write(blob)
         print(f"[save] {args.out_dir}/{key}.png")
@@ -319,13 +339,13 @@ def cmd_mapobject(args):
     detail = api("GET", f"/map-objects/{resp['object_id']}")
     url = detail.get("download_url")
     if url:
-        blob = requests.get(url, timeout=120).content
+        blob = fetch_binary(url)
         os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
         with open(args.out, "wb") as fh:
             fh.write(blob)
         print(f"[save] {args.out} ({len(blob)} bytes)")
     else:
-        print(f"[warn] no download_url; status={detail.get('status')}")
+        sys.exit(f"no download_url; status={detail.get('status')}")
 
 
 def cmd_create_v3(args):
@@ -496,6 +516,8 @@ def main():
     p.add_argument("--flat-top-px", type=int, choices=[2, 4],
                    help="2 = classic pointed diamond (engine style)")
     p.add_argument("--feature", choices=["roads", "tileset", "building"])
+    p.add_argument("--style-image", action="append",
+                   help="approved tile PNG(s) to lock style to (repeatable)")
     p.add_argument("--seed", type=int)
     p.add_argument("--out-dir", required=True)
     p.set_defaults(fn=cmd_tilespro)
@@ -564,6 +586,12 @@ def main():
     p.add_argument("--id", required=True)
     p.add_argument("--out-dir", required=True)
     p.set_defaults(fn=cmd_character)
+
+    # Accept --dry-run before OR after the subcommand name. SUPPRESS keeps a
+    # subcommand-level absence from clobbering a main-level --dry-run.
+    for sp in sub.choices.values():
+        sp.add_argument("--dry-run", action="store_true",
+                        default=argparse.SUPPRESS, dest="dry_run")
 
     args = ap.parse_args()
     args.fn(args)

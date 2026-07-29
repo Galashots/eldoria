@@ -75,10 +75,12 @@ Engine slots map to PixelLab directions with `--isometric`:
 | `left`  | NW | `north-west` |
 | `up`    | NE | `north-east` |
 
-PixelLab `view` is `low top-down` (closest to our locked elevation of
-26.565° = atan 0.5). **First-run calibration must verify** both that the
-diagonal directions render as our facings and that `low top-down` reads
-correctly against the engine's 64×32 diamonds — see checklist below.
+PixelLab `view` is `low top-down`. Note on the projection constant: 26.565°
+(= atan 0.5) is the **screen slope of the 2:1 diamond edge** carried over
+from the prior 3D contract — it is not, without qualification, a camera
+elevation. Whether `low top-down` sits correctly on the engine's 64×32
+diamonds is a **visual calibration gate** (in-game screenshot against the
+grid), not something the machine gates check — see checklist below.
 
 Walk animation is **4 frames** at `WALK_FRAME_MS=110`; the engine resets
 `walkFrame` to 0 when stationary, so **frame 0 must be the standing pose** and
@@ -96,23 +98,27 @@ generated cycle returns 4 distinct poses, keep frames {stand, A, stand-copy, B}.
 ## Commands (Ranger example)
 
 ```bash
-# 4 static facings, isometric diagonals, 64px
-python tools/pipeline/pixellab_client.py create4 \
-  --description "older ranger adventurer, weathered green hooded cloak, leather bracers, longbow and quiver, determined expression" \
-  --size 64 --isometric \
-  --directions south-east,south-west,north-west,north-east \
+# IDENTITY ROUTE (proven): concept -> <=256px -> v3 reference rotation
+python -c "from PIL import Image; Image.open('art-incoming/ranger-concept-v1.png').convert('RGBA').resize((256,256), Image.LANCZOS).save('_probe_local/pipeline/ranger/ref-256.png')"
+python tools/pipeline/pixellab_client.py create-v3 \
+  --description "older ranger adventurer, weathered green hooded cloak, leather bracers, longbow and quiver" \
+  --reference-image _probe_local/pipeline/ranger/ref-256.png --seed 11 \
   --out-dir _probe_local/pipeline/ranger
+# -> 8 rotations; keep the 4 diagonals for the engine slots
 
-# walk cycle for the character created above (id printed / in character.json)
+# DESCRIPTION ROUTE: 8 directions (create4 yields cardinals only — do not
+# use it for the engine's diagonal facings; its `directions` field is
+# per-direction REFERENCE IMAGES, not a selector)
+python tools/pipeline/pixellab_client.py create8 \
+  --description "..." --size 64 --isometric --seed 11 \
+  --out-dir _probe_local/pipeline/cast/NAME
+
+# walk cycle for a created character (id in character.json; one job per
+# direction — the client polls background_job_ids and re-downloads the zip)
 python tools/pipeline/pixellab_client.py animate \
   --character-id <id> --action "walking" --frames 4 --isometric \
-  --out-dir _probe_local/pipeline/ranger
-
-# alternative identity-preserving route: rotate an APPROVED sprite to a new facing
-python tools/pipeline/pixellab_client.py rotate \
-  --from-image art-incoming/ranger-down.png \
-  --from-direction south-west --to-direction south-east --isometric \
-  --size 64 --out _probe_local/pipeline/ranger/raw/right.png
+  --directions south-east,south-west,north-west,north-east \
+  --out-dir _probe_local/pipeline/ranger-walk
 
 # arrange raw frames as <slot>.png / <slot>-walk-<i>.png, then:
 python tools/pipeline/normalize_sprite.py \
@@ -206,7 +212,8 @@ trial covers the whole calibration checklist.
 This PR establishes **process, not art** — no visible game change, no change
 to the visual direction. Alignment is enforced structurally: identity stays
 with ChatGPT (standing visual-direction lead), the palette can be forced from
-a North Star swatch, the camera contract is pinned in the normalize/validate
-gates, and nothing reaches `assets/` without the human + North Star review
-step. First generated art must be reviewed against
+a North Star swatch, the size/alpha/anchor/scale contract is pinned in the
+normalize/validate gates (camera and facing correctness remain **visual**
+review gates), and nothing reaches `assets/` without the human + North Star
+review step. First generated art must be reviewed against
 `docs/VISUAL_NORTH_STAR.md` before commit, per repo `CLAUDE.md`.
