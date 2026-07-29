@@ -19,7 +19,7 @@ Eldoria already contains a complete mechanical spine:
 - eighteen Squishy Dumplings with earned-gold pulls, visible pity, duplicate dough, and collection persistence;
 - a Shadow Warden and Crystal Wyrm;
 - an approved 2:1 isometric conversion and Visual North Star;
-- an active PixelLab plus deterministic-post-processing pipeline proposal.
+- the adopted PixelLab plus deterministic-post-processing pipeline.
 
 The missing layer is not another collection of mechanics. It is a strong reason those mechanics belong to one world and one adventure.
 
@@ -31,8 +31,9 @@ When this document conflicts with current runtime facts, the runtime remains aut
 
 | Label | Meaning |
 | --- | --- |
-| **Existing** | Already present in the current repository or approved direction. Preserve unless separately changed. |
-| **Recommended** | The Creative Director's preferred direction for owner approval. |
+| **Existing** | Already present in the current repository. Preserve unless separately changed. |
+| **Approved** | Explicit owner-approved direction. Build to it unless the owner reopens it. |
+| **Recommended** | The Creative Director's preferred direction for future owner approval. |
 | **Provisional** | Useful working material that may be refined before implementation. |
 | **Open decision** | Requires Leo's explicit choice because it affects identity, product direction, or existing continuity. |
 
@@ -78,7 +79,7 @@ It should feel:
 
 ### The Rootsong and the Fading
 
-**Recommended**
+**Approved**
 
 Beneath Eldoria runs the **Rootsong**, an ancient living current carried through roots, soil, water, crystal, forge-fire, food, memory, and promises kept between people.
 
@@ -147,7 +148,7 @@ Therefore:
 ### Older brother — Ranger
 
 **Existing internal identity:** `adventurer`  
-**Recommended player-facing identity:** Ranger
+**Approved player-facing identity:** Ranger
 
 **Fantasy promise:** “The world leaves evidence. I can read it, plan for it, and act precisely.”
 
@@ -195,7 +196,7 @@ The Mage is not a baby-mode hero. His insight is a different kind of expertise.
 ### Mira — Town steward and quest captain
 
 **Existing runtime role:** quest giver  
-**Recommended fiction:** Mira coordinates Town requests, market-day deliveries, and help between residents.
+**Approved fiction:** Mira coordinates Town requests, market-day deliveries, and help between residents.
 
 Mira is warm, capable, and slightly mischievous. She notices whether the heroes follow through. Her practical apron, produce basket, and travel-ready clothes still fit: she works throughout the market rather than remaining behind one counter.
 
@@ -651,7 +652,10 @@ The PixelLab pipeline was adopted in PR #15 and the MCP connection was establish
 The adopted route:
 
 - `create-character-v3` with a reference image is the identity route;
-- eight directions are generated to obtain the four diagonal isometric facings;
+- all eight generated directions are retained as canonical production sources;
+- the current engine consumes SE/SW/NW/NE as a four-direction compatibility
+  subset; the owner intends a later bounded eight-direction runtime for heroes
+  and moving NPCs/enemies;
 - hero concepts remain ChatGPT-led and North-Star-controlled;
 - PixelLab handles rotation and animation;
 - deterministic normalization and machine gates remain mandatory;
@@ -659,10 +663,20 @@ The adopted route:
 
 ### Wave 1 — Hero identity and motion
 
-1. Ranger: the unarmed v2 rotation has been generated at 64 px and passed Claude's heading-fidelity and semantic-drift gates. ChatGPT's pixel inspection of the contact sheet is pending before visual approval. Walk animation is next after approval.
-2. Mage: concept evidence exists (PR #19). Generation has not started; the Mage prompt must be updated to match the adopted unarmed, flat-front-on reference route before spending credits.
-3. Confirm the two brothers read as one world and different roles at actual runtime size.
-4. Lock contact points and animation conventions before equipment-look families.
+1. Ranger: the manual PixelLab Character workflow produced all eight transparent
+   256×256 rotations from an unarmed South-facing reference already drawn at the
+   target high-top-down camera (approximately 35°). ChatGPT recommended the set
+   through the source-art gate and found it readable after 64px downscale. Retain
+   all eight directions. The South walk's eight raw frames passed as candidate
+   source motion, pending bottom-center normalization, full directional coverage,
+   runtime conversion, and runtime inspection.
+2. Mage: concept evidence exists (PR #19). Generation has not started; update
+   the prompt to the adopted unarmed, South-facing high-top-down reference route
+   before spending credits.
+3. Confirm the two brothers read as one world and different roles at actual
+   runtime size.
+4. Lock contact points and animation conventions while preserving full
+   eight-direction sources before equipment-look families.
 
 ### Wave 2 — Town relationship anchors
 
@@ -787,7 +801,7 @@ into one PR.
 
 ## 21. Continuity conflicts — decided
 
-All four conflicts below were put to the owner and **decided on 2026-07-29**. They
+All five conflicts below were put to the owner and **decided on 2026-07-29**. They
 are now canon: build to the **Decision** lines, not to the original recommendations.
 Reopening any of them needs a new owner decision, not an agent's judgement.
 
@@ -837,10 +851,14 @@ Personalities and favorites stay as the affection layer.
 1. ~~Owner reviews the five continuity decisions above.~~ Done 2026-07-29; all five decided in §21.
 2. ~~Adopt the PixelLab pipeline.~~ Done — PR #15 (pipeline) and PR #18 (MCP).
 3. Merge this creative-direction document after accepted non-author amendments.
-4. Complete the Ranger visual approval: ChatGPT inspects the contact sheet.
-5. Update the Mage prompt to match the adopted unarmed, flat-front-on reference route and generate.
+4. Complete Ranger normalization and runtime inspection while retaining all
+   eight source directions and the eight-frame South walk source.
+5. Update the Mage prompt to match the adopted unarmed, South-facing
+   high-top-down reference route and generate all eight rotations.
 6. Finish the current Town isometric slice through its own PR.
-7. Produce the Ranger and Mage motion lock (walk animations).
+7. Produce complete Ranger and Mage motion coverage; keep all generated
+   directions and raw frames even while the current engine uses a four-direction
+   compatibility subset.
 8. Implement the first three-quest story slice:
    - First Furrow;
    - Mira's Market Day;
