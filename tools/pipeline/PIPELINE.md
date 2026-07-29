@@ -1,6 +1,6 @@
 # Eldoria Asset Pipeline v2 — PixelLab + deterministic post-process
 
-**Status: proposed (draft PR). Owner decision required before adoption.**
+**Status: adopted 2026-07-29 via merged PR #15 at reviewed head `1c6be80d672609923647150fdd28413015269019`.**
 
 This is the consolidated asset pipeline for Realm of Eldoria's 2.5D relaunch.
 It replaces the generation stages of the two earlier pipeline docs and keeps
@@ -20,8 +20,8 @@ Options weighed for producing character facings + animation frames:
    template/text/skeleton animation, palette forcing, isometric flag, and
    diagonal directions that map 1:1 onto our engine slots. Credit-priced
    (~$0.012 per 64×64 4-direction character; cents per animation). Official
-   REST API + Python SDK + MCP server. Community consensus: best-in-class
-   pipeline for rotations + animation.
+   REST API + Python SDK + MCP server. Eldoria's repo-local calibration found
+   it the strongest tested route for rotations + animation.
 2. **Retro Diffusion API** — output-quality leader for single images; weaker
    rotation/animation story. Kept as an optional *base-image* source later;
    not needed for v1.

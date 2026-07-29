@@ -2,9 +2,10 @@
 
 - **Date:** 2026-07-27
 - **Game:** Realm of Eldoria (original / `eldoria-public`, single-file `index.html`)
-- **Status:** Design approved through brainstorming; parameter defaults flagged for Leo's veto (§2)
-- **Companion doc:** `tools/3D_ISO_SPRITE_PIPELINE.md` (how the real art gets made). Its §9 STOP
-  guard points here — **this file is the engine-side source of truth.**
+- **Status:** Engine design approved; Phase 0/Farm and the first bounded Town slice are merged. Production-art generation is governed by `tools/pipeline/PIPELINE.md`.
+- **Companion doc:** `tools/pipeline/PIPELINE.md` (adopted production-art route). The former
+  `tools/3D_ISO_SPRITE_PIPELINE.md` generation route is historical after PR #13; **this file
+  remains the engine-side source of truth.**
 - **Author:** Leo + Claude (brainstorming session; visual mock approved at
   `mockups/iso-preview.html`)
 
@@ -200,8 +201,13 @@ Engine code changes (complete list — anything beyond this is scope creep):
   fallen through to the new iso default). Gate awaits the boys' verdict.
 - **Phase 2 — Port remaining areas.** Town (NPCs, buildings) → Wilds → Deep Woods → Mine (enemies,
   combat entry cues). *Gate:* every area playable in iso; combat/quests verified in-world.
-- **Phase 3 — Real art.** Run the 3D pipeline proof slice (pipeline doc §8: adventurer, 4 facings,
-  3 anims), then tiles/props, then mage + enemies. Defaults D1–D3 harden here.
+  **IN PROGRESS 2026-07-29** — the first bounded Town slice (General Store + Mira) is merged with
+  placeholder art; the Forge, other Town villagers, Wilds, Deep Woods, and Mine remain.
+- **Phase 3 — Real art.** Use the adopted PixelLab + deterministic post-process route in
+  `tools/pipeline/PIPELINE.md`. The Ranger proof and production tooling are merged; the cast and
+  Farm landscape concepts are owner-approved. Next: approved-style building kits, normalization,
+  validation, and bounded engine wiring for Farm plus the validated Town slice. The engine keeps
+  four diagonal facing slots sourced from approved eight-direction rotations.
 - **Phase 4 — Default flip.** Iso becomes the default everywhere; top-down remains reachable via
   the flag for one settling period, then the top-down draw path is retired.
 
@@ -216,8 +222,8 @@ and the dumpling feature (2D, DOM-based, fully insulated).
 
 - **Projection round-trip:** `inverse(project(p)) == p` for corner/center/edge points (dev-console
   assertion in Phase 0).
-- **Headless boot smoke** (established this session: headless Chrome, zero console errors) run in
-  both modes; restoring real CI on this repo is task-tracked and should land with Phase 0.
+- **Headless boot smoke** runs through `npm test` in CI with zero console errors; the same suite
+  also exercises the isometric interaction, travel, depth, save, and evidence paths.
 - **Depth-sort spot checks:** hero behind/in-front of a tree both render correctly on the Farm
   (the exact scenario in the approved mock).
 - **Input feel check:** push-up moves hero straight up-screen in iso Farm; door transitions
@@ -229,8 +235,8 @@ and the dumpling feature (2D, DOM-based, fully insulated).
 
 ## 12. Risks & mitigations
 
-- **Art volume is the long pole** → placeholder-first (game feels new before any art lands);
-  deterministic pipeline; D2 (cohesive looks) cuts character renders ~4×.
+- **Art volume is the long pole** → placeholder-first; adopted PixelLab generation plus
+  deterministic normalization/validation; cohesive gear-tier looks avoid per-slot render volume.
 - **Movement feel on tablet** → Phase 1 kid gate before any further investment.
 - **Sprite jitter** → single shared foot-anchor rule (pipeline §5F) + bottom-center draw (§8.4).
 - **Scope creep in a 4,100-line file** → §8's closed change list; everything else is content.
@@ -239,7 +245,8 @@ and the dumpling feature (2D, DOM-based, fully insulated).
 
 ## 13. Open items
 
-1. Defaults **D1/D2/D3** (§2) — standing unless Leo vetoes before Phase 3.
-2. Zoom feel: `TARGET_VIEW_ROWS` (§5b) is the one constant that decides how much world is visible
-   on every device — tune at the Phase 1 gate on Leo's phone AND the iPad together.
-3. `mockups/iso-preview.html` — delete from the public repo once Phase 0 exists to look at.
+1. Complete the Phase 1 kid preference gate; Farm is live in iso but the boys' recorded verdict is still outstanding.
+2. Finish Phase 2 beyond the validated General Store/Mira slice: remaining Town content, Wilds, Deep Woods, and Mine.
+3. Land Phase 3 production art through the adopted pipeline, beginning with approved-style building kits and bounded Farm/Town engine wiring.
+4. Keep tuning `TARGET_VIEW_ROWS` (§5b) on Leo's phone and the iPad together if playtesting identifies a real visibility problem.
+5. Delete `mockups/iso-preview.html` once it no longer provides useful comparison evidence.

@@ -53,13 +53,14 @@ differs per profile is **difficulty** — the math grade level and reading level
 ## Development
 
 Built in small, testable slices — see [`AGENTS.md`](AGENTS.md) for shared agent rules,
-[`CLAUDE.md`](CLAUDE.md) for the Claude entry point, and [`PROGRESS.md`](PROGRESS.md)
-for the running log.
+[`CLAUDE.md`](CLAUDE.md) for the Claude entry point, and
+[`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) for the current implementation state and next
+accepted outcome. Owner-designated large deliveries also follow
+[`docs/LARGE_PR_EXECUTION.md`](docs/LARGE_PR_EXECUTION.md).
 
-Every push runs three checks (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
-
-- a **smoke test** that boots `index.html` headlessly and fails on any console error,
-- a **gameplay logic test suite** (farming, shop, combat, cooking, save migrations) driven
-  through a Node DOM-stub harness, and
-- a **Lighthouse accessibility audit** (contrast, labels, etc.) to keep the game usable for
-  the youngest player.
+Every push to `main` and every pull request runs `npm test` in the single CI job defined by
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml). The current script chain is the source of
+truth in [`package.json`](package.json); it covers deterministic asset integrity/build checks,
+Ranger proof validation, headless boot smoke, and isometric gameplay/interaction tests. CI uploads
+generated PNG/JSON playtest evidence from `artifacts/` when present. Visual quality still requires
+human image inspection; the automated suite does not run a Lighthouse audit.
