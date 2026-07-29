@@ -32,49 +32,61 @@ decision record, not a mirror of the vendor reference.
 
 ## 1. Cost and sizing — read this before generating anything
 
-**Rotation cost is documented as `ceil(w × h × 8 / 65536)` generations.**
-From-scratch mode adds one Pixen generation: `1 + ceil(s² × 8 / 65536)`.
+**MEASURED 2026-07-29** on two live reference-mode runs (Ranger, seed 11,
+`view=high top-down`, no `image_size` sent). This section previously said "do not
+state which one won until step 3 has actually been done." Step 3 is now done.
 
-| Character size | Rotation set | Custom (v3) walk, 4 directions |
-|---|---|---|
-| 256 px | **8 gens** | ~8/dir → **~32 gens** |
-| 192 px | 5 gens | ~6/dir → ~24 gens |
-| 128 px | 2 gens | ~2/dir → ~8 gens |
-| 96 px | 2 gens | ~1/dir → ~4 gens |
-| **64 px** | **1 gen** | **~1/dir → ~4 gens** |
+### What was measured
 
-Animation cost scales with canvas × frames the same way: roughly 1 generation
-per direction at ≤96 px, rising to ~8 per direction at 256 px.
+| Reference fed | Figure in reference | Figure in output | Output canvas | Charged |
+|---|---|---|---|---|
+| 64×64 | 52 px tall | **52.6 px** | 108×108 | **1 gen** |
+| 128×128 | 104 px tall | **104.6 px** | 216×216 | **2 gens** |
 
-### The rule
+Three rules fall out, and all three held on both runs:
 
-> **Drive the output to the engine's target resolution. Never let it default.**
+1. **The figure's pixel height is preserved 1:1 from the reference.** PixelLab
+   does not rescale your character. Figure occupancy was 48.7% and 48.4% of
+   canvas — the same operation both times.
+2. **The output canvas is the reference × 1.6875, capped at 256.** This is
+   padding, not enlargement. The spec says so: *"Final canvas is padded ~2x for
+   animation room (capped at 256)."* A character that looks like it "came back
+   bigger" is a padded canvas around a same-size figure.
+3. **Rotation is billed on the REFERENCE dimensions, not the output canvas.**
+   `ceil(ref_w × ref_h × 8 / 65536)` predicted 1 and 2; 1 and 2 were charged.
+   Billing on the *output* would have predicted 2 and 6. It did not.
 
-`size` defaults to 48 px — *except* when you pass a reference image, where output
-**follows the reference's own dimensions**. Feed a 256×256 concept and you get a
-256 px character, an 8× bill, and every future animation on that character billed
-at 256 px too.
+> ### The rule
+>
+> **Size the reference so the figure lands at the engine's target height.**
+> That single lever sets identity fidelity, output size, and price at once.
 
-**The two sources disagree on how to control this, so do both.** The MCP docs say
-output "defaults to the reference's own dimensions unless `size` is set", while
-the OpenAPI spec calls `image_size` *"advisory (model picks its own size)"* in
-reference mode. Until we have measured it ourselves:
+Eldoria's contract is a **64×64** frame (`normalize_sprite.py`, `FRAME = 64`),
+so the target figure is ~52–56 px — which is what a **64×64 reference** produces,
+at **1 generation**. That is the standard for Eldoria heroes.
 
-1. **Downscale the reference to the target size** — this is the lever both
-   sources agree on;
-2. **also pass `--size`** — costs nothing if it is ignored;
-3. **check the actual dimensions in `character.json` after the first run** and
-   record the answer here.
+| Reference | Figure out | Rotation cost | Verdict for a 64px frame |
+|---|---|---|---|
+| **64 px** | **~52 px** | **1 gen** | **Standard.** Lands on target, no resampling |
+| 128 px | ~104 px | 2 gens | 1.9× downscale. Only if fine props must survive (§3) |
+| 256 px | ~208 px | **8 gens** | Avoid: 8× the price, ~3.7× downscale, **and** the 256 canvas cap squeezes animation padding from 1.69× to 1.23×, risking limb clipping in animation |
 
-Do not state which one won until step 3 has actually been done.
+Bigger references are not "better sizing" — they buy a bigger figure that must
+then be downscaled further, blending the pixel grid. Generating at target is
+cheaper *and* sharper.
 
-This is not only a cost argument. Eldoria renders at **64×64**. Generating at
-256 px and downscaling 4× blends 4×4 blocks into one output pixel, which is
-exactly how you destroy a pixel grid. Generating at the target size is
-**cheaper and sharper**. Reserve larger sizes for art that genuinely ships large.
+### What is still unverified
 
-Canvas comes back roughly 40% larger than `size` to leave animation room; the
-normalizer handles that.
+`image_size` was **not sent** on either run, so output was determined entirely by
+the reference. That is consistent with the spec calling it *"advisory (model
+picks its own size)"* in reference mode, but **we have not tested whether passing
+it overrides the reference.** Do not assume it does. The reference's own
+dimensions are the lever we have actually proven.
+
+Animation cost is billed against the character's canvas, so a 216 px character
+stays expensive for every walk and attack it ever receives. This is the surviving
+reason to keep characters small, and it is independent of the rotation billing
+above.
 
 ### Mode costs
 
@@ -133,6 +145,54 @@ hint: `low top-down` ≈ 20° above, `high top-down` ≈ 35°.
 Constraints: reference max **256×256**; requires `mode=v3`; `outline`/`detail`
 hints are ignored when a reference is supplied; `proportions` is ignored by v3
 entirely (it applies to standard/pro only).
+
+### The reference should be flat front-on, NOT elevated — verified 2026-07-29
+
+**PixelLab does not ask for an elevated reference.** `reference_image` documents
+exactly one requirement: *"South-facing reference image… Max 256x256 pixels."*
+There is no camera-elevation requirement on the reference anywhere in the spec.
+
+This was tested rather than assumed. A **flat, eye-level, front-on** concept was
+fed to `create-character-v3` with `view=high top-down` (≈35°), and the rotation
+came back correct in all eight directions — faces on south/SE/SW, no face on
+north/NE/NW, no collapsed pairs, consistent scale (51–53 px across the set).
+
+> **Ask concept artists for a plain front-on view at eye level.** It is what the
+> API documents, it is markedly easier for an image generator to produce, and it
+> is now measured to rotate correctly.
+
+Two related facts that make this safe: `view` is a **single** field *"used by
+both generation and skeleton reconstruction"* — there is no from/to split on this
+endpoint, so one value covers reference and output. (The **web** Rotate tool does
+have a separate `From view`; that split does not exist in the REST API.) And the
+vendor's rotate guide warns that changing camera view is *"not something the
+model has been trained to do"* — so do not try to make the model re-shoot the
+camera. Match `view` to the game's camera and let the reference be plain.
+
+### Do not bake weapons into a hero's base sprite
+
+Eldoria composites equipment as layers — `index.html` defines
+`EQUIPMENT_SLOTS = ['head', 'body', 'weapon', 'cape']` and draws cape → base →
+body → head → weapon at the same position and frame index. A weapon baked into
+the base sprite therefore cannot be swapped, and fights every future gear tier.
+
+It also costs fidelity. Measured on the Ranger: at a 64 px reference the bow was
+~1 px wide and **did not survive rotation** — a broken stick in `south`, a
+featureless stave in `north-east`, and **entirely absent in `south-west`**, the
+frame the engine maps to walking toward the camera. At a 128 px reference the
+same bow survived in all eight. Fine props are the thing that breaks first when
+you shrink a reference.
+
+Generate the hero **unarmed**, and treat the weapon as a `weapon`-slot overlay.
+PixelLab has **no** equipment-layer endpoint — nothing attaches an item to a
+character — but Eldoria's overlays are full-frame aligned layers, not
+hand-anchored, so none is needed. (There is no hand keypoint to anchor to in any
+case: the skeleton enum stops at `LEFT ARM`/`RIGHT ARM`, and `skeletons` came
+back `null` on both v3 reference-mode characters.)
+
+For gear variants, use **`create-character-state`** (§2) — one text edit applied
+consistently across all rotations, keeping identity and proportions, with
+`use_color_palette_from_reference` to stay on-palette.
 
 ---
 
@@ -242,9 +302,24 @@ failure modes is the point of this file.
 
 - **Cost was never checked.** The Mage was generated at 256 px and the Ranger at
   192 px because `size` was never passed and silently inherited the reference
-  dimensions. Every rotation set and every custom walk on those characters was
-  billed at up to 8× the necessary rate, and the output was then downscaled 4× to
-  64 px — paying more for worse pixels.
+  dimensions. The output was then downscaled 4× to 64 px — paying more for worse
+  pixels.
+  - **Partly corrected 2026-07-29 by measurement (§1).** The claim that those
+    heroes were *"billed at up to 8× the necessary rate"* on their rotations is
+    **wrong**, and so is the reasoning in commit `98fb3f6`
+    (*"expose --size on create-v3 so heroes are not billed at 8x"*). Rotation is
+    billed on the **reference** dimensions, not the output canvas — a 64 px
+    reference cost 1 generation despite producing a 108 px character. Since those
+    heroes' references were already capped at 256×256, the rotation overspend was
+    real but bounded by the reference, not by the output.
+  - The **conclusion still holds for a different reason**: animation is billed
+    against the character's canvas, so an oversized character stays expensive for
+    every walk and attack it ever receives. Keep characters small — but cite the
+    animation bill, not the rotation bill.
+  - This is a worked example of the failure mode this file exists to prevent: a
+    plausible cost model, stated confidently in a commit message, propagated
+    without anyone charging one generation to check it. **Two runs and 3
+    generations settled it.**
 - **`enhance_prompt` was documented as available on `create-character-v3`**
   without the from-scratch-only constraint. It would have returned 422.
 - **The Ranger was generated from-scratch** with no concept image, skipping the
@@ -253,6 +328,12 @@ failure modes is the point of this file.
   slot `down` — facing away from the camera. The Mage, built from a concept
   reference in the same session, rotated correctly. That contrast is the evidence
   that the route, not luck, is what matters.
+  - **Confirmed fixed 2026-07-29.** Regenerated through the identity route from a
+    ChatGPT concept, the Ranger's wheel came back correct in all eight
+    directions at both 64 px and 128 px references — `south-west` now faces the
+    camera. The diagnosis was right: the route was the defect.
+  - The remaining failure at 64 px was the **bow**, not the rotation (§3). Do not
+    read a prop failure as a rotation failure — they have different fixes.
 - **A summarizing fetch twice reported that `/animate-character` does not exist.**
   It does. Parse the spec directly.
 

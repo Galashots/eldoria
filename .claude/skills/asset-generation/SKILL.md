@@ -55,9 +55,38 @@ four diagonal frames from any 8-direction set.
 
 Ready-to-paste prompts live in `tools/pipeline/CAST_INVENTORY.md`. Rules that
 make concepts PixelLab-ready — every prompt must demand: one character, full
-body, three-quarter FRONT view, neutral standing pose, feet visible, plain
-flat light-grey background, no ground shadow, no text, square image. Save
+body, **flat front-on view at eye level**, neutral standing pose, feet visible,
+plain flat light-grey background, no ground shadow, no text, square image. Save
 results to `art-incoming/<name>-concept-v1.png` (gitignored).
+
+### 2a. Do NOT ask for an elevated camera — verified 2026-07-29
+
+**PixelLab documents no camera-elevation requirement on the reference** — only
+*"South-facing reference image… Max 256x256 pixels."* A flat eye-level concept
+was fed to `create-v3` with `view=high top-down` (≈35°) and rotated correctly in
+all eight directions.
+
+This matters practically: image generators **will not obey a 35° camera from
+prompt text alone.** Two independent reviews of the Ranger concept agreed it came
+back eye-level despite the prompt asking for elevation. Asking for the elevated
+view buys nothing, and spends iterations failing to get it. Ask for plain
+front-on; set the camera with `--view` on the PixelLab call instead.
+
+### 2b. Concepts for heroes must be UNARMED
+
+Eldoria composites gear as layers — `index.html` defines
+`EQUIPMENT_SLOTS = ['head', 'body', 'weapon', 'cape']`, drawn cape → base →
+body → head → weapon. A weapon baked into the base sprite cannot be swapped and
+breaks every gear tier the character will ever be given.
+
+It also fails on fidelity. Measured on the Ranger: at a 64 px reference the bow
+was ~1 px wide and did not survive rotation — broken in `south`, featureless in
+`north-east`, and **absent entirely in `south-west`**, the frame the engine maps
+to walking toward the camera.
+
+So: **the concept prompt asks for the hero with empty hands.** Weapons are
+generated separately into the `weapon` slot. Gear variants of an existing
+character use `create-character-state` (`PIXELLAB_API.md` §2), not a new concept.
 
 If driving ChatGPT via the sandbox browser: the automation Chrome has its own
 profile — Leo must be logged in there once. Always `switch_tab` to the
@@ -76,25 +105,34 @@ route that produced Eldoria's one rejected character; see `PIXELLAB_API.md` §3.
 ```powershell
 python -c "from PIL import Image; Image.open('art-incoming/NAME-concept-v1.png').convert('RGBA').resize((64,64), Image.LANCZOS).save('_probe_local/pipeline/NAME/ref-64.png')"
 python tools/pipeline/pixellab_client.py create-v3 --description "..." `
-  --reference-image _probe_local/pipeline/NAME/ref-64.png --size 64 --seed 11 `
-  --out-dir _probe_local/pipeline/NAME
+  --reference-image _probe_local/pipeline/NAME/ref-64.png --seed 11 `
+  --view "high top-down" --out-dir _probe_local/pipeline/NAME
 ```
 
-**Size the output to the engine — 64 px.** With a reference image the output
-follows the reference's dimensions, so the old 256×256 reference produced a
-256 px character: 8 generations instead of 1, and every future animation on that
-character billed at 256 px too. It was also worse art — Eldoria renders at 64×64,
-and a 4× downscale blends 4×4 blocks into one output pixel.
+> **`create-v3` has no `--size` flag.** It is not in the subparser; passing it
+> exits with *"unrecognized arguments"*. An earlier version of this run-book
+> documented `--size 64` and would not have run. Do not re-add it without
+> evidence that `image_size` does anything in reference mode — the spec calls it
+> *advisory ("model picks its own size")*, and neither measured run sent it.
 
-**256 is the input *ceiling*, not a target.** The two doc sources disagree on
-whether `--size` alone controls output (`PIXELLAB_API.md` §1), so do both:
-downscale the reference *and* pass `--size`.
+**MEASURED 2026-07-29 — the reference is the only proven size lever.**
 
-**Unverified as of 2026-07-29** — nothing has been generated this way yet. On the
-first run: check the real output size in `character.json`, and judge whether
-identity survives a 64 px reference. If detail is too thin, step up to `128`
-(2 generations, still a quarter of 256) rather than going back to 256. Record
-what actually happened in `PIXELLAB_API.md` §1.
+| Reference | Figure out | Canvas | Charged |
+|---|---|---|---|
+| **64×64** | **~52 px** | 108 | **1 gen** |
+| 128×128 | ~104 px | 216 | 2 gens |
+
+The figure's pixel height is preserved **1:1** from the reference; the canvas is
+padded ×1.6875 for animation room (that is why output "looks bigger" — it is
+padding, not enlargement). Rotation is billed on the **reference** dimensions.
+
+So a 64 px reference lands the figure on Eldoria's ~52–56 px target for a 64×64
+frame, at 1 generation, with no destructive resampling. **256 is the input
+ceiling, never a target** — it costs 8 generations and needs a ~3.7× downscale.
+
+Step up to a 128 px reference (2 gens) **only** when a fine prop must survive
+rotation — and prefer removing the prop from the base sprite entirely (§2b).
+Always confirm the real dimensions in `character.json`; do not assume.
 
 **(b) Description route:**
 

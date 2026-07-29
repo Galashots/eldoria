@@ -46,13 +46,25 @@ facings/walks are a later polish, statics unblock Phase 3.
 
 ## ChatGPT concept prompt pack (route A)
 
-Conventions (all prompts): one character, full body, three-quarter FRONT view,
-neutral standing pose, feet visible, plain flat light-grey background, no
+Conventions (all prompts): one character, full body, **flat front-on view at eye
+level**, neutral standing pose, feet visible, plain flat light-grey background, no
 shadow on the ground, no text, square image. Style: premium crisp pixel-art
 concept for a child-friendly adventure (ages 7–11, sleek not cutesy, not
 preschool), rich saturated-but-moody palette, warm upper-left key light with
 down-right shadows, bold readable silhouette. These concepts are *identity
 references* for PixelLab rotation — silhouette clarity beats detail density.
+
+**Two rules verified 2026-07-29 — see `PIXELLAB_API.md` §1 and §3:**
+
+1. **Never ask for an elevated / top-down camera.** PixelLab requires only that
+   the reference be south-facing; it documents no elevation requirement. Image
+   generators will not obey a 35° camera from prompt text anyway. Ask for plain
+   front-on and set the camera with `--view` on the PixelLab call.
+2. **Heroes are drawn UNARMED.** Eldoria composites weapons as a `weapon`-slot
+   layer, so a bow or staff baked into the base sprite cannot be swapped — and
+   measurably does not survive rotation at a 64 px reference (the Ranger's bow
+   vanished entirely from `south-west`, the engine's `down` frame). Prompts below
+   that still name a held weapon predate this rule and need updating before reuse.
 
 **Mage (younger brother of the approved Ranger):**
 > Full-body pixel-art concept of a young apprentice mage for a child-friendly
