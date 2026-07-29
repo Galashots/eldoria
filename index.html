@@ -1295,8 +1295,11 @@ bgMusic.volume = 0.35;
 // ---- Iso mode flag ----
 // Per-area rollout switch. An area flips true once its iso port passes the kid gate.
 // farm: true since Phase 1 (2026-07-27) — the boys playtest iso Farm by default.
+// town: true since the Phase 2 first slice (2026-07-28) — General Store + Mira on
+//       placeholder geometry. The Forge and the other villagers still render through the
+//       generic tile/NPC placeholders; they are not part of that validated slice.
 // Override: ?iso=1 forces iso everywhere, ?iso=0 forces top-down; both persist via localStorage.
-var ISO_AREAS = { farm: true, town: false, wilds: false, deepwoods: false, mine: false };
+var ISO_AREAS = { farm: true, town: true, wilds: false, deepwoods: false, mine: false };
 if (location.search.indexOf('iso=1') !== -1) { try { localStorage.setItem('eldoria_iso', '1'); } catch (e) {} }
 if (location.search.indexOf('iso=0') !== -1) { try { localStorage.setItem('eldoria_iso', '0'); } catch (e) {} }
 function isoActive() {
@@ -4158,15 +4161,20 @@ function drawEnemyShape(type, ex, ey, now) {
 // Both modes share the ONE tile palette: TILE_COLOR.
 var isoCamPX = 0, isoCamPY = 0;
 
-function drawIsoTileDiamond(cx, cy, fillColor) {
+// Half-width/half-height variant: prisms narrower than a tile (villagers) share this path.
+function drawIsoDiamondAt(cx, cy, hw, hh, fillColor) {
   ctx.beginPath();
-  ctx.moveTo(cx, cy - ISO_TH / 2);
-  ctx.lineTo(cx + ISO_TW / 2, cy);
-  ctx.lineTo(cx, cy + ISO_TH / 2);
-  ctx.lineTo(cx - ISO_TW / 2, cy);
+  ctx.moveTo(cx, cy - hh);
+  ctx.lineTo(cx + hw, cy);
+  ctx.lineTo(cx, cy + hh);
+  ctx.lineTo(cx - hw, cy);
   ctx.closePath();
   ctx.fillStyle = fillColor;
   ctx.fill();
+}
+
+function drawIsoTileDiamond(cx, cy, fillColor) {
+  drawIsoDiamondAt(cx, cy, ISO_TW / 2, ISO_TH / 2, fillColor);
 }
 
 function drawIsoSoilTile(cx, cy) {
@@ -4319,13 +4327,20 @@ function drawIsoWorld() {
 
   // ---- Pass 2: depth-sorted objects (spec section 7) ----
   var objs = isoCollectObjects();
-  if (window.__isoDebug) window.__isoDrawOrder = objs.map(function (o) { return o.kind; });
+  // Test hook only. Building tiles and villagers get identifying labels so depth assertions
+  // can name an exact target; every other label is the object's kind, unchanged.
+  if (window.__isoDebug) window.__isoDrawOrder = objs.map(function (o) {
+    if (o.tile === HOUSE || o.tile === DOOR) return 'building@' + o.row + ',' + o.col;
+    if (o.kind === 'npc') return 'npc@' + o.npc.id;
+    return o.kind;
+  });
   for (var oi = 0; oi < objs.length; oi++) {
     var o = objs[oi];
     var ocx = isoPX(o.px, o.py), ocy = isoPY(o.px, o.py);
-    if (o.tile) drawIsoPrism(ocx, ocy, ISO_PROP_HEIGHT[o.tile],
+    if (o.tile === HOUSE || o.tile === DOOR) drawIsoBuildingTile(ocx, ocy, o.tile);
+    else if (o.tile) drawIsoPrism(ocx, ocy, ISO_PROP_HEIGHT[o.tile],
                              TILE_COLOR[o.tile] || '#555555');
-    else if (o.kind === 'npc') drawIsoPrism(ocx, ocy, 28, o.npc.color);
+    else if (o.kind === 'npc') drawIsoNpc(ocx, ocy, o.npc, now);
     else if (o.kind === 'cookpot') drawIsoPrism(ocx, ocy, 16, '#6b4423');
     else if (o.kind === 'enemy') drawIsoPrism(ocx, ocy, 24, ENEMIES[o.enemy.type].color);
     else if (o.kind === 'player') {
@@ -4334,6 +4349,7 @@ function drawIsoWorld() {
       else drawIsoPrism(ocx, ocy, 30, '#4a90d9');
     }
   }
+  drawIsoCues(now);
   drawIsoPops(now);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
@@ -4371,28 +4387,118 @@ function isoShade(hex, f) {   // multiply a #rrggbb color's brightness by f
   return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
-function drawIsoPrism(cx, cy, h, baseColor) {
+// opts.w scales the footprint (1 = a full tile); opts.rim = false drops the top outline so
+// neighbouring prisms of one building fuse into a single mass instead of a grid of blocks.
+function drawIsoPrism(cx, cy, h, baseColor, opts) {
+  var hw = (ISO_TW / 2) * ((opts && opts.w) || 1);
+  var hh = (ISO_TH / 2) * ((opts && opts.w) || 1);
   // Left + right faces down from the top diamond's south/west/east points.
   ctx.fillStyle = isoShade(baseColor, 0.45);
   ctx.beginPath();
-  ctx.moveTo(cx - ISO_TW / 2, cy - h); ctx.lineTo(cx, cy - h + ISO_TH / 2);
-  ctx.lineTo(cx, cy + ISO_TH / 2); ctx.lineTo(cx - ISO_TW / 2, cy); ctx.closePath(); ctx.fill();
+  ctx.moveTo(cx - hw, cy - h); ctx.lineTo(cx, cy - h + hh);
+  ctx.lineTo(cx, cy + hh); ctx.lineTo(cx - hw, cy); ctx.closePath(); ctx.fill();
   ctx.fillStyle = isoShade(baseColor, 0.6);
   ctx.beginPath();
-  ctx.moveTo(cx + ISO_TW / 2, cy - h); ctx.lineTo(cx, cy - h + ISO_TH / 2);
-  ctx.lineTo(cx, cy + ISO_TH / 2); ctx.lineTo(cx + ISO_TW / 2, cy); ctx.closePath(); ctx.fill();
-  // Lit top diamond with a subtle rim.
-  ctx.strokeStyle = isoShade(baseColor, 1.4);
-  ctx.lineWidth = 1.5;
-  drawIsoTileDiamond(cx, cy - h, isoShade(baseColor, 1.1));
-  ctx.stroke();
+  ctx.moveTo(cx + hw, cy - h); ctx.lineTo(cx, cy - h + hh);
+  ctx.lineTo(cx, cy + hh); ctx.lineTo(cx + hw, cy); ctx.closePath(); ctx.fill();
+  // Lit top diamond, optionally rimmed.
+  if (opts && opts.rim === false) {
+    drawIsoDiamondAt(cx, cy - h, hw, hh, isoShade(baseColor, 1.1));
+  } else {
+    ctx.strokeStyle = isoShade(baseColor, 1.4);
+    ctx.lineWidth = 1.5;
+    drawIsoDiamondAt(cx, cy - h, hw, hh, isoShade(baseColor, 1.1));
+    ctx.stroke();
+  }
 }
 
 var ISO_PROP_HEIGHT = {};
 ISO_PROP_HEIGHT[TREE]  = 40;   // chunky enough to read, short enough not to hide paths
 ISO_PROP_HEIGHT[HOUSE] = 56;
-ISO_PROP_HEIGHT[DOOR]  = 48;
+ISO_PROP_HEIGHT[DOOR]  = 56;   // same as HOUSE: a door is a hole in a wall, not a short block
 ISO_PROP_HEIGHT[EXIT]  = 12;
+
+// ---- Buildings (Phase 2 Town slice) ----
+// The doorway sits on the south-west wall face, which the tile's eastern neighbour never
+// covers, so an entrance stays visible along a continuous shop front. One helper owns the
+// geometry so the panel and its pulsing cue can never drift apart.
+function isoDoorPanel(cx, cy) {
+  // The face's ground edge runs from its west corner to the tile's south corner, so a
+  // fraction t along it advances by half a tile width and half a tile height.
+  var bx = cx - ISO_TW / 2, by = cy;
+  var t1 = 0.28, t2 = 0.72;
+  return {
+    x1: bx + (ISO_TW / 2) * t1, y1: by + (ISO_TH / 2) * t1,
+    x2: bx + (ISO_TW / 2) * t2, y2: by + (ISO_TH / 2) * t2,
+    h: ISO_PROP_HEIGHT[HOUSE] * 0.62
+  };
+}
+
+function isoTracePanel(p) {
+  ctx.beginPath();
+  ctx.moveTo(p.x1, p.y1); ctx.lineTo(p.x2, p.y2);
+  ctx.lineTo(p.x2, p.y2 - p.h); ctx.lineTo(p.x1, p.y1 - p.h);
+  ctx.closePath();
+}
+
+// A multi-tile building is still drawn tile by tile, so every tile keeps its own depth key
+// and sorts correctly against the hero (spec section 7). Uniform height + no per-tile rim is
+// what turns those tiles into one readable mass rather than a plateau of separate blocks.
+function drawIsoBuildingTile(cx, cy, tile) {
+  drawIsoPrism(cx, cy, ISO_PROP_HEIGHT[HOUSE], TILE_COLOR[HOUSE], { rim: false });
+  if (tile !== DOOR) return;
+  var p = isoDoorPanel(cx, cy);
+  isoTracePanel(p);
+  ctx.fillStyle = isoShade(TILE_COLOR[DOOR], 0.55);
+  ctx.fill();
+  ctx.strokeStyle = isoShade(TILE_COLOR[DOOR], 1.3);
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+// Villagers read as people, not crates: a narrow body prism under a lighter head block.
+function drawIsoNpc(cx, cy, npc, now) {
+  drawIsoPrism(cx, cy, 26, npc.color, { w: 0.42 });
+  drawIsoPrism(cx, cy - 26, 10, '#f0c8a0', { w: 0.3 });
+  var bob = Math.sin(now / 250) * 3;
+  ctx.fillStyle = '#fff2b0';
+  ctx.font = 'bold 18px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('!', cx, cy - 46 + bob);
+  ctx.textAlign = 'left';
+}
+
+// Entry and travel cues, drawn after the object pass so a doorway or road exit is never
+// buried behind the wall it belongs to. Same cue language as top-down: pulse plus a
+// bobbing arrow that points at the tile you should step on.
+function drawIsoCues(now) {
+  for (var r = 0; r < MAP_H; r++) {
+    for (var c = 0; c < MAP_W; c++) {
+      var t = map[r][c];
+      if (t !== DOOR && t !== EXIT) continue;
+      var cx = isoPX((c + 0.5) * TILE, (r + 0.5) * TILE);
+      var cy = isoPY((c + 0.5) * TILE, (r + 0.5) * TILE);
+      var pulse = 0.5 + 0.5 * Math.abs(Math.sin(now / 350));
+      var bob = Math.sin(now / 200) * 3;
+      ctx.strokeStyle = 'rgba(255, 214, 102,' + pulse + ')';
+      ctx.lineWidth = 2;
+      if (t === DOOR) {
+        // Outline the doorway itself. A door tile's ground diamond is buried under its own
+        // wall, so pulsing the floor there would just paint a diamond across the building.
+        var p = isoDoorPanel(cx, cy);
+        isoTracePanel(p);
+        ctx.stroke();
+        drawArrow((p.x1 + p.x2) / 2, p.y1 - p.h - 8 + bob, 7, 'down', '#fff2b0');
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - ISO_TH / 2); ctx.lineTo(cx + ISO_TW / 2, cy);
+        ctx.lineTo(cx, cy + ISO_TH / 2); ctx.lineTo(cx - ISO_TW / 2, cy);
+        ctx.closePath(); ctx.stroke();
+        drawArrow(cx, cy - 24 + bob, 6, 'down', '#fff2b0');
+      }
+    }
+  }
+}
 
 function isoCollectObjects() {
   var objs = [];
@@ -4400,7 +4506,7 @@ function isoCollectObjects() {
     var t = map[r][c];
     if (ISO_PROP_HEIGHT[t]) {
       objs.push({ px: (c + 0.5) * TILE, py: (r + 0.5) * TILE,
-                  kind: 'tree@' + r + ',' + c, tile: t });
+                  kind: 'tree@' + r + ',' + c, tile: t, row: r, col: c });
     }
   }
   for (var n = 0; n < NPCS.length; n++) if (NPCS[n].area === currentArea)
