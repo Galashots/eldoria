@@ -24,10 +24,7 @@ jobs:
       - run: pip install -r tools/pipeline/requirements.lock
       - run: npm ci
       - run: npm test
-      # TEMP (this branch only, reverted before review): capture Linux-rendered
-      # generator outputs so the committed ranger-proof art can be re-baselined
-      # to the pinned CI environment. See PR #27 body.
-      - run: npm run assets:build
+      - run: npm run assets:verify
       - run: npm run ranger-proof:candidate
       - name: Validate hero sprite contracts
         run: |
@@ -44,7 +41,4 @@ jobs:
             artifacts/*.png
             artifacts/**/*.png
             artifacts/**/*.json
-            art/ranger-proof/normalized/*.png
-            assets/iso/*.png
-            docs/visual/experiments/ranger-character-proof/**
           if-no-files-found: ignore
