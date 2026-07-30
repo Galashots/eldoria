@@ -178,8 +178,13 @@ python tools/pipeline/pixellab_client.py animate \
 python tools/pipeline/pixellab_client.py character \
   --id <id> --out-dir _probe_local/pipeline/ranger-walk
 
-# UNTESTED IN ELDORIA, RECOMMENDED NEXT EXPERIMENT: PixelLab's own template
-# library (mode=template, e.g. --template-id walk / walking / walk-1..10 /
+# UNTESTED IN ELDORIA **on this REST/Python route**: PixelLab's own template
+# library. (Scope note 2026-07-30: a separate WEB-APP template experiment —
+# "Taking Punch" on the 256px Mage throwaway state — produced a heading flip
+# on the camera-facing South frame; see COMBAT_ARMOR_STRATEGY.md §7 incident 2.
+# That measures template-mode heading infidelity in the web app; the REST
+# template route below remains its own untested experiment. Do not conflate
+# the two.) Template mode (mode=template, e.g. --template-id walk / walking / walk-1..10 /
 # crouched-walking) is VENDOR-DOCUMENTED as skeleton-driven and priced at
 # 1 generation/direction — a fraction of the ~3 gen/direction custom v3 cost
 # above — and may reduce semantic drift since motion is constrained to a rig
@@ -358,11 +363,22 @@ docs review):**
   through to the engine.
 
   **Mandatory addition to the raw-sheet visual gate — check heading fidelity
-  per direction, before anything else:** inspect all eight retained directions;
-  for the current four engine slots,
-  confirm the frame actually faces where its label claims. Fastest reliable
-  check: **`south`, `south-east` and `south-west` must all show the face;
-  `north`, `north-east` and `north-west` must not.** If two adjacent
+  per direction, before anything else:** inspect all eight retained directions
+  and confirm each frame actually faces where its label claims. The full
+  octant checklist (expanded 2026-07-30, post-merge audit):
+  - **`south`, `south-east`, `south-west` show the face** (`south-east`/
+    `south-west` as front three-quarter views, not full-front duplicates);
+  - **`north`, `north-east`, `north-west` do not** (`north-east`/`north-west`
+    as rear three-quarter views);
+  - **`east` and `west` are distinct profiles**, not mirrors-with-artifacts
+    of each other or near-copies of the diagonals;
+  - **asymmetric equipment stays on the correct body side** in every frame
+    (a bow, satchel, or staff that switches hands between directions is a
+    rejection, not a nitpick);
+  - **every label lands on the runtime's eight-direction engine slot** per
+    the mapping table above.
+
+  If two adjacent
   directions look near-identical, the rotation has collapsed — reject the set.
   A reroll or replacement decision is an owner/lead call, not something to
   self-resolve.

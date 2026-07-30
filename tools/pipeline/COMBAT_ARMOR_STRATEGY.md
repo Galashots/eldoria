@@ -2,9 +2,11 @@
 
 **Status:** Adopted 2026-07-30. Two generation authorizations exist as of
 that date: a bounded 15-generation web-app exploration (**closed**, 4 spent —
-§6a) and the §5 calibration batch (**open**, ~100-generation cap, not yet
-started). Nothing else is authorized; every call inside an open authorization
-is still quoted to the owner against its cap before it runs. The PR #25/#26
+§6a) and the §5 calibration batch (**PAUSED** 2026-07-30 pending resolution of
+the Codex post-merge audit findings; ~100-generation cap, not yet started —
+requires an explicit owner re-open before any call). Nothing else is
+authorized; every call inside an open authorization is still quoted to the
+owner against its cap before it runs. The PR #25/#26
 art stack merged to `main` (c27a2af) on 2026-07-30, so execution is no longer
 blocked on it.
 
@@ -52,9 +54,17 @@ those win and this file is stale.
 - **Order of attack:** hit-reaction and death animations first — no props, so
   they dodge the model's documented accessory weakness. Weapon/cast attacks
   second, with weapon-class-specific descriptions (§3).
-- Use `animation_group_id` to fill directions a partial run missed; never
-  regenerate a whole set for one bad direction before trying the repair
-  ladder in [`PIXELLAB_API.md`](PIXELLAB_API.md) §4.
+- **Fill directions a partial run missed instead of regenerating the set** —
+  but the mechanism is interface-specific ([REST-VERIFIED 2026-07-30]):
+  - **MCP `animate_character`**: pass `animation_group_id`.
+  - **Web UI**: the per-slot rocket icon on the existing animation group.
+  - **REST `/animate-character` + Python client**: `CreateCharacterAnimation
+    Request` exposes **no** append field today (`animation_group_id` exists in
+    REST only on the *object*-animation endpoint). Repairing one direction of
+    a character animation from the REST client means MCP or web UI, or the
+    repair ladder in [`PIXELLAB_API.md`](PIXELLAB_API.md) §4.
+
+  Never regenerate a whole set for one bad direction before trying these.
 
 ## 3. Equipment architecture — the decision
 
@@ -100,7 +110,7 @@ character — not a slot overlay. Two candidate models were considered:
 - Every state × animation combination is a separate spend. Budget as
   heroes × tiers × actions × directions before authorizing a batch.
 
-## 5. First calibration batch (AUTHORIZED 2026-07-30, ~100 generation cap)
+## 5. First calibration batch (AUTHORIZED 2026-07-30, ~100 generation cap; PAUSED pending audit resolution — owner re-open required)
 
 The original "5–10 generations" estimate here was **wrong** — it predated the
 measured pricing: `create_character_state` discloses **20–40 gens** up front,
@@ -114,8 +124,16 @@ happens:
    face** (see §7 incident 2).
 2. One armored `create_character_state` (20–40 gens).
 3. One **Transfer Outfit reskin test** (20–40 gens) — the decisive experiment
-   for the §3 architecture choice: reskin the finished unarmed animation
-   frames with an armor reference and judge identity/alignment per frame.
+   for the §3 architecture choice: reskin finished unarmed animation frames
+   with an armor reference and judge identity/alignment per frame.
+   **Frame limits are size-tiered** ([REST-VERIFIED 2026-07-30 against
+   `/transfer-outfit-v2`]: 32–64 px output → up to 15 frames; 65–80 px → 8;
+   81–256 px → **3** — the reference occupies one grid slot). Eldoria's
+   108–112 px hero canvases and the 256 px Mage all fall in the 3-frames-per-
+   call tier, so a full animation reskin takes multiple calls. The probe
+   authorization covers **one call**, and its quote must state the exact
+   output size, frame count, and which frames are packed. A full rollout is a
+   separate batch-count + cost approval.
 4. The diff-overlay extraction test rides on 2's output for free (armored
    state minus unarmed base, per direction).
 5. Standard gates throughout: raw output to `_probe_local/`, normalize,
@@ -175,7 +193,12 @@ A logged-in review of the web app (read-only Phase 2, then a Leo-authorized
   ≤128px** per batch (≤15 frames), disclosed in-form before running. Edit
   Animation is the text-driven sibling ("wearing red armor") of the
   reference-image-driven Transfer Outfit — same price, and also a per-frame
-  repair option alongside inpaint.
+  repair option alongside inpaint. **Correction ([REST-VERIFIED 2026-07-30]):
+  the "≤15 frames" the web form implied only holds at 32–64 px output.** The
+  live `/transfer-outfit-v2` docs tier the per-call frame limit by output
+  size: 15 frames at 32–64 px, 8 at 65–80 px, **3 at 81–256 px** (reference
+  image occupies one grid slot). At Eldoria's hero canvas sizes every call
+  carries at most 3 frames — see the §5 probe terms.
 - **Cost-disclosure asymmetry**: Create State shows "Costs 20-40 generations"
   before you type; **the Add Animation page shows no cost anywhere and
   submits without confirmation**. Treat Add Animation as a spend with no
@@ -201,8 +224,8 @@ animation set instead of completing the owner's existing in-browser walking
 set that was only missing the four diagonals. This is documented behavior,
 not vendor breakage: animation sets append server-side named after the
 slugified action, and **filling missing directions in an existing set
-requires passing `animation_group_id`** ([`PIXELLAB_API.md`](PIXELLAB_API.md)
-§5). The owner repaired it manually (completed the original set in the web
+requires targeting that set** — via MCP `animation_group_id` or the web UI's
+per-slot rocket; the REST character endpoint has no append field (see §2). The owner repaired it manually (completed the original set in the web
 UI, deleted the duplicate). Standing rule: **before animating a character
 that already has any animation set, list its existing sets and target the
 right `animation_group_id`; never start a parallel set for an action that
