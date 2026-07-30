@@ -8,7 +8,7 @@
 var combatOpen = false;     // is the battle modal up?
 var combatAnswer = 0;       // correct answer to the current question
 var combatEnemy = null;     // a fresh, fightable COPY of the enemy template for this fight
-var combatSource = null;    // the WILDS_ENEMIES entry this fight is against
+var combatSource = null;    // the profile-owned AREA_ENEMIES entry this fight is against
 
 // Sum of +damage from all equipped gear.
 function gearDamageBonus() {
@@ -415,7 +415,8 @@ function gainXp(amount) {
 }
 
 // Lose: respawn at the current area's entrance with full HP and NO penalty. Never punitive.
-// All enemies in this area stay/turn alive so the player can walk back and try again.
+// All enemies in this area stay/turn alive (with cleared respawn timers) so the player can
+// walk back and try again — this touches ONLY the selected profile's enemies.
 function loseCombat() {
   updateCombatBars();
   closeCombat();
@@ -425,7 +426,10 @@ function loseCombat() {
   var faintRow = 9;
   for (var fr = 0; fr < MAP_H; fr++) { if (map[fr][0] === EXIT) { faintRow = fr; break; } }
   player.y = faintRow * TILE;
-  for (var i = 0; i < currentEnemies.length; i++) currentEnemies[i].alive = true;
+  for (var i = 0; i < currentEnemies.length; i++) {
+    currentEnemies[i].alive = true;
+    currentEnemies[i].respawnAt = 0;
+  }
   wasNearEnemy = false;  // don't instantly re-trigger from the old position
   showToast('You fainted! Back to the entrance, full HP.');
   speak('You fainted! No worries — back to the start with full health.');

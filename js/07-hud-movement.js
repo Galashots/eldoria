@@ -169,13 +169,17 @@ function updateActionLabel() {
 // ---- Movement ----
 function update() {
   if (!gameActive) return;   // nothing happens until a profile is chosen
-  // Respawn dead enemies after their timer expires.
+  // Respawn dead enemies after their timer expires — across ALL of this profile's
+  // areas, so an off-screen area's timers advance the same as the one on screen.
   var now = Date.now();
-  for (var ri = 0; ri < currentEnemies.length; ri++) {
-    var re = currentEnemies[ri];
-    if (!re.alive && re.respawnAt && now >= re.respawnAt) {
-      re.alive = true;
-      re.respawnAt = 0;
+  for (var areaKey in AREA_ENEMIES) {
+    var list = AREA_ENEMIES[areaKey];
+    for (var ri = 0; ri < list.length; ri++) {
+      var re = list[ri];
+      if (!re.alive && re.respawnAt && now >= re.respawnAt) {
+        re.alive = true;
+        re.respawnAt = 0;
+      }
     }
   }
   // Freeze the player while a modal (shop, math bonus, quest, or battle) is open.
@@ -272,8 +276,9 @@ function checkTravel() {
   // Land just inside the destination's matching entrance: came from the left →
   // arrive on its right side; came from the right → arrive on its left side.
   activateArea(dest);
-  // Enemy arrays persist across travel. Their normal 30-second respawnAt timers are
-  // honored on re-entry; leaving and returning must not instantly revive bosses.
+  // The selected profile's enemy state persists across travel. Normal 30-second
+  // respawnAt timers are honored on re-entry; leaving and returning must not
+  // instantly revive bosses (and never touches the other profile's world).
   player.x = goingLeft ? (MAP_W - 2) * TILE : 1 * TILE;
   // Spawn on the exit row of the destination area (find the first EXIT on the entry edge).
   var entryCol = goingLeft ? MAP_W - 1 : 0;

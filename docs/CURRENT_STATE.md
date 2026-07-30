@@ -17,7 +17,17 @@
 - World coordinates, collision, maps, saves, economy, quests, and combat remain orthogonal and shared by both render modes.
 - Farm and Town default to the isometric renderer. Wilds, Deep Woods, and Mine remain top-down by default; under the `?iso=1` development override they render in iso with real enemy sprites, but flipping their defaults stays out of scope until the iso spec's combat/quest parity gates are met.
 - Town's validated isometric scope is intentionally partial: the General Store and Mira have dedicated placeholder treatments; the Forge and remaining villagers still use generic placeholders.
-- The current save schema remains version 2. Isometric work must not change it unless Leo explicitly authorizes a migration.
+- The save schema is **version 3** (profile & quest-state integrity, 2026-07-30,
+  owner-authorized migration): enemy life state (`alive`/`respawnAt` by stable
+  spawn ID) is profile-owned under `areas.<name>.enemies`, spawn definitions are
+  the immutable `ENEMY_SPAWNS` templates, and ALL save input (profile load,
+  paste import, file import) flows through one central
+  parse → validate → migrate → canonicalize path (`ingestSaveText` in
+  `js/06-saves.js`). v0/v1/v2 saves migrate deterministically with every enemy
+  alive; corrupt stored saves refuse profile entry rather than being silently
+  overwritten by autosave. Kill quests are paced to what the world can offer
+  (one kill per quest while each area places one instance of each enemy;
+  rewards = `Math.round(oldReward/oldCount)`).
 
 ## Accepted delivery landmarks
 
