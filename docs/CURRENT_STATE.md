@@ -6,7 +6,14 @@
 
 ## Live architecture
 
-- One offline, vanilla HTML/CSS/JavaScript game in `index.html`.
+- One offline, vanilla HTML/CSS/JavaScript game rooted in `index.html`.
+  Since Foundation B (2026-07-30) the inline blocks are extracted verbatim
+  into `eldoria.css` and nine classic **deferred** scripts `js/01-*.js` …
+  `js/09-*.js` loaded in numbered order at the end of `<body>`; split points
+  are existing top-level section comments only, all declarations remain
+  `var`/`function` globals, and behavior/rendering/DOM timing are unchanged
+  (proven byte-identical by reconstruction, full suite green, and 16/16
+  pixel-identical artifact captures vs the pre-split baseline).
 - World coordinates, collision, maps, saves, economy, quests, and combat remain orthogonal and shared by both render modes.
 - Farm and Town default to the isometric renderer. Wilds, Deep Woods, and Mine remain top-down by default; under the `?iso=1` development override they render in iso with real enemy sprites, but flipping their defaults stays out of scope until the iso spec's combat/quest parity gates are met.
 - Town's validated isometric scope is intentionally partial: the General Store and Mira have dedicated placeholder treatments; the Forge and remaining villagers still use generic placeholders.
