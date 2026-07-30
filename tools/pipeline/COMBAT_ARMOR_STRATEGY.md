@@ -1,9 +1,12 @@
 # Combat animations & equipment variants — strategy record
 
-**Status:** Proposal, approved for documentation by the owner 2026-07-30.
-No generation authorized yet. The PR #25/#26 art stack merged to `main`
-(c27a2af) on 2026-07-30, so execution is no longer blocked on it; each
-generation batch still requires its own owner authorization and cost quote.
+**Status:** Adopted 2026-07-30. Two generation authorizations exist as of
+that date: a bounded 15-generation web-app exploration (**closed**, 4 spent —
+§6a) and the §5 calibration batch (**open**, ~100-generation cap, not yet
+started). Nothing else is authorized; every call inside an open authorization
+is still quoted to the owner against its cap before it runs. The PR #25/#26
+art stack merged to `main` (c27a2af) on 2026-07-30, so execution is no longer
+blocked on it.
 
 **Authority:** Subordinate to [`PIPELINE.md`](PIPELINE.md) and
 [`PIXELLAB_API.md`](PIXELLAB_API.md). If this file conflicts with either,
@@ -73,7 +76,10 @@ character — not a slot overlay. Two candidate models were considered:
   "two-handed cast"), described explicitly in the action text, serves every
   weapon in the class.
 - **Armor/body tiers become whole-character states**, capped at a small tier
-  count (2–3 per hero). Generate with `use_color_palette_from_reference=true`.
+  count (2–3 per hero). Palette locking is **conditional**: pass
+  `use_color_palette_from_reference=true` when the tier should keep the hero's
+  existing colors, and leave it **off** when the tier's point is new colors
+  (e.g. distinct armor-tier color schemes) — see the tooltip finding in §6a.
 - The **diff-overlay experiment** stays on the books as a bounded calibration
   probe; if it works, it re-opens per-slot armor without the state
   multiplication.
@@ -124,6 +130,33 @@ no personal data. This grant covers Eldoria game art only.
 
 ---
 
+## 6. 2026-07-30 review findings (read-only doc sweep, Sonnet browser agent)
+
+A read-only review of PixelLab's public docs (`pixellab.ai/docs`,
+`api.pixellab.ai/v2/llms.txt`, `api.pixellab.ai/mcp/docs`, generated
+2026-07-30) surfaced:
+
+- **`POST /transfer-outfit-v2` is a documented REST endpoint** built to apply
+  an outfit/armor reference image across 2–16 existing animation frames in
+  one call (flat ~20 gens ≤64 px output, up to 40 at larger sizes). If
+  usable, it is a **third equipment model** this doc's §3 did not consider:
+  animate the unarmed base once, then reskin the finished frames per armor
+  tier — potentially much cheaper than whole-state re-animation.
+  **Unresolved vendor contradiction:** the tool's own docs page says
+  *"Available in Aseprite and Pixelorama extensions only"* while the REST
+  reference documents it as directly callable (with a Python-client example),
+  and it is absent from the MCP tool list. Resolve with one cheap
+  owner-authorized probe before putting planning weight on it.
+- **The live template list is larger than [`PIXELLAB_API.md`](PIXELLAB_API.md)
+  §5 records** — combat-relevant additions include `taking-punch`
+  (hit-reaction), `getting-up`, and `fight-stance-idle-8-frames`. Candidates
+  for the small-canvas template re-test, not production commitments.
+- Camera angles (20°/35°), the repair ladder, and the web-only feature list
+  were all re-confirmed unchanged.
+- MCP tool docs quote `create-character-v3` at "2–9 generations"; Eldoria
+  measured 1 gen at a 64 px reference. Possibly a range-vs-measurement
+  artifact — noted, unresolved.
+
 ## 6a. 2026-07-30 live web-app findings (Phases 2–3, bounded exploration)
 
 A logged-in review of the web app (read-only Phase 2, then a Leo-authorized
@@ -160,33 +193,6 @@ A logged-in review of the web app (read-only Phase 2, then a Leo-authorized
 - Aseprite was evaluated and **ruled out**: paid (~$20, extensions require
   paid v1.3+) and its PixelLab extension offers nothing the free embedded
   Pixelorama bridge lacks.
-
-## 6. 2026-07-30 review findings (read-only doc sweep, Sonnet browser agent)
-
-A read-only review of PixelLab's public docs (`pixellab.ai/docs`,
-`api.pixellab.ai/v2/llms.txt`, `api.pixellab.ai/mcp/docs`, generated
-2026-07-30) surfaced:
-
-- **`POST /transfer-outfit-v2` is a documented REST endpoint** built to apply
-  an outfit/armor reference image across 2–16 existing animation frames in
-  one call (flat ~20 gens ≤64 px output, up to 40 at larger sizes). If
-  usable, it is a **third equipment model** this doc's §3 did not consider:
-  animate the unarmed base once, then reskin the finished frames per armor
-  tier — potentially much cheaper than whole-state re-animation.
-  **Unresolved vendor contradiction:** the tool's own docs page says
-  *"Available in Aseprite and Pixelorama extensions only"* while the REST
-  reference documents it as directly callable (with a Python-client example),
-  and it is absent from the MCP tool list. Resolve with one cheap
-  owner-authorized probe before putting planning weight on it.
-- **The live template list is larger than [`PIXELLAB_API.md`](PIXELLAB_API.md)
-  §5 records** — combat-relevant additions include `taking-punch`
-  (hit-reaction), `getting-up`, and `fight-stance-idle-8-frames`. Candidates
-  for the small-canvas template re-test, not production commitments.
-- Camera angles (20°/35°), the repair ladder, and the web-only feature list
-  were all re-confirmed unchanged.
-- MCP tool docs quote `create-character-v3` at "2–9 generations"; Eldoria
-  measured 1 gen at a 64 px reference. Possibly a range-vs-measurement
-  artifact — noted, unresolved.
 
 ## 7. Measured incident: duplicate animation sets via MCP (2026-07-30)
 
