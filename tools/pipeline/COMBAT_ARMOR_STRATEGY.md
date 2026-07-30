@@ -94,22 +94,72 @@ character — not a slot overlay. Two candidate models were considered:
 - Every state × animation combination is a separate spend. Budget as
   heroes × tiers × actions × directions before authorizing a batch.
 
-## 5. First calibration batch (not yet authorized)
+## 5. First calibration batch (AUTHORIZED 2026-07-30, ~100 generation cap)
 
-Approximately 5–10 generations, each call quoted to the owner first
-(unblocked since the art stack merged 2026-07-30; awaiting owner
-authorization to spend):
+The original "5–10 generations" estimate here was **wrong** — it predated the
+measured pricing: `create_character_state` discloses **20–40 gens** up front,
+and Transfer Outfit is a flat **20–40 gens** per batch by frame size. The
+owner authorized a corrected batch at a **~100 generation cap** (1,516
+remaining at authorization), each call still quoted against the cap as it
+happens:
 
-1. One custom hit-reaction animation on the 64px-reference Ranger, all 8
-   directions.
-2. One armored `create_character_state` on the same Ranger.
-3. One diff-overlay extraction test: armored state minus unarmed base, per
-   direction, inspected for alignment artifacts.
-4. Standard gates throughout: raw output to `_probe_local/`, normalize,
+1. One custom hit-reaction animation on a hero (custom v3, all 8 directions,
+   ~8 gens). Visual gate first look: **south-facing frames must show the
+   face** (see §7 incident 2).
+2. One armored `create_character_state` (20–40 gens).
+3. One **Transfer Outfit reskin test** (20–40 gens) — the decisive experiment
+   for the §3 architecture choice: reskin the finished unarmed animation
+   frames with an armor reference and judge identity/alignment per frame.
+4. The diff-overlay extraction test rides on 2's output for free (armored
+   state minus unarmed base, per direction).
+5. Standard gates throughout: raw output to `_probe_local/`, normalize,
    validate, contact sheet, North Star comparison, owner approval before
    anything reaches `assets/`.
 
+**Owner data-retention decision (2026-07-30): ALLOWED.** Eldoria character
+art may be fed through Transfer Outfit / Edit Animation (pro) despite
+PixelLab's disclosure that those tools' *"inputs and results are saved to
+help us build better and cheaper models"* — the sprites are public art with
+no personal data. This grant covers Eldoria game art only.
+
 ---
+
+## 6a. 2026-07-30 live web-app findings (Phases 2–3, bounded exploration)
+
+A logged-in review of the web app (read-only Phase 2, then a Leo-authorized
+15-gen exploration Phase 3 that spent 4) established:
+
+- **Filling missing directions**: an animation group renders all 8 direction
+  slots immediately, missing ones as dashed placeholders with a per-slot
+  **rocket icon** that queues that direction *into the same group* — the UI
+  equivalent of `animation_group_id`. **Reproduced**: one "Taking Punch"
+  direction created the group; the rocket on a second slot appended to it
+  (animation count stayed 1). Any tool that instead re-describes the action
+  fresh mints a duplicate group — the §7 incident-1 mechanism, confirmed.
+- **Transfer Outfit to Animation (pro) and Edit Animation (pro) live in the
+  "Edit in Pixelorama" bridge** (button on every state card), NOT the plain
+  Characters UI and NOT the MCP. Both cost a **flat 40 gens at 256px / 20 at
+  ≤128px** per batch (≤15 frames), disclosed in-form before running. Edit
+  Animation is the text-driven sibling ("wearing red armor") of the
+  reference-image-driven Transfer Outfit — same price, and also a per-frame
+  repair option alongside inpaint.
+- **Cost-disclosure asymmetry**: Create State shows "Costs 20-40 generations"
+  before you type; **the Add Animation page shows no cost anywhere and
+  submits without confirmation**. Treat Add Animation as a spend with no
+  guardrail. Its direction selector is a single-select radio (one direction
+  per submission), unlike the REST `directions` list.
+- The template system carries a **"(DEPRECATED — NEW SOLUTION IN THE WORKS)"
+  banner** steering to "state + Custom Animation V3" — the vendor converging
+  on this doc's §2 route. Combat templates ("Taking Punch",
+  "Falling Back Death", "Fight Stance Idle") remain one click away meanwhile.
+- Create State's palette checkbox tooltip: use `use_color_palette_from_
+  reference` to hold the original colors, but **leave it off when the new
+  state's point is new colors** (e.g. colored armor tiers).
+- Export is the free, unauthenticated `GET /characters/{id}/zip` — instant
+  download, no dialog, no cost.
+- Aseprite was evaluated and **ruled out**: paid (~$20, extensions require
+  paid v1.3+) and its PixelLab extension offers nothing the free embedded
+  Pixelorama bridge lacks.
 
 ## 6. 2026-07-30 review findings (read-only doc sweep, Sonnet browser agent)
 
@@ -152,6 +202,18 @@ that already has any animation set, list its existing sets and target the
 right `animation_group_id`; never start a parallel set for an action that
 already exists.** The web UI surfaces existing sets visually, which is why it
 is currently more robust in the owner's hands than the MCP path.
+
+**Incident 2 (2026-07-30): template-mode heading flip on a combat frame.**
+The Phase 3 probe's very first "Taking Punch" South frame came back showing
+the **back of the character's head** — a heading flip on the camera-facing
+direction, in template mode, on the 256px Mage throwaway state, visible on a
+2-generation probe. Same defect class as the from-scratch Ranger wheel
+(§ PIXELLAB_API.md §7), now measured on combat animation. Standing
+consequences: (a) the raw-sheet visual gate — *south/south-east/south-west
+must show the face* — is the mandatory first look for every combat animation,
+template or custom; no structural validator can catch this (the frame is a
+valid, correctly-sized, alpha-clean PNG); (b) repair one bad direction via
+its slot (rocket icon / `animation_group_id`), never by rerolling the set.
 
 ---
 
