@@ -790,5 +790,94 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('visual evidence: Town device, depth, interaction, and travel frames captured', true);
 }
 
+// --- Suite 16: eight-direction facings and iso walk animation ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    // Octant bucketing: every world motion vector lands on its own facing slot.
+    var got = [[1, 0], [1, 1], [0, 1], [-1, 1],
+               [-1, 0], [-1, -1], [0, -1], [1, -1]].map(function (v) {
+      return facingFromVector(v[0], v[1]);
+    });
+    var want = ['right', 'down-right', 'down', 'down-left',
+                'left', 'up-left', 'up', 'up-right'];
+    var octants = got.join(',') === want.join(',');
+    // All sixteen player sprites (static + walk) registered per profile.
+    var registered = true;
+    ['adventurer', 'mage'].forEach(function (p) {
+      want.forEach(function (d) {
+        if (!SPRITES['player_' + p + '_' + d]) registered = false;
+        if (!SPRITES['player_walk_' + p + '_' + d]) registered = false;
+      });
+    });
+    // The iso renderer draws a mid-stride frame while walking: with a diagonal
+    // facing and walkFrame 1, the drawn pixels must differ from the standing pose.
+    selectProfile('adventurer');
+    activateArea('farm');
+    applyCanvasMode();
+    player.facing = 'down-right';
+    player.walking = false; player.walkFrame = 0;
+    drawIsoWorld();
+    var stand = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    player.walking = true; player.walkFrame = 1;
+    drawIsoWorld();
+    var stride = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    var differs = false;
+    for (var i = 0; i < stand.length; i += 16) {
+      if (stand[i] !== stride[i]) { differs = true; break; }
+    }
+    return { octants: octants, registered: registered, differs: differs };
+  });
+  check('facing: eight octants map to eight slots', r.octants === true);
+  check('facing: all eight static+walk sprites registered per profile', r.registered === true);
+  check('iso walk: mid-stride frame draws differently from the stand', r.differs === true);
+  await browser.close();
+}
+
+// --- Suite 17: top-down escape hatch keeps cardinal facings + full visuals ---
+// Attack strips and equipment overlays exist only for the original four facings,
+// so under ?iso=0 a diagonal facing would silently drop them. Regression cover
+// for: diagonal movement stays cardinal, attack art resolves, equipped gear
+// resolves, and a stale diagonal facing (e.g. from an iso save) snaps back.
+{
+  const { browser, page } = await launch('?iso=0');
+  const r = await page.evaluate(async () => {
+    selectProfile('adventurer');
+    activateArea('farm');
+    applyCanvasMode();
+    // Diagonal input in top-down: facing must stay one of the original four
+    // (horizontal wins a tie, the pre-8-direction rule).
+    held.right = true; held.down = true;
+    update();
+    held.right = false; held.down = false;
+    var diagFacing = player.facing;
+    // Attack art must resolve at that facing.
+    player.attacking = true;
+    var attackImg = playerAttackSprite();
+    player.attacking = false;
+    // Equipped gear must resolve at that facing.
+    player.gear = player.gear || {};
+    player.gear.body = 'leather';
+    var gearImg = equipmentSprite('body');
+    player.gear.body = null;
+    // A diagonal facing carried into top-down (iso save / mode toggle) must
+    // snap back to a supported cardinal on the next update.
+    player.facing = 'down-right';
+    update();
+    var snapped = player.facing;
+    return { diagFacing: diagFacing, attackOk: !!attackImg, gearOk: !!gearImg,
+             snapped: snapped };
+  });
+  check('escape hatch: diagonal input keeps a cardinal facing (' + r.diagFacing + ')',
+        ['down', 'up', 'left', 'right'].indexOf(r.diagFacing) !== -1);
+  check('escape hatch: attack sprite resolves while facing after diagonal input',
+        r.attackOk === true);
+  check('escape hatch: equipped body overlay resolves after diagonal input',
+        r.gearOk === true);
+  check('escape hatch: stale diagonal facing snaps back to cardinal (' + r.snapped + ')',
+        ['down', 'up', 'left', 'right'].indexOf(r.snapped) !== -1);
+  await browser.close();
+}
+
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');
