@@ -12,6 +12,7 @@ the eight-direction walk slice.
 - `<profile>-stand.png` — the standing pose (walkFrame resets to 0), the
   engine's stationary contract.
 - `area-<name>.png` — every area (`farm`, `town`, `wilds`, `deepwoods`,
-  `mine`) rendering in its now-default iso mode; the combat areas show enemies
-  drawn from their real sprites (with the top-down red "alive" cue) instead of
-  colored prisms.
+  `mine`) rendering in iso under the `?iso=1` development override (Farm and
+  Town are iso by default; the combat areas remain top-down by default until
+  their parity gates are met); the combat areas show enemies drawn from their
+  real sprites (with the top-down red "alive" cue) instead of colored prisms.

@@ -31,7 +31,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- Suite 2: flag plumbing (every area defaults to iso since the 8-direction slice) ---
+// --- Suite 2: flag plumbing (Phase 1 farm + Phase 2 town ON, later areas still top-down) ---
 {
   const { browser, page } = await launch('?iso=1');
   const r = await page.evaluate(() => {
@@ -40,19 +40,16 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     var farmDefault = isoActive();           // currentArea is 'farm' at boot
     currentArea = 'town';
     var townDefault = isoActive();           // ported by the Phase 2 first slice
-    var combatDefaults = ['wilds', 'deepwoods', 'mine'].map(function (a) {
-      currentArea = a;
-      return isoActive();
-    });
+    currentArea = 'wilds';
+    var wildsDefault = isoActive();          // not ported yet
     currentArea = 'farm';
     return { on: on, farmDefault: farmDefault, townDefault: townDefault,
-             combatDefaults: combatDefaults };
+             wildsDefault: wildsDefault };
   });
   check('flag: ?iso=1 turns iso on', r.on === true);
   check('flag: farm defaults to iso (Phase 1)', r.farmDefault === true);
   check('flag: town defaults to iso (Phase 2 slice)', r.townDefault === true);
-  check('flag: combat areas default to iso (8-direction slice)',
-        Array.isArray(r.combatDefaults) && r.combatDefaults.every(v => v === true));
+  check('flag: unported areas default to top-down', r.wildsDefault === false);
   await browser.close();
 }
 
@@ -834,6 +831,51 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('facing: eight octants map to eight slots', r.octants === true);
   check('facing: all eight static+walk sprites registered per profile', r.registered === true);
   check('iso walk: mid-stride frame draws differently from the stand', r.differs === true);
+  await browser.close();
+}
+
+// --- Suite 17: top-down escape hatch keeps cardinal facings + full visuals ---
+// Attack strips and equipment overlays exist only for the original four facings,
+// so under ?iso=0 a diagonal facing would silently drop them. Regression cover
+// for: diagonal movement stays cardinal, attack art resolves, equipped gear
+// resolves, and a stale diagonal facing (e.g. from an iso save) snaps back.
+{
+  const { browser, page } = await launch('?iso=0');
+  const r = await page.evaluate(async () => {
+    selectProfile('adventurer');
+    activateArea('farm');
+    applyCanvasMode();
+    // Diagonal input in top-down: facing must stay one of the original four
+    // (horizontal wins a tie, the pre-8-direction rule).
+    held.right = true; held.down = true;
+    update();
+    held.right = false; held.down = false;
+    var diagFacing = player.facing;
+    // Attack art must resolve at that facing.
+    player.attacking = true;
+    var attackImg = playerAttackSprite();
+    player.attacking = false;
+    // Equipped gear must resolve at that facing.
+    player.gear = player.gear || {};
+    player.gear.body = 'leather';
+    var gearImg = equipmentSprite('body');
+    player.gear.body = null;
+    // A diagonal facing carried into top-down (iso save / mode toggle) must
+    // snap back to a supported cardinal on the next update.
+    player.facing = 'down-right';
+    update();
+    var snapped = player.facing;
+    return { diagFacing: diagFacing, attackOk: !!attackImg, gearOk: !!gearImg,
+             snapped: snapped };
+  });
+  check('escape hatch: diagonal input keeps a cardinal facing (' + r.diagFacing + ')',
+        ['down', 'up', 'left', 'right'].indexOf(r.diagFacing) !== -1);
+  check('escape hatch: attack sprite resolves while facing after diagonal input',
+        r.attackOk === true);
+  check('escape hatch: equipped body overlay resolves after diagonal input',
+        r.gearOk === true);
+  check('escape hatch: stale diagonal facing snaps back to cardinal (' + r.snapped + ')',
+        ['down', 'up', 'left', 'right'].indexOf(r.snapped) !== -1);
   await browser.close();
 }
 

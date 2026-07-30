@@ -83,12 +83,14 @@ Retain every generated direction as canonical production source material:
 | `west` | `down-left` |
 | `south-west` | `down` |
 
-**Superseded 2026-07-30 by owner call:** the four-diagonal compatibility subset
-is no longer the runtime limit. Heroes consume all eight directions, each with
-its own walk strip; `facingFromVector` in `index.html` buckets the world motion
-vector into octants, and the normalizer/validator (`normalize_sprite.py`,
-`validate_sprites.py`) enforce all eight slots. Moving NPCs/enemies remain a
-later bounded upgrade.
+**Superseded 2026-07-30 by owner call (iso mode):** the four-diagonal
+compatibility subset is no longer the iso runtime limit. In iso, heroes consume
+all eight directions, each with its own walk strip; `facingFromVector` in
+`index.html` buckets the world motion vector into octants, and the
+normalizer/validator (`normalize_sprite.py`, `validate_sprites.py`) enforce all
+eight slots. The top-down escape hatch keeps cardinal facings (its
+attack/equipment art exists only for the original four). Moving NPCs/enemies
+remain a later bounded upgrade.
 
 The 26.565° constant (= atan 0.5) is the **screen slope of the 2:1 diamond
 edge** carried over from the prior 3D contract; it is not, without

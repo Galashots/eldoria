@@ -1182,6 +1182,20 @@ function facingFromVector(dx, dy) {
   return FACING_OCTANTS[((oct % 8) + 8) % 8];
 }
 
+// Top-down keeps the original four facings: attack strips and equipment
+// overlays only exist for those, so a diagonal facing under ?iso=0 would make
+// the attack animation and equipped gear vanish. Diagonal input prefers the
+// stronger axis; tied diagonals keep the horizontal direction (pre-8-direction
+// behavior, unchanged).
+function cardinalFromVector(dx, dy) {
+  if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) return dx < 0 ? 'left' : 'right';
+  return dy < 0 ? 'up' : 'down';
+}
+// Snap map for a diagonal facing carried into top-down mode (iso save, mode
+// toggle): same horizontal-wins rule as cardinalFromVector.
+var FACING_TO_CARDINAL = { 'down-right': 'right', 'up-right': 'right',
+                           'down-left': 'left', 'up-left': 'left' };
+
 // Prefer the selected child's directional art. Missing new art falls back to the
 // original single player.png, then the existing yellow-box placeholder.
 function playerSprite() {
@@ -1338,7 +1352,7 @@ bgMusic.volume = 0.35;
 //       placeholder geometry. The Forge and the other villagers still render through the
 //       generic tile/NPC placeholders; they are not part of that validated slice.
 // Override: ?iso=1 forces iso everywhere, ?iso=0 forces top-down; both persist via localStorage.
-var ISO_AREAS = { farm: true, town: true, wilds: true, deepwoods: true, mine: true };
+var ISO_AREAS = { farm: true, town: true, wilds: false, deepwoods: false, mine: false };
 if (location.search.indexOf('iso=1') !== -1) { try { localStorage.setItem('eldoria_iso', '1'); } catch (e) {} }
 if (location.search.indexOf('iso=0') !== -1) { try { localStorage.setItem('eldoria_iso', '0'); } catch (e) {} }
 function isoActive() {
@@ -1835,7 +1849,10 @@ function faceWorldTile(row, col) {
   var playerRow = Math.floor((player.y + player.size / 2) / TILE);
   var dc = col - playerCol;
   var dr = row - playerRow;
-  if (dc !== 0 || dr !== 0) player.facing = facingFromVector(dc, dr);
+  if (dc === 0 && dr === 0) return;
+  // Same split as movement: eight-way only in iso, cardinal in top-down.
+  player.facing = (typeof isoActive === 'function' && isoActive())
+    ? facingFromVector(dc, dr) : cardinalFromVector(dc, dr);
 }
 
 function askToWalkCloser(label) {
@@ -3883,9 +3900,15 @@ function update() {
       isoMoved = true;
     }
 
-    // Eight-way facing straight from the motion vector — diagonals get their own
-    // pose now that every facing has real art.
-    if (dx !== 0 || dy !== 0) player.facing = facingFromVector(dx, dy);
+    // Eight-way facing in iso, where every facing has real art and overlays are
+    // not drawn. Top-down stays cardinal so attack strips and equipped gear
+    // (authored for the original four facings only) never disappear.
+    if (dx !== 0 || dy !== 0) {
+      player.facing = isoMoved ? facingFromVector(dx, dy) : cardinalFromVector(dx, dy);
+    } else if (!isoMoved && FACING_TO_CARDINAL[player.facing] &&
+               !(typeof isoActive === 'function' && isoActive())) {
+      player.facing = FACING_TO_CARDINAL[player.facing];
+    }
 
     // (Iso vectors are already unit-length; re-normalizing would halve some directions.)
     if (!isoMoved && dx !== 0 && dy !== 0) {
