@@ -31,6 +31,11 @@ Locked in brainstorming (Leo, 2026-07-27):
 
 Defaults adopted, **veto anytime before Phase 3** (art production is when they harden):
 - **D1 — 4 facings** (not 8). Doubles are cheap to add later; start simple.
+  **SUPERSEDED 2026-07-30 by owner call (iso mode):** heroes run all 8 facings in iso with
+  per-facing walk strips; the four world-diagonal slots (down-right=S, down-left=W,
+  up-left=N, up-right=E) joined the original four (right=SE, down=SW, left=NW, up=NE).
+  The top-down escape hatch stays cardinal — its attack/equipment art only exists for
+  the original four facings.
 - **D2 — Equipment as cohesive gear-tier looks** (not per-slot paper-doll overlays) for iso art.
   Interim: iso base bodies + NO separate equipment overlays; gear still applies statistically.
   (See pipeline doc §6; revisit if the kids miss visual mix-and-match.)
@@ -206,10 +211,13 @@ Engine code changes (complete list — anything beyond this is scope creep):
 - **Phase 3 — Real art.** Use the adopted PixelLab + deterministic post-process route in
   `tools/pipeline/PIPELINE.md`. The Ranger proof and production tooling are merged; the cast and
   Farm landscape concepts are owner-approved. Next: approved-style building kits, normalization,
-  validation, and bounded engine wiring for Farm plus the validated Town slice. The engine keeps
-  four diagonal facing slots sourced from approved eight-direction rotations.
+  validation, and bounded engine wiring for Farm plus the validated Town slice. The engine runs
+  all eight facing slots sourced from approved eight-direction rotations (superseding the earlier
+  four-diagonal compatibility subset, per the 2026-07-30 owner call).
 - **Phase 4 — Default flip.** Iso becomes the default everywhere; top-down remains reachable via
-  the flag for one settling period, then the top-down draw path is retired.
+  the flag for one settling period, then the top-down draw path is retired. Not started: the
+  Wilds/Deep Woods/Mine defaults stay top-down until Phase 2 combat/quest parity is verified
+  there (2026-07-30 non-author review). Hero walk animation in the iso renderer is delivered.
 
 ## 10. What does NOT change
 

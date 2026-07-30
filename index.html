@@ -1056,9 +1056,16 @@ TILE_SPRITE[CAVE]  = 'assets/cave-floor.png';
 
 // Kick off loading everything up front (async; sprites pop in as they finish).
 for (var ts in TILE_SPRITE) loadSprite('tile_' + ts, TILE_SPRITE[ts]);
-// Profile-specific, four-direction player sprites. The legacy player.png stays loaded
+// Profile-specific, eight-direction player sprites. The legacy player.png stays loaded
 // as a compatibility fallback while new art is still being added one file at a time.
-var PLAYER_DIRECTIONS = ['down', 'up', 'left', 'right'];
+// The original four slots keep their names and iso art mapping (right=SE, down=SW,
+// left=NW, up=NE); the four world-diagonal slots map to the compass cardinals
+// (down-right=S, down-left=W, up-left=N, up-right=E).
+var PLAYER_DIRECTIONS = ['down', 'up', 'left', 'right',
+                         'down-right', 'down-left', 'up-left', 'up-right'];
+// Attack strips and equipment overlays are still authored against the original
+// four facings only; requesting the missing diagonal files would 404 every boot.
+var OVERLAY_DIRECTIONS = ['down', 'up', 'left', 'right'];
 // Profiles are identified by reading level, not by a child's name: 'adventurer' is
 // the older-reader slot, 'mage' is the early-reader slot. These ids double as the
 // sprite-file prefixes (assets/adventurer-down.png, assets/mage-up-walk.png, ...).
@@ -1074,6 +1081,7 @@ for (var pp = 0; pp < PLAYER_PROFILES.length; pp++) {
       'assets/' + profile + '-' + direction + '.png');
     loadSprite('player_walk_' + profile + '_' + direction,
       'assets/' + profile + '-' + direction + '-walk.png');
+    if (OVERLAY_DIRECTIONS.indexOf(direction) === -1) continue;
     loadSprite('player_attack_' + profile + '_' + direction,
       'assets/' + profile + '-' + direction + '-attack.png');
     for (var es = 0; es < EQUIPMENT_SLOTS.length; es++) {
@@ -1150,16 +1158,43 @@ function equipmentWalkSprite(slot) {
 }
 
 function drawSpriteFrame(img, stripType, dx, dy) {
-  // If the image isn't wide enough to be a strip, draw it statically
-  var isStrip = img.naturalWidth > TILE;
+  // Frames are square, so the frame edge is the image height. Strips are at least
+  // two frames wide — this keeps 128x32 legacy strips and 256x64 pipeline strips
+  // both slicing correctly, and a 64x64 static can never be mistaken for a strip.
+  var fw = img.naturalHeight;
+  var isStrip = img.naturalWidth >= fw * 2;
   if (stripType === 'walk' && isStrip) {
-    ctx.drawImage(img, player.walkFrame * TILE, 0, TILE, TILE, dx, dy, TILE, TILE);
+    ctx.drawImage(img, player.walkFrame * fw, 0, fw, fw, dx, dy, TILE, TILE);
   } else if (stripType === 'attack' && isStrip) {
-    ctx.drawImage(img, player.attackFrame * TILE, 0, TILE, TILE, dx, dy, TILE, TILE);
+    ctx.drawImage(img, player.attackFrame * fw, 0, fw, fw, dx, dy, TILE, TILE);
   } else {
     ctx.drawImage(img, dx, dy, TILE, TILE);
   }
 }
+
+// Bucket a world motion vector into one of the eight facing slots. Octant 0 is
+// pure +x ('right'); each further octant is 45 degrees clockwise in world space
+// (screen-y grows downward, so atan2 already runs clockwise).
+var FACING_OCTANTS = ['right', 'down-right', 'down', 'down-left',
+                      'left', 'up-left', 'up', 'up-right'];
+function facingFromVector(dx, dy) {
+  var oct = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
+  return FACING_OCTANTS[((oct % 8) + 8) % 8];
+}
+
+// Top-down keeps the original four facings: attack strips and equipment
+// overlays only exist for those, so a diagonal facing under ?iso=0 would make
+// the attack animation and equipped gear vanish. Diagonal input prefers the
+// stronger axis; tied diagonals keep the horizontal direction (pre-8-direction
+// behavior, unchanged).
+function cardinalFromVector(dx, dy) {
+  if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) return dx < 0 ? 'left' : 'right';
+  return dy < 0 ? 'up' : 'down';
+}
+// Snap map for a diagonal facing carried into top-down mode (iso save, mode
+// toggle): same horizontal-wins rule as cardinalFromVector.
+var FACING_TO_CARDINAL = { 'down-right': 'right', 'up-right': 'right',
+                           'down-left': 'left', 'up-left': 'left' };
 
 // Prefer the selected child's directional art. Missing new art falls back to the
 // original single player.png, then the existing yellow-box placeholder.
@@ -1814,8 +1849,10 @@ function faceWorldTile(row, col) {
   var playerRow = Math.floor((player.y + player.size / 2) / TILE);
   var dc = col - playerCol;
   var dr = row - playerRow;
-  if (Math.abs(dc) >= Math.abs(dr) && dc !== 0) player.facing = dc < 0 ? 'left' : 'right';
-  else if (dr !== 0) player.facing = dr < 0 ? 'up' : 'down';
+  if (dc === 0 && dr === 0) return;
+  // Same split as movement: eight-way only in iso, cardinal in top-down.
+  player.facing = (typeof isoActive === 'function' && isoActive())
+    ? facingFromVector(dc, dr) : cardinalFromVector(dc, dr);
 }
 
 function askToWalkCloser(label) {
@@ -3863,11 +3900,14 @@ function update() {
       isoMoved = true;
     }
 
-    // A diagonal still uses one readable cardinal pose. Prefer the stronger axis;
-    // tied diagonals keep the horizontal direction.
+    // Eight-way facing in iso, where every facing has real art and overlays are
+    // not drawn. Top-down stays cardinal so attack strips and equipped gear
+    // (authored for the original four facings only) never disappear.
     if (dx !== 0 || dy !== 0) {
-      if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) player.facing = (dx < 0) ? 'left' : 'right';
-      else player.facing = (dy < 0) ? 'up' : 'down';
+      player.facing = isoMoved ? facingFromVector(dx, dy) : cardinalFromVector(dx, dy);
+    } else if (!isoMoved && FACING_TO_CARDINAL[player.facing] &&
+               !(typeof isoActive === 'function' && isoActive())) {
+      player.facing = FACING_TO_CARDINAL[player.facing];
     }
 
     // (Iso vectors are already unit-length; re-normalizing would halve some directions.)
@@ -4404,10 +4444,29 @@ function drawIsoWorld() {
                              TILE_COLOR[o.tile] || '#555555');
     else if (o.kind === 'npc') drawIsoNpc(ocx, ocy, o.npc, now);
     else if (o.kind === 'cookpot') drawIsoPrism(ocx, ocy, 16, '#6b4423');
-    else if (o.kind === 'enemy') drawIsoPrism(ocx, ocy, 24, ENEMIES[o.enemy.type].color);
+    else if (o.kind === 'enemy') {
+      var eimg = spr('enemy_' + o.enemy.type);
+      if (eimg) {
+        ctx.drawImage(eimg, ocx - 20, ocy - 38, 40, 40);
+        // Same "alive enemy" cue as top-down: a bobbing red dot above the sprite.
+        ctx.fillStyle = '#ff5555';
+        ctx.beginPath();
+        ctx.arc(ocx, ocy - 42 + Math.sin(now / 250) * 3, 4, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        drawIsoPrism(ocx, ocy, 24, ENEMIES[o.enemy.type].color);
+      }
+    }
     else if (o.kind === 'player') {
+      var walkImg = playerWalkSprite();
       var img = playerSprite();
-      if (img) ctx.drawImage(img, ocx - 24, ocy - 46, 48, 48);
+      if (walkImg) {
+        // Same square-frame slicing rule as drawSpriteFrame, scaled to iso size.
+        var pfw = walkImg.naturalHeight;
+        ctx.drawImage(walkImg, player.walkFrame * pfw, 0, pfw, pfw,
+                      ocx - 24, ocy - 46, 48, 48);
+      }
+      else if (img) ctx.drawImage(img, ocx - 24, ocy - 46, 48, 48);
       else drawIsoPrism(ocx, ocy, 30, '#4a90d9');
     }
   }

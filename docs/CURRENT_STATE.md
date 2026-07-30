@@ -8,7 +8,7 @@
 
 - One offline, vanilla HTML/CSS/JavaScript game in `index.html`.
 - World coordinates, collision, maps, saves, economy, quests, and combat remain orthogonal and shared by both render modes.
-- Farm and Town default to the isometric renderer. Wilds, Deep Woods, and Mine remain top-down unless the development override is used.
+- Farm and Town default to the isometric renderer. Wilds, Deep Woods, and Mine remain top-down by default; under the `?iso=1` development override they render in iso with real enemy sprites, but flipping their defaults stays out of scope until the iso spec's combat/quest parity gates are met.
 - Town's validated isometric scope is intentionally partial: the General Store and Mira have dedicated placeholder treatments; the Forge and remaining villagers still use generic placeholders.
 - The current save schema remains version 2. Isometric work must not change it unless Leo explicitly authorizes a migration.
 
@@ -25,7 +25,8 @@
 
 - Production generation now follows [`tools/pipeline/PIPELINE.md`](../tools/pipeline/PIPELINE.md): ChatGPT-owned identity concepts where identity matters, PixelLab rotations/generation, deterministic normalization, fail-closed validation, human review, and North Star review before anything enters `assets/`.
 - The four identity concepts (Mage, Mira, Shadow Warden, Crystal Wyrm), the full cast sheet, and the Farm landscape sheet were owner-approved during pipeline calibration.
-- Mage v3 reference rotation preserved the approved identity across all eight generated directions. The engine continues to consume the four diagonal facings mapped to its existing slots.
+- Mage v3 reference rotation preserved the approved identity across all eight generated directions.
+- **Superseded 2026-07-30 by owner call (iso mode):** the four-facing compatibility subset is no longer the iso runtime limit. In iso the engine consumes all eight facings per hero (right=SE, down=SW, left=NW, up=NE, down-right=S, down-left=W, up-left=N, up-right=E), with walk strips per facing sourced from the owner's manual web-Creator regeneration of both heroes, curated to the engine's `{stand, step A, stand, step B}` contract, and played by the iso renderer. The top-down escape hatch keeps cardinal facings so its attack strips and equipment overlays (authored for the original four facings) always resolve.
 - The approved Farm landscape candidates remain generation outputs until they are deliberately normalized, validated, committed under `assets/iso/`, wired into the renderer, and inspected in-game.
 - Building kits are the next generation need. They must use the approved landscape as the style reference and still pass human and North Star review.
 - [`tools/3D_ISO_SPRITE_PIPELINE.md`](../tools/3D_ISO_SPRITE_PIPELINE.md) is historical. Do not restart its generation route; only the retained engine-contract facts explicitly referenced by the v2 pipeline remain applicable.
