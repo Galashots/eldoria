@@ -307,10 +307,14 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
 }
 
 // --- Visual evidence: the Mine, so a reviewer can see it is a cavern and not a forest ---
-// Written to docs/playtest/ (committed) rather than artifacts/ (gitignored): a reviewer needs
-// a raw-content URL at the exact head, not a PNG stranded inside a CI artifact ZIP.
+// The committed reviewer copies live in docs/playtest/ (a reviewer needs a raw-content URL at
+// the exact head, not a PNG stranded inside a CI artifact ZIP), but an ordinary test run must
+// not rewrite tracked files: fresh captures default to artifacts/, and docs/playtest/ is only
+// refreshed deliberately with --update-evidence.
 {
-  const evidenceDir = new URL('../docs/playtest/', import.meta.url);
+  const evidenceDir = process.argv.includes('--update-evidence')
+    ? new URL('../docs/playtest/', import.meta.url)
+    : new URL('../artifacts/', import.meta.url);
   await mkdir(evidenceDir, { recursive: true });
   for (const viewport of [
     { name: 'desktop', width: 1363, height: 936 },

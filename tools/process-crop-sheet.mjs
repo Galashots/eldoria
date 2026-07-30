@@ -7,6 +7,7 @@ const SOURCE = fileURLToPath(new URL('art/source/crops/crop-family-source.png', 
 const OUTPUT_DIR = fileURLToPath(new URL('assets/iso/', ROOT));
 const ARTIFACT_DIR = fileURLToPath(new URL('artifacts/', ROOT));
 const CROPS = ['turnip', 'carrot', 'corn', 'pumpkin', 'starfruit'];
+const CHECK = process.argv.includes('--check');
 
 async function main() {
   const source = await readFile(SOURCE);
@@ -317,16 +318,23 @@ async function main() {
       committedAssets,
     });
 
-    for (const output of result.outputs) {
+    if (CHECK) {
+      const unmatched = result.reports.filter(report => !report.matchesCommittedPixels).map(report => report.crop);
+      if (unmatched.length) {
+        throw new Error(`--check: committed crop assets missing or stale for: ${unmatched.join(', ')}`);
+      }
+    } else {
+      for (const output of result.outputs) {
+        await writeFile(
+          `${OUTPUT_DIR}/crop-${output.crop}.png`,
+          Buffer.from(output.dataUrl.split(',')[1], 'base64'),
+        );
+      }
       await writeFile(
-        `${OUTPUT_DIR}/crop-${output.crop}.png`,
-        Buffer.from(output.dataUrl.split(',')[1], 'base64'),
+        `${ARTIFACT_DIR}/crop-asset-lab-contact-sheet.png`,
+        Buffer.from(result.contact.split(',')[1], 'base64'),
       );
     }
-    await writeFile(
-      `${ARTIFACT_DIR}/crop-asset-lab-contact-sheet.png`,
-      Buffer.from(result.contact.split(',')[1], 'base64'),
-    );
     console.log(JSON.stringify({
       source: result.source,
       output: result.reports,

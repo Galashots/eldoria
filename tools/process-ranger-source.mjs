@@ -22,6 +22,39 @@ function arg(name, fallback) {
 }
 function hash(buffer) { return createHash('sha256').update(buffer).digest('hex'); }
 
+// Decoded-pixel comparison (not byte comparison): PNG encoders differ across
+// platforms, but the decoded RGBA data is the contract.
+async function assertPixelsMatchCommitted(page, name, producedBase64, committedPath) {
+  let committed;
+  try {
+    committed = await readFile(committedPath);
+  } catch (error) {
+    if (error.code === 'ENOENT') throw new Error(`--check: committed file missing: ${committedPath}`);
+    throw error;
+  }
+  const equal = await page.evaluate(async ({ produced, existing }) => {
+    const load = src => new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Could not decode PNG for comparison'));
+      image.src = src;
+    });
+    const decode = async b64 => {
+      const image = await load(`data:image/png;base64,${b64}`);
+      const c = Object.assign(document.createElement('canvas'), { width: image.width, height: image.height });
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(image, 0, 0);
+      return { width: image.width, height: image.height, data: Array.from(ctx.getImageData(0, 0, image.width, image.height).data) };
+    };
+    const a = await decode(produced);
+    const b = await decode(existing);
+    if (a.width !== b.width || a.height !== b.height) return false;
+    for (let i = 0; i < a.data.length; i++) if (a.data[i] !== b.data[i]) return false;
+    return true;
+  }, { produced: producedBase64, existing: committed.toString('base64') });
+  if (!equal) throw new Error(`--check: ${name} pixels differ from committed ${committedPath}`);
+}
+
 async function render(page, sourceBase64) {
   return page.evaluate(async ({ sourceBase64, frame, targetMaxHeight, sourceAlphaThreshold, resizedAlphaThreshold, facings }) => {
     const canvas = (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h });
@@ -207,6 +240,13 @@ async function main() {
     const deterministic = JSON.stringify(firstHashes) === JSON.stringify(secondHashes);
     if (!deterministic) throw new Error('Ranger source processing produced different rerun hashes');
     if (!first.report.passed) throw new Error(`Ranger source processing gates failed: ${JSON.stringify(first.report.gates)}`);
+    if (process.argv.includes('--check')) {
+      for (const [name, b64] of Object.entries(first.normalized)) {
+        await assertPixelsMatchCommitted(page, name, b64, path.join(normalizedDir, name));
+      }
+      console.log('Ranger static candidate --check passed: gates green, deterministic, committed pixels match');
+      return;
+    }
     await mkdir(normalizedDir, { recursive: true });
     await mkdir(evidenceDir, { recursive: true });
     for (const [name, b64] of Object.entries(first.normalized)) await writeFile(path.join(normalizedDir, name), Buffer.from(b64, 'base64'));

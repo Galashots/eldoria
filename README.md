@@ -60,9 +60,16 @@ accepted outcome. Owner-designated large deliveries also follow
 [`docs/CREATIVE_DIRECTION.md`](docs/CREATIVE_DIRECTION.md) holds the owner-approved story, quest,
 Squishy Dumpling, learning, and content-driven asset direction.
 
-Every push to `main` and every pull request runs `npm test` in the single CI job defined by
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml). The current script chain is the source of
-truth in [`package.json`](package.json); it covers deterministic asset integrity/build checks,
-Ranger proof validation, headless boot smoke, and isometric gameplay/interaction tests. CI uploads
+Every push to `main` and every pull request runs the single CI job defined by
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml): the read-only `npm test` suite (Ranger
+proof integrity and self-test, headless boot smoke, isometric gameplay/interaction and playtest-fix
+tests), `npm run assets:verify` (regenerates every generator-owned asset currently covered by
+`assets:verify` — crop strips and the Ranger-proof normalized set — in memory and fails unless it
+matches the committed pixels, writing nothing), Ranger proof candidate evidence, the pinned-Python
+sprite validator for both hero profiles, and a clean-worktree gate. The script chain's source of
+truth is [`package.json`](package.json); `npm run verify:all` chains the Node-side checks locally.
+The intended workflow rewrites generator-owned outputs only via an explicit `npm run assets:build`
+(hand-authored or externally produced assets, such as the PixelLab hero sets, are outside that
+generator contract). CI uploads
 generated PNG/JSON playtest evidence from `artifacts/` when present. Visual quality still requires
 human image inspection; the automated suite does not run a Lighthouse audit.

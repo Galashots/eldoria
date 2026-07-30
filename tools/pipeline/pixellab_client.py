@@ -31,13 +31,27 @@ import base64
 import io
 import json
 import os
+import re
 import sys
 import time
 import zipfile
+from urllib.parse import urljoin, urlparse
 
 import requests
 
 BASE = "https://api.pixellab.ai/v2"
+
+# Download / extraction guardrails. PixelLab is the trusted vendor, but this
+# client runs on a developer machine with a valuable token and a repository
+# checkout — a compromised response must not be able to write outside the
+# chosen output directory or exhaust disk. Extend the host list deliberately
+# (one-line edit) if PixelLab moves storage providers.
+ALLOWED_DOWNLOAD_HOSTS = ("pixellab.ai", "backblazeb2.com")
+MAX_DOWNLOAD_BYTES = 25 * 1024 * 1024
+ZIP_MAX_ENTRIES = 512
+ZIP_MAX_TOTAL_BYTES = 100 * 1024 * 1024
+ZIP_ALLOWED_EXTENSIONS = {".png", ".json", ".gif"}
+MAX_REDIRECTS = 5
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 TOKEN_FILE = os.path.join(REPO, "_probe_local", "pixellab.token")
 
@@ -67,14 +81,46 @@ def get_token():
     return tok
 
 
+def reject_redirect(method, path, resp):
+    """Fail closed on any API 3xx: requests forwards explicitly-passed headers
+    across redirects, so following one could hand the bearer token to an
+    unapproved or internal host, bypassing check_download_url()."""
+    if 300 <= resp.status_code < 400:
+        location = resp.headers.get("location") or resp.headers.get("Location")
+        sys.exit(f"API {method} {path} unexpectedly redirected "
+                 f"({resp.status_code} -> {str(location)[:120]}); refusing to "
+                 "follow with an authenticated request")
+
+
 def api(method, path, payload=None, raw=False):
     headers = {"Authorization": f"Bearer {get_token()}"}
+    if raw:
+        # Bounded streaming: the character-zip path must not buffer an
+        # unlimited response before safe_extract gets to inspect it.
+        chunks = []
+        total = 0
+        with requests.request(
+            method, BASE + path, json=payload, headers=headers,
+            timeout=180, stream=True, allow_redirects=False,
+        ) as resp:
+            reject_redirect(method, path, resp)
+            if resp.status_code >= 400:
+                sys.exit(f"API {method} {path} -> {resp.status_code}: {resp.text[:800]}")
+            for chunk in resp.iter_content(65536):
+                total += len(chunk)
+                if total > MAX_DOWNLOAD_BYTES:
+                    sys.exit(f"API {method} {path} raw response exceeds "
+                             f"{MAX_DOWNLOAD_BYTES} byte cap; refusing")
+                chunks.append(chunk)
+        return b"".join(chunks)
     resp = requests.request(
-        method, BASE + path, json=payload, headers=headers, timeout=180
+        method, BASE + path, json=payload, headers=headers,
+        timeout=180, allow_redirects=False,
     )
+    reject_redirect(method, path, resp)
     if resp.status_code >= 400:
         sys.exit(f"API {method} {path} -> {resp.status_code}: {resp.text[:800]}")
-    return resp.content if raw else resp.json()
+    return resp.json()
 
 
 def b64_image(path):
@@ -142,14 +188,103 @@ def poll_job(job_id):
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
 
+def check_download_url(url):
+    """Require HTTPS and an allow-listed vendor/storage host before fetching."""
+    parts = urlparse(url)
+    if parts.scheme != "https":
+        sys.exit(f"refusing non-HTTPS download url: {url[:120]}")
+    host = (parts.hostname or "").lower()
+    if not any(host == h or host.endswith("." + h) for h in ALLOWED_DOWNLOAD_HOSTS):
+        sys.exit(
+            f"download host {host!r} is not on the allow-list "
+            f"{ALLOWED_DOWNLOAD_HOSTS}; if PixelLab changed storage providers, "
+            "extend ALLOWED_DOWNLOAD_HOSTS deliberately."
+        )
+
+
 def fetch_binary(url):
-    """Download a result file; verify HTTP status and PNG magic before use."""
-    resp = requests.get(url, timeout=120)
-    resp.raise_for_status()
-    if not resp.content.startswith(PNG_MAGIC):
-        sys.exit(f"download from {url[:80]}... is not a PNG "
-                 f"({resp.headers.get('content-type')}, {len(resp.content)} bytes)")
-    return resp.content
+    """Download a result file; enforce host allow-list (re-validated on every
+    redirect hop, since requests' auto-follow would skip our checks), size cap,
+    and PNG magic."""
+    for _ in range(MAX_REDIRECTS + 1):
+        check_download_url(url)
+        chunks = []
+        total = 0
+        with requests.get(url, timeout=120, stream=True, allow_redirects=False) as resp:
+            if resp.status_code in (301, 302, 303, 307, 308):
+                location = resp.headers.get("location") or resp.headers.get("Location")
+                if not location:
+                    sys.exit(f"redirect from {url[:80]}... carries no Location header")
+                url = urljoin(url, location)
+                continue
+            resp.raise_for_status()
+            content_type = resp.headers.get("content-type")
+            for chunk in resp.iter_content(65536):
+                total += len(chunk)
+                if total > MAX_DOWNLOAD_BYTES:
+                    sys.exit(f"download from {url[:80]}... exceeds "
+                             f"{MAX_DOWNLOAD_BYTES} byte cap; refusing")
+                chunks.append(chunk)
+        content = b"".join(chunks)
+        if not content.startswith(PNG_MAGIC):
+            sys.exit(f"download from {url[:80]}... is not a PNG "
+                     f"({content_type}, {len(content)} bytes)")
+        return content
+    sys.exit(f"more than {MAX_REDIRECTS} redirects fetching {url[:80]}...; refusing")
+
+
+def safe_member_name(key):
+    """Reduce a vendor-provided filename/key to a safe basename."""
+    name = os.path.basename(str(key).replace("\\", "/"))
+    name = re.sub(r"[^A-Za-z0-9._-]", "_", name)
+    if not name or name.strip(".") == "":
+        sys.exit(f"unsafe vendor filename {key!r}; refusing to write it")
+    return name
+
+
+def unique_safe_names(keys):
+    """Sanitize every vendor key and refuse silent overwrites: two distinct
+    keys that collapse to the same safe basename are an error, not a merge."""
+    names = {}
+    claimed = {}
+    for key in keys:
+        name = safe_member_name(key)
+        if name in claimed:
+            sys.exit(f"vendor keys {claimed[name]!r} and {key!r} both sanitize "
+                     f"to {name!r}; refusing to overwrite one with the other")
+        claimed[name] = key
+        names[key] = name
+    return names
+
+
+def safe_extract(zf, dest):
+    """extractall with caps: entry count, total uncompressed bytes, extension
+    allow-list, and every resolved path confined to the destination."""
+    infos = [i for i in zf.infolist() if not i.is_dir()]
+    if len(infos) > ZIP_MAX_ENTRIES:
+        sys.exit(f"zip has {len(infos)} members; cap is {ZIP_MAX_ENTRIES}")
+    dest = os.path.abspath(dest)
+    total = 0
+    for info in infos:
+        name = info.filename.replace("\\", "/")
+        if os.path.splitext(name)[1].lower() not in ZIP_ALLOWED_EXTENSIONS:
+            sys.exit(f"zip member {name!r}: extension not allowed "
+                     f"(allowed: {sorted(ZIP_ALLOWED_EXTENSIONS)})")
+        target = os.path.abspath(os.path.join(dest, name))
+        if os.path.commonpath([dest, target]) != dest:
+            sys.exit(f"zip member {name!r} escapes the extraction directory")
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        with zf.open(info) as src, open(target, "wb") as out:
+            while True:
+                chunk = src.read(65536)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > ZIP_MAX_TOTAL_BYTES:
+                    sys.exit(f"zip uncompressed content exceeds "
+                             f"{ZIP_MAX_TOTAL_BYTES} byte cap; refusing")
+                out.write(chunk)
+    return len(infos)
 
 
 def download_character(character_id, out_dir):
@@ -162,9 +297,8 @@ def download_character(character_id, out_dir):
     with open(zpath, "wb") as fh:
         fh.write(blob)
     with zipfile.ZipFile(io.BytesIO(blob)) as zf:
-        zf.extractall(os.path.join(out_dir, "zip"))
-        names = zf.namelist()
-    print(f"[save] {zpath} ({len(names)} files) -> {out_dir}/zip/")
+        count = safe_extract(zf, os.path.join(out_dir, "zip"))
+    print(f"[save] {zpath} ({count} files) -> {out_dir}/zip/")
     return detail
 
 
@@ -314,11 +448,13 @@ def cmd_tilespro(args):
     os.makedirs(args.out_dir, exist_ok=True)
     with open(os.path.join(args.out_dir, "tiles.json"), "w", encoding="utf-8") as fh:
         json.dump({k: v for k, v in detail.items() if k != "storage_urls"}, fh, indent=2)
-    for key, url in (detail.get("storage_urls") or {}).items():
+    storage_urls = detail.get("storage_urls") or {}
+    names = unique_safe_names(storage_urls.keys())
+    for key, url in storage_urls.items():
         blob = fetch_binary(url)
-        with open(os.path.join(args.out_dir, f"{key}.png"), "wb") as fh:
+        with open(os.path.join(args.out_dir, f"{names[key]}.png"), "wb") as fh:
             fh.write(blob)
-        print(f"[save] {args.out_dir}/{key}.png")
+        print(f"[save] {args.out_dir}/{names[key]}.png")
 
 
 def cmd_mapobject(args):
