@@ -130,10 +130,13 @@ happens:
    `/transfer-outfit-v2`]: 32–64 px output → up to 15 frames; 65–80 px → 8;
    81–256 px → **3** — the reference occupies one grid slot). Eldoria's
    108–112 px hero canvases and the 256 px Mage all fall in the 3-frames-per-
-   call tier, so a full animation reskin takes multiple calls. The probe
-   authorization covers **one call**, and its quote must state the exact
-   output size, frame count, and which frames are packed. A full rollout is a
-   separate batch-count + cost approval.
+   call tier (Edit Animation, its text-driven sibling, gets 4 — see §6a), so
+   a full animation reskin takes multiple calls. The probe authorization
+   covers **one call**. **Standing rule for this and every future probe
+   authorization — the quote presented to the owner must name all six:**
+   the interface (REST / MCP / web / Pixelorama bridge), the canvas size,
+   the selected frames, the frame count, the number of calls, and the quoted
+   total cost. A full rollout is a separate batch-count + cost approval.
 4. The diff-overlay extraction test rides on 2's output for free (armored
    state minus unarmed base, per direction).
 5. Standard gates throughout: raw output to `_probe_local/`, normalize,
@@ -194,11 +197,18 @@ A logged-in review of the web app (read-only Phase 2, then a Leo-authorized
   Animation is the text-driven sibling ("wearing red armor") of the
   reference-image-driven Transfer Outfit — same price, and also a per-frame
   repair option alongside inpaint. **Correction ([REST-VERIFIED 2026-07-30]):
-  the "≤15 frames" the web form implied only holds at 32–64 px output.** The
-  live `/transfer-outfit-v2` docs tier the per-call frame limit by output
-  size: 15 frames at 32–64 px, 8 at 65–80 px, **3 at 81–256 px** (reference
-  image occupies one grid slot). At Eldoria's hero canvas sizes every call
-  carries at most 3 frames — see the §5 probe terms.
+  the "≤15 frames" the web form implied only holds at the smallest sizes, and
+  the two tools' limits differ** — both pack everything into one fixed
+  generation grid, but Transfer Outfit's reference image consumes a slot:
+  - **Transfer Outfit** (`/transfer-outfit-v2`): 15 frames at 32–64 px,
+    8 at 65–80 px, **3 at 81–256 px**.
+  - **Edit Animation** (`/edit-animation-v2`): 16 frames at 16–64 px,
+    9 at 65–80 px, **4 at 81–256 px** (text-driven, no reference slot).
+
+  At Eldoria's hero canvas sizes (108–112 px, Mage 256 px) every call
+  carries at most **3 Transfer Outfit or 4 Edit Animation frames** — see the
+  §5 probe terms. Both are also documented REST endpoints, not just
+  Pixelorama-bridge features.
 - **Cost-disclosure asymmetry**: Create State shows "Costs 20-40 generations"
   before you type; **the Add Animation page shows no cost anywhere and
   submits without confirmation**. Treat Add Animation as a spend with no
