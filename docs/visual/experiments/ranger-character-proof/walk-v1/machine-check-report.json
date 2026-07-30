@@ -10,16 +10,6 @@
     4,
     1
   ],
-  "source": {
-    "file": "art/source/characters/ranger-right-walk-source-v001.jpeg",
-    "dimensions": [
-      1536,
-      512
-    ],
-    "bytes": 190816,
-    "sha256": "3e8ac63f18a758bdc8f33f2485ccb2f12c4ff64c7649d5637c24fa4b8d1f6eae",
-    "note": "Owner-accepted corrected whole-strip source; baked checkerboard removed deterministically."
-  },
   "normalization": {
     "sourceCellSize": [
       384,
@@ -63,9 +53,9 @@
         "height": 56,
         "centerX": 24.5
       },
-      "opaquePixels": 1180,
+      "opaquePixels": 1174,
       "semiTransparentPixels": 0,
-      "footBandCenterX": 31.6984126984127
+      "footBandCenterX": 31.65
     },
     {
       "index": 1,
@@ -95,9 +85,9 @@
         "height": 54,
         "centerX": 30
       },
-      "opaquePixels": 1046,
+      "opaquePixels": 1043,
       "semiTransparentPixels": 0,
-      "footBandCenterX": 32.23255813953488
+      "footBandCenterX": 32.333333333333336
     },
     {
       "index": 2,
@@ -127,9 +117,9 @@
         "height": 55,
         "centerX": 26.5
       },
-      "opaquePixels": 1145,
+      "opaquePixels": 1137,
       "semiTransparentPixels": 0,
-      "footBandCenterX": 32
+      "footBandCenterX": 31.865671641791046
     },
     {
       "index": 3,
@@ -159,15 +149,15 @@
         "height": 54,
         "centerX": 29.5
       },
-      "opaquePixels": 1038,
+      "opaquePixels": 1039,
       "semiTransparentPixels": 0,
-      "footBandCenterX": 31.75
+      "footBandCenterX": 31.666666666666668
     }
   ],
   "metrics": {
     "walkCenterRange": 5.5,
     "walkTopRange": 2,
-    "footCenterRange": 0.5341454411221813
+    "footCenterRange": 0.6833333333333371
   },
   "gates": {
     "dimensions": true,
@@ -180,11 +170,6 @@
     "footPivotConsistency": true
   },
   "passed": true,
-  "deterministic": true,
-  "outputs": {
-    "adventurer-right-walk.png": "82f193dbf88c9f27f9f58190458a0a0dd459a8c22f2927f45a6875b6e3cba33a",
-    "walk-strip-preview.png": "9d82f84a84231d0f9c66935ee9e2dc855c3a24d06927541eab427db4717f9877"
-  },
   "visualSemanticsNotMachineVerified": [
     "identity consistency",
     "equipment consistency",
@@ -194,5 +179,22 @@
     "pixel treatment",
     "North Star alignment"
   ],
-  "reviewNote": "Machine gates prove the file contract and stability tolerances, not production-art approval. No runtime integration or merge is included."
+  "source": {
+    "file": "art/source/characters/ranger-right-walk-source-v001.jpeg",
+    "dimensions": [
+      1536,
+      512
+    ],
+    "bytes": 190816,
+    "sha256": "3e8ac63f18a758bdc8f33f2485ccb2f12c4ff64c7649d5637c24fa4b8d1f6eae",
+    "note": "Owner-accepted corrected whole-strip source; baked checkerboard removed deterministically."
+  },
+  "deterministic": true,
+  "outputs": {
+    "adventurer-right-walk.png": "d16b24db61c9a5af3bf2b29203a39fbb81590ddd369ddc0f41510593135e2e5a",
+    "runtime-scale-sheet.png": "d16b24db61c9a5af3bf2b29203a39fbb81590ddd369ddc0f41510593135e2e5a",
+    "walk-strip-preview.png": "669c59d4d3f53675260168b01e2bcff3b64a537ddcdfebf4200c8cb46c28e14c",
+    "magenta-transparency-sheet.png": "35ea974063f03a0c9823b56f562db20d86b32ef8dfbeea064bc85a349a4a7872",
+    "anchor-bounds-overlay.png": "9586b21c1329226659ddaa4cf00c176c7330765aabf69b0b56a950afdea2f1a0"
+  }
 }
