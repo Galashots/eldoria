@@ -22,6 +22,8 @@ jobs:
           cache: pip
           cache-dependency-path: tools/pipeline/requirements.txt
       - run: pip install -r tools/pipeline/requirements.txt
+      - name: Pipeline unit tests
+        run: python -m unittest discover -s tools/pipeline -p "test_*.py" -v
       - run: npm ci
       - run: npm test
       - run: npm run assets:verify
