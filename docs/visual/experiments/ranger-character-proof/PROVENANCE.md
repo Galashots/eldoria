@@ -23,6 +23,15 @@ generated report because the current generator does not emit them:
   right = top-left, up = top-right, down = bottom-left, left = bottom-right.
   (The runtime mapping is encoded in `tools/process-ranger-source.mjs`
   `FACINGS`; this records the *source sheet* layout.)
+- **Committed integrity repair** (recorded pre-re-baseline as
+  `committedIntegrityRepair`, verbatim):
+  - *reason*: "Recovered valid PNGs after committed IDAT corruption/truncation
+    was found before walk generation."
+  - *method*: "Rebuilt the SW frame deterministically from the committed
+    source contract and rebuilt the contact sheet from the four accepted
+    normalized frames."
+  - *guard*: "npm run ranger-proof:integrity runs before any Ranger
+    regeneration." (The guard still runs first in `npm test`.)
 
 ## Walk strip (walk-v1)
 
