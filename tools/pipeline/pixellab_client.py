@@ -35,7 +35,7 @@ import re
 import sys
 import time
 import zipfile
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import requests
 
@@ -51,6 +51,7 @@ MAX_DOWNLOAD_BYTES = 25 * 1024 * 1024
 ZIP_MAX_ENTRIES = 512
 ZIP_MAX_TOTAL_BYTES = 100 * 1024 * 1024
 ZIP_ALLOWED_EXTENSIONS = {".png", ".json", ".gif"}
+MAX_REDIRECTS = 5
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 TOKEN_FILE = os.path.join(REPO, "_probe_local", "pixellab.token")
 
@@ -82,12 +83,30 @@ def get_token():
 
 def api(method, path, payload=None, raw=False):
     headers = {"Authorization": f"Bearer {get_token()}"}
+    if raw:
+        # Bounded streaming: the character-zip path must not buffer an
+        # unlimited response before safe_extract gets to inspect it.
+        chunks = []
+        total = 0
+        with requests.request(
+            method, BASE + path, json=payload, headers=headers,
+            timeout=180, stream=True,
+        ) as resp:
+            if resp.status_code >= 400:
+                sys.exit(f"API {method} {path} -> {resp.status_code}: {resp.text[:800]}")
+            for chunk in resp.iter_content(65536):
+                total += len(chunk)
+                if total > MAX_DOWNLOAD_BYTES:
+                    sys.exit(f"API {method} {path} raw response exceeds "
+                             f"{MAX_DOWNLOAD_BYTES} byte cap; refusing")
+                chunks.append(chunk)
+        return b"".join(chunks)
     resp = requests.request(
         method, BASE + path, json=payload, headers=headers, timeout=180
     )
     if resp.status_code >= 400:
         sys.exit(f"API {method} {path} -> {resp.status_code}: {resp.text[:800]}")
-    return resp.content if raw else resp.json()
+    return resp.json()
 
 
 def b64_image(path):
@@ -170,23 +189,34 @@ def check_download_url(url):
 
 
 def fetch_binary(url):
-    """Download a result file; enforce host allow-list, size cap, PNG magic."""
-    check_download_url(url)
-    chunks = []
-    total = 0
-    with requests.get(url, timeout=120, stream=True) as resp:
-        resp.raise_for_status()
-        for chunk in resp.iter_content(65536):
-            total += len(chunk)
-            if total > MAX_DOWNLOAD_BYTES:
-                sys.exit(f"download from {url[:80]}... exceeds "
-                         f"{MAX_DOWNLOAD_BYTES} byte cap; refusing")
-            chunks.append(chunk)
-    content = b"".join(chunks)
-    if not content.startswith(PNG_MAGIC):
-        sys.exit(f"download from {url[:80]}... is not a PNG "
-                 f"({resp.headers.get('content-type')}, {len(content)} bytes)")
-    return content
+    """Download a result file; enforce host allow-list (re-validated on every
+    redirect hop, since requests' auto-follow would skip our checks), size cap,
+    and PNG magic."""
+    for _ in range(MAX_REDIRECTS + 1):
+        check_download_url(url)
+        chunks = []
+        total = 0
+        with requests.get(url, timeout=120, stream=True, allow_redirects=False) as resp:
+            if resp.status_code in (301, 302, 303, 307, 308):
+                location = resp.headers.get("location") or resp.headers.get("Location")
+                if not location:
+                    sys.exit(f"redirect from {url[:80]}... carries no Location header")
+                url = urljoin(url, location)
+                continue
+            resp.raise_for_status()
+            content_type = resp.headers.get("content-type")
+            for chunk in resp.iter_content(65536):
+                total += len(chunk)
+                if total > MAX_DOWNLOAD_BYTES:
+                    sys.exit(f"download from {url[:80]}... exceeds "
+                             f"{MAX_DOWNLOAD_BYTES} byte cap; refusing")
+                chunks.append(chunk)
+        content = b"".join(chunks)
+        if not content.startswith(PNG_MAGIC):
+            sys.exit(f"download from {url[:80]}... is not a PNG "
+                     f"({content_type}, {len(content)} bytes)")
+        return content
+    sys.exit(f"more than {MAX_REDIRECTS} redirects fetching {url[:80]}...; refusing")
 
 
 def safe_member_name(key):
@@ -196,6 +226,21 @@ def safe_member_name(key):
     if not name or name.strip(".") == "":
         sys.exit(f"unsafe vendor filename {key!r}; refusing to write it")
     return name
+
+
+def unique_safe_names(keys):
+    """Sanitize every vendor key and refuse silent overwrites: two distinct
+    keys that collapse to the same safe basename are an error, not a merge."""
+    names = {}
+    claimed = {}
+    for key in keys:
+        name = safe_member_name(key)
+        if name in claimed:
+            sys.exit(f"vendor keys {claimed[name]!r} and {key!r} both sanitize "
+                     f"to {name!r}; refusing to overwrite one with the other")
+        claimed[name] = key
+        names[key] = name
+    return names
 
 
 def safe_extract(zf, dest):
@@ -389,12 +434,13 @@ def cmd_tilespro(args):
     os.makedirs(args.out_dir, exist_ok=True)
     with open(os.path.join(args.out_dir, "tiles.json"), "w", encoding="utf-8") as fh:
         json.dump({k: v for k, v in detail.items() if k != "storage_urls"}, fh, indent=2)
-    for key, url in (detail.get("storage_urls") or {}).items():
+    storage_urls = detail.get("storage_urls") or {}
+    names = unique_safe_names(storage_urls.keys())
+    for key, url in storage_urls.items():
         blob = fetch_binary(url)
-        name = safe_member_name(key)
-        with open(os.path.join(args.out_dir, f"{name}.png"), "wb") as fh:
+        with open(os.path.join(args.out_dir, f"{names[key]}.png"), "wb") as fh:
             fh.write(blob)
-        print(f"[save] {args.out_dir}/{name}.png")
+        print(f"[save] {args.out_dir}/{names[key]}.png")
 
 
 def cmd_mapobject(args):
