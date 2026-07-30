@@ -178,20 +178,28 @@ python tools/pipeline/pixellab_client.py animate \
 python tools/pipeline/pixellab_client.py character \
   --id <id> --out-dir _probe_local/pipeline/ranger-walk
 
-# UNTESTED IN ELDORIA **on this REST/Python route**: PixelLab's own template
-# library. (Scope note 2026-07-30: a separate WEB-APP template experiment —
-# "Taking Punch" on the 256px Mage throwaway state — produced a heading flip
-# on the camera-facing South frame; see COMBAT_ARMOR_STRATEGY.md §7 incident 2.
-# That measures template-mode heading infidelity in the web app; the REST
-# template route below remains its own untested experiment. Do not conflate
-# the two.) Template mode (mode=template, e.g. --template-id walk / walking / walk-1..10 /
+# TESTED IN ELDORIA 2026-07-29 ON THIS REST/PYTHON ROUTE — AND IT FAILED THE
+# VISUAL GATE. (Correction 2026-07-30: this block previously called the route
+# untested; the retained session record — corroborated by the character UUID
+# in _probe_local/heroes-20260729/ranger/character.json — shows
+# `template_animation_id: "walking"` was run on the 256px Ranger via this
+# exact client: identity wrecked frame to frame, camera drift, hallucinated
+# hat, and it billed 20 generations for 4 directions vs the documented
+# 1 gen/direction. The client poller also times out while jobs keep running
+# and billing — a client timeout is not a failure and not a refund; there is
+# no cancel. Full record: COMBAT_ARMOR_STRATEGY.md §1.) A separate WEB-APP
+# template experiment — "Taking Punch" on the 256px Mage throwaway state —
+# produced a heading flip on the camera-facing South frame (strategy doc §7
+# incident 2). The web Creator manual route produced clean cardinal walks on
+# the same Ranger. Do not conflate the three. The only template experiment
+# still open is a bounded SMALL-CANVAS re-test (both failures were on 256px
+# characters), which requires its own owner authorization. Template mode
+# (mode=template, e.g. --template-id walk / walking / walk-1..10 /
 # crouched-walking) is VENDOR-DOCUMENTED as skeleton-driven and priced at
-# 1 generation/direction — a fraction of the ~3 gen/direction custom v3 cost
-# above — and may reduce semantic drift since motion is constrained to a rig
-# rather than invented from free text, but is NOT immune (the renderer still
-# paints equipment onto the rig). `keep_first_frame`, `custom_start_frame`, and
-# `end_frame` are explicitly NOT supported in template mode, so the frame_000
-# =stand convention above needs separate verification before adopting this
+# 1 generation/direction — but see the measured 5× billing above.
+# `keep_first_frame`, `custom_start_frame`, and `end_frame` are explicitly
+# NOT supported in template mode, so the frame_000=stand convention above
+# needs separate verification before ever adopting this
 # route. The full live template-ID list is intentionally not copied here (the
 # vendor's own OpenAPI description truncates it, and it can change) — pull it
 # fresh from the PixelLab MCP docs or interactive docs before relying on it.
