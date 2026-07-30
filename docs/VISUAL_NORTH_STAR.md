@@ -1,15 +1,15 @@
 # Eldoria Visual North Star
 
 **Status:** Owner-approved visual direction  
-**Version:** 1  
-**Approved:** 2026-07-28  
+**Version:** 2  
+**Approved:** 2026-07-30  
 **Applies to:** Realm of Eldoria as a whole
 
-![Eldoria Visual North Star](visual/eldoria-visual-north-star-v1.png)
+![Eldoria Visual North Star](visual/eldoria-visual-north-star-v2.png)
 
 Permanent repository link after merge:
 
-`https://github.com/Galashots/eldoria/blob/main/docs/visual/eldoria-visual-north-star-v1.png`
+`https://github.com/Galashots/eldoria/blob/main/docs/visual/eldoria-visual-north-star-v2.png`
 
 ## Purpose
 
@@ -61,12 +61,12 @@ The agent should continue with otherwise-authorized scoped work. The flag is for
 
 When recommending a refresh, base the prompt on the current image rather than asking the owner to find and upload it again. Link to:
 
-`https://raw.githubusercontent.com/Galashots/eldoria/main/docs/visual/eldoria-visual-north-star-v1.png`
+`https://raw.githubusercontent.com/Galashots/eldoria/main/docs/visual/eldoria-visual-north-star-v2.png`
 
 Use this structure and replace the bracketed fields:
 
 > Use the linked current Eldoria Visual North Star as the primary visual reference:
-> https://raw.githubusercontent.com/Galashots/eldoria/main/docs/visual/eldoria-visual-north-star-v1.png
+> https://raw.githubusercontent.com/Galashots/eldoria/main/docs/visual/eldoria-visual-north-star-v2.png
 >
 > Create one polished 16:9 gameplay concept that can supersede it. Preserve [qualities that remain authoritative]. Incorporate [new feature, art, camera, UI, character, biome, or gameplay direction] because [brief reason/evidence from the repository]. Show [specific scene and interactions] in one coherent, playable composition. Keep strict isometric construction, generous navigable spacing, premium crisp pixel art/HD-2D depth, consistent upper-left lighting, child-friendly adventure tone, readable touch-first UI, and direct world-object interaction unless explicitly changed above. Do not create a poster, collage, sprite sheet, device frame, logo, watermark, or explanatory text. The result must look like a real gameplay screenshot and must be suitable for owner review as the next repository-wide Visual North Star.
 
@@ -85,4 +85,13 @@ A new North Star becomes current only after explicit owner approval. Once approv
 
 **Supersession history**
 
-- **v1 — 2026-07-28:** Established the spacious isometric farm scene, dual-hero presentation, premium pixel-art/HD-2D finish, farm-to-dumpling loop, exploration hooks, and touch-first HUD as the initial repository-wide visual direction.
+- **v2 — 2026-07-30:** Owner-approved pixelized re-render of the v1 scene
+  (produced by ChatGPT, the standing visual-direction lead, at the owner's
+  request; owner approved it the same day and directed the replacement).
+  Why superseded: v1 was a painterly concept render, leaving an
+  interpretation gap between the target and the game's actual medium; v2
+  states the same direction — composition, duo, farm loop, touch-first UI —
+  in true crisp pixel art, so agents compare like against like. Every
+  direction bullet above carries over unchanged. v1 is retained below as
+  history.
+- **v1 — 2026-07-28:** Established the spacious isometric farm scene, dual-hero presentation, premium pixel-art/HD-2D finish, farm-to-dumpling loop, exploration hooks, and touch-first HUD as the initial repository-wide visual direction. Superseded by v2 (same direction, native pixel-art medium); file retained at `docs/visual/eldoria-visual-north-star-v1.png`.
