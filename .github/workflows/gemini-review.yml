@@ -27,7 +27,7 @@ jobs:
       # Review the PR through GitHub's API, but keep the checked-out workspace on
       # the trusted base commit. PR code and prose are untrusted review input.
       - name: Checkout trusted base
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
