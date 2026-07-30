@@ -216,6 +216,38 @@ class ApiRawStreamingCap(unittest.TestCase):
             blob = client.api("GET", "/characters/abc/zip", raw=True)
         self.assertEqual(blob, b"PK\x03\x04zipdata")
 
+    def test_raw_redirect_rejected_and_not_followed(self):
+        # Security blocker regression: an API 3xx must fail closed, never be
+        # auto-followed with the bearer token attached.
+        calls = []
+
+        def fake_request(method, url, **kwargs):
+            self.assertFalse(kwargs.get("allow_redirects", True),
+                             "authenticated raw path must disable auto-redirects")
+            calls.append(url)
+            return FakeResponse(302, {"location": "https://evil.example.com/zip"})
+
+        with mock.patch.object(client.requests, "request", side_effect=fake_request), \
+             mock.patch.object(client, "get_token", return_value="test-token"):
+            with self.assertRaises(SystemExit):
+                client.api("GET", "/characters/abc/zip", raw=True)
+        self.assertEqual(len(calls), 1, "redirect must not be followed")
+
+    def test_json_redirect_rejected_and_not_followed(self):
+        calls = []
+
+        def fake_request(method, url, **kwargs):
+            self.assertFalse(kwargs.get("allow_redirects", True),
+                             "authenticated JSON path must disable auto-redirects")
+            calls.append(url)
+            return FakeResponse(301, {"location": "http://internal.local/steal"})
+
+        with mock.patch.object(client.requests, "request", side_effect=fake_request), \
+             mock.patch.object(client, "get_token", return_value="test-token"):
+            with self.assertRaises(SystemExit):
+                client.api("GET", "/balance")
+        self.assertEqual(len(calls), 1, "redirect must not be followed")
+
 
 class UniqueSafeNames(unittest.TestCase):
     def test_distinct_keys_pass(self):

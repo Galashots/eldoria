@@ -81,6 +81,17 @@ def get_token():
     return tok
 
 
+def reject_redirect(method, path, resp):
+    """Fail closed on any API 3xx: requests forwards explicitly-passed headers
+    across redirects, so following one could hand the bearer token to an
+    unapproved or internal host, bypassing check_download_url()."""
+    if 300 <= resp.status_code < 400:
+        location = resp.headers.get("location") or resp.headers.get("Location")
+        sys.exit(f"API {method} {path} unexpectedly redirected "
+                 f"({resp.status_code} -> {str(location)[:120]}); refusing to "
+                 "follow with an authenticated request")
+
+
 def api(method, path, payload=None, raw=False):
     headers = {"Authorization": f"Bearer {get_token()}"}
     if raw:
@@ -90,8 +101,9 @@ def api(method, path, payload=None, raw=False):
         total = 0
         with requests.request(
             method, BASE + path, json=payload, headers=headers,
-            timeout=180, stream=True,
+            timeout=180, stream=True, allow_redirects=False,
         ) as resp:
+            reject_redirect(method, path, resp)
             if resp.status_code >= 400:
                 sys.exit(f"API {method} {path} -> {resp.status_code}: {resp.text[:800]}")
             for chunk in resp.iter_content(65536):
@@ -102,8 +114,10 @@ def api(method, path, payload=None, raw=False):
                 chunks.append(chunk)
         return b"".join(chunks)
     resp = requests.request(
-        method, BASE + path, json=payload, headers=headers, timeout=180
+        method, BASE + path, json=payload, headers=headers,
+        timeout=180, allow_redirects=False,
     )
+    reject_redirect(method, path, resp)
     if resp.status_code >= 400:
         sys.exit(f"API {method} {path} -> {resp.status_code}: {resp.text[:800]}")
     return resp.json()
