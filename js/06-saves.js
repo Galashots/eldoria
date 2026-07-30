@@ -76,8 +76,14 @@ function validateSaveShape(s) {
   for (var i = 0; i < nums.length; i++)
     if (badNumber(p[nums[i]])) return 'invalid numeric field: ' + nums[i];
   if (p.maxHp != null && p.maxHp <= 0) return 'nonsensical maxHp';
-  if (p.hp != null && p.hp < 0) return 'nonsensical hp';
   if (p.level != null && p.level < 1) return 'nonsensical level';
+  // Nonsensical values are rejected, never silently clamped into a playable save.
+  var nonNeg = ['gold', 'questsDone', 'hp', 'xp', 'hpUpgrades', 'atkUpgrades',
+                'dumplingDough', 'pullsSinceLegendary'];
+  for (var nn = 0; nn < nonNeg.length; nn++)
+    if (p[nonNeg[nn]] != null && p[nonNeg[nn]] < 0) return 'negative ' + nonNeg[nn];
+  if (s.x != null && (s.x < 0 || s.x > MAP_W * TILE)) return 'off-map position x';
+  if (s.y != null && (s.y < 0 || s.y > MAP_H * TILE)) return 'off-map position y';
 
   // seeds/crops: legacy numeric, per-type object, or absent — anything else is corrupt.
   if (p.seeds != null && typeof p.seeds !== 'number' && !isPlainObject(p.seeds))
@@ -102,10 +108,14 @@ function validateSaveShape(s) {
   if (s.areas != null) {
     if (!isPlainObject(s.areas)) return 'invalid areas block';
     for (var a in s.areas) {
+      if (!areas[a]) return 'unknown area: ' + a;
       var blk = s.areas[a];
       if (blk == null) continue;
       if (!isPlainObject(blk)) return 'invalid area block: ' + a;
-      if (blk.tiles != null && !isPlainObject(blk.tiles)) return 'invalid tiles: ' + a;
+      if (blk.tiles != null) {
+        var tileErr = validateAreaTiles(a, blk.tiles);
+        if (tileErr) return tileErr;
+      }
       if (blk.enemies != null) {
         if (!isPlainObject(blk.enemies)) return 'invalid enemies block: ' + a;
         for (var eid in blk.enemies) {
@@ -117,10 +127,38 @@ function validateSaveShape(s) {
       }
     }
   }
-  // v1/v0 flat soil blocks
-  if (s.farmTiles != null && !isPlainObject(s.farmTiles)) return 'invalid farmTiles';
-  if (s.townTiles != null && !isPlainObject(s.townTiles)) return 'invalid townTiles';
-  if (s.tiles != null && !isPlainObject(s.tiles)) return 'invalid tiles';
+  // v1/v0 flat soil blocks get the same per-tile validation as nested ones.
+  if (!nested) {
+    var flatErr = (s.farmTiles != null && validateAreaTiles('farm', s.farmTiles)) ||
+                  (s.tiles != null && validateAreaTiles('farm', s.tiles)) ||
+                  (s.townTiles != null && validateAreaTiles('town', s.townTiles));
+    if (flatErr) return flatErr;
+  }
+  return null;
+}
+
+// Validate one area's saved soil map, record by record. restoreAreaCrops dereferences
+// each record's fields, so a null/garbage entry that slipped through here would crash
+// profile loading — every key and record must be provably safe before migration.
+var CROP_TILE_STATUSES = { empty: 1, growing: 1, ready: 1 };
+function validateAreaTiles(areaName, tiles) {
+  if (!isPlainObject(tiles)) return 'invalid tiles: ' + areaName;
+  for (var key in tiles) {
+    var mtch = /^(\d+),(\d+)$/.exec(key);
+    if (!mtch) return 'invalid tile key: ' + areaName + ' ' + key;
+    var tr = parseInt(mtch[1], 10), tc = parseInt(mtch[2], 10);
+    if (tr >= MAP_H || tc >= MAP_W || areas[areaName].map[tr][tc] !== SOIL)
+      return 'tile is not soil: ' + areaName + ' ' + key;
+    var rec = tiles[key];
+    if (!isPlainObject(rec)) return 'invalid tile record: ' + areaName + ' ' + key;
+    if (!CROP_TILE_STATUSES[rec.status]) return 'invalid tile status: ' + areaName + ' ' + key;
+    if (rec.type != null && CROP_TYPES.indexOf(rec.type) < 0)
+      return 'invalid tile crop type: ' + areaName + ' ' + key;
+    if (rec.plantedAt != null && (!isFiniteNumber(rec.plantedAt) || rec.plantedAt < 0))
+      return 'invalid tile plantedAt: ' + areaName + ' ' + key;
+    if (rec.status !== 'empty' && rec.plantedAt == null)
+      return 'growing tile missing plantedAt: ' + areaName + ' ' + key;
+  }
   return null;
 }
 
@@ -168,16 +206,30 @@ function migrateSaveToV3(s) {
       if (ENEMIES[kc] && isFiniteNumber(p.killCounts[kc]) && p.killCounts[kc] > 0)
         op.killCounts[kc] = p.killCounts[kc];
 
+  // Active kill quests are NORMALIZED against the CURRENT quest table, never copied
+  // through — otherwise a legacy "Slay 3 Slimes" save would still hit the ELD-PLAY-002
+  // waiting problem this schema exists to remove. Deterministic rules:
+  //   - the quest becomes the current definition for its target (one kill, singular
+  //     name, scaled reward), keeping min(saved progress, new count);
+  //   - if saved progress ALREADY satisfies the current objective, the quest resolves
+  //     during migration: the CURRENT scaled reward is credited to gold and the quest
+  //     clears — non-punitive, no extra kill required (tested);
+  //   - a target with no current quest definition drops the quest (cannot happen with
+  //     today's tables — every legacy target still has a definition).
   op.killQuest = null;
   if (isPlainObject(p.killQuest) && ENEMIES[p.killQuest.target]) {
-    op.killQuest = {
-      target: p.killQuest.target,
-      count: isFiniteNumber(p.killQuest.count) ? p.killQuest.count : 1,
-      reward: isFiniteNumber(p.killQuest.reward) ? p.killQuest.reward : 0,
-      name: (typeof p.killQuest.name === 'string') ? p.killQuest.name
-        : ('Slay ' + ENEMIES[p.killQuest.target].name),
-      progress: isFiniteNumber(p.killQuest.progress) ? p.killQuest.progress : 0
-    };
+    var qdef = null;
+    for (var kqi = 0; kqi < KILL_QUESTS.length; kqi++)
+      if (KILL_QUESTS[kqi].target === p.killQuest.target) { qdef = KILL_QUESTS[kqi]; break; }
+    var qprog = isFiniteNumber(p.killQuest.progress) ? Math.max(0, p.killQuest.progress) : 0;
+    if (qdef) {
+      if (qprog >= qdef.count) {
+        op.gold += qdef.reward;   // resolved at migration: credit the scaled reward once
+      } else {
+        op.killQuest = { target: qdef.target, count: qdef.count, reward: qdef.reward,
+                         name: qdef.name, progress: qprog };
+      }
+    }
   }
 
   op.friends = {};
