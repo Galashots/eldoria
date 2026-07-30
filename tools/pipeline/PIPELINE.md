@@ -64,7 +64,7 @@ REVIEW (human + North Star)   →   commit to assets/
 The generate stage is swappable by design — if PixelLab disappoints, the
 normalize/validate contract doesn't change; only the client does.
 
-## Camera + direction policy (source locked; runtime subset current)
+## Camera + direction policy (source locked; eight-direction runtime)
 
 PixelLab generation uses `view=high top-down` (approximately 35°), and the
 approved reference is already drawn at that camera. PixelLab rotates direction;
@@ -72,21 +72,23 @@ it is not responsible for converting an eye-level reference to the game camera.
 
 Retain every generated direction as canonical production source material:
 
-| PixelLab direction | Current engine use |
+| PixelLab direction | Engine slot (since the 2026-07-30 eight-direction runtime) |
 |---|---|
-| `south` | retained; reserved for later 8-direction runtime |
-| `south-east` | current `right` slot |
-| `east` | retained; reserved for later 8-direction runtime |
-| `north-east` | current `up` slot |
-| `north` | retained; reserved for later 8-direction runtime |
-| `north-west` | current `left` slot |
-| `west` | retained; reserved for later 8-direction runtime |
-| `south-west` | current `down` slot |
+| `south` | `down-right` |
+| `south-east` | `right` |
+| `east` | `up-right` |
+| `north-east` | `up` |
+| `north` | `up-left` |
+| `north-west` | `left` |
+| `west` | `down-left` |
+| `south-west` | `down` |
 
-The four diagonal slots are the current runtime compatibility subset, not the
-production-source limit. The owner intends a later bounded eight-direction
-runtime upgrade for heroes and moving NPCs/enemies. That work needs its own
-movement/input mapping, animation contract, tests, and runtime inspection.
+**Superseded 2026-07-30 by owner call:** the four-diagonal compatibility subset
+is no longer the runtime limit. Heroes consume all eight directions, each with
+its own walk strip; `facingFromVector` in `index.html` buckets the world motion
+vector into octants, and the normalizer/validator (`normalize_sprite.py`,
+`validate_sprites.py`) enforce all eight slots. Moving NPCs/enemies remain a
+later bounded upgrade.
 
 The 26.565° constant (= atan 0.5) is the **screen slope of the 2:1 diamond
 edge** carried over from the prior 3D contract; it is not, without
@@ -150,7 +152,7 @@ python tools/pipeline/pixellab_client.py create-v3 \
   --description "older ranger adventurer, weathered green hooded cloak, leather bracers, longbow and quiver" \
   --reference-image _probe_local/pipeline/ranger/ref-256.png --seed 11 \
   --out-dir _probe_local/pipeline/ranger
-# -> 8 rotations; retain all 8 directions (the current engine consumes the four diagonals) for the engine slots
+# -> 8 rotations; retain all 8 directions — since 2026-07-30 the engine consumes all eight slots
 
 # DESCRIPTION ROUTE: 8 directions (create4 yields cardinals only — do not
 # use it for the engine's diagonal facings; its `directions` field is
@@ -247,7 +249,7 @@ Run once with trial credits before trusting the pipeline:
   `init_image` when this happens; do not relax the gate.
 - **`create4` facings are CARDINAL** (pure front/side/back), even with
   `isometric: true` — not the 3/4 diagonals our camera wants. For diagonal
-  facings use `create-character-with-8-directions` and retain all 8 directions (the current engine consumes the four diagonals).
+  facings use `create-character-with-8-directions` and retain all 8 directions (the engine consumes all eight slots since 2026-07-30).
   Also: `isometric: true` outputs a 92×92 canvas, not 64 — harmless, the
   normalizer downscales.
 - **`directions` param is reference images per direction** (provide some

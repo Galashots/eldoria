@@ -4,7 +4,9 @@ Generalization of the Track 2(b) probe normalizer (same math, no longer
 hardcoded to one profile). Input is a directory of raw frames — from PixelLab,
 ChatGPT, Blender, anywhere — named by ENGINE SLOT:
 
-    <slot>.png              static facing        slot in {right, down, left, up}
+    <slot>.png              static facing        slot in {right, down, left, up,
+                                                          down-right, down-left,
+                                                          up-left, up-right}
     <slot>-walk-<i>.png     walk frame i (0..3)
 
 Output is engine-ready files named for the profile:
@@ -37,7 +39,14 @@ from PIL import Image
 FRAME = 64
 CONTENT_BOX = 60
 ALPHA_THRESHOLD = 128
-ENGINE_SLOTS = ["right", "down", "left", "up"]
+# Eight engine slots. The original diagonal four keep their names (right=SE,
+# down=SW, left=NW, up=NE); the 2026-07-30 eight-direction upgrade adds the
+# world-diagonal slots, which map to the compass cardinals (down-right=S,
+# down-left=W, up-left=N, up-right=E). A four-slot source still normalizes —
+# missing slots only warn (statics) or skip (walks); the validator decides
+# whether that is acceptable for the profile.
+ENGINE_SLOTS = ["right", "down", "left", "up",
+                "down-right", "down-left", "up-left", "up-right"]
 WALK_FRAMES = 4
 
 

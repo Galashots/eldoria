@@ -12,8 +12,8 @@ against the engine contract (tools/pipeline/PIPELINE.md):
   G6 walk stability  within a strip: centre-x range <= 2 px, top-y range <= 4 px
   G7 stand identity  walk frames 0 and 2 are byte-identical (engine resets
                      walkFrame to 0 when stationary; 0/2 are the stand pose)
-  G8 completeness    all four static slots must exist (relax with
-                     --allow-partial); --require-walks demands all four
+  G8 completeness    all eight static slots must exist (relax with
+                     --allow-partial); --require-walks demands all eight
                      strips; an empty directory always FAILS
 
 These are the same gates the Track 2 harness (tools/ranger-proof.mjs on
@@ -33,7 +33,12 @@ import numpy as np
 from PIL import Image
 
 FRAME = 64
-ENGINE_SLOTS = ["right", "down", "left", "up"]
+# Eight slots since the 2026-07-30 eight-direction upgrade (right=SE, down=SW,
+# left=NW, up=NE, down-right=S, down-left=W, up-left=N, up-right=E). G8 now
+# demands all eight statics, and --require-walks all eight strips; a four-slot
+# character must use --allow-partial explicitly.
+ENGINE_SLOTS = ["right", "down", "left", "up",
+                "down-right", "down-left", "up-left", "up-right"]
 WALK_FRAMES = 4
 
 failures = []
@@ -72,7 +77,7 @@ def main():
     ap.add_argument("--allow-partial", action="store_true",
                     help="do not fail on missing static slots")
     ap.add_argument("--require-walks", action="store_true",
-                    help="fail unless all four walk strips exist")
+                    help="fail unless all eight walk strips exist")
     args = ap.parse_args()
 
     found_any = False

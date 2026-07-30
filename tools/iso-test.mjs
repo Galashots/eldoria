@@ -31,7 +31,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- Suite 2: flag plumbing (Phase 1 farm + Phase 2 town ON, later areas still top-down) ---
+// --- Suite 2: flag plumbing (every area defaults to iso since the 8-direction slice) ---
 {
   const { browser, page } = await launch('?iso=1');
   const r = await page.evaluate(() => {
@@ -40,16 +40,19 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     var farmDefault = isoActive();           // currentArea is 'farm' at boot
     currentArea = 'town';
     var townDefault = isoActive();           // ported by the Phase 2 first slice
-    currentArea = 'wilds';
-    var wildsDefault = isoActive();          // not ported yet
+    var combatDefaults = ['wilds', 'deepwoods', 'mine'].map(function (a) {
+      currentArea = a;
+      return isoActive();
+    });
     currentArea = 'farm';
     return { on: on, farmDefault: farmDefault, townDefault: townDefault,
-             wildsDefault: wildsDefault };
+             combatDefaults: combatDefaults };
   });
   check('flag: ?iso=1 turns iso on', r.on === true);
   check('flag: farm defaults to iso (Phase 1)', r.farmDefault === true);
   check('flag: town defaults to iso (Phase 2 slice)', r.townDefault === true);
-  check('flag: unported areas default to top-down', r.wildsDefault === false);
+  check('flag: combat areas default to iso (8-direction slice)',
+        Array.isArray(r.combatDefaults) && r.combatDefaults.every(v => v === true));
   await browser.close();
 }
 
@@ -788,6 +791,50 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     await browser.close();
   }
   check('visual evidence: Town device, depth, interaction, and travel frames captured', true);
+}
+
+// --- Suite 16: eight-direction facings and iso walk animation ---
+{
+  const { browser, page } = await launch('?iso=1');
+  const r = await page.evaluate(() => {
+    // Octant bucketing: every world motion vector lands on its own facing slot.
+    var got = [[1, 0], [1, 1], [0, 1], [-1, 1],
+               [-1, 0], [-1, -1], [0, -1], [1, -1]].map(function (v) {
+      return facingFromVector(v[0], v[1]);
+    });
+    var want = ['right', 'down-right', 'down', 'down-left',
+                'left', 'up-left', 'up', 'up-right'];
+    var octants = got.join(',') === want.join(',');
+    // All sixteen player sprites (static + walk) registered per profile.
+    var registered = true;
+    ['adventurer', 'mage'].forEach(function (p) {
+      want.forEach(function (d) {
+        if (!SPRITES['player_' + p + '_' + d]) registered = false;
+        if (!SPRITES['player_walk_' + p + '_' + d]) registered = false;
+      });
+    });
+    // The iso renderer draws a mid-stride frame while walking: with a diagonal
+    // facing and walkFrame 1, the drawn pixels must differ from the standing pose.
+    selectProfile('adventurer');
+    activateArea('farm');
+    applyCanvasMode();
+    player.facing = 'down-right';
+    player.walking = false; player.walkFrame = 0;
+    drawIsoWorld();
+    var stand = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    player.walking = true; player.walkFrame = 1;
+    drawIsoWorld();
+    var stride = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    var differs = false;
+    for (var i = 0; i < stand.length; i += 16) {
+      if (stand[i] !== stride[i]) { differs = true; break; }
+    }
+    return { octants: octants, registered: registered, differs: differs };
+  });
+  check('facing: eight octants map to eight slots', r.octants === true);
+  check('facing: all eight static+walk sprites registered per profile', r.registered === true);
+  check('iso walk: mid-stride frame draws differently from the stand', r.differs === true);
+  await browser.close();
 }
 
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
