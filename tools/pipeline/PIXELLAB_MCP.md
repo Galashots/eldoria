@@ -198,9 +198,13 @@ of truth for the game.
 
 Do not re-derive the settings already calibrated in `PIPELINE.md`:
 
-- Character identity: approved concept/reference → `v3` rotation → keep four
-  diagonal facings.
-- Engine direction mapping: right=SE, down=SW, left=NW, up=NE.
+- Character identity: approved concept/reference → `v3` rotation → **retain
+  all eight directions** (the runtime is eight-direction since 2026-07-30;
+  see the mapping table in `PIPELINE.md`).
+- Engine slot → PixelLab direction mapping (complete, matching the
+  `PIPELINE.md` table): right=`south-east`, down-right=`south`,
+  down=`south-west`, down-left=`west`, left=`north-west`, up-left=`north`,
+  up=`north-east`, up-right=`east`.
 - Terrain: isometric `create_tiles_pro`, 64px tiles, `tile_flat_top_px=2`;
   use dedicated path and building-kit tools where applicable.
 - Cross-batch style: approved style references plus the North Star prompt

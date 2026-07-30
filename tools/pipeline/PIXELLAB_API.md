@@ -139,7 +139,7 @@ above.
 | Gear / outfit / pose variant of an existing character | **`create-character-state`** | One edit applied consistently across **all** rotations; keeps identity, body type and proportions. `use_color_palette_from_reference` snaps it to the source palette |
 | Stock motion | `animate-character` + `template_animation_id` | 1 gen/direction |
 | Custom motion | `animate-character` + `action_description` | v3; see §5 |
-| Fill in directions a partial animation missed | `animation_group_id` | Appends to the existing group instead of regenerating the set |
+| Fill in directions a partial animation missed | MCP `animate_character(animation_group_id=...)` or the web UI's per-slot rocket icon | Appends to the existing group instead of regenerating the set. **Not available on the REST character route** ([REST-VERIFIED 2026-07-30]: `CreateCharacterAnimationRequest` has no append field; REST's `animation_group_id` exists only on the *object*-animation endpoint) |
 | Download everything | `GET /characters/{id}/zip` | Rotations, animation frames, `metadata.json`, and per-frame keypoints |
 
 **[VENDOR-DOCUMENTED] Downloads need no authentication — the UUID is the access

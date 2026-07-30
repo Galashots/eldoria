@@ -178,15 +178,28 @@ python tools/pipeline/pixellab_client.py animate \
 python tools/pipeline/pixellab_client.py character \
   --id <id> --out-dir _probe_local/pipeline/ranger-walk
 
-# UNTESTED IN ELDORIA, RECOMMENDED NEXT EXPERIMENT: PixelLab's own template
-# library (mode=template, e.g. --template-id walk / walking / walk-1..10 /
+# TESTED IN ELDORIA 2026-07-29 ON THIS REST/PYTHON ROUTE — AND IT FAILED THE
+# VISUAL GATE. (Correction 2026-07-30: this block previously called the route
+# untested. The durable record — tools/pipeline/evidence/
+# 2026-07-29-rest-template-walk-failure.md — shows
+# `template_animation_id: "walking"` was run on the 256px Ranger via this
+# exact client: identity wrecked frame to frame, camera drift, hallucinated
+# hat, and it billed 20 generations for 4 directions vs the documented
+# 1 gen/direction. The client poller also times out while jobs keep running
+# and billing — a client timeout is not a failure and not a refund; there is
+# no cancel. Interface breakdown: COMBAT_ARMOR_STRATEGY.md §1.) A separate WEB-APP
+# template experiment — "Taking Punch" on the 256px Mage throwaway state —
+# produced a heading flip on the camera-facing South frame (strategy doc §7
+# incident 2). The web Creator manual route produced clean cardinal walks on
+# the same Ranger. Do not conflate the three. The only template experiment
+# still open is a bounded SMALL-CANVAS re-test (both failures were on 256px
+# characters), which requires its own owner authorization. Template mode
+# (mode=template, e.g. --template-id walk / walking / walk-1..10 /
 # crouched-walking) is VENDOR-DOCUMENTED as skeleton-driven and priced at
-# 1 generation/direction — a fraction of the ~3 gen/direction custom v3 cost
-# above — and may reduce semantic drift since motion is constrained to a rig
-# rather than invented from free text, but is NOT immune (the renderer still
-# paints equipment onto the rig). `keep_first_frame`, `custom_start_frame`, and
-# `end_frame` are explicitly NOT supported in template mode, so the frame_000
-# =stand convention above needs separate verification before adopting this
+# 1 generation/direction — but see the measured 5× billing above.
+# `keep_first_frame`, `custom_start_frame`, and `end_frame` are explicitly
+# NOT supported in template mode, so the frame_000=stand convention above
+# needs separate verification before ever adopting this
 # route. The full live template-ID list is intentionally not copied here (the
 # vendor's own OpenAPI description truncates it, and it can change) — pull it
 # fresh from the PixelLab MCP docs or interactive docs before relying on it.
@@ -358,11 +371,22 @@ docs review):**
   through to the engine.
 
   **Mandatory addition to the raw-sheet visual gate — check heading fidelity
-  per direction, before anything else:** inspect all eight retained directions;
-  for the current four engine slots,
-  confirm the frame actually faces where its label claims. Fastest reliable
-  check: **`south`, `south-east` and `south-west` must all show the face;
-  `north`, `north-east` and `north-west` must not.** If two adjacent
+  per direction, before anything else:** inspect all eight retained directions
+  and confirm each frame actually faces where its label claims. The full
+  octant checklist (expanded 2026-07-30, post-merge audit):
+  - **`south`, `south-east`, `south-west` show the face** (`south-east`/
+    `south-west` as front three-quarter views, not full-front duplicates);
+  - **`north`, `north-east`, `north-west` do not** (`north-east`/`north-west`
+    as rear three-quarter views);
+  - **`east` and `west` are distinct profiles**, not mirrors-with-artifacts
+    of each other or near-copies of the diagonals;
+  - **asymmetric equipment stays on the correct body side** in every frame
+    (a bow, satchel, or staff that switches hands between directions is a
+    rejection, not a nitpick);
+  - **every label lands on the runtime's eight-direction engine slot** per
+    the mapping table above.
+
+  If two adjacent
   directions look near-identical, the rotation has collapsed — reject the set.
   A reroll or replacement decision is an owner/lead call, not something to
   self-resolve.

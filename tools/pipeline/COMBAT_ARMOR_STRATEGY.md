@@ -2,9 +2,11 @@
 
 **Status:** Adopted 2026-07-30. Two generation authorizations exist as of
 that date: a bounded 15-generation web-app exploration (**closed**, 4 spent —
-§6a) and the §5 calibration batch (**open**, ~100-generation cap, not yet
-started). Nothing else is authorized; every call inside an open authorization
-is still quoted to the owner against its cap before it runs. The PR #25/#26
+§6a) and the §5 calibration batch (**PAUSED** 2026-07-30 pending resolution of
+the Codex post-merge audit findings; ~100-generation cap, not yet started —
+requires an explicit owner re-open before any call). Nothing else is
+authorized; every call inside an open authorization is still quoted to the
+owner against its cap before it runs. The PR #25/#26
 art stack merged to `main` (c27a2af) on 2026-07-30, so execution is no longer
 blocked on it.
 
@@ -23,9 +25,23 @@ those win and this file is stale.
   Asked about combat + equipment workflow, it recommended:
   - `create_character(description=...)` — from-scratch mode, the route that
     collapsed the Ranger rotation wheel ([`PIXELLAB_API.md`](PIXELLAB_API.md) §7);
-  - `template_animation_id="attack"` etc. — template mode, which failed the
-    visual gate on the walk attempt (identity wrecked, ~5× documented billing,
-    no cancel path once the client poller gives up).
+  - `template_animation_id="attack"` etc. — template mode. Eldoria's template
+    evidence, by interface (do not conflate these):
+    - **REST/Python client route — tested 2026-07-29 and FAILED the visual
+      gate.** `pixellab_client.py` → `POST /animate-character` with
+      `template_animation_id: "walking"` on the 256 px Ranger
+      (`add36c36-295d-4626-94fd-179a4102d1ea`): identity wrecked frame to
+      frame, camera drift, a hallucinated hat; billed **20 generations for 4
+      directions** (~5× the documented 1 gen/direction), and the client
+      poller times out while the jobs keep running and billing — no cancel
+      path. Durable in-repo record:
+      [`evidence/2026-07-29-rest-template-walk-failure.md`](evidence/2026-07-29-rest-template-walk-failure.md)
+      (sanitized import of the author-held 2026-07-29 session record;
+      `PIPELINE.md` previously — wrongly — carried this route as untested.)
+    - **Web-app template route — measured 2026-07-30**: the "Taking Punch"
+      South frame heading flip (§7 incident 2).
+    - **Web Creator manual route**: the same Ranger's cardinal walks came
+      back clean — the failure is route-specific, not character-specific.
 
   `agent_help` reflects vendor defaults, not our calibration. Treat it as a
   discovery aid only; the repo decision record stays authoritative.
@@ -38,8 +54,9 @@ those win and this file is stale.
 - **Use `animate_character` with a custom `action_description` (v3 mode), not
   `template_animation_id`.** Custom v3 cost scales with canvas × frames, which
   stays cheap on 64px-reference heroes (~108–112 px canvases). A single bounded
-  template-mode re-test on a small canvas may be authorized later (the template
-  failure was measured on a 256 px character), but production does not depend
+  template-mode re-test on a small canvas may be authorized later (both
+  measured template failures — the REST/Python walk and the web-app Taking
+  Punch — were on 256 px characters; see §1), but production does not depend
   on it.
 - **Always pass `directions` explicitly** — custom mode silently animates
   `south` only.
@@ -52,9 +69,17 @@ those win and this file is stale.
 - **Order of attack:** hit-reaction and death animations first — no props, so
   they dodge the model's documented accessory weakness. Weapon/cast attacks
   second, with weapon-class-specific descriptions (§3).
-- Use `animation_group_id` to fill directions a partial run missed; never
-  regenerate a whole set for one bad direction before trying the repair
-  ladder in [`PIXELLAB_API.md`](PIXELLAB_API.md) §4.
+- **Fill directions a partial run missed instead of regenerating the set** —
+  but the mechanism is interface-specific ([REST-VERIFIED 2026-07-30]):
+  - **MCP `animate_character`**: pass `animation_group_id`.
+  - **Web UI**: the per-slot rocket icon on the existing animation group.
+  - **REST `/animate-character` + Python client**: `CreateCharacterAnimation
+    Request` exposes **no** append field today (`animation_group_id` exists in
+    REST only on the *object*-animation endpoint). Repairing one direction of
+    a character animation from the REST client means MCP or web UI, or the
+    repair ladder in [`PIXELLAB_API.md`](PIXELLAB_API.md) §4.
+
+  Never regenerate a whole set for one bad direction before trying these.
 
 ## 3. Equipment architecture — the decision
 
@@ -100,7 +125,7 @@ character — not a slot overlay. Two candidate models were considered:
 - Every state × animation combination is a separate spend. Budget as
   heroes × tiers × actions × directions before authorizing a batch.
 
-## 5. First calibration batch (AUTHORIZED 2026-07-30, ~100 generation cap)
+## 5. First calibration batch (AUTHORIZED 2026-07-30, ~100 generation cap; PAUSED pending audit resolution — owner re-open required)
 
 The original "5–10 generations" estimate here was **wrong** — it predated the
 measured pricing: `create_character_state` discloses **20–40 gens** up front,
@@ -114,8 +139,19 @@ happens:
    face** (see §7 incident 2).
 2. One armored `create_character_state` (20–40 gens).
 3. One **Transfer Outfit reskin test** (20–40 gens) — the decisive experiment
-   for the §3 architecture choice: reskin the finished unarmed animation
-   frames with an armor reference and judge identity/alignment per frame.
+   for the §3 architecture choice: reskin finished unarmed animation frames
+   with an armor reference and judge identity/alignment per frame.
+   **Frame limits are size-tiered** ([REST-VERIFIED 2026-07-30 against
+   `/transfer-outfit-v2`]: 32–64 px output → up to 15 frames; 65–80 px → 8;
+   81–256 px → **3** — the reference occupies one grid slot). Eldoria's
+   108–112 px hero canvases and the 256 px Mage all fall in the 3-frames-per-
+   call tier (Edit Animation, its text-driven sibling, gets 4 — see §6a), so
+   a full animation reskin takes multiple calls. The probe authorization
+   covers **one call**. **Standing rule for this and every future probe
+   authorization — the quote presented to the owner must name all six:**
+   the interface (REST / MCP / web / Pixelorama bridge), the canvas size,
+   the selected frames, the frame count, the number of calls, and the quoted
+   total cost. A full rollout is a separate batch-count + cost approval.
 4. The diff-overlay extraction test rides on 2's output for free (armored
    state minus unarmed base, per direction).
 5. Standard gates throughout: raw output to `_probe_local/`, normalize,
@@ -137,9 +173,11 @@ A read-only review of PixelLab's public docs (`pixellab.ai/docs`,
 2026-07-30) surfaced:
 
 - **`POST /transfer-outfit-v2` is a documented REST endpoint** built to apply
-  an outfit/armor reference image across 2–16 existing animation frames in
-  one call (flat ~20 gens ≤64 px output, up to 40 at larger sizes). If
-  usable, it is a **third equipment model** this doc's §3 did not consider:
+  an outfit/armor reference image across existing animation frames in one
+  call. Per-call frame limits are **size-tiered** ([REST-VERIFIED
+  2026-07-30]): 15 frames at 32–64 px output, 8 at 65–80 px, **3 at
+  81–256 px**. If usable, it is a **third equipment model** this doc's §3
+  did not consider:
   animate the unarmed base once, then reskin the finished frames per armor
   tier — potentially much cheaper than whole-state re-animation.
   **Unresolved vendor contradiction:** the tool's own docs page says
@@ -171,11 +209,23 @@ A logged-in review of the web app (read-only Phase 2, then a Leo-authorized
   fresh mints a duplicate group — the §7 incident-1 mechanism, confirmed.
 - **Transfer Outfit to Animation (pro) and Edit Animation (pro) live in the
   "Edit in Pixelorama" bridge** (button on every state card), NOT the plain
-  Characters UI and NOT the MCP. Both cost a **flat 40 gens at 256px / 20 at
-  ≤128px** per batch (≤15 frames), disclosed in-form before running. Edit
+  Characters UI and NOT the MCP. Both disclose a **flat cost per call
+  in-form before running: 40 gens at 256 px / 20 at ≤128 px**. Edit
   Animation is the text-driven sibling ("wearing red armor") of the
   reference-image-driven Transfer Outfit — same price, and also a per-frame
-  repair option alongside inpaint.
+  repair option alongside inpaint. **Per-call frame limits are size-tiered
+  and differ between the two tools** ([REST-VERIFIED 2026-07-30]) — both
+  pack everything into one fixed generation grid, but Transfer Outfit's
+  reference image consumes a slot:
+  - **Transfer Outfit** (`/transfer-outfit-v2`): 15 frames at 32–64 px,
+    8 at 65–80 px, **3 at 81–256 px**.
+  - **Edit Animation** (`/edit-animation-v2`): 16 frames at 16–64 px,
+    9 at 65–80 px, **4 at 81–256 px** (text-driven, no reference slot).
+
+  At Eldoria's hero canvas sizes (108–112 px, Mage 256 px) every call
+  carries at most **3 Transfer Outfit or 4 Edit Animation frames** — see the
+  §5 probe terms. Both are also documented REST endpoints, not just
+  Pixelorama-bridge features.
 - **Cost-disclosure asymmetry**: Create State shows "Costs 20-40 generations"
   before you type; **the Add Animation page shows no cost anywhere and
   submits without confirmation**. Treat Add Animation as a spend with no
@@ -201,25 +251,31 @@ animation set instead of completing the owner's existing in-browser walking
 set that was only missing the four diagonals. This is documented behavior,
 not vendor breakage: animation sets append server-side named after the
 slugified action, and **filling missing directions in an existing set
-requires passing `animation_group_id`** ([`PIXELLAB_API.md`](PIXELLAB_API.md)
-§5). The owner repaired it manually (completed the original set in the web
+requires targeting that set** — via MCP `animation_group_id` or the web UI's
+per-slot rocket; the REST character endpoint has no append field (see §2). The owner repaired it manually (completed the original set in the web
 UI, deleted the duplicate). Standing rule: **before animating a character
-that already has any animation set, list its existing sets and target the
-right `animation_group_id`; never start a parallel set for an action that
-already exists.** The web UI surfaces existing sets visually, which is why it
+that already has any animation set, list its existing sets first, then
+append by the interface you are on — MCP: pass the correct
+`animation_group_id`; web UI: use the existing group's per-direction rocket
+slot; REST/Python character route: appending is not possible, so switch to
+MCP or the web UI, or use the [`PIXELLAB_API.md`](PIXELLAB_API.md) §4 repair
+ladder. Never create a parallel group for an action that already exists.**
+The web UI surfaces existing sets visually, which is why it
 is currently more robust in the owner's hands than the MCP path.
 
 **Incident 2 (2026-07-30): template-mode heading flip on a combat frame.**
 The Phase 3 probe's very first "Taking Punch" South frame came back showing
 the **back of the character's head** — a heading flip on the camera-facing
-direction, in template mode, on the 256px Mage throwaway state, visible on a
-2-generation probe. Same defect class as the from-scratch Ranger wheel
+direction, in **web-app** template mode, on the 256px Mage throwaway state,
+visible on a 2-generation probe. Same defect class as the from-scratch Ranger wheel
 (§ PIXELLAB_API.md §7), now measured on combat animation. Standing
 consequences: (a) the raw-sheet visual gate — *south/south-east/south-west
 must show the face* — is the mandatory first look for every combat animation,
 template or custom; no structural validator can catch this (the frame is a
-valid, correctly-sized, alpha-clean PNG); (b) repair one bad direction via
-its slot (rocket icon / `animation_group_id`), never by rerolling the set.
+valid, correctly-sized, alpha-clean PNG); (b) repair one bad direction by
+appending to the existing group via the interface's mechanism — web UI
+per-direction rocket slot, or MCP `animation_group_id`; the REST/Python
+character route cannot append (§2) — never by rerolling the set.
 
 ---
 
