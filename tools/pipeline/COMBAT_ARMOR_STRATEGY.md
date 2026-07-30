@@ -1,8 +1,9 @@
 # Combat animations & equipment variants — strategy record
 
 **Status:** Proposal, approved for documentation by the owner 2026-07-30.
-No generation authorized yet. Execution is deliberately held until the
-PR #25 / #26 art stack is settled.
+No generation authorized yet. The PR #25/#26 art stack merged to `main`
+(c27a2af) on 2026-07-30, so execution is no longer blocked on it; each
+generation batch still requires its own owner authorization and cost quote.
 
 **Authority:** Subordinate to [`PIPELINE.md`](PIPELINE.md) and
 [`PIXELLAB_API.md`](PIXELLAB_API.md). If this file conflicts with either,
@@ -95,8 +96,9 @@ character — not a slot overlay. Two candidate models were considered:
 
 ## 5. First calibration batch (not yet authorized)
 
-Approximately 5–10 generations, each call quoted to the owner first, after
-PR #25/#26 settle:
+Approximately 5–10 generations, each call quoted to the owner first
+(unblocked since the art stack merged 2026-07-30; awaiting owner
+authorization to spend):
 
 1. One custom hit-reaction animation on the 64px-reference Ranger, all 8
    directions.
