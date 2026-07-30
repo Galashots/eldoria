@@ -1,0 +1,637 @@
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: #1a1208;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #f5e6c8;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  #stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    /* dvh tracks the mobile URL bar, so the column is never taller than what is on
+       screen. Declared second so browsers without dvh keep the vh value. */
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  /* ---- HUD (top bar) ---- */
+  .hud {
+    display: flex;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    margin: 6px 0 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: linear-gradient(180deg, rgba(60,34,10,0.92) 0%, rgba(40,22,6,0.95) 100%);
+    border: 2px solid rgba(255,214,102,0.4);
+    border-radius: 10px;
+    padding: 5px 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,214,102,0.1);
+  }
+  .hud > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .hud-gold  { color: #ffd666; }
+  .hud-seeds { color: #88cc55; }
+  .hud-crops { color: #e8a040; }
+  .hud-hp    { color: #ff7a7a; }
+  .hud-level { color: #9cd0ff; }
+  .hud-food  { color: #ffb866; }
+
+  #game {
+    background: #000;
+    border: 3px solid #5a3a1a;
+    border-radius: 8px;
+    width: min(96vw, 960px);
+    height: auto;
+    image-rendering: pixelated;
+    touch-action: none;
+  }
+
+  /* Iso mode: the canvas fills what is left under the in-flow HUD. It used to ask for a
+     full 100dvh inside a 100vh column that already had the HUD in it, which pushed the
+     bottom of the playfield off-screen by exactly the HUD's height (ELD-PT-015).
+     flex sizing lets #stage hand it the remainder; applyCanvasMode() reads the resulting
+     box, so the backing store and view rows follow automatically. */
+  #game.iso-mode {
+    width: 100vw;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+  }
+
+  /* ---- Shop modal (opens when you walk into the building) ---- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;                 /* hidden until the shop opens */
+    align-items: center;
+    justify-content: center;
+    z-index: 200;                  /* above the D-pad and action button */
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-overlay.slash-mode {
+    background: rgba(0, 0, 0, 0.25);
+    align-items: flex-end;
+    padding-bottom: 160px;
+  }
+  .slash-mode .modal {
+    padding: 12px;
+    opacity: 0.85;
+    width: min(86vw, 320px);
+  }
+  .slash-mode .modal .hp-row { display: none; }
+  .slash-mode .modal .btn-close { display: none; }
+  .modal {
+    background: linear-gradient(170deg, #4a3018 0%, #3d2200 40%, #2e1a06 100%);
+    border: 4px solid #ffd666;
+    border-radius: 14px;
+    padding: 22px;
+    width: min(86vw, 360px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    box-shadow: inset 0 1px 0 rgba(255,214,102,0.15), inset 0 -1px 0 rgba(0,0,0,0.3),
+                0 8px 32px rgba(0,0,0,0.7), 0 0 0 2px #2a1800;
+  }
+  .modal-title {
+    color: #ffd666;
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid rgba(255,214,102,0.25);
+    padding-bottom: 6px;
+  }
+  .modal button {
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    border: 3px solid #5a3a1a;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.2);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .modal button:active { transform: scale(0.96); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+  .btn-buy  { background: linear-gradient(180deg, #99dd66 0%, #6aaa33 100%); color: #1a3300; border-color: #4a7722; }
+  .btn-buy:disabled  { background: #556644; color: #888; cursor: default; box-shadow: none; }
+  .btn-sell  { background: linear-gradient(180deg, #ffe080 0%, #ddaa33 100%); color: #3a2800; border-color: #aa8822; }
+  .btn-sell:disabled { background: #998844; color: #888; cursor: default; box-shadow: none; }
+  .btn-close { background: linear-gradient(180deg, #c07a44 0%, #8a5020 100%); color: #fff; border-color: #6a3a10; }
+
+  /* ---- Dumpling collection MVP ---- */
+  .dumpling-modal {
+    width: min(94vw, 560px);
+    max-height: 90dvh;
+    overflow-y: auto;
+  }
+  .dumpling-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,214,102,0.25);
+    padding-bottom: 6px;
+  }
+  .dumpling-heading .modal-title {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .modal .dumpling-close-x {
+    flex: 0 0 46px;
+    min-height: 46px;
+    padding: 4px;
+    background: linear-gradient(180deg, #c07a44 0%, #8a5020 100%);
+    color: #fff;
+    border-color: #6a3a10;
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+  .dumpling-balance {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: #ffe0a0;
+    font-weight: bold;
+  }
+  .dumpling-pulls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .dumpling-pulls button {
+    padding: 10px 5px;
+    background: linear-gradient(180deg, #ffcf70 0%, #d88932 100%);
+    color: #381b00;
+    border-color: #9b5a1b;
+  }
+  .dumpling-pulls button:disabled {
+    background: #6b5b48;
+    color: #9b8c7a;
+    cursor: default;
+    box-shadow: none;
+  }
+  .dumpling-pulls small { display: block; margin-top: 2px; font-size: 0.76em; }
+  .dumpling-status {
+    min-height: 2.6em;
+    margin: 0;
+    color: #fff4cf;
+    line-height: 1.3;
+  }
+  .dumpling-showcase {
+    padding: 12px;
+    border: 3px solid #92724b;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #5a4b3c, #2f271f);
+  }
+  .dumpling-showcase.rare { border-color: #65b8ff; background: linear-gradient(145deg, #285f91, #152e54); }
+  .dumpling-showcase.epic { border-color: #c88aff; background: linear-gradient(145deg, #643a88, #321b4d); }
+  .dumpling-showcase.legendary { border-color: #ffe06a; background: linear-gradient(145deg, #9c7117, #4d3100); }
+  .dumpling-icon {
+    width: 44px;
+    height: 34px;
+    margin: 0 auto 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #8b755c;
+    border-radius: 52% 52% 44% 44%;
+    background: #f3ddba;
+    color: #4b2c1b;
+    font: bold 12px system-ui, sans-serif;
+    box-shadow: inset 0 5px 0 rgba(255,255,255,0.32), 0 3px 5px rgba(0,0,0,0.35);
+  }
+  .dumpling-icon.rare { background: #b8e2ff; border-color: #4c9ddd; }
+  .dumpling-icon.epic { background: #e2bdff; border-color: #9e58d1; }
+  .dumpling-icon.legendary { background: #ffe477; border-color: #d39a14; }
+  .dumpling-icon.large { width: 100px; height: 74px; font-size: 24px; border-width: 5px; }
+  .dumpling-selected-name { color: #fff; font-size: 1.1rem; font-weight: bold; }
+  .dumpling-selected-rarity { color: #ffe0a0; margin-top: 2px; text-transform: capitalize; }
+  .dumpling-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 7px;
+  }
+  .modal .dumpling-card {
+    min-height: 76px;
+    padding: 7px 3px;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-color: rgba(255,255,255,0.22);
+    font-size: 0.72rem;
+  }
+  .modal .dumpling-card.locked { opacity: 0.48; filter: grayscale(1); }
+  .modal .dumpling-card.selected { outline: 3px solid #ffd666; }
+
+  /* ---- Shop crop rows (slice 10a) ---- */
+  .shop-hint {
+    font-size: 0.95rem;
+    color: #ffe0a0;
+    font-style: italic;
+    margin: 0 0 4px;
+  }
+  .shop-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,214,102,0.12);
+    border-radius: 8px;
+    padding: 6px 8px;
+  }
+  .crop-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shop-info {
+    flex: 1;
+    text-align: left;
+    line-height: 1.3;
+  }
+  .shop-info small {
+    display: block;
+    font-size: 0.8rem;
+    color: #c8b080;
+  }
+  .shop-row .btn-buy {
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    min-width: 50px;
+  }
+  /* ---- Seed picker overlay (tap to choose which seed to plant) ---- */
+  .btn-seed {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    background: linear-gradient(180deg, #5a7a2a 0%, #3a5510 100%);
+    color: #f5e6c8;
+    border: 3px solid #4a7722;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.1s;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  }
+  .btn-seed:active { transform: scale(0.96); }
+
+  /* ---- Virtual joystick (bottom-left) ---- */
+  #joystickZone {
+    position: fixed;
+    left: 18px;
+    bottom: 18px;
+    width: 140px;
+    height: 140px;
+    z-index: 50;
+    touch-action: none;
+  }
+  #joystickBase {
+    position: absolute;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(120, 80, 40, 0.5);
+    border: 3px solid rgba(255, 214, 102, 0.6);
+  }
+  #joystickThumb {
+    position: absolute;
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: rgba(120, 80, 40, 0.85);
+    border: 2px solid #ffd666;
+    left: 43px; top: 43px;
+    pointer-events: none;
+    transition: none;
+  }
+  .joystick-arrow {
+    position: absolute;
+    color: rgba(255, 214, 102, 0.7);
+    font-size: 1.1rem;
+    font-weight: bold;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .joystick-arrow.arr-up    { left: 50%; top: 8px; transform: translateX(-50%); }
+  .joystick-arrow.arr-down  { left: 50%; bottom: 8px; transform: translateX(-50%); }
+  .joystick-arrow.arr-left  { left: 10px; top: 50%; transform: translateY(-50%); }
+  .joystick-arrow.arr-right { right: 10px; top: 50%; transform: translateY(-50%); }
+
+  /* ---- Action button (bottom-right) ---- */
+  #actionBtn {
+    position: fixed;
+    right: 18px;
+    bottom: 50px;
+    width: 80px;
+    height: 80px;
+    background: rgba(120, 80, 40, 0.85);
+    border: 3px solid #ffd666;
+    border-radius: 50%;
+    color: #ffd666;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    z-index: 50;
+    line-height: 1.1;
+  }
+  #actionBtn:active, #actionBtn.flash {
+    background: rgba(255, 214, 102, 0.9);
+    color: #3a2800;
+  }
+
+  /* ---- Bonus-harvest button (sits above the Action button) ---- */
+  #bonusBtn {
+    position: fixed;
+    right: 18px;
+    bottom: 142px;
+    width: 80px;
+    height: 80px;
+    background: rgba(80, 50, 110, 0.9);
+    border: 3px solid #c9a0ff;
+    border-radius: 50%;
+    color: #f0e0ff;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    z-index: 50;
+    line-height: 1.1;
+  }
+  #bonusBtn:active { background: rgba(170, 120, 230, 0.95); color: #1a0a2a; }
+  /* dim it when there's nothing ready to bonus-harvest */
+  #bonusBtn.dim { opacity: 0.4; }
+
+  /* ---- "Do this now!" attention pulses, so kids never get lost ---- */
+  /* Action button glows + grows when you're standing on something you can do. */
+  @keyframes actionPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 214, 102, 0.7); transform: scale(1); }
+    50%      { box-shadow: 0 0 22px 8px rgba(255, 214, 102, 0.95); transform: scale(1.08); }
+  }
+  #actionBtn.ready {
+    animation: actionPulse 0.9s ease-in-out infinite;
+    background: rgba(255, 214, 102, 0.95);
+    color: #3a2800;
+  }
+  /* Bonus button pulses purple when there are ready crops to scoop up with math. */
+  @keyframes bonusPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(170, 120, 230, 0.7); transform: scale(1); }
+    50%      { box-shadow: 0 0 22px 8px rgba(200, 150, 255, 0.95); transform: scale(1.08); }
+  }
+  #bonusBtn.ready { animation: bonusPulse 0.9s ease-in-out infinite; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+  @keyframes slashFlash { 0% { opacity:1; } 50% { opacity:0.2; } 100% { opacity:1; } }
+  .slash-flash { animation: slashFlash 0.15s ease-out 2; }
+
+  /* Respect the OS "reduce motion" setting: keep the helpful glow, drop the pulsing
+     scale/box-shadow animation for kids (or adults) who find motion uncomfortable. */
+  @media (prefers-reduced-motion: reduce) {
+    #actionBtn.ready, #bonusBtn.ready { animation: none; }
+  }
+
+  /* ---- Combat HP bars (slice 10c) ---- */
+  .hp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+  }
+  .hp-label { width: 70px; text-align: left; font-weight: bold; }
+  .hp-track {
+    flex: 1;
+    height: 14px;
+    background: #221a10;
+    border: 2px solid #5a3a1a;
+    border-radius: 7px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+  }
+  .hp-fill { height: 100%; transition: width 0.2s; }
+  .hp-fill.enemy { background: #cc4444; }
+  .hp-fill.you   { background: #55cc66; }
+  .hp-num { width: 58px; text-align: right; }
+  /* The turn result line above the question (e.g. "Hit! Slime hits back 2."). */
+  #combatMsg { font-size: 1rem; color: #ffe0a0; min-height: 1.2em; margin: 2px 0; }
+
+  /* ---- Cooking modal (slice 13a) ---- */
+  .cook-section { color: #ffd666; font-weight: bold; text-align: left; margin: 8px 0 2px; border-top: 1px solid #5a3a1a; padding-top: 8px; }
+  .cook-hp { float: right; font-weight: normal; color: #ff9a9a; font-size: 0.9rem; }
+
+  /* ---- Math answer buttons (big tap targets) ---- */
+  .btn-answer {
+    background: linear-gradient(180deg, #77ccee 0%, #4499bb 100%);
+    color: #06283a;
+    padding: 16px;
+    font-size: 1.3rem;
+    border-color: #337799;
+  }
+  .btn-answer:active { transform: scale(0.96); }
+
+  /* ---- Toast ---- */
+  .toast {
+    position: fixed;
+    top: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #4a3018 0%, #2e1a06 100%);
+    color: #ffd666;
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: 2px solid rgba(255,214,102,0.4);
+    font-size: 1.1rem;
+    font-weight: bold;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .toast.show { opacity: 1; }
+
+  /* ---- Profile bits in the HUD ---- */
+  .hud-profile { color: #ffd666; background: #3d2200; padding: 2px 10px; border-radius: 6px; }
+  .hud-switch {
+    background: #b0683a; color: #fff; border: 2px solid #ffd666;
+    border-radius: 6px; padding: 2px 10px; font-weight: bold; cursor: pointer;
+  }
+  .hud-mute {
+    background: #b0683a; color: #fff; border: 2px solid #ffd666;
+    border-radius: 6px; padding: 2px 10px; font-size: 1.1rem; cursor: pointer;
+    min-width: 38px; min-height: 34px; line-height: 1;
+  }
+  .quest-tracker {
+    position: absolute;
+    top: 40px;
+    left: 8px;
+    font-size: 0.75rem;
+    color: #ffd666;
+    background: linear-gradient(180deg, rgba(60,34,10,0.9), rgba(40,22,6,0.95));
+    border: 1px solid rgba(255,214,102,0.35);
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: none;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  /* ---- Title / profile-picker screen ---- */
+  .title-overlay {
+    position: fixed;
+    inset: 0;
+    background: #1a1208 url('assets/title-bg.png') center/cover no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: min(6vh, 40px);
+    z-index: 300;
+  }
+  .title-overlay.hide { display: none; }
+  .title-logo {
+    position: absolute;
+    top: min(4vh, 30px);
+    left: 50%; transform: translateX(-50%);
+    width: min(80vw, 500px);
+    pointer-events: none;
+  }
+  .title-box {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: min(92vw, 480px);
+    background: rgba(20,14,6,0.82);
+    border-radius: 16px;
+    padding: 18px 20px;
+    border: 2px solid rgba(255,214,102,0.5);
+  }
+  .title-name { display: none; }
+  .title-sub  { color: #e8d5b0; font-size: 1.1rem; margin-bottom: 2px; text-shadow: 1px 1px 3px #000; }
+  .profile-btn {
+    padding: 14px 20px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border: 3px solid #ffd666;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #1a3300;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+  }
+  .profile-btn:active { transform: scale(0.97); }
+  .profile-btn.adventurer { background: #88cc55; }
+  .profile-btn.mage       { background: #66bbdd; }
+  .profile-portrait {
+    width: 52px; height: 52px;
+    border-radius: 8px;
+    border: 2px solid rgba(0,0,0,0.25);
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #d4eaff 0%, #f0e8d8 100%);
+  }
+  .profile-info { display: flex; flex-direction: column; align-items: flex-start; }
+  .profile-grade { font-size: 0.7rem; font-weight: normal; opacity: 0.7; }
+  .profile-row { display: flex; align-items: stretch; gap: 10px; }
+  .profile-row .profile-btn { flex: 1; }
+  .rename-btn {
+    padding: 0 16px;
+    font-size: 1.3rem;
+    border: 3px solid #ffd666;
+    border-radius: 12px;
+    background: #fff4cc;
+    color: #1a3300;
+    cursor: pointer;
+  }
+  .rename-btn:active { transform: scale(0.95); }
+
+  /* ---- Save tools (slice 14) ---- */
+  /* Opened from the title screen (z-index 300), so it must sit above it. */
+  #saveToolsModal { z-index: 400; }
+  .save-tools-btn {
+    margin-top: 6px;
+    padding: 8px 14px;
+    font-size: 0.95rem;
+    background: #3d2200;
+    color: #c8b080;
+    border: 2px solid #5a3a1a;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .save-tools-btn:active { transform: scale(0.97); }
+  .save-tabs { display: flex; gap: 8px; }
+  .save-tab {
+    flex: 1;
+    padding: 10px;
+    font-weight: bold;
+    border: 2px solid #5a3a1a;
+    border-radius: 8px;
+    background: #2a1c0a;
+    color: #c8b080;
+    cursor: pointer;
+  }
+  .save-tab.active { background: #ffd666; color: #3a2800; border-color: #ffd666; }
+  .save-text {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.8rem;
+    padding: 8px;
+    border-radius: 8px;
+    border: 2px solid #5a3a1a;
+    background: #1a1208;
+    color: #f5e6c8;
+    resize: vertical;
+  }
+  .save-btn-row { display: flex; gap: 8px; }
+  .save-btn-row button { flex: 1; }
+  .btn-reset {
+    padding: 12px;
+    font-weight: bold;
+    border: 2px solid #5a3a1a;
+    border-radius: 10px;
+    background: #6a4a2a;
+    color: #f5e6c8;
+    cursor: pointer;
+  }
+  .btn-reset.danger { background: #7a2a2a; }
+  .btn-reset:active { transform: scale(0.97); }
+
+  /* Screen-reader-only: hidden visually but announced by assistive tech. */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
