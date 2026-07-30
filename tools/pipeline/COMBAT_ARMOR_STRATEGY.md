@@ -34,10 +34,10 @@ those win and this file is stale.
       frame, camera drift, a hallucinated hat; billed **20 generations for 4
       directions** (~5× the documented 1 gen/direction), and the client
       poller times out while the jobs keep running and billing — no cancel
-      path. (Retained session record 2026-07-29; character UUID corroborated
-      by `_probe_local/heroes-20260729/ranger/character.json`. This PR
-      imports that record into the repo — it was previously undocumented
-      here, and `PIPELINE.md` wrongly carried the route as untested.)
+      path. Durable in-repo record:
+      [`evidence/2026-07-29-rest-template-walk-failure.md`](evidence/2026-07-29-rest-template-walk-failure.md)
+      (sanitized import of the author-held 2026-07-29 session record;
+      `PIPELINE.md` previously — wrongly — carried this route as untested.)
     - **Web-app template route — measured 2026-07-30**: the "Taking Punch"
       South frame heading flip (§7 incident 2).
     - **Web Creator manual route**: the same Ranger's cardinal walks came

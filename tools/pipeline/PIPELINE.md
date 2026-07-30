@@ -180,14 +180,14 @@ python tools/pipeline/pixellab_client.py character \
 
 # TESTED IN ELDORIA 2026-07-29 ON THIS REST/PYTHON ROUTE — AND IT FAILED THE
 # VISUAL GATE. (Correction 2026-07-30: this block previously called the route
-# untested; the retained session record — corroborated by the character UUID
-# in _probe_local/heroes-20260729/ranger/character.json — shows
+# untested. The durable record — tools/pipeline/evidence/
+# 2026-07-29-rest-template-walk-failure.md — shows
 # `template_animation_id: "walking"` was run on the 256px Ranger via this
 # exact client: identity wrecked frame to frame, camera drift, hallucinated
 # hat, and it billed 20 generations for 4 directions vs the documented
 # 1 gen/direction. The client poller also times out while jobs keep running
 # and billing — a client timeout is not a failure and not a refund; there is
-# no cancel. Full record: COMBAT_ARMOR_STRATEGY.md §1.) A separate WEB-APP
+# no cancel. Interface breakdown: COMBAT_ARMOR_STRATEGY.md §1.) A separate WEB-APP
 # template experiment — "Taking Punch" on the 256px Mage throwaway state —
 # produced a heading flip on the camera-facing South frame (strategy doc §7
 # incident 2). The web Creator manual route produced clean cardinal walks on
