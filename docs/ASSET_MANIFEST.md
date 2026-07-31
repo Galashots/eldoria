@@ -66,7 +66,11 @@ This is the part a plain file listing can't give you: the game's `loadSprite()` 
 | `committed` | Computed by the tool: is `path` currently a tracked file? |
 | `use` | The concrete combination (profile/direction/slot/etc.) this expansion represents. |
 
-**Required vs. optional reflects current behavior, not aspiration.** Per the contract this PR implements: hero static sprites, hero walk sprites, and title portraits are required (their absence is a visible regression the game has no designed fallback for). Everything else — attack frames, every equipment overlay state, tile/crop/enemy/NPC/decoration art, the legacy `player.png` fallback, background music — is optional, because `js/02-data-state.js`'s `loadSprite()` already fails closed to a drawn placeholder or a legacy sprite for every one of those. **Not every registered `loadSprite()` path is required merely because the engine attempts to load it** — see `js/02-data-state.js` for the actual fallback chain (`profilePlayerSprite()` → `spr('player')` → colored placeholder box, `drawEnemyShape()`, `drawNpcShape()`, `drawProcDeco()`, etc.).
+**`required` means one specific thing: this slot's absence is a visible regression the engine has no designed procedural or static substitute for — not merely "the engine tried to load it."** Concretely, `required: true` applies to exactly these families (46 slots total): hero static sprites and hero walk sprites (both heroes, all eight directions — `js/02-data-state.js`'s `playerSprite()` chain has no drawn substitute for a missing directional pose), title portraits (both heroes — the title screen `<img>` has no fallback image), the Character-screen paper-doll base (both heroes — same reasoning as hero static), and the eight core world tiles (`grass`/`water`/`tree`/`soil`/`path`/`house`/`door`/`exit` — `js/09-main.js`'s draw loop falls back to a flat `TILE_COLOR` fill, which is a visible regression, not a designed placeholder), plus the two title-screen UI images (`title-logo.png`, `title-bg.png` — no designed fallback exists for either).
+
+**Everything else is `required: false`, because `js/02-data-state.js`'s `loadSprite()` already fails closed to a designed substitute for it**: hero attack frames (fall back to the static/walk sprite), every equipment overlay state (fall back to no extra gear layer — the base hero already carries its own permanent identity clothing, see `assets/README.md`'s three-layer governance), the two cavern tiles `rock`/`cave-floor` (fall back to procedurally drawn cavern detailing — the real Mine art doesn't exist yet), crop/enemy/NPC/decoration/environment art (fall back to a procedurally drawn shape each), the legacy `player.png` fallback, and background music (fails silently). **Not every registered `loadSprite()` path is required merely because the engine attempts to load it** — see `js/02-data-state.js` for the actual fallback chain (`profilePlayerSprite()` → `spr('player')` → colored placeholder box, `drawEnemyShape()`, `drawNpcShape()`, `drawProcDeco()`, etc.).
+
+Required-ness is therefore orthogonal to `status`/`visualReview`: a slot can be `required: true` with a fully approved, aligned asset (hero static sprites), or `required: false` while still being an intentional interim gap under active tracking (the generic equipment overlays; Mira and the General Store, both explicitly named "dedicated placeholder treatments" in `docs/CURRENT_STATE.md` and classified `intentional-placeholder`/`intentional-interim-gap` rather than `approved`/`aligned` here).
 
 Two examples worth knowing before you're surprised by the manifest:
 
@@ -82,14 +86,19 @@ Two examples worth knowing before you're surprised by the manifest:
 ## Using the tool
 
 ```bash
-node tools/asset-manifest.mjs --write    # canonicalize assets/manifest.json
-node tools/asset-manifest.mjs --check    # verify it matches the repo (no writes) — the CI gate
-node tools/asset-manifest.mjs --report   # write an uncommitted summary to artifacts/
+node tools/asset-manifest.mjs --write               # recompute facts for KNOWN files; canonicalize
+node tools/asset-manifest.mjs --write --accept-new   # also add newly discovered files (see below)
+node tools/asset-manifest.mjs --check                # verify it matches the repo (no writes) — the CI gate
+node tools/asset-manifest.mjs --report               # write an uncommitted summary to artifacts/
 ```
 
 `--check` verifies, in order: the manifest parses and its enums are valid; every tracked media file is listed exactly once (no more, no less); every listed file's computed facts (bytes/SHA-256/raster dimensions) match what's actually on disk; every required runtime binding has a committed file; every optional runtime binding declares a fallback; and the whole manifest is byte-for-byte canonical (so a hand-edited or stale file fails even if every individual fact happens to still be correct).
 
-`--write` recomputes every mechanical fact, preserves every human-authored field (`provenance`, `notes`, etc.) for files already in the manifest, and **refuses to guess** at classification for a file that matches none of the tool's classification rules — it lists the unclassified path(s) and exits non-zero rather than inventing a scope/domain/status. Extending the classification rules (in `tools/asset-manifest.mjs`) is the deliberate, human-reviewed step that unblocks it.
+`--write` always recomputes every mechanical fact and preserves human-authored `provenance` for files already in the manifest. It **refuses to guess** at classification for a file that matches none of the tool's classification rules — it lists the unclassified path(s) and exits non-zero rather than inventing a scope/domain/status. Extending the classification rules (in `tools/asset-manifest.mjs`) is the deliberate, human-reviewed step that unblocks it.
+
+**A file matching a rule is not thereby approved for entry.** `--write` (without `--accept-new`) only recomputes facts for paths **already present** in the stored manifest — a path the manifest has never seen before, even one that matches an existing rule perfectly, is printed with its *proposed* classification and the command exits non-zero without writing anything. A human reviews that proposal, then re-runs with `--write --accept-new` to actually add it. This is what keeps "matches a rule" and "is approved" as two separate steps, per the contract's requirement that every new tracked path stop for an explicit decision rather than being silently absorbed because a rule happened to match it.
+
+`notes` is treated as rule-generated boilerplate by default: a `--write` that updates a classification rule's wording propagates that fix to every asset the rule governs, so a documentation correction doesn't silently freeze in place. A human who deliberately writes a note beyond what the rule would generate sets `notesLocked: true` on that one entry to opt it out of future regeneration.
 
 `--report` writes `artifacts/asset-manifest-report.json` (gitignored, CI-retained as a build artifact) with counts by scope/domain/status/visual-review, which required slots are present, which optional slots are expected-missing, and how many entries still have unknown provenance.
 
@@ -100,8 +109,9 @@ node tools/asset-manifest.mjs --report   # write an uncommitted summary to artif
 ## How to add a new committed source asset
 
 1. Add the file under an already-scanned directory (`assets/`, `assets/iso/`, `art/`, `docs/visual/`, `docs/playtest/`, etc.) or extend `EXCLUDED_PATH_PREFIXES`'s narrow scope discussion in `tools/asset-manifest.mjs` if it's genuinely a new area.
-2. Run `npm run assets:manifest:write`. If the file matches an existing classification rule, it's inventoried automatically with computed facts and `provenance: "unknown"`. If it matches no rule, `--write` exits non-zero and names the file — add a rule (or extend an existing one) in `tools/asset-manifest.mjs`'s `RULES` table.
-3. Commit the updated `assets/manifest.json` alongside the new file.
+2. Run `node tools/asset-manifest.mjs --write` (no `--accept-new` yet). If the file matches no classification rule, it's listed as unclassified — add a rule (or extend an existing one) in `tools/asset-manifest.mjs`'s `RULES` table and re-run. Once it matches a rule, the same command prints it as a **newly discovered** file with its proposed classification and exits non-zero without writing.
+3. Review that proposed classification. If it's correct, run `node tools/asset-manifest.mjs --write --accept-new` to actually add it with computed facts and `provenance: "unknown"`.
+4. Commit the updated `assets/manifest.json` alongside the new file.
 
 ## How to promote an asset into runtime use
 

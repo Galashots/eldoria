@@ -22,6 +22,7 @@ const SCHEMA_VERSION = 1;
 const MODE = process.argv.includes('--write') ? 'write'
   : process.argv.includes('--report') ? 'report'
   : 'check'; // default, and explicit --check
+const ACCEPT_NEW = process.argv.includes('--accept-new');
 
 // ==================================================================
 // Policy: which tracked files this manifest governs.
@@ -72,7 +73,7 @@ function sha256(buf) { return createHash('sha256').update(buf).digest('hex'); }
 
 // Minimal PNG IHDR reader — width/height are the first 8 bytes of the IHDR
 // chunk, big-endian, immediately after the 8-byte signature + 8-byte chunk header.
-function pngDimensions(buf) {
+export function pngDimensions(buf) {
   const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
   if (buf.length < 24 || !buf.subarray(0, 8).equals(sig)) return null;
   const type = buf.toString('ascii', 12, 16);
@@ -83,7 +84,7 @@ function pngDimensions(buf) {
 // Minimal baseline/progressive JPEG SOF reader: scan markers until an SOFn
 // (0xC0-0xC3, 0xC5-0xC7, 0xC9-0xCB, 0xCD-0xCF) segment, height/width follow
 // immediately after the segment length + sample-precision byte.
-function jpegDimensions(buf) {
+export function jpegDimensions(buf) {
   if (buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8) return null;
   let offset = 2;
   while (offset + 4 <= buf.length) {
@@ -103,13 +104,86 @@ function jpegDimensions(buf) {
   return null;
 }
 
-function rasterDimensions(path, buf) {
-  const lower = path.toLowerCase();
-  if (lower.endsWith('.png')) return pngDimensions(buf);
-  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return jpegDimensions(buf);
-  return null; // not attempted for other formats — "where applicable" per contract
+// GIF87a/GIF89a: 6-byte signature, then a 7-byte Logical Screen Descriptor
+// whose first 4 bytes are width/height as little-endian uint16.
+export function gifDimensions(buf) {
+  if (buf.length < 10) return null;
+  const sig = buf.toString('ascii', 0, 6);
+  if (sig !== 'GIF87a' && sig !== 'GIF89a') return null;
+  return { width: buf.readUInt16LE(6), height: buf.readUInt16LE(8) };
 }
 
+// WebP: a RIFF container ('RIFF' size 'WEBP') holding one image chunk.
+// VP8X (extended): 24-bit little-endian (width-1)/(height-1) at fixed offsets.
+// VP8  (lossy):    a 3-byte frame tag, a 3-byte start code (0x9d 0x01 0x2a),
+//                  then 14-bit width/height (top 2 bits of each 16-bit field
+//                  are a scale factor, masked off here).
+// VP8L (lossless):  a 0x2f signature byte, then 14-bit (width-1)/(height-1)
+//                  packed across the following 4 bytes, little-endian.
+export function webpDimensions(buf) {
+  if (buf.length < 30) return null;
+  if (buf.toString('ascii', 0, 4) !== 'RIFF' || buf.toString('ascii', 8, 12) !== 'WEBP') return null;
+  const fourCC = buf.toString('ascii', 12, 16);
+  if (fourCC === 'VP8X') {
+    if (buf.length < 30) return null;
+    return { width: (buf.readUIntLE(24, 3) + 1), height: (buf.readUIntLE(27, 3) + 1) };
+  }
+  if (fourCC === 'VP8 ') {
+    if (buf.length < 30 || buf[23] !== 0x9d || buf[24] !== 0x01 || buf[25] !== 0x2a) return null;
+    return { width: buf.readUInt16LE(26) & 0x3fff, height: buf.readUInt16LE(28) & 0x3fff };
+  }
+  if (fourCC === 'VP8L') {
+    if (buf.length < 25 || buf[20] !== 0x2f) return null;
+    const bits = buf.readUInt32LE(21);
+    return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
+  }
+  return null;
+}
+
+const DIMENSION_READERS = {
+  '.png': pngDimensions,
+  '.jpg': jpegDimensions,
+  '.jpeg': jpegDimensions,
+  '.gif': gifDimensions,
+  '.webp': webpDimensions,
+};
+
+// Known magic-byte signatures, checked against the extension a file is
+// COMMITTED under. A mismatch (or a signature that fails to match a format
+// this checker knows) is a real integrity failure, not a silent skip —
+// "extension says X, bytes say Y" is exactly the class of corruption a
+// filename-only inventory can never catch.
+export function matchesSignature(ext, buf) {
+  switch (ext) {
+    case '.png': return buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    case '.jpg': case '.jpeg': return buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+    case '.gif': return buf.length >= 6 && (buf.toString('ascii', 0, 6) === 'GIF87a' || buf.toString('ascii', 0, 6) === 'GIF89a');
+    case '.webp': return buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP';
+    case '.ico': return buf.length >= 4 && buf[0] === 0 && buf[1] === 0 && buf[2] === 1 && buf[3] === 0;
+    case '.svg': return /^\s*(<\?xml|<svg)/i.test(buf.subarray(0, Math.min(buf.length, 256)).toString('utf8'));
+    case '.wav': return buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WAVE';
+    case '.ogg': return buf.length >= 4 && buf.toString('ascii', 0, 4) === 'OggS';
+    case '.mp3': return buf.length >= 3 && (buf.toString('ascii', 0, 3) === 'ID3' || (buf[0] === 0xff && (buf[1] & 0xe0) === 0xe0));
+    case '.mp4': case '.m4a': return buf.length >= 8 && buf.toString('ascii', 4, 8) === 'ftyp';
+    case '.webm': return buf.length >= 4 && buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3;
+    case '.ttf': return buf.length >= 4 && (buf.readUInt32BE(0) === 0x00010000 || buf.toString('ascii', 0, 4) === 'true');
+    case '.otf': return buf.length >= 4 && buf.toString('ascii', 0, 4) === 'OTTO';
+    case '.woff': return buf.length >= 4 && buf.toString('ascii', 0, 4) === 'wOFF';
+    case '.woff2': return buf.length >= 4 && buf.toString('ascii', 0, 4) === 'wOF2';
+    default: return null; // no known signature to check — not a failure, just not attempted
+  }
+}
+
+export function rasterDimensions(path, buf) {
+  const ext = path.slice(path.lastIndexOf('.')).toLowerCase();
+  const reader = DIMENSION_READERS[ext];
+  return reader ? reader(buf) : null;
+}
+
+// Persisted computed facts only — bytes/sha256/width/height, matching the
+// contract's data model. Signature/corruption validation is deliberately NOT
+// persisted (see integrityIssues below): it is re-derived live every --check
+// run directly from the file bytes, so it can never itself go stale.
 function computeFacts(path) {
   const buf = readFileSync(join(ROOT, path));
   const dims = rasterDimensions(path, buf);
@@ -119,6 +193,30 @@ function computeFacts(path) {
     width: dims ? dims.width : null,
     height: dims ? dims.height : null,
   };
+}
+
+// Live (non-persisted) integrity validation for one buffer of bytes claimed
+// to be at `path` with extension `ext`. Pure function of (path, ext, buf) —
+// takes no dependency on the file actually being git-tracked or even really
+// on disk, so it is directly unit-testable against synthetic malformed
+// buffers. Returns an array of human-readable problem strings, empty when
+// the buffer is clean.
+export function integrityIssuesForBuffer(path, ext, buf) {
+  const issues = [];
+  if (buf.length === 0) { issues.push('file is zero bytes'); return issues; }
+  const sigMatch = matchesSignature(ext, buf);
+  if (sigMatch === false) issues.push(`file bytes do not match the "${ext}" signature (corrupt or misnamed)`);
+  if (ext in DIMENSION_READERS && rasterDimensions(path, buf) === null) {
+    issues.push(`raster dimensions could not be read from a "${ext}" file (corrupt or truncated)`);
+  }
+  return issues;
+}
+
+// Thin disk-reading wrapper used by the CLI's --check path.
+function integrityIssues(path, ext) {
+  let buf;
+  try { buf = readFileSync(join(ROOT, path)); } catch (e) { return [`cannot read file: ${e.message}`]; }
+  return integrityIssuesForBuffer(path, ext, buf);
 }
 
 // ==================================================================
@@ -257,6 +355,19 @@ const RULES = [
     }),
   },
   {
+    // Mira is explicitly named in docs/CURRENT_STATE.md as a "dedicated
+    // placeholder treatment" within Town's intentionally partial isometric
+    // scope — classification must say so, not blanket-mark every NPC sprite
+    // as finished/aligned production art.
+    name: 'npc-mira-sprite',
+    test: p => p === 'assets/npc_mira.png',
+    classify: () => ({
+      domain: 'npc-sprite', scope: 'runtime', status: 'intentional-placeholder', visualReview: 'intentional-interim-gap',
+      governedBy: 'docs/CURRENT_STATE.md',
+      notes: 'Optional; falls back to a procedurally drawn per-NPC shape if absent. docs/CURRENT_STATE.md records Mira as a "dedicated placeholder treatment" within Town\'s intentionally partial isometric scope, not finished production art.',
+    }),
+  },
+  {
     name: 'npc-sprite',
     test: p => /^assets\/npc_[a-z_]+\.png$/.test(p),
     classify: () => ({
@@ -265,8 +376,21 @@ const RULES = [
     }),
   },
   {
+    // The General Store building is likewise explicitly named in
+    // docs/CURRENT_STATE.md as a "dedicated placeholder treatment," distinct
+    // from other environment sprites (e.g. the cooking pot) that doc doesn't
+    // call out as placeholder.
+    name: 'general-store-sprite',
+    test: p => p === 'assets/shop_building.png',
+    classify: () => ({
+      domain: 'environment-sprite', scope: 'runtime', status: 'intentional-placeholder', visualReview: 'intentional-interim-gap',
+      governedBy: 'docs/CURRENT_STATE.md',
+      notes: 'Optional; falls back to HOUSE/DOOR tile rendering if absent. docs/CURRENT_STATE.md records the General Store as a "dedicated placeholder treatment" within Town\'s intentionally partial isometric scope, not finished production art.',
+    }),
+  },
+  {
     name: 'environment-sprite',
-    test: p => ['assets/cookpot.png', 'assets/shop_building.png'].includes(p),
+    test: p => p === 'assets/cookpot.png',
     classify: () => ({
       domain: 'environment-sprite', scope: 'runtime', status: 'approved', visualReview: 'aligned',
       governedBy: '', notes: 'Optional; falls back to a procedurally drawn shape if absent.',
@@ -462,15 +586,22 @@ function buildRuntimeBindings() {
     }
   }
 
+  // The registered SPRITES key is 'tile_' + the NUMERIC tile-type constant
+  // (js/02-data-state.js: `for (var ts in TILE_SPRITE) loadSprite('tile_' + ts, ...)`
+  // where TILE_SPRITE's own keys are the GRASS=0/WATER=1/... constants) — NOT
+  // the human-readable tile name. Verified against source: an earlier draft
+  // declared `tile_grass` etc, which the live cross-check (test 26) proved
+  // never matches any real SPRITES key.
+  const TILE_IDS = { grass: 0, water: 1, tree: 2, soil: 3, path: 4, house: 5, door: 6, exit: 7, rock: 8, 'cave-floor': 9 };
   const TILE_REQUIRED = { grass: true, water: true, tree: true, soil: true, path: true, house: true, door: true, exit: true, rock: false, 'cave-floor': false };
   const TILE_FILE = { grass: 'grass', water: 'water', tree: 'tree', soil: 'soil', path: 'path', house: 'house', door: 'door', exit: 'exit', rock: 'rock', 'cave-floor': 'cave-floor' };
   for (const [tile, required] of Object.entries(TILE_REQUIRED)) {
     push({
-      key: `tile_${tile}`, family: 'tile-sprite',
+      key: `tile_${TILE_IDS[tile]}`, family: 'tile-sprite',
       path: `assets/${TILE_FILE[tile]}.png`,
       owner: 'js/02-data-state.js TILE_SPRITE', required,
       fallback: required ? 'flat TILE_COLOR fill' : 'procedurally drawn cavern detailing (ROCK/CAVE) — the real Mine art is not yet produced',
-      use: { tile },
+      use: { tile, tileTypeId: TILE_IDS[tile] },
     });
   }
   for (const variant of ['grass2', 'grass3']) {
@@ -558,7 +689,14 @@ function buildCanonicalManifest(existing) {
       // otherwise 'unknown' with a note on what would resolve it.
       provenance: prior?.provenance ?? 'unknown',
       provenanceNote: prior?.provenanceNote ?? 'No repository record establishes the origin of this file; resolving it would require author/tool history from outside this repo.',
-      notes: prior?.notes ?? cls.notes,
+      // notes is rule-generated boilerplate by default, so a --write that
+      // updates a classification rule's wording must propagate to every
+      // asset that rule governs. A human who deliberately customizes a note
+      // beyond the rule's default sets notesLocked: true to opt that one
+      // entry out of future regeneration; everything else always reflects
+      // the CURRENT rule, never a stale prior run's text.
+      notes: prior?.notesLocked ? prior.notes : cls.notes,
+      notesLocked: prior?.notesLocked ?? false,
       bytes: facts.bytes,
       sha256: facts.sha256,
       width: facts.width,
@@ -614,6 +752,24 @@ function runWrite() {
     console.error('Add a classification rule (with human-reviewed scope/domain/status/notes) before writing.');
     process.exit(1);
   }
+
+  // A path matching a classification rule is eligible to be inventoried — it
+  // is NOT automatically approved for entry. Per the contract, every path the
+  // stored manifest has never seen before must stop for an explicit human
+  // decision, regardless of how confidently a rule classifies it. Recomputing
+  // mechanical facts for ALREADY-KNOWN files never requires this — only the
+  // first time a path appears.
+  if (existing) {
+    const existingPaths = new Set(existing.assets.map(a => a.path));
+    const newlyDiscovered = manifest.assets.filter(a => !existingPaths.has(a.path));
+    if (newlyDiscovered.length && !ACCEPT_NEW) {
+      console.error(`asset-manifest --write: ${newlyDiscovered.length} newly tracked file(s) are not yet in the manifest:`);
+      for (const a of newlyDiscovered) console.error(`  ${a.path}  (would classify as: ${a.domain}, ${a.scope}, ${a.status})`);
+      console.error('Review the proposed classification above, then re-run with --write --accept-new to add them.');
+      process.exit(1);
+    }
+  }
+
   writeFileSync(MANIFEST_PATH, canonicalJSON(manifest));
   console.log(`Wrote ${MANIFEST_PATH}: ${manifest.assets.length} assets, ${manifest.runtimeBindings.length} runtime bindings.`);
 }
@@ -669,6 +825,13 @@ function runCheck() {
     if (!b.required && !b.fallback) errors.push(`optional runtime binding "${b.key}" has no declared fallback`);
   }
 
+  // Live file integrity: re-derived directly from bytes on every run, never
+  // trusted from the manifest itself, so a corrupted or misnamed file cannot
+  // hide behind mechanical facts that happen to still look plausible.
+  for (const a of manifest.assets) {
+    for (const issue of integrityIssues(a.path, a.ext)) errors.push(`${a.path}: ${issue}`);
+  }
+
   if (errors.length) {
     console.error(`asset-manifest --check: ${errors.length} problem(s):`);
     for (const e of errors) console.error(`  - ${e}`);
@@ -687,6 +850,8 @@ function runReport() {
   const by = (arr, field) => arr.reduce((acc, x) => { acc[x[field]] = (acc[x[field]] || 0) + 1; return acc; }, {});
   const requiredMissing = manifest.runtimeBindings.filter(b => b.required && !b.committed);
   const optionalMissing = manifest.runtimeBindings.filter(b => !b.required && !b.committed);
+  const boundPaths = new Set(manifest.runtimeBindings.map(b => b.path));
+  const unknownProvenance = manifest.assets.filter(a => a.provenance === 'unknown');
   const report = {
     totalAssets: manifest.assets.length,
     byScope: by(manifest.assets, 'scope'),
@@ -697,7 +862,15 @@ function runReport() {
     optionalRuntimeSlotsPresent: manifest.runtimeBindings.filter(b => !b.required && b.committed).length,
     expectedMissingOptionalSlots: optionalMissing.map(b => b.key),
     requiredMissing: requiredMissing.map(b => b.key),
-    unknownProvenanceCount: manifest.assets.filter(a => a.provenance === 'unknown').length,
+    unknownProvenanceCount: unknownProvenance.length,
+    unknownProvenanceEntries: unknownProvenance.map(a => a.path),
+    // Every committed file that no declared runtime binding actually points
+    // at — the manifest's own answer to "is this file used by the game at
+    // all?" Distinct from expectedMissingOptionalSlots (which describes
+    // bindings with no file), this describes FILES with no binding.
+    unusedCommittedRuntimeCandidates: manifest.assets
+      .filter(a => !boundPaths.has(a.path))
+      .map(a => a.path),
     intentionalInterimGaps: manifest.assets.filter(a => a.visualReview === 'intentional-interim-gap').map(a => a.path),
     warnings: requiredMissing.length ? [`${requiredMissing.length} required runtime binding(s) missing — see requiredMissing`] : [],
   };
