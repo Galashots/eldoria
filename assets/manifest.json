@@ -3648,7 +3648,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_down_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3662,7 +3662,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_down_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3676,7 +3676,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_down_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3690,7 +3690,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_down_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3704,7 +3704,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_left_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3718,7 +3718,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_left_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3732,7 +3732,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_left_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3746,7 +3746,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_left_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3760,7 +3760,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_right_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3774,7 +3774,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_right_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3788,7 +3788,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_right_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3802,7 +3802,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_right_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3816,7 +3816,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_up_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3830,7 +3830,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_up_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3844,7 +3844,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_up_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3858,7 +3858,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_up_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4320,7 +4320,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_down_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4334,7 +4334,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_down_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4348,7 +4348,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_down_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4362,7 +4362,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_down_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4376,7 +4376,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_left_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4390,7 +4390,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_left_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4404,7 +4404,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_left_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4418,7 +4418,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_left_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4432,7 +4432,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_right_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4446,7 +4446,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_right_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4460,7 +4460,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_right_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4474,7 +4474,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_right_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4488,7 +4488,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_up_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4502,7 +4502,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_up_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4516,7 +4516,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_up_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4530,7 +4530,7 @@
     },
     {
       "committed": true,
-      "fallback": "no visual layer for that slot (base hero renders bare)",
+      "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_up_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",

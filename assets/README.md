@@ -55,8 +55,11 @@ static base sprite instead.
 
 ## Equipment overlays
 
-Base heroes are intentionally drawn without permanent armor, capes, or weapons. Optional
-equipment is a separate transparent 32 x 32 PNG for the same hero and direction:
+The approved Ranger and Mage bases carry their own permanent canonical identity clothing
+and props (see the three-layer governance below) — equipment overlays are a separate,
+*additional* progression layer on top of that identity, not a replacement for a bare
+underlayer. Optional equipment is a separate transparent 32 x 32 PNG for the same hero
+and direction:
 
 | Pattern | Slot | Draw order |
 |---|---|---|

@@ -186,7 +186,7 @@ const RULES = [
     classify: () => ({
       domain: 'equipment-overlay-static', scope: 'runtime', status: 'intentional-placeholder', visualReview: 'intentional-interim-gap',
       governedBy: 'docs/CHARACTER_INVENTORY.md',
-      notes: 'Generic per-slot overlay art, not exact per-item art — documented interim gap. Optional runtime slot (base hero renders bare if absent).',
+      notes: 'Generic per-slot overlay art, not exact per-item art — documented interim gap. Optional runtime slot; absence means no extra progression-tier gear layer, not a bare hero — the base sprite already carries its own permanent canonical identity clothing (see assets/README.md\'s three-layer governance).',
     }),
   },
   {
@@ -408,7 +408,7 @@ function buildRuntimeBindings() {
           key: `equipment_${profile}_${dir}_${slot}`, family: 'equipment-overlay-static',
           path: tpl('assets/{p}-{d}-{s}.png', { p: profile, d: dir, s: slot }),
           owner: 'js/02-data-state.js (loadSprite loop)', required: false,
-          fallback: 'no visual layer for that slot (base hero renders bare)',
+          fallback: 'no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare',
           use: { profile, direction: dir, slot },
         });
         push({
