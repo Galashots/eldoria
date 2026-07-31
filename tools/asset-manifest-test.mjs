@@ -6,6 +6,7 @@
 // Run: node tools/asset-manifest-test.mjs
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { deflateSync } from 'node:zlib';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launch } from './smoke-test.mjs';
@@ -246,11 +247,14 @@ function withRawManifestContent(rawContent, testFn) {
   check('24e: WebP (VP8X) dimension reader reads real width/height',
     (() => { const d = webpDimensions(webpBuf); return d && d.width === 100 && d.height === 50; })());
 
-  // 24f-24l: container-completeness — a header can parse cleanly (signature
-  // OK, dimensions readable) while the file BODY is still truncated. This is
-  // a distinct failure mode from 22-24's "can't even read the header" cases,
-  // caught by re-checking the OTHER end of the buffer against each format's
-  // real end-of-stream marker.
+  // 24f-24r: container-completeness — a header can parse cleanly (signature
+  // OK, dimensions readable) while the file BODY is still truncated, OR
+  // structurally reaches its real end-of-stream marker while carrying ZERO
+  // actual encoded payload (a hand-built shell: valid header, valid trailer,
+  // no pixel data in between). Both are distinct failure modes from 22-24's
+  // "can't even read the header" cases. The "good" fixtures below carry real
+  // (if minimal) encoded payload specifically so they remain valid positive
+  // cases now that payload presence is checked, not just trailer presence.
   {
     // Real PNG chunk-stream construction: signature, then an IHDR chunk with
     // valid 4x4 dimensions, deliberately WITHOUT an IEND chunk.
@@ -264,9 +268,22 @@ function withRawManifestContent(rawContent, testFn) {
     check('24f: a body-truncated PNG (valid IHDR, no IEND) is flagged as incomplete',
       pngDimensions(pngNoIend) !== null && !pngContainerComplete(pngNoIend) &&
       integrityIssuesForBuffer('fixture.png', '.png', pngNoIend).some(i => i.includes('incomplete or truncated')));
-    const iendChunk = Buffer.from([0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]);
-    const pngWithIend = Buffer.concat([pngNoIend, iendChunk]);
-    check('24g: the same PNG with a proper IEND chunk produces zero integrity issues',
+
+    const emptyIendChunk = Buffer.from([0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]);
+    const pngEmptyShell = Buffer.concat([pngNoIend, emptyIendChunk]); // signature+IHDR+IEND, no IDAT at all
+    check('24f2: a PNG with a valid IEND but NO IDAT chunk (empty shell) is flagged as incomplete',
+      pngDimensions(pngEmptyShell) !== null && !pngContainerComplete(pngEmptyShell) &&
+      integrityIssuesForBuffer('fixture.png', '.png', pngEmptyShell).some(i => i.includes('incomplete or truncated')));
+
+    // A genuinely complete PNG: real deflate-compressed pixel data for the
+    // declared 4x4 RGBA image (4 rows * (1 filter byte + 16 pixel bytes)).
+    const raw = Buffer.alloc(4 * 17, 0);
+    for (let row = 0; row < 4; row++) raw[row * 17] = 0; // filter type "None" per row
+    const idatData = deflateSync(raw);
+    const idatLen = Buffer.alloc(4); idatLen.writeUInt32BE(idatData.length, 0);
+    const idatChunk = Buffer.concat([idatLen, Buffer.from('IDAT', 'ascii'), idatData, Buffer.alloc(4)]);
+    const pngWithIend = Buffer.concat([pngNoIend, idatChunk, emptyIendChunk]);
+    check('24g: the same PNG with a real IDAT and a proper IEND chunk produces zero integrity issues',
       pngContainerComplete(pngWithIend) && integrityIssuesForBuffer('fixture.png', '.png', pngWithIend).length === 0);
   }
   {
@@ -281,8 +298,18 @@ function withRawManifestContent(rawContent, testFn) {
     check('24h: a JPEG missing its EOI marker is flagged as incomplete',
       jpegDimensions(jpegNoEoi) !== null && !jpegContainerComplete(jpegNoEoi) &&
       integrityIssuesForBuffer('fixture.jpg', '.jpg', jpegNoEoi).some(i => i.includes('incomplete or truncated')));
-    const jpegWithEoi = Buffer.concat([jpegNoEoi, Buffer.from([0xff, 0xd9])]);
-    check('24i: the same JPEG with a proper EOI marker produces zero integrity issues',
+
+    const jpegNoScanData = Buffer.concat([jpegNoEoi, Buffer.from([0xff, 0xd9])]); // SOI+SOF+EOI, no SOS at all
+    check('24h2: a JPEG with SOI/SOF/EOI but no SOS (no scan data) is flagged as incomplete',
+      jpegDimensions(jpegNoScanData) !== null && !jpegContainerComplete(jpegNoScanData) &&
+      integrityIssuesForBuffer('fixture.jpg', '.jpg', jpegNoScanData).some(i => i.includes('incomplete or truncated')));
+
+    // A real (if minimal) SOS segment — 1 component — followed by a few
+    // bytes of stand-in entropy-coded scan data, then EOI.
+    const sos = Buffer.from([0xff, 0xda, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3f, 0x00]);
+    const scanData = Buffer.from([0x12, 0x34, 0x56]);
+    const jpegWithEoi = Buffer.concat([jpegNoEoi, sos, scanData, Buffer.from([0xff, 0xd9])]);
+    check('24i: the same JPEG with a real SOS + scan data and a proper EOI marker produces zero integrity issues',
       jpegContainerComplete(jpegWithEoi) && integrityIssuesForBuffer('fixture.jpg', '.jpg', jpegWithEoi).length === 0);
   }
   {
@@ -291,8 +318,21 @@ function withRawManifestContent(rawContent, testFn) {
     check('24j: a GIF missing its trailer byte is flagged as incomplete',
       gifDimensions(gifNoTrailer) !== null && !gifContainerComplete(gifNoTrailer) &&
       integrityIssuesForBuffer('fixture.gif', '.gif', gifNoTrailer).some(i => i.includes('incomplete or truncated')));
-    const gifWithTrailer = Buffer.concat([gifNoTrailer.subarray(0, gifNoTrailer.length - 1), Buffer.from([0x3b])]);
-    check('24k: the same GIF with a proper trailer byte produces zero integrity issues',
+
+    const gifEmptyShell = Buffer.concat([gifNoTrailer.subarray(0, gifNoTrailer.length - 1), Buffer.from([0x3b])]); // LSD + bare trailer, no image descriptor
+    check('24j2: a GIF with only a Logical Screen Descriptor and a bare trailer (no image data) is flagged as incomplete',
+      !gifContainerComplete(gifEmptyShell) &&
+      integrityIssuesForBuffer('fixture.gif', '.gif', gifEmptyShell).some(i => i.includes('incomplete or truncated')));
+
+    // A real Image Descriptor with one non-empty LZW data sub-block.
+    const imageDescriptor = Buffer.from([0x2c, 0, 0, 0, 0, 4, 0, 4, 0, 0x00]);
+    const lzwMinCodeSize = Buffer.from([0x02]);
+    const dataSubBlock = Buffer.from([0x03, 0x00, 0x01, 0x02]);
+    const blockTerminator = Buffer.from([0x00]);
+    const gifWithTrailer = Buffer.concat([
+      gifNoTrailer.subarray(0, gifNoTrailer.length - 1), imageDescriptor, lzwMinCodeSize, dataSubBlock, blockTerminator, Buffer.from([0x3b]),
+    ]);
+    check('24k: the same GIF with a real image descriptor + data sub-block and a proper trailer produces zero integrity issues',
       gifContainerComplete(gifWithTrailer) && integrityIssuesForBuffer('fixture.gif', '.gif', gifWithTrailer).length === 0);
   }
   {
@@ -305,9 +345,19 @@ function withRawManifestContent(rawContent, testFn) {
     check('24l: a WebP with a RIFF size mismatch (truncated) is flagged as incomplete',
       webpDimensions(webpBadSize) !== null && !webpContainerComplete(webpBadSize) &&
       integrityIssuesForBuffer('fixture.webp', '.webp', webpBadSize).some(i => i.includes('incomplete or truncated')));
-    const goodSize = Buffer.alloc(4); goodSize.writeUInt32LE(webpBody.length, 0);
-    const webpGoodSize = Buffer.concat([Buffer.from('RIFF', 'ascii'), goodSize, webpBody]);
-    check('24m: the same WebP with a correct RIFF size produces zero integrity issues',
+
+    const emptySize = Buffer.alloc(4); emptySize.writeUInt32LE(webpBody.length, 0);
+    const webpEmptyShell = Buffer.concat([Buffer.from('RIFF', 'ascii'), emptySize, webpBody]); // correct RIFF size, but VP8X only — no pixel subchunk
+    check('24l2: a WebP with a correctly-sized VP8X header but no pixel subchunk is flagged as incomplete',
+      webpDimensions(webpEmptyShell) !== null && !webpContainerComplete(webpEmptyShell) &&
+      integrityIssuesForBuffer('fixture.webp', '.webp', webpEmptyShell).some(i => i.includes('incomplete or truncated')));
+
+    // A real pixel-bearing VP8L subchunk following VP8X.
+    const vp8lChunk = Buffer.concat([Buffer.from('VP8L', 'ascii'), Buffer.from([2, 0, 0, 0]), Buffer.from([0x2f, 0x00])]);
+    const webpBodyWithPixels = Buffer.concat([webpBody, vp8lChunk]);
+    const goodSize = Buffer.alloc(4); goodSize.writeUInt32LE(webpBodyWithPixels.length, 0);
+    const webpGoodSize = Buffer.concat([Buffer.from('RIFF', 'ascii'), goodSize, webpBodyWithPixels]);
+    check('24m: the same WebP with a real VP8L pixel subchunk and a correct RIFF size produces zero integrity issues',
       webpContainerComplete(webpGoodSize) && integrityIssuesForBuffer('fixture.webp', '.webp', webpGoodSize).length === 0);
   }
 
@@ -395,6 +445,54 @@ function withRawManifestContent(rawContent, testFn) {
     live.titlePortraitPaths.mage === bindingsByKey.get('title_portrait_mage')?.path &&
     (!live.musicPath || bindingsByKey.get('music_town')?.path === live.musicPath));
 
+  // 27a: title_bg's manifest path is cross-checked against the ACTUAL computed
+  // CSS background-image URL, not just "whatever CSS currently references can
+  // load" (a probe-and-load check can't detect the manifest path and the real
+  // CSS url() having quietly diverged, since a different-but-still-loadable
+  // file would probe as successful either way).
+  const cssTitleBgPath = await page.evaluate(() => {
+    function toRel(src) { return src ? new URL(src).pathname.replace(/^.*\/(assets\/.*)$/, '$1') : null; }
+    const bgImage = getComputedStyle(document.querySelector('.title-overlay')).backgroundImage;
+    const match = /url\((['"]?)(.*?)\1\)/.exec(bgImage);
+    return match ? toRel(match[2]) : null;
+  });
+  check('27a: title_bg\'s manifest path matches the actual computed CSS background-image URL exactly',
+    cssTitleBgPath !== null && cssTitleBgPath === bindingsByKey.get('title_bg')?.path);
+
+  // 27b: HERO_IDENTITIES (the actual source powering the title portrait AND
+  // the Character-screen paper-doll direction) is read directly and
+  // cross-checked, rather than trusting the manifest's own hardcoded
+  // assumptions about it.
+  const heroIdentities = await page.evaluate(() => {
+    const out = {};
+    for (const p of PLAYER_PROFILES) out[p] = { titlePortrait: HERO_IDENTITIES[p].titlePortrait, paperDollDirection: HERO_IDENTITIES[p].paperDollDirection };
+    return out;
+  });
+  check('27b: HERO_IDENTITIES.titlePortrait matches the declared title_portrait_* binding path for both profiles',
+    live.profiles.every(p => heroIdentities[p].titlePortrait === bindingsByKey.get(`title_portrait_${p}`)?.path));
+  check('27c: HERO_IDENTITIES.paperDollDirection matches the direction encoded in the declared paperdoll_base_* path',
+    live.profiles.every(p => bindingsByKey.get(`paperdoll_base_${p}`)?.path === `assets/${p}-${heroIdentities[p].paperDollDirection}.png`));
+
+  // 27d-27e: the Character screen's ACTUAL rendered paper-doll <img> sources
+  // are inspected directly (base layer, then all four equipment overlay
+  // layers with synthetic gear equipped) — not inferred from "this path
+  // happens to also appear under a different SPRITES key."
+  for (const profile of live.profiles) {
+    const rendered = await page.evaluate((p) => {
+      function toRel(src) { return src ? new URL(src).pathname.replace(/^.*\/(assets\/.*)$/, '$1') : null; }
+      selectProfile(p);
+      player.gear = { head: 'x', body: 'y', weapon: 'z', cape: 'w' }; // synthetic — renderPaperDoll only checks truthiness
+      renderPaperDoll();
+      const imgs = Array.from(document.getElementById('paperDoll').querySelectorAll('img')).map(img => toRel(img.src));
+      player.gear = { head: null, body: null, weapon: null, cape: null }; // leave state clean for later tests
+      return imgs;
+    }, profile);
+    check(`27d-${profile}: the Character screen's rendered paper-doll base layer matches paperdoll_base_${profile}`,
+      rendered.includes(bindingsByKey.get(`paperdoll_base_${profile}`)?.path));
+    check(`27e-${profile}: the Character screen's rendered equipment-overlay layers match all four paperdoll_*_${profile} bindings`,
+      live.slots.every(s => rendered.includes(bindingsByKey.get(`paperdoll_${s}_${profile}`)?.path)));
+  }
+
   check('28: both hero profiles are represented',
     live.profiles.every(p => bindingsByKey.has(`player_${p}_down`)));
   check('29: all eight static directions per hero are represented',
@@ -452,22 +550,35 @@ function withRawManifestContent(rawContent, testFn) {
   const nonSpriteLiveKeys = new Set([
     'title_logo', 'title_bg', 'title_portrait_adventurer', 'title_portrait_mage', 'music_town',
   ]);
-  // Verified directly against every loadSprite() call site in
-  // js/02-data-state.js (grep confirms the complete list): these four keys
-  // are drawn via spr() in js/09-main.js but have NO loadSprite() call
-  // anywhere, so they can never appear in the live SPRITES registry — not an
-  // orphaned/stale declaration, but an accurately-documented dormant one
-  // (see their `fallback` text in tools/asset-manifest.mjs). A real
-  // accidental orphan would be any OTHER key missing from live+this set.
-  const neverRegisteredKeys = new Set(['forge_building', 'npc_bram', 'npc_gunnar', 'npc_dumpling_vendor']);
-  check('37: every declared runtime binding (committed or not) corresponds to a real live reference',
-    manifest.runtimeBindings.every(b =>
-      liveKeySet.has(b.key) || nonSpriteLiveKeys.has(b.key) || neverRegisteredKeys.has(b.key) ||
-      // paper-doll bindings reuse hero-static/equipment-overlay files that
-      // ARE in the SPRITES registry under a different key (player_/equipment_
-      // prefixes) — the underlying PATH is live even though the paperdoll_*
-      // key itself isn't a separate SPRITES entry.
-      (b.family === 'character-paperdoll' && live.spritePairs.some(s => s.path === b.path))));
+  // A binding not live at all is EITHER an orphaned/stale declaration for
+  // removed code, OR a documented dormant key (forge_building/npc_bram/
+  // npc_gunnar/npc_dumpling_vendor — declared and drawn via spr() but with
+  // no loadSprite() registration anywhere). Rather than trusting a
+  // hard-coded exception list, verify the CLAIM directly: parse
+  // js/02-data-state.js's real source for every literal loadSprite('key', ...)
+  // call site, and require that a not-live binding's key genuinely does not
+  // appear there. Templated/looped registrations (hero/equipment/tile/crop/
+  // enemy families) always show up live already, so a not-live key can only
+  // ever be explained by a literal call — this check can never be fooled by
+  // source drift the way a fixed list could.
+  const dataStateSrc = readFileSync(join(ROOT, 'js', '02-data-state.js'), 'utf8');
+  const literalLoadSpriteKeys = new Set(
+    Array.from(dataStateSrc.matchAll(/loadSprite\('([a-zA-Z0-9_]+)'/g)).map(m => m[1]));
+  const paperDollLive = b => b.family === 'character-paperdoll' && live.spritePairs.some(s => s.path === b.path);
+  const notLive = manifest.runtimeBindings.filter(b =>
+    !liveKeySet.has(b.key) && !nonSpriteLiveKeys.has(b.key) && !paperDollLive(b));
+
+  check('37: every declared runtime binding (committed or not) corresponds to a real live reference, OR is provably never registered in source',
+    notLive.every(b => !literalLoadSpriteKeys.has(b.key)));
+
+  // 37a: the not-live set must be EXACTLY the four documented dormant
+  // bindings — not silently larger (a new orphan slipped in undetected) or
+  // smaller (someone added the missing registration and this test/manifest
+  // is now stale about it either way).
+  const expectedDormant = ['forge_building', 'npc_bram', 'npc_gunnar', 'npc_dumpling_vendor'];
+  check('37a: the not-live set is exactly the four documented dormant bindings, no more and no fewer',
+    notLive.length === expectedDormant.length &&
+    expectedDormant.every(k => notLive.some(b => b.key === k)));
 
   check('38: required missing runtime assets fail', (() => {
     return withMutatedManifest(m => {

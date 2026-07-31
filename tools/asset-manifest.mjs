@@ -12,6 +12,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { inflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 
@@ -150,37 +151,140 @@ const DIMENSION_READERS = {
 };
 
 // Container-completeness checks. A header can parse cleanly (signature OK,
-// dimensions readable) while the file body is still truncated — missing
-// pixel data, a missing end-of-file marker, or a RIFF size that lies about
-// how much data actually follows. These re-derive from the SAME bytes the
-// dimension readers already parsed, checking the OTHER end of the file.
-// PNG: walk the chunk chain from byte 8 and confirm it reaches a real IEND
-// chunk without any chunk's declared length overrunning the buffer.
+// dimensions readable) while the file body is still truncated OR simply
+// EMPTY of real pixel data — a structurally well-formed shell with a valid
+// ending marker but zero encoded payload (e.g. a PNG with signature+IHDR+IEND
+// and no IDAT chunk at all) would satisfy a check that only looks for the
+// terminal marker. These checks re-derive from the SAME bytes the dimension
+// readers already parsed, verifying BOTH that the container reaches its real
+// end-of-stream marker AND that genuine encoded payload actually exists
+// in between — not full decoding, but enough that an empty or hand-crafted
+// shell cannot pass as a real image.
+//
+// PNG: walk the chunk chain from byte 8, collecting IDAT data, and confirm
+// it reaches a real IEND chunk without any chunk's declared length
+// overrunning the buffer. Then zlib-inflate the concatenated IDAT stream —
+// a missing/empty IDAT fails to inflate at all (an empty buffer is not a
+// valid zlib stream), and for a non-interlaced image the inflated byte
+// count must exactly match what IHDR's dimensions/color type/bit depth
+// predict (this is the exact technique used to verify the crop-carrot.png
+// repair by hand — now built into the tool itself). Adam7-interlaced images
+// skip the exact-count match (pass sizing is significantly more complex) but
+// still require a successful, non-empty inflate.
+const PNG_CHANNELS_BY_COLOR_TYPE = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
 export function pngContainerComplete(buf) {
+  if (buf.length < 26) return false;
+  const bitDepth = buf[24], colorType = buf[25], interlace = buf[28];
   let offset = 8;
+  const idatParts = [];
   while (offset + 8 <= buf.length) {
     const len = buf.readUInt32BE(offset);
     const type = buf.toString('ascii', offset + 4, offset + 8);
     const chunkEnd = offset + 8 + len + 4; // length + type + data + CRC
     if (chunkEnd > buf.length) return false; // chunk claims bytes past the buffer end
-    if (type === 'IEND') return true;
+    if (type === 'IDAT') idatParts.push(buf.subarray(offset + 8, offset + 8 + len));
+    if (type === 'IEND') {
+      const channels = PNG_CHANNELS_BY_COLOR_TYPE[colorType];
+      if (!channels || !idatParts.length) return false;
+      let raw;
+      try { raw = inflateSync(Buffer.concat(idatParts)); } catch { return false; }
+      if (raw.length === 0) return false;
+      if (interlace === 0) {
+        const width = buf.readUInt32BE(16), height = buf.readUInt32BE(20);
+        const rowBytes = Math.ceil((width * channels * bitDepth) / 8) + 1; // +1 filter-type byte
+        return raw.length === height * rowBytes;
+      }
+      return true; // interlaced: successful non-empty inflate is as far as this check goes
+    }
     offset = chunkEnd;
   }
   return false;
 }
-// JPEG: a complete stream ends with the End-Of-Image marker (0xFFD9).
+// JPEG: a complete stream ends with the End-Of-Image marker (0xFFD9), AND
+// has a real Start-Of-Scan segment with at least one byte of entropy-coded
+// data between the SOS header and that EOI marker — a file with only
+// SOI/SOF/EOI and no SOS has no scan data at all.
 export function jpegContainerComplete(buf) {
-  return buf.length >= 2 && buf[buf.length - 2] === 0xff && buf[buf.length - 1] === 0xd9;
+  if (buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8) return false;
+  if (buf[buf.length - 2] !== 0xff || buf[buf.length - 1] !== 0xd9) return false;
+  let offset = 2;
+  while (offset + 4 <= buf.length) {
+    if (buf[offset] !== 0xff) { offset++; continue; }
+    const marker = buf[offset + 1];
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) { offset += 2; continue; }
+    const segLen = buf.readUInt16BE(offset + 2);
+    if (marker === 0xda) {
+      const scanDataStart = offset + 2 + segLen;
+      const scanDataEnd = buf.length - 2; // the trailing EOI marker
+      return scanDataEnd > scanDataStart;
+    }
+    offset += 2 + segLen;
+  }
+  return false; // no SOS segment found — no scan data at all
 }
-// GIF: a complete stream ends with the trailer byte (0x3B).
+// GIF: a complete stream ends with the trailer byte (0x3B), AND contains a
+// real Image Descriptor block with at least one non-empty LZW data
+// sub-block — not just a Logical Screen Descriptor and a bare trailer.
 export function gifContainerComplete(buf) {
-  return buf.length >= 1 && buf[buf.length - 1] === 0x3b;
+  if (buf.length < 13 || (buf[buf.length - 1] !== 0x3b)) return false;
+  const lsdPacked = buf[10];
+  const gctSize = (lsdPacked & 0x80) ? 3 * (2 ** ((lsdPacked & 0x07) + 1)) : 0;
+  let offset = 13 + gctSize;
+  while (offset < buf.length) {
+    const b = buf[offset];
+    if (b === 0x3b) return false; // trailer reached, no image descriptor found
+    if (b === 0x21) { // Extension: introducer + label, then length-prefixed sub-blocks
+      offset += 2;
+      while (offset < buf.length && buf[offset] !== 0x00) offset += 1 + buf[offset];
+      offset += 1;
+      continue;
+    }
+    if (b === 0x2c) { // Image Descriptor
+      if (offset + 10 > buf.length) return false;
+      const descPacked = buf[offset + 9];
+      const lctSize = (descPacked & 0x80) ? 3 * (2 ** ((descPacked & 0x07) + 1)) : 0;
+      offset += 10 + lctSize + 1; // descriptor + local color table + LZW min code size byte
+      let sawData = false;
+      while (offset < buf.length) {
+        const subLen = buf[offset];
+        offset += 1;
+        if (subLen === 0) break;
+        sawData = true;
+        offset += subLen;
+      }
+      return sawData;
+    }
+    return false; // unrecognized block type — bail out conservatively
+  }
+  return false;
 }
 // WebP: the RIFF size field (bytes 4-7, little-endian) must equal the number
-// of bytes that actually follow it — a smaller buffer than declared is a
-// truncated download or a botched write, not a valid (if oddly padded) file.
+// of bytes that actually follow it, AND a real pixel-bearing chunk must
+// exist. For direct (non-extended) VP8/VP8L, the chunk IS the pixel data, so
+// its declared length must exceed the fixed dimension-header bytes this tool
+// already parses. For extended VP8X, the dimensions live in VP8X itself, but
+// the actual pixels live in a LATER sub-chunk (VP8 /VP8L/ANMF) — a bare VP8X
+// with nothing else has correct RIFF size accounting but zero pixel data.
 export function webpContainerComplete(buf) {
-  return buf.length >= 8 && buf.readUInt32LE(4) === buf.length - 8;
+  if (buf.length < 12 || buf.readUInt32LE(4) !== buf.length - 8) return false;
+  const fourCC = buf.toString('ascii', 12, 16);
+  if (fourCC === 'VP8 ' || fourCC === 'VP8L') {
+    if (buf.length < 20) return false;
+    const declaredLen = buf.readUInt32LE(16);
+    const headerBytes = fourCC === 'VP8 ' ? 10 : 5; // VP8: 3(frame tag)+3(start code)+4(dims); VP8L: 1(sig)+4(packed dims)
+    return declaredLen > headerBytes;
+  }
+  if (fourCC === 'VP8X') {
+    let offset = 12;
+    while (offset + 8 <= buf.length) {
+      const chunkFourCC = buf.toString('ascii', offset, offset + 4);
+      const chunkLen = buf.readUInt32LE(offset + 4);
+      if (['VP8 ', 'VP8L', 'ANMF'].includes(chunkFourCC) && chunkLen > 0) return true;
+      offset += 8 + chunkLen + (chunkLen % 2); // RIFF sub-chunks are word-aligned
+    }
+    return false;
+  }
+  return false;
 }
 
 const CONTAINER_VALIDATORS = {
