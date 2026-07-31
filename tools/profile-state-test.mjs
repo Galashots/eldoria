@@ -91,9 +91,25 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
       { version: 2, player: {}, areas: { farm: { tiles: { '3,14': { status: 'ready', plantedAt: -5 } } } } },
       { version: 2, player: {}, areas: { atlantis: {} } },                                       // unknown area
       { version: 2, player: { gold: -10 } },                                                     // negative gold
-      { version: 2, x: -64, player: {} },                                                        // off-map
+      { version: 2, x: -64, player: {} },                                                        // off-map (negative)
+      { version: 2, area: 'atlantis', player: {} },                                              // unknown TOP-LEVEL area
+      { version: 2, x: MAP_W * TILE, player: {} },                                               // one tile past the right edge
+      { version: 2, y: MAP_H * TILE, player: {} },                                               // one tile past the bottom edge
       { gold: 5, farmTiles: { '3,14': 'weeds' } }                                                // flat v1 junk tile
     ].map(function (s) { return ingestSaveObject(s).ok === false; });
+    // Boundary sanity: the LAST valid tile origin is still accepted.
+    out.boundaryOk = ingestSaveObject({ version: 2, x: (MAP_W - 1) * TILE, y: (MAP_H - 1) * TILE,
+      player: {} }).ok === true;
+
+    // An existing stored save carrying an unknown top-level area refuses entry and
+    // stays byte-identical (the "invalid saves are rejected, never quietly rewritten"
+    // promise, proven on the area field specifically).
+    var badAreaSave = JSON.stringify({ version: 2, area: 'atlantis', player: { gold: 3 } });
+    localStorage.setItem('eldoria_save_adventurer', badAreaSave);
+    selectProfile('adventurer');
+    out.badAreaRefused = (gameActive === false) && (currentProfile === null) &&
+      localStorage.getItem('eldoria_save_adventurer') === badAreaSave;
+    localStorage.removeItem('eldoria_save_adventurer');
 
     // A malformed tile inside an EXISTING stored save refuses profile entry and the
     // stored text stays byte-for-byte untouched.
@@ -153,6 +169,8 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('SAVE: v1 unfinished legacy quest normalizes to the current one-kill definition', r.v1b);
   check('SAVE: v2 fixture migrates with progression intact, unknown gear dropped', r.v2);
   check('SAVE: malformed tiles/areas/negatives/off-map are all rejected', r.tileRejects.every(Boolean));
+  check('SAVE: the last valid tile origin is still accepted', r.boundaryOk);
+  check('SAVE: unknown top-level area in an existing save refuses entry, storage untouched', r.badAreaRefused);
   check('SAVE: malformed tile in an existing save refuses entry, storage untouched', r.badTileRefused);
   check('SAVE: paste and file import share one door and store identical canonical v3', r.sameDoor);
   check('SAVE: export -> import -> load round-trip preserves canonical state', r.roundTrip);

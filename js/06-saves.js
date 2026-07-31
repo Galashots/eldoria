@@ -64,7 +64,10 @@ function validateSaveShape(s) {
       return 'invalid version field';
     if (s.version > SAVE_VERSION) return 'save is from a newer game version';
   }
-  if (s.area != null && typeof s.area !== 'string') return 'invalid area field';
+  if (s.area != null) {
+    if (typeof s.area !== 'string') return 'invalid area field';
+    if (!areas[s.area]) return 'unknown area: ' + s.area;   // critical ID — never defaulted
+  }
   if (badNumber(s.x) || badNumber(s.y)) return 'invalid position';
 
   var nested = (s.version >= 2);
@@ -82,8 +85,9 @@ function validateSaveShape(s) {
                 'dumplingDough', 'pullsSinceLegendary'];
   for (var nn = 0; nn < nonNeg.length; nn++)
     if (p[nonNeg[nn]] != null && p[nonNeg[nn]] < 0) return 'negative ' + nonNeg[nn];
-  if (s.x != null && (s.x < 0 || s.x > MAP_W * TILE)) return 'off-map position x';
-  if (s.y != null && (s.y < 0 || s.y > MAP_H * TILE)) return 'off-map position y';
+  // The last valid tile origin is (MAP_-1) * TILE; MAP_ * TILE is already off-map.
+  if (s.x != null && (s.x < 0 || s.x > (MAP_W - 1) * TILE)) return 'off-map position x';
+  if (s.y != null && (s.y < 0 || s.y > (MAP_H - 1) * TILE)) return 'off-map position y';
 
   // seeds/crops: legacy numeric, per-type object, or absent — anything else is corrupt.
   if (p.seeds != null && typeof p.seeds !== 'number' && !isPlainObject(p.seeds))
@@ -171,7 +175,7 @@ function migrateSaveToV3(s) {
   var out = defaultState();
   var op = out.player;
 
-  if (typeof s.area === 'string' && areas[s.area]) out.area = s.area; // unknown → farm
+  if (typeof s.area === 'string') out.area = s.area; // validated known; absent → farm
   if (s.x != null) out.x = s.x;
   if (s.y != null) out.y = s.y;
 
