@@ -73,8 +73,10 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
         r.wrongMashedDamage < r.correctDamage);
   check('ELD-PT-002: a wrong answer is capped at one baseDmg', r.wrongMashedDamage === r.base);
   check('ELD-PT-002: a wrong answer still pays some consolation damage', r.wrongMashedDamage > 0);
-  check('ELD-PT-002: tapping still scales without limit on a correct answer',
-        r.correctMashedDamage > r.correctDamage * 10);
+  // Superseded by ELD-PLAY-001 (combat progression integrity): correct-answer tapping
+  // rewards up to the per-question budget of 4 x baseDmg on a regular enemy, then caps.
+  check('ELD-PT-002: correct-answer tapping rewards up to the 4x budget, then caps',
+        r.correctMashedDamage === r.base * 4 && r.correctMashedDamage > r.wrongMashedDamage);
   check('ELD-PT-002: no console errors', errors.length === 0);
   await browser.close();
 }
