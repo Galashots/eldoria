@@ -28,6 +28,12 @@
   overwritten by autosave. Kill quests are paced to what the world can offer
   (one kill per quest while each area places one instance of each enemy;
   rewards = `Math.round(oldReward/oldCount)`).
+- Combat uses **per-question damage budgets** (2026-07-30, ELD-PLAY-001):
+  correct zero-tap = 2× base; wrong ≤ 1× base; regular correct capped at 4×
+  base; every boss question capped at `ceil(maxHp/3)` so the Shadow Warden and
+  Crystal Wyrm always take ≥3 answered questions at any attainable loadout;
+  spent budgets end the phase promptly with child-readable feedback
+  (`questionDamageBudget` in `js/05-combat-cooking.js`).
 
 ## Accepted delivery landmarks
 

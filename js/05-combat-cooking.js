@@ -222,42 +222,72 @@ function onCombatAnswerClick(e) {
 
 // Combat slash phase: answer math, then mash SLASH for BONUS damage.
 //
-// The invariant this enforces (ELD-PT-002): **answering correctly always beats answering
-// wrongly, no matter how fast anyone taps.**
+// PER-QUESTION DAMAGE BUDGETS (ELD-PLAY-001 + ELD-PT-002). Every question computes ONE
+// immutable budget before its slash window opens, and no input of any kind — taps, clicks,
+// keyboard, direct executeSlash() calls, timer-edge races — can exceed it:
 //
-//   correct, zero taps  = 2 x baseDmg   (banked before the window even opens)
-//   wrong,  any taps    <= 1 x baseDmg  (hard cap, see slashDamageCap)
+//   correct, zero taps  = 2 x baseDmg   (banked free hit; counts toward the budget;
+//                                        clipped only by the boss phase cap below)
+//   wrong,  any taps    <= 1 x baseDmg  (strictly BELOW the correct zero-tap floor)
+//   correct, any taps   <= 4 x baseDmg  on a regular enemy (tapping rewards, then caps)
+//   ANY boss question   <= ceil(boss maxHp / 3), correct or wrong — so the Shadow Warden
+//                          and Crystal Wyrm always take at least three answered questions
+//                          at every attainable level, gear loadout, and attack upgrade;
+//                          on a boss the wrong-answer budget tightens to one below the
+//                          phase cap so a right answer ALWAYS out-earns a wrong one.
 //
-// So the floor on a right answer is strictly above the ceiling on a wrong one. Tapping
-// still rewards a correct answer without limit, but it can never turn a wrong answer into
-// the better play. A wrong answer keeps a small consolation payout because losing is
-// deliberately never punitive in this game — it just cannot out-earn knowing the answer.
+// A wrong answer keeps a small consolation payout because losing is deliberately never
+// punitive in this game — it just cannot out-earn knowing the answer. When a budget is
+// spent and the enemy still stands, the phase ends promptly with clear feedback instead
+// of leaving the kid idle for the rest of the window.
 var slashDmgPerHit = 0;
 var slashHits = 0;
-var slashDamageDone = 0;        // damage dealt so far this window (respects the cap)
-var slashDamageCap = Infinity;  // total damage this window may ever deal
+var slashDamageDone = 0;        // damage dealt so far this window (respects the budget)
+var slashDamageCap = 0;         // this question's immutable damage budget
 var slashTimerId = 0;
 var slashActive = false;
 var SLASH_TIME_ADV = 3000;
 var SLASH_TIME_MAGE = 5000;
+var SLASH_CAP_ADVANCE_MS = 900; // short beat after cap feedback before the phase advances
+var REGULAR_CORRECT_CAP_MULT = 4;
 function slashTime() { return (currentProfile === 'mage') ? SLASH_TIME_MAGE : SLASH_TIME_ADV; }
+
+// Is the current combat opponent a boss (Shadow Warden / Crystal Wyrm)?
+function combatEnemyIsBoss() {
+  return !!(combatEnemy && ENEMIES[combatEnemy.type] && ENEMIES[combatEnemy.type].boss);
+}
+
+// The one place the per-question budget is computed. Immutable for the question:
+// answerCombat stores it in slashDamageCap before the window opens and nothing else
+// ever raises it.
+function questionDamageBudget(correct) {
+  var base = playerDamage();
+  var budget = correct ? base * REGULAR_CORRECT_CAP_MULT : base;
+  if (combatEnemyIsBoss()) {
+    var phaseCap = Math.ceil(combatEnemy.maxHp / 3);
+    // Correct questions may reach the full phase cap; wrong ones stop one short of it
+    // so the correct zero-tap hit stays STRICTLY better even when gear outgrows the cap.
+    budget = Math.min(budget, correct ? phaseCap : Math.max(1, phaseCap - 1));
+  }
+  return budget;
+}
 
 function answerCombat(value) {
   if (!combatOpen || !combatEnemy) return;
   var correct = (value === combatAnswer);
   var baseDmg = playerDamage();
+  slashDamageCap = questionDamageBudget(correct);
 
   if (correct) {
     soundCorrect();
     slashDmgPerHit = baseDmg * 2;
-    slashDamageCap = Infinity;
-    // One free hit is banked immediately: right answer => damage, guaranteed.
+    // One free hit is banked immediately: right answer => damage, guaranteed. It counts
+    // toward the budget (executeSlash clips it against slashDamageCap).
     startSlashPhase(slashTime(), 'RIGHT! Free hit! Slash for more!', 1);
   } else {
-    // Half damage per tap, and the whole window is capped at one baseDmg — strictly less
-    // than the 2 x baseDmg a correct answer banks for free.
+    // Half damage per tap, and the whole window is budgeted at one baseDmg (tighter on
+    // bosses) — strictly less than the 2 x baseDmg a correct answer banks for free.
     slashDmgPerHit = Math.max(1, Math.floor(baseDmg / 2));
-    slashDamageCap = baseDmg;
     if (typeof HTMLElement !== 'undefined') {
       startSlashPhase(slashTime(), 'Not quite — slash for a little damage!', 0);
     } else {
@@ -302,12 +332,16 @@ function startSlashPhase(duration, msg, freeHits) {
 
 function executeSlash() {
   if (!slashActive || !combatOpen || !combatEnemy) return;
-  // A wrong answer's window is capped. Once it is spent, further taps are acknowledged on
-  // screen but deal nothing — the player is told plainly what would have earned more.
+  // Every window is budgeted. Once the budget is spent, further taps are acknowledged on
+  // screen but deal ZERO damage, and the phase advances promptly (announceSlashCap).
   var dmg = Math.min(slashDmgPerHit, slashDamageCap - slashDamageDone);
   if (dmg <= 0) {
     var cappedEl = document.getElementById('slashCount');
-    if (cappedEl) cappedEl.textContent = slashDamageDone + ' dmg — answer right for a big free hit!';
+    if (cappedEl) {
+      cappedEl.textContent = combatEnemyIsBoss()
+        ? slashDamageDone + ' dmg — phase complete!'
+        : slashDamageDone + ' dmg — answer right for a big free hit!';
+    }
     return;
   }
   slashHits++;
@@ -332,13 +366,34 @@ function executeSlash() {
   var countEl = document.getElementById('slashCount');
   if (countEl) countEl.textContent = 'Hits: ' + slashHits + ' (' + slashDamageDone + ' dmg)';
   if (combatEnemy.hp <= 0) {
+    // A lethal permitted hit closes the fight through winCombat exactly once:
+    // slashActive drops first, so the pending timer's endSlashPhase (and any further
+    // taps) become no-ops rather than a duplicate counterattack or transition.
     combatEnemy.hp = 0;
     slashActive = false;
     clearTimeout(slashTimerId);
     var zone = document.getElementById('slashZone');
     if (zone) zone.style.display = 'none';
     winCombat();
+    return;
   }
+  // Budget just exhausted with the enemy still standing: tell the player plainly and
+  // advance the phase after a short beat instead of an idle wait. Replacing the window
+  // timer (clearTimeout first) means the cap-advance and the original timer can never
+  // both fire — endSlashPhase's slashActive guard is the second line of defense.
+  if (slashDamageDone >= slashDamageCap) announceSlashCap();
+}
+
+// Cap feedback + prompt advance. Child-readable, boss-aware, spoken once.
+function announceSlashCap() {
+  var msgEl = document.getElementById('combatMsg');
+  var msg = combatEnemyIsBoss()
+    ? 'Great hit! The boss braces for the next challenge.'
+    : 'Phase complete — great slashing!';
+  if (msgEl) msgEl.textContent = msg;
+  speak(combatEnemyIsBoss() ? 'Phase complete! Solve the next problem!' : msg);
+  clearTimeout(slashTimerId);
+  slashTimerId = setTimeout(endSlashPhase, SLASH_CAP_ADVANCE_MS);
 }
 
 function endSlashPhase() {
