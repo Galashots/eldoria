@@ -1369,7 +1369,7 @@
       "width": 32
     },
     {
-      "bytes": 4104,
+      "bytes": 4113,
       "domain": "crop-iso-strip",
       "ext": ".png",
       "governedBy": "",
@@ -1381,7 +1381,7 @@
       "provenance": "unknown",
       "provenanceNote": "No repository record establishes the origin of this file; resolving it would require author/tool history from outside this repo.",
       "scope": "runtime",
-      "sha256": "5dca60709e2ed20ba86709b28b49df5368ac96a9ddcb13d90ce8abf44e5634e7",
+      "sha256": "2a540c856730853a47b382bd9c2389bef17bcbf02559096c15bbb0b261c45afa",
       "status": "approved",
       "visualReview": "aligned",
       "width": 192
@@ -3660,6 +3660,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn cooking-pot shape",
+      "fallbackKind": "engine-drawn",
       "family": "environment-sprite",
       "key": "cookpot",
       "owner": "js/02-data-state.js + js/09-main.js",
@@ -3670,6 +3671,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn colored crop shape",
+      "fallbackKind": "engine-drawn",
       "family": "crop-sprite",
       "key": "crop_growing",
       "owner": "js/02-data-state.js + js/09-main.js",
@@ -3680,6 +3682,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn colored crop shape",
+      "fallbackKind": "engine-drawn",
       "family": "crop-sprite",
       "key": "crop_ready",
       "owner": "js/02-data-state.js + js/09-main.js",
@@ -3690,6 +3693,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn decoration shape",
+      "fallbackKind": "engine-drawn",
       "family": "decoration-sprite",
       "key": "deco_boulder",
       "owner": "js/09-main.js drawProcDeco()",
@@ -3700,6 +3704,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn decoration shape",
+      "fallbackKind": "engine-drawn",
       "family": "decoration-sprite",
       "key": "deco_flowers",
       "owner": "js/09-main.js drawProcDeco()",
@@ -3710,6 +3715,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn decoration shape",
+      "fallbackKind": "engine-drawn",
       "family": "decoration-sprite",
       "key": "deco_stone",
       "owner": "js/09-main.js drawProcDeco()",
@@ -3720,6 +3726,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn decoration shape",
+      "fallbackKind": "engine-drawn",
       "family": "decoration-sprite",
       "key": "deco_stump",
       "owner": "js/09-main.js drawProcDeco()",
@@ -3730,6 +3737,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_bat",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3742,6 +3750,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_bear",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3754,6 +3763,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_crystal_wyrm",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3766,6 +3776,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_goblin",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3778,6 +3789,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_magma_slug",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3790,6 +3802,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_rock_golem",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3802,6 +3815,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_shadow_warden",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3814,6 +3828,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_slime",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3826,6 +3841,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_troll",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3838,6 +3854,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-type enemy shape",
+      "fallbackKind": "engine-drawn",
       "family": "enemy-sprite",
       "key": "enemy_wolf",
       "owner": "js/02-data-state.js + js/09-main.js drawEnemyShape()",
@@ -3850,6 +3867,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_down_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3864,6 +3882,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_down_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3878,6 +3897,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_down_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3892,6 +3912,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_down_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3906,6 +3927,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_left_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3920,6 +3942,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_left_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3934,6 +3957,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_left_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3948,6 +3972,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_left_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3962,6 +3987,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_right_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3976,6 +4002,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_right_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -3990,6 +4017,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_right_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4004,6 +4032,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_right_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4018,6 +4047,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_up_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4032,6 +4062,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_up_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4046,6 +4077,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_up_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4060,6 +4092,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_adventurer_up_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4073,7 +4106,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_down_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4088,6 +4122,7 @@
     {
       "committed": false,
       "fallback": "never drawn — draw() never calls equipmentAttackSprite('cape'); this registered SPRITES entry has no visible effect regardless of load state",
+      "fallbackKind": "not-applicable",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_down_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4101,7 +4136,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_down_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4115,7 +4151,8 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_down_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4129,7 +4166,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_left_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4144,6 +4182,7 @@
     {
       "committed": false,
       "fallback": "never drawn — draw() never calls equipmentAttackSprite('cape'); this registered SPRITES entry has no visible effect regardless of load state",
+      "fallbackKind": "not-applicable",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_left_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4157,7 +4196,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_left_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4171,7 +4211,8 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_left_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4185,7 +4226,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_right_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4200,6 +4242,7 @@
     {
       "committed": false,
       "fallback": "never drawn — draw() never calls equipmentAttackSprite('cape'); this registered SPRITES entry has no visible effect regardless of load state",
+      "fallbackKind": "not-applicable",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_right_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4213,7 +4256,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_right_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4227,7 +4271,8 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_right_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4241,7 +4286,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_up_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4256,6 +4302,7 @@
     {
       "committed": false,
       "fallback": "never drawn — draw() never calls equipmentAttackSprite('cape'); this registered SPRITES entry has no visible effect regardless of load state",
+      "fallbackKind": "not-applicable",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_up_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4269,7 +4316,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_up_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4283,7 +4331,8 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_adventurer_up_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4297,7 +4346,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_down_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4312,6 +4362,7 @@
     {
       "committed": false,
       "fallback": "never drawn — draw() never calls equipmentAttackSprite('cape'); this registered SPRITES entry has no visible effect regardless of load state",
+      "fallbackKind": "not-applicable",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_down_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4325,7 +4376,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_down_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4339,7 +4391,8 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_down_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4353,7 +4406,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_left_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4368,6 +4422,7 @@
     {
       "committed": false,
       "fallback": "never drawn — draw() never calls equipmentAttackSprite('cape'); this registered SPRITES entry has no visible effect regardless of load state",
+      "fallbackKind": "not-applicable",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_left_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4381,7 +4436,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_left_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4395,7 +4451,8 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_left_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4409,7 +4466,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_right_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4424,6 +4482,7 @@
     {
       "committed": false,
       "fallback": "never drawn — draw() never calls equipmentAttackSprite('cape'); this registered SPRITES entry has no visible effect regardless of load state",
+      "fallbackKind": "not-applicable",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_right_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4437,7 +4496,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_right_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4451,7 +4511,8 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_right_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4465,7 +4526,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_up_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4480,6 +4542,7 @@
     {
       "committed": false,
       "fallback": "never drawn — draw() never calls equipmentAttackSprite('cape'); this registered SPRITES entry has no visible effect regardless of load state",
+      "fallbackKind": "not-applicable",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_up_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4493,7 +4556,8 @@
     },
     {
       "committed": false,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_up_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4507,7 +4571,8 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk equipment overlay for that slot",
+      "fallback": "no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot's overlay is simply absent for those frames",
+      "fallbackKind": "none",
       "family": "equipment-overlay-attack",
       "key": "equipment_attack_mage_up_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4522,6 +4587,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_down_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4536,6 +4602,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_down_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4550,6 +4617,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_down_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4564,6 +4632,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_down_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4578,6 +4647,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_left_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4592,6 +4662,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_left_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4606,6 +4677,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_left_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4620,6 +4692,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_left_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4634,6 +4707,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_right_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4648,6 +4722,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_right_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4662,6 +4737,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_right_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4676,6 +4752,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_right_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4690,6 +4767,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_up_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4704,6 +4782,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_up_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4718,6 +4797,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_up_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4732,6 +4812,7 @@
     {
       "committed": true,
       "fallback": "no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare",
+      "fallbackKind": "none",
       "family": "equipment-overlay-static",
       "key": "equipment_mage_up_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4746,6 +4827,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_down_body"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_down_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4760,6 +4845,10 @@
     {
       "committed": true,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_down_cape"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_down_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4774,6 +4863,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_down_head"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_down_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4788,6 +4881,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_down_weapon"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_down_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4802,6 +4899,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_left_body"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_left_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4816,6 +4917,10 @@
     {
       "committed": true,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_left_cape"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_left_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4830,6 +4935,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_left_head"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_left_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4844,6 +4953,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_left_weapon"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_left_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4858,6 +4971,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_right_body"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_right_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4872,6 +4989,10 @@
     {
       "committed": true,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_right_cape"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_right_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4886,6 +5007,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_right_head"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_right_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4900,6 +5025,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_right_weapon"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_right_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4914,6 +5043,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_up_body"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_up_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4928,6 +5061,10 @@
     {
       "committed": true,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_up_cape"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_up_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4942,6 +5079,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_up_head"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_up_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4956,6 +5097,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_adventurer_up_weapon"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_adventurer_up_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4970,6 +5115,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_down_body"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_down_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4984,6 +5133,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_down_cape"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_down_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -4998,6 +5151,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_down_head"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_down_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5012,6 +5169,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_down_weapon"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_down_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5026,6 +5187,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_left_body"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_left_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5040,6 +5205,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_left_cape"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_left_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5054,6 +5223,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_left_head"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_left_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5068,6 +5241,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_left_weapon"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_left_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5082,6 +5259,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_right_body"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_right_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5096,6 +5277,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_right_cape"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_right_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5110,6 +5295,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_right_head"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_right_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5124,6 +5313,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_right_weapon"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_right_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5138,6 +5331,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_up_body"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_up_body",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5152,6 +5349,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_up_cape"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_up_cape",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5166,6 +5367,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_up_head"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_up_head",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5180,6 +5385,10 @@
     {
       "committed": false,
       "fallback": "static equipment overlay for that slot",
+      "fallbackChain": [
+        "equipment_mage_up_weapon"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "equipment-overlay-walk",
       "key": "equipment_walk_mage_up_weapon",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5193,7 +5402,8 @@
     },
     {
       "committed": false,
-      "fallback": "procedurally drawn stone building with a \"FORGE\" text label — Gunnar's forge has no gameplay behind it yet",
+      "fallback": "always procedurally drawn (stone building with a \"FORGE\" text label) — no loadSprite() call registers this key yet, so spr() always returns null regardless of whether a file is committed at this path; Gunnar's forge has no gameplay behind it yet",
+      "fallbackKind": "engine-drawn",
       "family": "environment-sprite",
       "key": "forge_building",
       "owner": "js/09-main.js (spr('forge_building') call site)",
@@ -5204,6 +5414,10 @@
     {
       "committed": true,
       "fallback": "base grass tile",
+      "fallbackChain": [
+        "tile_0"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "tile-decoration-variant",
       "key": "grass2",
       "owner": "js/02-data-state.js + js/09-main.js grass-variety draw",
@@ -5214,6 +5428,10 @@
     {
       "committed": true,
       "fallback": "base grass tile",
+      "fallbackChain": [
+        "tile_0"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "tile-decoration-variant",
       "key": "grass3",
       "owner": "js/02-data-state.js + js/09-main.js grass-variety draw",
@@ -5224,6 +5442,7 @@
     {
       "committed": true,
       "fallback": "deterministic canvas crop proof",
+      "fallbackKind": "engine-drawn",
       "family": "crop-iso-strip",
       "key": "iso_crop_carrot",
       "owner": "js/02-data-state.js + js/08-iso-renderer.js",
@@ -5236,6 +5455,7 @@
     {
       "committed": true,
       "fallback": "deterministic canvas crop proof",
+      "fallbackKind": "engine-drawn",
       "family": "crop-iso-strip",
       "key": "iso_crop_corn",
       "owner": "js/02-data-state.js + js/08-iso-renderer.js",
@@ -5248,6 +5468,7 @@
     {
       "committed": true,
       "fallback": "deterministic canvas crop proof",
+      "fallbackKind": "engine-drawn",
       "family": "crop-iso-strip",
       "key": "iso_crop_pumpkin",
       "owner": "js/02-data-state.js + js/08-iso-renderer.js",
@@ -5260,6 +5481,7 @@
     {
       "committed": true,
       "fallback": "deterministic canvas crop proof",
+      "fallbackKind": "engine-drawn",
       "family": "crop-iso-strip",
       "key": "iso_crop_starfruit",
       "owner": "js/02-data-state.js + js/08-iso-renderer.js",
@@ -5272,6 +5494,7 @@
     {
       "committed": true,
       "fallback": "deterministic canvas crop proof",
+      "fallbackKind": "engine-drawn",
       "family": "crop-iso-strip",
       "key": "iso_crop_turnip",
       "owner": "js/02-data-state.js + js/08-iso-renderer.js",
@@ -5284,6 +5507,7 @@
     {
       "committed": true,
       "fallback": "silent — Audio() has no onerror handling, game is unaffected",
+      "fallbackKind": "silent",
       "family": "audio-music",
       "key": "music_town",
       "owner": "js/02-data-state.js bgMusic",
@@ -5293,7 +5517,8 @@
     },
     {
       "committed": false,
-      "fallback": "procedurally drawn per-NPC shape",
+      "fallback": "always procedurally drawn — no loadSprite() call registers this key yet, so spr() always returns null regardless of whether a file is committed at this path",
+      "fallbackKind": "engine-drawn",
       "family": "npc-sprite",
       "key": "npc_bram",
       "owner": "js/09-main.js NPC draw loop + drawNpcShape()",
@@ -5305,7 +5530,8 @@
     },
     {
       "committed": false,
-      "fallback": "procedurally drawn per-NPC shape",
+      "fallback": "always procedurally drawn — no loadSprite() call registers this key yet, so spr() always returns null regardless of whether a file is committed at this path",
+      "fallbackKind": "engine-drawn",
       "family": "npc-sprite",
       "key": "npc_dumpling_vendor",
       "owner": "js/09-main.js NPC draw loop + drawNpcShape()",
@@ -5317,7 +5543,8 @@
     },
     {
       "committed": false,
-      "fallback": "procedurally drawn per-NPC shape",
+      "fallback": "always procedurally drawn — no loadSprite() call registers this key yet, so spr() always returns null regardless of whether a file is committed at this path",
+      "fallbackKind": "engine-drawn",
       "family": "npc-sprite",
       "key": "npc_gunnar",
       "owner": "js/09-main.js NPC draw loop + drawNpcShape()",
@@ -5330,6 +5557,7 @@
     {
       "committed": true,
       "fallback": "procedurally drawn per-NPC shape",
+      "fallbackKind": "engine-drawn",
       "family": "npc-sprite",
       "key": "npc_mira",
       "owner": "js/09-main.js NPC draw loop + drawNpcShape()",
@@ -5342,6 +5570,7 @@
     {
       "committed": true,
       "fallback": "none designed — img.onerror hides just that layer",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_base_adventurer",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5354,6 +5583,7 @@
     {
       "committed": true,
       "fallback": "none designed — img.onerror hides just that layer",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_base_mage",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5366,6 +5596,7 @@
     {
       "committed": true,
       "fallback": "img.onerror hides just that overlay layer; base hero stays visible",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_body_adventurer",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5379,6 +5610,7 @@
     {
       "committed": true,
       "fallback": "img.onerror hides just that overlay layer; base hero stays visible",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_body_mage",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5392,6 +5624,7 @@
     {
       "committed": true,
       "fallback": "img.onerror hides just that overlay layer; base hero stays visible",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_cape_adventurer",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5405,6 +5638,7 @@
     {
       "committed": true,
       "fallback": "img.onerror hides just that overlay layer; base hero stays visible",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_cape_mage",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5418,6 +5652,7 @@
     {
       "committed": true,
       "fallback": "img.onerror hides just that overlay layer; base hero stays visible",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_head_adventurer",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5431,6 +5666,7 @@
     {
       "committed": true,
       "fallback": "img.onerror hides just that overlay layer; base hero stays visible",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_head_mage",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5444,6 +5680,7 @@
     {
       "committed": true,
       "fallback": "img.onerror hides just that overlay layer; base hero stays visible",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_weapon_adventurer",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5457,6 +5694,7 @@
     {
       "committed": true,
       "fallback": "img.onerror hides just that overlay layer; base hero stays visible",
+      "fallbackKind": "none",
       "family": "character-paperdoll",
       "key": "paperdoll_weapon_mage",
       "owner": "js/10-character.js renderPaperDoll()",
@@ -5470,6 +5708,7 @@
     {
       "committed": false,
       "fallback": "a colored placeholder box with a directional nose triangle",
+      "fallbackKind": "engine-drawn",
       "family": "legacy-fallback",
       "key": "player",
       "owner": "js/02-data-state.js loadSprite + playerSprite() fallback chain",
@@ -5480,6 +5719,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_adventurer_down",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5493,6 +5736,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_adventurer_down-left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5506,6 +5753,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_adventurer_down-right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5519,6 +5770,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_adventurer_left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5532,6 +5787,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_adventurer_right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5545,6 +5804,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_adventurer_up",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5558,6 +5821,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_adventurer_up-left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5571,6 +5838,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_adventurer_up-right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5583,7 +5854,12 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk hero sprite (no attack animation)",
+      "fallback": "walk hero sprite for that direction, then the static hero sprite (no attack animation)",
+      "fallbackChain": [
+        "player_walk_adventurer_down",
+        "player_adventurer_down"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-attack",
       "key": "player_attack_adventurer_down",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5596,7 +5872,12 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk hero sprite (no attack animation)",
+      "fallback": "walk hero sprite for that direction, then the static hero sprite (no attack animation)",
+      "fallbackChain": [
+        "player_walk_adventurer_left",
+        "player_adventurer_left"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-attack",
       "key": "player_attack_adventurer_left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5609,7 +5890,12 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk hero sprite (no attack animation)",
+      "fallback": "walk hero sprite for that direction, then the static hero sprite (no attack animation)",
+      "fallbackChain": [
+        "player_walk_adventurer_right",
+        "player_adventurer_right"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-attack",
       "key": "player_attack_adventurer_right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5622,7 +5908,12 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk hero sprite (no attack animation)",
+      "fallback": "walk hero sprite for that direction, then the static hero sprite (no attack animation)",
+      "fallbackChain": [
+        "player_walk_adventurer_up",
+        "player_adventurer_up"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-attack",
       "key": "player_attack_adventurer_up",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5635,7 +5926,12 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk hero sprite (no attack animation)",
+      "fallback": "walk hero sprite for that direction, then the static hero sprite (no attack animation)",
+      "fallbackChain": [
+        "player_walk_mage_down",
+        "player_mage_down"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-attack",
       "key": "player_attack_mage_down",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5648,7 +5944,12 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk hero sprite (no attack animation)",
+      "fallback": "walk hero sprite for that direction, then the static hero sprite (no attack animation)",
+      "fallbackChain": [
+        "player_walk_mage_left",
+        "player_mage_left"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-attack",
       "key": "player_attack_mage_left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5661,7 +5962,12 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk hero sprite (no attack animation)",
+      "fallback": "walk hero sprite for that direction, then the static hero sprite (no attack animation)",
+      "fallbackChain": [
+        "player_walk_mage_right",
+        "player_mage_right"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-attack",
       "key": "player_attack_mage_right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5674,7 +5980,12 @@
     },
     {
       "committed": true,
-      "fallback": "static or walk hero sprite (no attack animation)",
+      "fallback": "walk hero sprite for that direction, then the static hero sprite (no attack animation)",
+      "fallbackChain": [
+        "player_walk_mage_up",
+        "player_mage_up"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-attack",
       "key": "player_attack_mage_up",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5688,6 +5999,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_mage_down",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5701,6 +6016,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_mage_down-left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5714,6 +6033,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_mage_down-right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5727,6 +6050,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_mage_left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5740,6 +6067,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_mage_right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5753,6 +6084,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_mage_up",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5766,6 +6101,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_mage_up-left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5779,6 +6118,10 @@
     {
       "committed": true,
       "fallback": "assets/player.png legacy sprite, then a drawn placeholder box",
+      "fallbackChain": [
+        "player"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-static",
       "key": "player_mage_up-right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5792,6 +6135,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_adventurer_down"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_adventurer_down",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5805,6 +6152,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_adventurer_down-left"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_adventurer_down-left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5818,6 +6169,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_adventurer_down-right"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_adventurer_down-right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5831,6 +6186,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_adventurer_left"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_adventurer_left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5844,6 +6203,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_adventurer_right"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_adventurer_right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5857,6 +6220,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_adventurer_up"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_adventurer_up",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5870,6 +6237,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_adventurer_up-left"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_adventurer_up-left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5883,6 +6254,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_adventurer_up-right"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_adventurer_up-right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5896,6 +6271,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_mage_down"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_mage_down",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5909,6 +6288,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_mage_down-left"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_mage_down-left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5922,6 +6305,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_mage_down-right"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_mage_down-right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5935,6 +6322,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_mage_left"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_mage_left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5948,6 +6339,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_mage_right"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_mage_right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5961,6 +6356,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_mage_up"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_mage_up",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5974,6 +6373,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_mage_up-left"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_mage_up-left",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5987,6 +6390,10 @@
     {
       "committed": true,
       "fallback": "static hero sprite for that direction (no walk animation)",
+      "fallbackChain": [
+        "player_mage_up-right"
+      ],
+      "fallbackKind": "asset-chain",
       "family": "hero-walk",
       "key": "player_walk_mage_up-right",
       "owner": "js/02-data-state.js (loadSprite loop)",
@@ -5999,7 +6406,8 @@
     },
     {
       "committed": true,
-      "fallback": "HOUSE/DOOR tile fallback rendering",
+      "fallback": "HOUSE/DOOR tile fallback rendering (whichever the map cell actually is)",
+      "fallbackKind": "context-dependent",
       "family": "environment-sprite",
       "key": "shop_building",
       "owner": "js/02-data-state.js + js/09-main.js",
@@ -6010,6 +6418,7 @@
     {
       "committed": true,
       "fallback": "flat TILE_COLOR fill",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_0",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6023,6 +6432,7 @@
     {
       "committed": true,
       "fallback": "flat TILE_COLOR fill",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_1",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6036,6 +6446,7 @@
     {
       "committed": true,
       "fallback": "flat TILE_COLOR fill",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_2",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6049,6 +6460,7 @@
     {
       "committed": true,
       "fallback": "flat TILE_COLOR fill",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_3",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6062,6 +6474,7 @@
     {
       "committed": true,
       "fallback": "flat TILE_COLOR fill",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_4",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6075,6 +6488,7 @@
     {
       "committed": true,
       "fallback": "flat TILE_COLOR fill",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_5",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6088,6 +6502,7 @@
     {
       "committed": true,
       "fallback": "flat TILE_COLOR fill",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_6",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6101,6 +6516,7 @@
     {
       "committed": true,
       "fallback": "flat TILE_COLOR fill",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_7",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6114,6 +6530,7 @@
     {
       "committed": false,
       "fallback": "procedurally drawn cavern detailing (ROCK/CAVE) — the real Mine art is not yet produced",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_8",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6127,6 +6544,7 @@
     {
       "committed": false,
       "fallback": "procedurally drawn cavern detailing (ROCK/CAVE) — the real Mine art is not yet produced",
+      "fallbackKind": "engine-drawn",
       "family": "tile-sprite",
       "key": "tile_9",
       "owner": "js/02-data-state.js TILE_SPRITE",
@@ -6140,6 +6558,7 @@
     {
       "committed": true,
       "fallback": "CSS solid background-color (#1a1208)",
+      "fallbackKind": "css-fallback",
       "family": "ui-title",
       "key": "title_bg",
       "owner": "eldoria.css .title-overlay",
@@ -6150,6 +6569,7 @@
     {
       "committed": true,
       "fallback": "none designed",
+      "fallbackKind": "none",
       "family": "ui-title",
       "key": "title_logo",
       "owner": "index.html title screen",
@@ -6160,6 +6580,7 @@
     {
       "committed": true,
       "fallback": "none designed — plain <img>, browser broken-image icon if absent",
+      "fallbackKind": "none",
       "family": "title-portrait",
       "key": "title_portrait_adventurer",
       "owner": "index.html title screen + js/02-data-state.js HERO_IDENTITIES",
@@ -6172,6 +6593,7 @@
     {
       "committed": true,
       "fallback": "none designed — plain <img>, browser broken-image icon if absent",
+      "fallbackKind": "none",
       "family": "title-portrait",
       "key": "title_portrait_mage",
       "owner": "index.html title screen + js/02-data-state.js HERO_IDENTITIES",

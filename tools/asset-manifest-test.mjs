@@ -9,7 +9,10 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launch } from './smoke-test.mjs';
-import { integrityIssuesForBuffer, matchesSignature, gifDimensions, webpDimensions, pngDimensions } from './asset-manifest.mjs';
+import {
+  integrityIssuesForBuffer, matchesSignature, gifDimensions, webpDimensions, pngDimensions,
+  jpegDimensions, pngContainerComplete, jpegContainerComplete, gifContainerComplete, webpContainerComplete,
+} from './asset-manifest.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TOOL = join(ROOT, 'tools', 'asset-manifest.mjs');
@@ -69,6 +72,19 @@ function withMutatedManifest(mutateFn, testFn) {
     const m = JSON.parse(backup);
     mutateFn(m);
     writeFileRetrying(MANIFEST_PATH, JSON.stringify(m, null, 2));
+    return testFn();
+  } finally {
+    writeFileRetrying(MANIFEST_PATH, backup);
+  }
+}
+
+// Same sandboxing, but for testing rejection of genuinely unparseable
+// content — writes a raw string rather than a mutated (and thus always
+// still-valid-JSON) object.
+function withRawManifestContent(rawContent, testFn) {
+  const backup = readFileSync(MANIFEST_PATH, 'utf8');
+  try {
+    writeFileRetrying(MANIFEST_PATH, rawContent);
     return testFn();
   } finally {
     writeFileRetrying(MANIFEST_PATH, backup);
@@ -230,6 +246,71 @@ function withMutatedManifest(mutateFn, testFn) {
   check('24e: WebP (VP8X) dimension reader reads real width/height',
     (() => { const d = webpDimensions(webpBuf); return d && d.width === 100 && d.height === 50; })());
 
+  // 24f-24l: container-completeness — a header can parse cleanly (signature
+  // OK, dimensions readable) while the file BODY is still truncated. This is
+  // a distinct failure mode from 22-24's "can't even read the header" cases,
+  // caught by re-checking the OTHER end of the buffer against each format's
+  // real end-of-stream marker.
+  {
+    // Real PNG chunk-stream construction: signature, then an IHDR chunk with
+    // valid 4x4 dimensions, deliberately WITHOUT an IEND chunk.
+    const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+    const ihdrData = Buffer.alloc(13);
+    ihdrData.writeUInt32BE(4, 0); ihdrData.writeUInt32BE(4, 4);
+    ihdrData[8] = 8; ihdrData[9] = 6; // 8-bit depth, RGBA color type
+    const ihdrLen = Buffer.alloc(4); ihdrLen.writeUInt32BE(13, 0);
+    const ihdrChunk = Buffer.concat([ihdrLen, Buffer.from('IHDR', 'ascii'), ihdrData, Buffer.alloc(4)]);
+    const pngNoIend = Buffer.concat([sig, ihdrChunk]);
+    check('24f: a body-truncated PNG (valid IHDR, no IEND) is flagged as incomplete',
+      pngDimensions(pngNoIend) !== null && !pngContainerComplete(pngNoIend) &&
+      integrityIssuesForBuffer('fixture.png', '.png', pngNoIend).some(i => i.includes('incomplete or truncated')));
+    const iendChunk = Buffer.from([0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]);
+    const pngWithIend = Buffer.concat([pngNoIend, iendChunk]);
+    check('24g: the same PNG with a proper IEND chunk produces zero integrity issues',
+      pngContainerComplete(pngWithIend) && integrityIssuesForBuffer('fixture.png', '.png', pngWithIend).length === 0);
+  }
+  {
+    // Minimal single-component baseline SOF0 segment (4x4), deliberately
+    // WITHOUT a trailing End-Of-Image (0xFFD9) marker.
+    const soi = Buffer.from([0xff, 0xd8]);
+    const sof = Buffer.alloc(13);
+    sof[0] = 0xff; sof[1] = 0xc0; sof.writeUInt16BE(11, 2);
+    sof[4] = 8; sof.writeUInt16BE(4, 5); sof.writeUInt16BE(4, 7);
+    sof[9] = 1; sof[10] = 1; sof[11] = 0x11; sof[12] = 0;
+    const jpegNoEoi = Buffer.concat([soi, sof]);
+    check('24h: a JPEG missing its EOI marker is flagged as incomplete',
+      jpegDimensions(jpegNoEoi) !== null && !jpegContainerComplete(jpegNoEoi) &&
+      integrityIssuesForBuffer('fixture.jpg', '.jpg', jpegNoEoi).some(i => i.includes('incomplete or truncated')));
+    const jpegWithEoi = Buffer.concat([jpegNoEoi, Buffer.from([0xff, 0xd9])]);
+    check('24i: the same JPEG with a proper EOI marker produces zero integrity issues',
+      jpegContainerComplete(jpegWithEoi) && integrityIssuesForBuffer('fixture.jpg', '.jpg', jpegWithEoi).length === 0);
+  }
+  {
+    const gifNoTrailer = Buffer.concat([Buffer.from('GIF89a', 'ascii'),
+      Buffer.from([64, 0, 32, 0, 0, 0, 0]), Buffer.from([0x00])]); // ends 0x00, not the 0x3B trailer
+    check('24j: a GIF missing its trailer byte is flagged as incomplete',
+      gifDimensions(gifNoTrailer) !== null && !gifContainerComplete(gifNoTrailer) &&
+      integrityIssuesForBuffer('fixture.gif', '.gif', gifNoTrailer).some(i => i.includes('incomplete or truncated')));
+    const gifWithTrailer = Buffer.concat([gifNoTrailer.subarray(0, gifNoTrailer.length - 1), Buffer.from([0x3b])]);
+    check('24k: the same GIF with a proper trailer byte produces zero integrity issues',
+      gifContainerComplete(gifWithTrailer) && integrityIssuesForBuffer('fixture.gif', '.gif', gifWithTrailer).length === 0);
+  }
+  {
+    const webpBody = Buffer.concat([
+      Buffer.from('WEBP', 'ascii'), Buffer.from('VP8X', 'ascii'), Buffer.from([10, 0, 0, 0]),
+      Buffer.from([0, 0, 0, 0]), Buffer.from([99, 0, 0]), Buffer.from([49, 0, 0]),
+    ]);
+    const badSize = Buffer.alloc(4); badSize.writeUInt32LE(200, 0); // declares far more than actually follows
+    const webpBadSize = Buffer.concat([Buffer.from('RIFF', 'ascii'), badSize, webpBody]);
+    check('24l: a WebP with a RIFF size mismatch (truncated) is flagged as incomplete',
+      webpDimensions(webpBadSize) !== null && !webpContainerComplete(webpBadSize) &&
+      integrityIssuesForBuffer('fixture.webp', '.webp', webpBadSize).some(i => i.includes('incomplete or truncated')));
+    const goodSize = Buffer.alloc(4); goodSize.writeUInt32LE(webpBody.length, 0);
+    const webpGoodSize = Buffer.concat([Buffer.from('RIFF', 'ascii'), goodSize, webpBody]);
+    check('24m: the same WebP with a correct RIFF size produces zero integrity issues',
+      webpContainerComplete(webpGoodSize) && integrityIssuesForBuffer('fixture.webp', '.webp', webpGoodSize).length === 0);
+  }
+
   const hashDrift = withMutatedManifest(m => {
     const t = m.assets.find(a => a.path === sample.path);
     t.sha256 = '0'.repeat(64);
@@ -346,31 +427,42 @@ function withMutatedManifest(mutateFn, testFn) {
     manifest.runtimeBindings.some(b => b.family === 'decoration-sprite'));
 
   // 36: a live key whose binding was removed is now undeclared — --check
-  // must fail. (If that key's binding happened to be optional-and-absent
-  // this specific run, a live key can never be "absent" by definition — it
-  // is registered right now — so removing its declaration always breaks the
-  // key<->path association the manifest claims to be complete.)
+  // must actually FAIL, not just leave the removed key out of the mutated
+  // JSON (that alone proves the mutation worked, not that the tool detects
+  // it). buildCanonicalManifest() always rebuilds the FULL declarative
+  // binding set from js-loop-derived rules, so a manifest missing one of
+  // those bindings can never be canonical — --check's own drift check is
+  // the real detection mechanism this exercises.
   const someLiveKey = live.spritePairs[0].key;
   const undeclaredFails = withMutatedManifest(m => {
     m.runtimeBindings = m.runtimeBindings.filter(b => b.key !== someLiveKey);
-  }, () => {
-    // Re-run the SAME live cross-check logic against the mutated manifest:
-    // the removed key can no longer be found at all.
-    const mutated = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
-    return !mutated.runtimeBindings.some(b => b.key === someLiveKey);
-  });
-  check('36: removing a live runtime key\'s declaration is detected as undeclared', undeclaredFails);
+  }, () => runTool(['--check']).code !== 0);
+  check('36: removing a live runtime key\'s declaration makes --check fail', undeclaredFails);
 
-  // 37: staleness is checked across EVERY family with committed files, not
-  // just hero-/equipment- prefixed ones (tiles, crops, enemies, NPCs,
-  // decorations, environment, title, paper-doll, music all included).
+  // 37: staleness is checked across EVERY family and EVERY binding — not
+  // just committed ones, and not just hero-/equipment- prefixed ones (tiles,
+  // crops, enemies, NPCs, decorations, environment, title, paper-doll, music
+  // all included). js/02-data-state.js's loadSprite() registers a SPRITES
+  // entry unconditionally for every key the code declares, whether or not
+  // the backing file actually exists (ready stays false on a 404) — so an
+  // OPTIONAL/uncommitted binding's key should still be live right now. A key
+  // that ISN'T live at all (committed or not) is an orphaned declaration for
+  // a code path that no longer exists, not a legitimate "expected miss."
   const liveKeySet = new Set(live.spritePairs.map(s => s.key));
   const nonSpriteLiveKeys = new Set([
     'title_logo', 'title_bg', 'title_portrait_adventurer', 'title_portrait_mage', 'music_town',
   ]);
-  check('37: every committed runtime binding corresponds to a real live reference',
-    manifest.runtimeBindings.filter(b => b.committed).every(b =>
-      liveKeySet.has(b.key) || nonSpriteLiveKeys.has(b.key) ||
+  // Verified directly against every loadSprite() call site in
+  // js/02-data-state.js (grep confirms the complete list): these four keys
+  // are drawn via spr() in js/09-main.js but have NO loadSprite() call
+  // anywhere, so they can never appear in the live SPRITES registry — not an
+  // orphaned/stale declaration, but an accurately-documented dormant one
+  // (see their `fallback` text in tools/asset-manifest.mjs). A real
+  // accidental orphan would be any OTHER key missing from live+this set.
+  const neverRegisteredKeys = new Set(['forge_building', 'npc_bram', 'npc_gunnar', 'npc_dumpling_vendor']);
+  check('37: every declared runtime binding (committed or not) corresponds to a real live reference',
+    manifest.runtimeBindings.every(b =>
+      liveKeySet.has(b.key) || nonSpriteLiveKeys.has(b.key) || neverRegisteredKeys.has(b.key) ||
       // paper-doll bindings reuse hero-static/equipment-overlay files that
       // ARE in the SPRITES registry under a different key (player_/equipment_
       // prefixes) — the underlying PATH is live even though the paperdoll_*
@@ -415,6 +507,67 @@ function withMutatedManifest(mutateFn, testFn) {
     }, () => runTool(['--check']).code !== 0);
   })());
 
+  // 43a-43h: structured fallback validation — a free-text `fallback` string
+  // alone is not machine-checkable. Every binding also declares a
+  // fallbackKind, and "asset-chain" kinds name the real substitute bindings
+  // in fallbackChain; --check verifies those chains actually resolve and
+  // terminate somewhere guaranteed present, not just that SOME text exists.
+  check('43a: every committed runtime binding in the real manifest resolves to a scope:"runtime" asset', (() => {
+    const assetByPath = new Map(manifest.assets.map(a => [a.path, a]));
+    return manifest.runtimeBindings.filter(b => b.committed)
+      .every(b => assetByPath.get(b.path)?.scope === 'runtime');
+  })());
+  check('43b: pointing a committed binding at a non-runtime-scoped asset fails --check', (() => {
+    return withMutatedManifest(m => {
+      const committed = m.runtimeBindings.find(b => b.committed);
+      const otherAsset = m.assets.find(a => a.scope !== 'runtime');
+      committed.path = otherAsset.path;
+    }, () => runTool(['--check']).code !== 0);
+  })());
+  check('43c: every runtime binding in the real manifest declares a recognized fallbackKind', (() => {
+    const KNOWN = new Set(['asset-chain', 'engine-drawn', 'css-fallback', 'silent', 'none', 'not-applicable', 'context-dependent']);
+    return manifest.runtimeBindings.every(b => KNOWN.has(b.fallbackKind));
+  })());
+  check('43d: an unrecognized fallbackKind fails --check', (() => {
+    return withMutatedManifest(m => {
+      m.runtimeBindings[0].fallbackKind = 'not-a-real-kind';
+    }, () => runTool(['--check']).code !== 0);
+  })());
+  check('43e: an asset-chain fallbackChain referencing an undeclared key fails --check', (() => {
+    return withMutatedManifest(m => {
+      const chained = m.runtimeBindings.find(b => b.fallbackKind === 'asset-chain');
+      chained.fallbackChain = ['this_key_does_not_exist_anywhere'];
+    }, () => runTool(['--check']).code !== 0);
+  })());
+  check('43f: a fallbackChain that only cycles between two non-required bindings (never terminates) fails --check', (() => {
+    return withMutatedManifest(m => {
+      const [a, b] = m.runtimeBindings.filter(x => !x.required);
+      a.fallbackKind = 'asset-chain'; a.fallbackChain = [b.key];
+      b.fallbackKind = 'asset-chain'; b.fallbackChain = [a.key];
+    }, () => runTool(['--check']).code !== 0);
+  })());
+  check('43g: a fallbackChain present on a non-asset-chain binding fails --check', (() => {
+    return withMutatedManifest(m => {
+      const nonChain = m.runtimeBindings.find(b => b.fallbackKind !== 'asset-chain');
+      nonChain.fallbackChain = ['irrelevant'];
+    }, () => runTool(['--check']).code !== 0);
+  })());
+  check('43h: every asset-chain fallbackChain in the real manifest terminates in a required binding or a non-asset-chain fallback', (() => {
+    const byKey = new Map(manifest.runtimeBindings.map(b => [b.key, b]));
+    function terminates(b, seen) {
+      if (b.fallbackKind !== 'asset-chain') return true;
+      if (seen.has(b.key)) return false;
+      const chain = b.fallbackChain || [];
+      if (!chain.length) return false;
+      const last = byKey.get(chain[chain.length - 1]);
+      if (!last) return false;
+      if (last.required) return true;
+      return terminates(last, new Set(seen).add(b.key));
+    }
+    return manifest.runtimeBindings.filter(b => b.fallbackKind === 'asset-chain')
+      .every(b => terminates(b, new Set()));
+  })());
+
   await browser.close();
   check('runtime cross-check: no console errors', errors.length === 0);
 }
@@ -431,7 +584,23 @@ function withMutatedManifest(mutateFn, testFn) {
   let allLoaded = true, allErrorFree = true;
   const perViewport = {};
   for (const [label, [w, h]] of Object.entries(VIEWPORTS)) {
-    const { browser, page, errors } = await launch();
+    // smoke-test.mjs's shared launch() deliberately filters "Failed to load
+    // resource" console messages (that's the EXPECTED-optional-miss path,
+    // not a bug) — but that means console-error counting alone can never
+    // observe an actual failed request, so tests 47/48 previously passed
+    // vacuously even if something unexpected failed to load. Listening for
+    // the real network-level 'requestfailed' event gives an actual signal
+    // independent of that console filtering. It has to be attached via the
+    // onPage hook BEFORE navigation — launch() already waits for every
+    // missing-asset request to settle during its own initial load, so a
+    // listener attached only after launch() returns would miss all of them.
+    const failedRequestUrls = [];
+    const { browser, page, errors } = await launch('', {
+      onPage: async (p) => p.on('requestfailed', req => {
+        const url = req.url();
+        if (url.startsWith('file://')) failedRequestUrls.push(url);
+      }),
+    });
     await page.setViewport({ width: w, height: h });
     await new Promise(r => setTimeout(r, 500));
     await page.evaluate(() => selectProfile('adventurer'));
@@ -470,8 +639,12 @@ function withMutatedManifest(mutateFn, testFn) {
       }));
       return results.every(Boolean);
     }, requiredKeys);
+    // Give any in-flight failed requests a moment to actually fire their
+    // 'requestfailed' event before we tear the page down.
+    await new Promise(r => setTimeout(r, 300));
     await page.screenshot({ path: join(evidenceDir, `asset-manifest-${label}.png`) });
-    perViewport[label] = { requiredLoaded, consoleErrors: errors.length };
+    const failedRequestPaths = failedRequestUrls.map(u => u.replace(/^.*\/(assets\/.*)$/, '$1'));
+    perViewport[label] = { requiredLoaded, consoleErrors: errors.length, failedRequestPaths };
     allLoaded = allLoaded && requiredLoaded;
     allErrorFree = allErrorFree && errors.length === 0;
     await browser.close();
@@ -480,7 +653,20 @@ function withMutatedManifest(mutateFn, testFn) {
   check('45: required runtime images load at iPad landscape', perViewport['ipad-landscape'].requiredLoaded);
   check('46: required runtime images load at phone portrait', perViewport['phone-portrait'].requiredLoaded);
   check('47: expected optional failures produce no unexpected console errors', allErrorFree);
-  check('48: zero unexpected media request failures', allErrorFree);
+
+  // 48: cross-check the REAL observed failed requests (network-level, not
+  // console text) against the manifest's own declared optional-and-missing
+  // list — every failure must correspond to a declared expected miss, and
+  // (to prove this isn't vacuously passing on zero observed failures) at
+  // least one real failure must have been observed, since the repo
+  // currently has genuinely uncommitted optional assets that DO have a live
+  // loadSprite() call and so DO actually attempt — and fail — a fetch.
+  const expectedMissPaths = new Set(manifestForViewports.runtimeBindings.filter(b => !b.required && !b.committed).map(b => b.path));
+  const allFailedPaths = Object.values(perViewport).flatMap(v => v.failedRequestPaths);
+  const unexpectedFailures = allFailedPaths.filter(p => !expectedMissPaths.has(p));
+  check('48: every observed failed media request matches a declared optional miss, and at least one was observed',
+    unexpectedFailures.length === 0 && allFailedPaths.length > 0);
+  if (unexpectedFailures.length) console.log('  unexpected failed requests: ' + unexpectedFailures.join(', '));
 
   // Required CI-retained evidence: the manifest report plus required-loaded /
   // expected-optional-miss lists, alongside the three viewport screenshots
@@ -532,6 +718,48 @@ check('51: npm run assets:verify runs this file\'s --check as its own step (see 
     const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
     return /assets:manifest:check/.test(pkg.scripts['assets:verify']) && /asset-manifest-test\.mjs/.test(pkg.scripts.test);
   })());
+
+// 51a: --report's unusedCommittedRuntimeCandidates must only ever list
+// scope:"runtime" assets — source art, North Star references, playtest
+// evidence, etc. are never bound by design and would otherwise all show up
+// as false "unused" candidates, burying the signal this field exists for.
+// buildCanonicalManifest() rebuilds assets/bindings FRESH from git + rules
+// on every run (it doesn't read scope/committed back from a mutated file),
+// so this is checked against real repo data rather than via manifest
+// mutation — and cross-checked against what the OLD unfiltered computation
+// would have produced, to prove the fix has a real effect, not a vacuous one.
+check('51a: unusedCommittedRuntimeCandidates only lists scope:"runtime" assets', (() => {
+  runTool(['--report']);
+  const report = JSON.parse(readFileSync(join(ROOT, 'artifacts', 'asset-manifest-report.json'), 'utf8'));
+  const manifest = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
+  const scopeByPath = new Map(manifest.assets.map(a => [a.path, a.scope]));
+  const boundPaths = new Set(manifest.runtimeBindings.map(b => b.path));
+  const oldUnfilteredCount = manifest.assets.filter(a => !boundPaths.has(a.path)).length;
+  const onlyRuntime = report.unusedCommittedRuntimeCandidates.every(p => scopeByPath.get(p) === 'runtime');
+  return onlyRuntime && oldUnfilteredCount > report.unusedCommittedRuntimeCandidates.length;
+})());
+
+// 51b-51d: a manifest.json that EXISTS but fails to parse is corruption, not
+// a first-time bootstrap — --write/--check must refuse to silently rebuild
+// it (which would skip notesLocked preservation and --accept-new gating for
+// every asset at once) unless the caller explicitly opts in.
+check('51b: a malformed manifest.json is refused by --check rather than silently rebuilt', (() => {
+  return withRawManifestContent('{ this is not valid json ][', () => {
+    const result = runTool(['--check']);
+    return result.code !== 0 && /not valid JSON/.test(result.out) && /recover-malformed-manifest/.test(result.out);
+  });
+})());
+check('51c: a malformed manifest.json is also refused by --write without --recover-malformed-manifest', (() => {
+  return withRawManifestContent('{ not json either', () => {
+    const result = runTool(['--write']);
+    return result.code !== 0 && /recover-malformed-manifest/.test(result.out);
+  });
+})());
+check('51d: --recover-malformed-manifest lets --write intentionally discard a malformed manifest and rebuild', (() => {
+  return withRawManifestContent('{ still not json', () => {
+    return runTool(['--write', '--accept-new', '--recover-malformed-manifest']).code === 0;
+  });
+})());
 {
   const src = readFileSync(join(ROOT, 'js', '06-saves.js'), 'utf8');
   check('52: SAVE_VERSION remains 3', /var SAVE_VERSION = 3;/.test(src));

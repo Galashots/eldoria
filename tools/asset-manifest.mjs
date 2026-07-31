@@ -23,6 +23,7 @@ const MODE = process.argv.includes('--write') ? 'write'
   : process.argv.includes('--report') ? 'report'
   : 'check'; // default, and explicit --check
 const ACCEPT_NEW = process.argv.includes('--accept-new');
+const RECOVER_MALFORMED = process.argv.includes('--recover-malformed-manifest');
 
 // ==================================================================
 // Policy: which tracked files this manifest governs.
@@ -148,6 +149,48 @@ const DIMENSION_READERS = {
   '.webp': webpDimensions,
 };
 
+// Container-completeness checks. A header can parse cleanly (signature OK,
+// dimensions readable) while the file body is still truncated — missing
+// pixel data, a missing end-of-file marker, or a RIFF size that lies about
+// how much data actually follows. These re-derive from the SAME bytes the
+// dimension readers already parsed, checking the OTHER end of the file.
+// PNG: walk the chunk chain from byte 8 and confirm it reaches a real IEND
+// chunk without any chunk's declared length overrunning the buffer.
+export function pngContainerComplete(buf) {
+  let offset = 8;
+  while (offset + 8 <= buf.length) {
+    const len = buf.readUInt32BE(offset);
+    const type = buf.toString('ascii', offset + 4, offset + 8);
+    const chunkEnd = offset + 8 + len + 4; // length + type + data + CRC
+    if (chunkEnd > buf.length) return false; // chunk claims bytes past the buffer end
+    if (type === 'IEND') return true;
+    offset = chunkEnd;
+  }
+  return false;
+}
+// JPEG: a complete stream ends with the End-Of-Image marker (0xFFD9).
+export function jpegContainerComplete(buf) {
+  return buf.length >= 2 && buf[buf.length - 2] === 0xff && buf[buf.length - 1] === 0xd9;
+}
+// GIF: a complete stream ends with the trailer byte (0x3B).
+export function gifContainerComplete(buf) {
+  return buf.length >= 1 && buf[buf.length - 1] === 0x3b;
+}
+// WebP: the RIFF size field (bytes 4-7, little-endian) must equal the number
+// of bytes that actually follow it — a smaller buffer than declared is a
+// truncated download or a botched write, not a valid (if oddly padded) file.
+export function webpContainerComplete(buf) {
+  return buf.length >= 8 && buf.readUInt32LE(4) === buf.length - 8;
+}
+
+const CONTAINER_VALIDATORS = {
+  '.png': pngContainerComplete,
+  '.jpg': jpegContainerComplete,
+  '.jpeg': jpegContainerComplete,
+  '.gif': gifContainerComplete,
+  '.webp': webpContainerComplete,
+};
+
 // Known magic-byte signatures, checked against the extension a file is
 // COMMITTED under. A mismatch (or a signature that fails to match a format
 // this checker knows) is a real integrity failure, not a silent skip —
@@ -206,8 +249,12 @@ export function integrityIssuesForBuffer(path, ext, buf) {
   if (buf.length === 0) { issues.push('file is zero bytes'); return issues; }
   const sigMatch = matchesSignature(ext, buf);
   if (sigMatch === false) issues.push(`file bytes do not match the "${ext}" signature (corrupt or misnamed)`);
-  if (ext in DIMENSION_READERS && rasterDimensions(path, buf) === null) {
-    issues.push(`raster dimensions could not be read from a "${ext}" file (corrupt or truncated)`);
+  if (ext in DIMENSION_READERS) {
+    if (rasterDimensions(path, buf) === null) {
+      issues.push(`raster dimensions could not be read from a "${ext}" file (corrupt or truncated)`);
+    } else if (ext in CONTAINER_VALIDATORS && !CONTAINER_VALIDATORS[ext](buf)) {
+      issues.push(`"${ext}" file container is incomplete or truncated (header and dimensions read cleanly, but the file body/trailer is missing)`);
+    }
   }
   return issues;
 }
@@ -498,6 +545,27 @@ function tpl(pattern, vars) {
   return Object.entries(vars).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, v), pattern);
 }
 
+// Every binding declares a fallbackKind, in addition to the free-text
+// `fallback` field, so "what happens if this is missing" is machine-checkable
+// rather than only human-readable prose:
+//   asset-chain      — the engine substitutes ANOTHER declared binding, named
+//                       in fallbackChain (in the real precedence order the
+//                       drawing code actually tries them). Validated: every
+//                       chain entry must be a real binding key, and the chain
+//                       must terminate in a required (guaranteed-present)
+//                       binding or a non-asset-chain kind — never a dead end.
+//   engine-drawn      — a procedural/canvas-drawn substitute, no asset involved.
+//   css-fallback      — a declared CSS fallback (background-color, etc.).
+//   silent            — absence is inaudible/invisible; nothing draws or plays.
+//   none              — no substitute; the layer/element is simply absent.
+//   not-applicable    — this binding is registered but never actually queried
+//                       by any live code path (dead declaration, not a gap).
+//   context-dependent — the substitute depends on map/game state the manifest
+//                       can't express as one static key (documented in prose).
+const FALLBACK_KINDS = [
+  'asset-chain', 'engine-drawn', 'css-fallback', 'silent', 'none', 'not-applicable', 'context-dependent',
+];
+
 function buildRuntimeBindings() {
   const bindings = [];
   const push = (b) => bindings.push(b);
@@ -509,6 +577,7 @@ function buildRuntimeBindings() {
         path: tpl('assets/{p}-{d}.png', { p: profile, d: dir }),
         owner: 'js/02-data-state.js (loadSprite loop)', required: true,
         fallback: 'assets/player.png legacy sprite, then a drawn placeholder box',
+        fallbackKind: 'asset-chain', fallbackChain: ['player'],
         use: { profile, direction: dir },
       });
       push({
@@ -516,15 +585,21 @@ function buildRuntimeBindings() {
         path: tpl('assets/{p}-{d}-walk.png', { p: profile, d: dir }),
         owner: 'js/02-data-state.js (loadSprite loop)', required: true,
         fallback: 'static hero sprite for that direction (no walk animation)',
+        fallbackKind: 'asset-chain', fallbackChain: [tpl('player_{p}_{d}', { p: profile, d: dir })],
         use: { profile, direction: dir },
       });
     }
     for (const dir of OVERLAY_DIRECTIONS) {
+      // Verified against js/09-main.js draw(): playerImg = playerAttackImg ||
+      // playerWalkImg || playerSprite() — attack falls back to walk, then to
+      // static, then (inside playerSprite()) to the legacy 'player' sprite.
       push({
         key: `player_attack_${profile}_${dir}`, family: 'hero-attack',
         path: tpl('assets/{p}-{d}-attack.png', { p: profile, d: dir }),
         owner: 'js/02-data-state.js (loadSprite loop)', required: false,
-        fallback: 'static or walk hero sprite (no attack animation)',
+        fallback: 'walk hero sprite for that direction, then the static hero sprite (no attack animation)',
+        fallbackKind: 'asset-chain',
+        fallbackChain: [tpl('player_walk_{p}_{d}', { p: profile, d: dir }), tpl('player_{p}_{d}', { p: profile, d: dir })],
         use: { profile, direction: dir },
       });
       for (const slot of EQUIPMENT_SLOTS) {
@@ -533,6 +608,7 @@ function buildRuntimeBindings() {
           path: tpl('assets/{p}-{d}-{s}.png', { p: profile, d: dir, s: slot }),
           owner: 'js/02-data-state.js (loadSprite loop)', required: false,
           fallback: 'no extra progression-tier gear layer for that slot — the base hero already carries its own permanent canonical identity clothing/props, it does not render bare',
+          fallbackKind: 'none',
           use: { profile, direction: dir, slot },
         });
         push({
@@ -540,6 +616,8 @@ function buildRuntimeBindings() {
           path: tpl('assets/{p}-{d}-{s}-walk.png', { p: profile, d: dir, s: slot }),
           owner: 'js/02-data-state.js (loadSprite loop)', required: false,
           fallback: 'static equipment overlay for that slot',
+          fallbackKind: 'asset-chain',
+          fallbackChain: [tpl('equipment_{p}_{d}_{s}', { p: profile, d: dir, s: slot })],
           use: { profile, direction: dir, slot },
         });
         // js/02-data-state.js's registration loop calls loadSprite() for this
@@ -550,13 +628,23 @@ function buildRuntimeBindings() {
         // it here (rather than skipping cape) is what the live cross-check
         // against the real SPRITES registry requires — verified against source,
         // not assumed from the drawing code alone.
+        //
+        // For body/head/weapon: verified against draw()'s `if (spriteMode ===
+        // 'attack') { ... } else if (profilePlayerImg) { ...walk/static... }`
+        // branch structure — the walk/static substitute ONLY runs in the ELSE
+        // branch (not attacking). While actually attacking, a missing overlay
+        // for body/head/weapon draws NOTHING for that slot that frame; it does
+        // NOT fall back to the walk or static overlay. (An earlier version of
+        // this manifest's fallback text claimed a walk/static substitute here —
+        // that claim did not match the real drawing code and has been corrected.)
         push({
           key: `equipment_attack_${profile}_${dir}_${slot}`, family: 'equipment-overlay-attack',
           path: tpl('assets/{p}-{d}-{s}-attack.png', { p: profile, d: dir, s: slot }),
           owner: 'js/02-data-state.js (loadSprite loop)', required: false,
           fallback: slot === 'cape'
             ? 'never drawn — draw() never calls equipmentAttackSprite(\'cape\'); this registered SPRITES entry has no visible effect regardless of load state'
-            : 'static or walk equipment overlay for that slot',
+            : 'no substitute is drawn for that slot during the attack animation frames — the base hero, cape, and any other resolved equipment layers still render normally; this slot\'s overlay is simply absent for those frames',
+          fallbackKind: slot === 'cape' ? 'not-applicable' : 'none',
           use: { profile, direction: dir, slot },
         });
       }
@@ -566,6 +654,7 @@ function buildRuntimeBindings() {
       path: tpl('assets/{p}-down-right.png', { p: profile }),
       owner: 'index.html title screen + js/02-data-state.js HERO_IDENTITIES', required: true,
       fallback: 'none designed — plain <img>, browser broken-image icon if absent',
+      fallbackKind: 'none',
       use: { profile },
     });
     push({
@@ -573,6 +662,7 @@ function buildRuntimeBindings() {
       path: tpl('assets/{p}-right.png', { p: profile }),
       owner: 'js/10-character.js renderPaperDoll()', required: true,
       fallback: 'none designed — img.onerror hides just that layer',
+      fallbackKind: 'none',
       use: { profile },
     });
     for (const slot of EQUIPMENT_SLOTS) {
@@ -581,6 +671,7 @@ function buildRuntimeBindings() {
         path: tpl('assets/{p}-right-{s}.png', { p: profile, s: slot }),
         owner: 'js/10-character.js renderPaperDoll()', required: false,
         fallback: 'img.onerror hides just that overlay layer; base hero stays visible',
+        fallbackKind: 'none',
         use: { profile, slot },
       });
     }
@@ -601,62 +692,89 @@ function buildRuntimeBindings() {
       path: `assets/${TILE_FILE[tile]}.png`,
       owner: 'js/02-data-state.js TILE_SPRITE', required,
       fallback: required ? 'flat TILE_COLOR fill' : 'procedurally drawn cavern detailing (ROCK/CAVE) — the real Mine art is not yet produced',
+      fallbackKind: 'engine-drawn',
       use: { tile, tileTypeId: TILE_IDS[tile] },
     });
   }
   for (const variant of ['grass2', 'grass3']) {
+    // Verified against js/09-main.js: `ctx.drawImage(gv || tileImg, ...)` where
+    // tileImg is spr('tile_0') (base grass) — a genuine asset-chain, not a
+    // procedural substitute.
     push({ key: variant, family: 'tile-decoration-variant', path: `assets/${variant}.png`,
       owner: 'js/02-data-state.js + js/09-main.js grass-variety draw', required: false,
-      fallback: 'base grass tile', use: {} });
+      fallback: 'base grass tile', fallbackKind: 'asset-chain', fallbackChain: ['tile_0'], use: {} });
   }
   for (const [key, path] of Object.entries({
     deco_flowers: 'flowers', deco_boulder: 'boulder', deco_stump: 'tree_stump', deco_stone: 'stone',
   })) {
     push({ key, family: 'decoration-sprite', path: `assets/${path}.png`,
       owner: 'js/09-main.js drawProcDeco()', required: false,
-      fallback: 'procedurally drawn decoration shape', use: {} });
+      fallback: 'procedurally drawn decoration shape', fallbackKind: 'engine-drawn', use: {} });
   }
   for (const key of ['crop_growing', 'crop_ready']) {
     push({ key, family: 'crop-sprite', path: `assets/${key}.png`,
       owner: 'js/02-data-state.js + js/09-main.js', required: false,
-      fallback: 'procedurally drawn colored crop shape', use: {} });
+      fallback: 'procedurally drawn colored crop shape', fallbackKind: 'engine-drawn', use: {} });
   }
   for (const crop of ['turnip', 'carrot', 'corn', 'pumpkin', 'starfruit']) {
     push({ key: `iso_crop_${crop}`, family: 'crop-iso-strip', path: `assets/iso/crop-${crop}.png`,
       owner: 'js/02-data-state.js + js/08-iso-renderer.js', required: false,
-      fallback: 'deterministic canvas crop proof', use: { crop } });
+      fallback: 'deterministic canvas crop proof', fallbackKind: 'engine-drawn', use: { crop } });
   }
   for (const type of ['slime', 'bat', 'goblin', 'wolf', 'bear', 'troll', 'rock_golem', 'magma_slug', 'crystal_wyrm', 'shadow_warden']) {
     push({ key: `enemy_${type}`, family: 'enemy-sprite', path: `assets/enemy_${type}.png`,
       owner: 'js/02-data-state.js + js/09-main.js drawEnemyShape()', required: false,
-      fallback: 'procedurally drawn per-type enemy shape', use: { enemyType: type } });
+      fallback: 'procedurally drawn per-type enemy shape', fallbackKind: 'engine-drawn', use: { enemyType: type } });
   }
+  // Verified against js/02-data-state.js: only 'npc_mira' has an actual
+  // loadSprite() registration. bram/gunnar/dumpling_vendor have NO
+  // registration anywhere — js/09-main.js's draw loop still calls
+  // spr('npc_' + npc.id) for all four, but spr() looks up SPRITES[name],
+  // which is simply never created for these three. Committing a file at
+  // these three paths today would have NO effect until a source change adds
+  // the missing loadSprite() call — that is a real behavior change, out of
+  // scope for this governance-only tool, so it is documented here rather
+  // than silently assumed.
   for (const id of ['mira', 'bram', 'gunnar', 'dumpling_vendor']) {
+    const wired = id === 'mira';
     push({ key: `npc_${id}`, family: 'npc-sprite', path: `assets/npc_${id}.png`,
       owner: 'js/09-main.js NPC draw loop + drawNpcShape()', required: false,
-      fallback: 'procedurally drawn per-NPC shape', use: { npcId: id } });
+      fallback: wired
+        ? 'procedurally drawn per-NPC shape'
+        : 'always procedurally drawn — no loadSprite() call registers this key yet, so spr() always returns null regardless of whether a file is committed at this path',
+      fallbackKind: 'engine-drawn', use: { npcId: id } });
   }
   push({ key: 'cookpot', family: 'environment-sprite', path: 'assets/cookpot.png',
     owner: 'js/02-data-state.js + js/09-main.js', required: false,
-    fallback: 'procedurally drawn cooking-pot shape', use: {} });
+    fallback: 'procedurally drawn cooking-pot shape', fallbackKind: 'engine-drawn', use: {} });
+  // Depends on which tile the map cell actually is (HOUSE or DOOR) — not a
+  // single static asset key, so this is documented in prose rather than a
+  // fallbackChain. Verified against js/09-main.js: `if ((tileType === HOUSE ||
+  // tileType === DOOR) && currentArea === 'town' && spr('shop_building'))
+  // continue;` — absent shop_building simply lets the normal tile draw run.
   push({ key: 'shop_building', family: 'environment-sprite', path: 'assets/shop_building.png',
     owner: 'js/02-data-state.js + js/09-main.js', required: false,
-    fallback: 'HOUSE/DOOR tile fallback rendering', use: {} });
+    fallback: 'HOUSE/DOOR tile fallback rendering (whichever the map cell actually is)',
+    fallbackKind: 'context-dependent', use: {} });
+  // Verified against js/02-data-state.js: no loadSprite('forge_building', ...)
+  // call exists anywhere. js/09-main.js's spr('forge_building') therefore
+  // always returns null — committing a file at this path today has no
+  // effect until a source change adds the missing registration.
   push({ key: 'forge_building', family: 'environment-sprite', path: 'assets/forge_building.png',
     owner: 'js/09-main.js (spr(\'forge_building\') call site)', required: false,
-    fallback: 'procedurally drawn stone building with a "FORGE" text label — Gunnar\'s forge has no gameplay behind it yet',
-    use: {} });
+    fallback: 'always procedurally drawn (stone building with a "FORGE" text label) — no loadSprite() call registers this key yet, so spr() always returns null regardless of whether a file is committed at this path; Gunnar\'s forge has no gameplay behind it yet',
+    fallbackKind: 'engine-drawn', use: {} });
   push({ key: 'title_logo', family: 'ui-title', path: 'assets/title-logo.png',
-    owner: 'index.html title screen', required: true, fallback: 'none designed', use: {} });
+    owner: 'index.html title screen', required: true, fallback: 'none designed', fallbackKind: 'none', use: {} });
   push({ key: 'title_bg', family: 'ui-title', path: 'assets/title-bg.png',
     owner: 'eldoria.css .title-overlay', required: true,
-    fallback: 'CSS solid background-color (#1a1208)', use: {} });
+    fallback: 'CSS solid background-color (#1a1208)', fallbackKind: 'css-fallback', use: {} });
   push({ key: 'music_town', family: 'audio-music', path: 'assets/music-town.mp3',
     owner: 'js/02-data-state.js bgMusic', required: false,
-    fallback: 'silent — Audio() has no onerror handling, game is unaffected', use: {} });
+    fallback: 'silent — Audio() has no onerror handling, game is unaffected', fallbackKind: 'silent', use: {} });
   push({ key: 'player', family: 'legacy-fallback', path: 'assets/player.png',
     owner: 'js/02-data-state.js loadSprite + playerSprite() fallback chain', required: false,
-    fallback: 'a colored placeholder box with a directional nose triangle', use: {} });
+    fallback: 'a colored placeholder box with a directional nose triangle', fallbackKind: 'engine-drawn', use: {} });
 
   return bindings;
 }
@@ -739,12 +857,52 @@ function sortKeysReplacer(key, value) {
 // Modes
 // ==================================================================
 
+// A manifest that TRULY does not exist yet (ENOENT — first-time bootstrap,
+// nothing to lose) is a fundamentally different situation from one that
+// EXISTS but fails to parse (corruption — a bad merge, truncated write, or
+// accidental edit). Conflating them under a single "return null" made
+// --write treat a corrupted manifest exactly like a fresh bootstrap: every
+// asset would look "newly discovered," silently skipping notesLocked
+// preservation and the --accept-new review gate for all of them at once.
+// Only ENOENT is auto-bootstrapped; a parse failure is refused unless the
+// caller explicitly opts in with --recover-malformed-manifest.
+class MalformedManifestError extends Error {}
+
 function readExistingManifest() {
-  try { return JSON.parse(readFileSync(MANIFEST_PATH, 'utf8')); } catch { return null; }
+  let raw;
+  try {
+    raw = readFileSync(MANIFEST_PATH, 'utf8');
+  } catch (e) {
+    if (e.code === 'ENOENT') return null; // no manifest yet — legitimate first-run bootstrap
+    throw e;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    if (RECOVER_MALFORMED) return null; // explicit opt-in: discard and rebuild from scratch
+    throw new MalformedManifestError(
+      `${MANIFEST_PATH} exists but is not valid JSON (${e.message}). Refusing to silently rebuild it ` +
+      `from scratch, since that would skip existing-path safeguards (notesLocked preservation, ` +
+      `--accept-new gating) for every asset at once. Restore the file from git history, or re-run ` +
+      `with --recover-malformed-manifest to intentionally discard it and bootstrap a fresh manifest.`
+    );
+  }
+}
+
+function readExistingManifestOrExit(mode) {
+  try {
+    return readExistingManifest();
+  } catch (e) {
+    if (e instanceof MalformedManifestError) {
+      console.error(`asset-manifest ${mode}: ${e.message}`);
+      process.exit(1);
+    }
+    throw e;
+  }
 }
 
 function runWrite() {
-  const existing = readExistingManifest();
+  const existing = readExistingManifestOrExit('--write');
   const { manifest, unclassified } = buildCanonicalManifest(existing);
   if (unclassified.length) {
     console.error(`asset-manifest --write: ${unclassified.length} tracked media file(s) match no classification rule:`);
@@ -779,9 +937,9 @@ function deepEqualCanonical(a, b) {
 }
 
 function runCheck() {
-  const existing = readExistingManifest();
+  const existing = readExistingManifestOrExit('--check');
   if (!existing) {
-    console.error(`asset-manifest --check: ${MANIFEST_PATH} is missing or invalid JSON. Run --write first.`);
+    console.error(`asset-manifest --check: ${MANIFEST_PATH} is missing. Run --write first.`);
     process.exit(1);
   }
   const { manifest, unclassified } = buildCanonicalManifest(existing);
@@ -825,6 +983,56 @@ function runCheck() {
     if (!b.required && !b.fallback) errors.push(`optional runtime binding "${b.key}" has no declared fallback`);
   }
 
+  // A committed runtime binding must resolve to an asset actually classified
+  // scope:"runtime" — otherwise the manifest could point live game code at a
+  // source/reference/evidence file (or a path with no asset entry at all)
+  // without ever being told so.
+  const assetByPath = new Map(manifest.assets.map(a => [a.path, a]));
+  for (const b of manifest.runtimeBindings) {
+    if (!b.committed) continue;
+    const asset = assetByPath.get(b.path);
+    if (!asset) errors.push(`runtime binding "${b.key}" is committed but has no manifest asset entry at ${b.path}`);
+    else if (asset.scope !== 'runtime') errors.push(`runtime binding "${b.key}" points at ${b.path}, which is classified scope:"${asset.scope}" (expected "runtime")`);
+  }
+
+  // Structured fallback validation: a free-text `fallback` string is not
+  // machine-checkable. `fallbackKind` says WHAT KIND of substitute exists;
+  // for "asset-chain" kinds, `fallbackChain` names the other bindings the
+  // real drawing code tries, in order, verified to (a) all be real declared
+  // keys and (b) actually terminate somewhere guaranteed to be present,
+  // rather than silently dead-ending.
+  const bindingsByKey = new Map(manifest.runtimeBindings.map(b => [b.key, b]));
+  function chainTerminatesSafely(binding, seen) {
+    if (binding.fallbackKind !== 'asset-chain') return true;
+    if (seen.has(binding.key)) return false; // cycle
+    const chain = binding.fallbackChain || [];
+    if (!chain.length) return false;
+    const last = bindingsByKey.get(chain[chain.length - 1]);
+    if (!last) return false; // unresolved key, reported separately below
+    if (last.required) return true;
+    return chainTerminatesSafely(last, new Set(seen).add(binding.key));
+  }
+  for (const b of manifest.runtimeBindings) {
+    if (!FALLBACK_KINDS.includes(b.fallbackKind)) {
+      errors.push(`runtime binding "${b.key}": unknown fallbackKind "${b.fallbackKind}"`);
+      continue;
+    }
+    if (b.fallbackKind === 'asset-chain') {
+      const chain = b.fallbackChain || [];
+      if (!chain.length) errors.push(`runtime binding "${b.key}": fallbackKind is "asset-chain" but fallbackChain is empty`);
+      const allKeysResolve = chain.every(k => {
+        const ok = bindingsByKey.has(k);
+        if (!ok) errors.push(`runtime binding "${b.key}": fallbackChain references undeclared key "${k}"`);
+        return ok;
+      });
+      if (chain.length && allKeysResolve && !chainTerminatesSafely(b, new Set())) {
+        errors.push(`runtime binding "${b.key}": fallbackChain does not terminate in a required (guaranteed-present) binding or a non-asset-chain fallback`);
+      }
+    } else if (b.fallbackChain) {
+      errors.push(`runtime binding "${b.key}": fallbackChain is only valid when fallbackKind is "asset-chain"`);
+    }
+  }
+
   // Live file integrity: re-derived directly from bytes on every run, never
   // trusted from the manifest itself, so a corrupted or misnamed file cannot
   // hide behind mechanical facts that happen to still look plausible.
@@ -841,7 +1049,7 @@ function runCheck() {
 }
 
 function runReport() {
-  const existing = readExistingManifest();
+  const existing = readExistingManifestOrExit('--report');
   if (!existing) {
     console.error('asset-manifest --report: no manifest to report on. Run --write first.');
     process.exit(1);
@@ -864,12 +1072,16 @@ function runReport() {
     requiredMissing: requiredMissing.map(b => b.key),
     unknownProvenanceCount: unknownProvenance.length,
     unknownProvenanceEntries: unknownProvenance.map(a => a.path),
-    // Every committed file that no declared runtime binding actually points
-    // at — the manifest's own answer to "is this file used by the game at
-    // all?" Distinct from expectedMissingOptionalSlots (which describes
-    // bindings with no file), this describes FILES with no binding.
+    // Every committed RUNTIME-scoped file that no declared runtime binding
+    // actually points at — the manifest's own answer to "is this file used
+    // by the game at all?" Scoped to scope:"runtime" specifically: source
+    // art, North Star references, playtest evidence, and other non-runtime
+    // scopes are never bound by design (they aren't game assets), so
+    // including them here would make every single one look "unused" and bury
+    // the signal this field exists for. Distinct from expectedMissingOptionalSlots
+    // (which describes bindings with no file), this describes FILES with no binding.
     unusedCommittedRuntimeCandidates: manifest.assets
-      .filter(a => !boundPaths.has(a.path))
+      .filter(a => a.scope === 'runtime' && !boundPaths.has(a.path))
       .map(a => a.path),
     intentionalInterimGaps: manifest.assets.filter(a => a.visualReview === 'intentional-interim-gap').map(a => a.path),
     warnings: requiredMissing.length ? [`${requiredMissing.length} required runtime binding(s) missing — see requiredMissing`] : [],
