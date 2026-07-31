@@ -83,8 +83,9 @@ General Store** (equipped gear is never listed there). Spare gear price remains
 `GEAR` carries presentation-only metadata (`tier`, `source`, `trophy`) that changes no
 number. Trophy items get a 🏆 marker everywhere they appear:
 
-- **Eldoria Blade** — Shadow Warden trophy (best weapon, guaranteed first-kill drop).
-- **Wyrm Scale Armor** — Crystal Wyrm trophy (best armor, guaranteed drop).
+- **Eldoria Blade** — Shadow Warden trophy (best weapon, guaranteed boss/trophy drop on
+  every win — chance 1 in the loot table).
+- **Wyrm Scale Armor** — Crystal Wyrm trophy (best armor, guaranteed drop on every win).
 
 ## Screen access and layout
 

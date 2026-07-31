@@ -110,6 +110,14 @@
     text-align: center;
     box-shadow: inset 0 1px 0 rgba(255,214,102,0.15), inset 0 -1px 0 rgba(0,0,0,0.3),
                 0 8px 32px rgba(0,0,0,0.7), 0 0 0 2px #2a1800;
+    /* Foundation C2: EVERY modal panel is bounded inside the viewport and scrolls
+       its own content — the page itself never scrolls, so a long panel (a populated
+       General Store, cooking list, or Save Tools) must contain its overflow or its
+       bottom actions become unreachable on a phone. vh first as the fallback for
+       engines without dvh. */
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
   }
   .modal-title {
     color: #ffd666;

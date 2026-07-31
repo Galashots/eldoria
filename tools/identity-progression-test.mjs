@@ -333,10 +333,14 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     var total = playerDamage();
     var gearB = gearDamageBonus();
     var trainB = player.atkUpgrades * TRAIN_ATK;
+    // The combined base+level contribution is labeled as exactly that — never as
+    // level progression alone (it includes the base 5).
     out.statsLive = stats.indexOf('4') !== -1 &&
       stats.indexOf('30 / ' + xpForNextLevel()) !== -1 &&
       stats.indexOf('18 / 35') !== -1 &&
       stats.indexOf(String(total)) !== -1 &&
+      stats.indexOf('base + level') !== -1 &&
+      stats.indexOf('from level') === -1 &&
       stats.indexOf('+' + gearB) !== -1 &&
       stats.indexOf('+' + trainB) !== -1 &&
       stats.indexOf('7') !== -1;
@@ -361,7 +365,10 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     switchProfile();               // closes the screen (no stale modal)
     selectProfile('mage');
     openCharacter();
-    var mageView = document.getElementById('characterRole').textContent.indexOf('Mage') !== -1;
+    // Default name === role, so the heading itself states the role and the
+    // subtitle de-duplicates to just the grade.
+    var mageView = document.getElementById('characterName').textContent === 'Mage' &&
+      document.getElementById('characterRole').textContent === 'Grade 2';
     closeCharacter();
     out.liveUpdates = afterEquip && afterUnequip && mageView;
     switchProfile();
@@ -459,6 +466,92 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('VISUAL-40: no horizontal overflow at any viewport', allOk.overflow);
   check('VISUAL-41: modal bounded and scrollable at all three viewports', allOk.bounded);
   check('VISUAL-42: screen-reader names identify role, slot, item, comparison, action', allOk.names);
+}
+
+// --- Modal scroll containment at phone portrait (review round 1): EVERY modal
+// panel must stay bounded inside the viewport and scroll its own overflow, with
+// bottom actions reachable and focus still trapped after scrolling.
+{
+  const { browser, page, errors } = await launch();
+  await page.setViewport({ width: 390, height: 844 });
+  const r1 = await page.evaluate(`(() => {
+    localStorage.clear();
+    var out = { bounded: {} };
+    selectProfile('adventurer');
+    function panelContained(id) {
+      var panel = document.querySelector('#' + id + ' .modal');
+      if (!panel) return false;
+      var rect = panel.getBoundingClientRect();
+      var cs = getComputedStyle(panel);
+      return rect.height <= window.innerHeight + 1 && rect.width <= window.innerWidth + 1 &&
+        cs.overflowY === 'auto';
+    }
+    function probe(id, openFn, closeFn) {
+      openFn();
+      out.bounded[id] = panelContained(id);
+      closeFn();
+    }
+    activateArea('farm');
+    var k = Object.keys(cropData)[0];
+    cropData[k].status = 'ready'; cropData[k].type = 'turnip';
+    probe('mathModal', openMathBonus, closeMathBonus);
+    cropData[k].status = 'empty'; cropData[k].type = null;
+    probe('dumplingModal', openDumplingVendor, closeDumplingVendor);
+    probe('saveToolsModal', openSaveTools, closeSaveTools);
+    probe('seedPicker', function () { openSeedPicker(k, cropData[k]); }, closeSeedPicker);
+    probe('questModal', function () { openQuest(); }, closeQuest);
+    probe('characterModal', openCharacter, closeCharacter);
+    // Populated long cooking panel (every recipe + every food owned).
+    for (var f = 0; f < FOOD_TYPES.length; f++) player.food[FOOD_TYPES[f]] = 3;
+    player.hp = 5;   // Eat buttons enabled -> full rows
+    probe('cookingModal', openCooking, closeCooking);
+    player.crops.turnip = 4;
+    openCooking(); cookRecipe('veggie_soup');
+    out.bounded.doubleBatchModal = panelContained('doubleBatchModal');
+    answerDoubleBatch(-1); closeCooking();
+    activateArea('wilds');
+    currentEnemies[0].alive = true;
+    probe('combatModal', function () { openCombat(currentEnemies[0]); }, fleeCombat);
+    activateArea('farm');
+    // The long-Store case: five seed rows, sell, two upgrades, a 25-item spare-gear
+    // list, and the final Leave button — the panel must scroll, not the page.
+    player.inventory = [];
+    for (var i = 0; i < 25; i++) player.inventory.push('wooden_sword');
+    openShop();
+    out.bounded.shopModal = panelContained('shopModal');
+    var panel = document.querySelector('#shopModal .modal');
+    out.storeScrolls = panel.scrollHeight > panel.clientHeight;
+    out.pageStaysPut = document.documentElement.scrollWidth <= window.innerWidth + 1;
+    var leave = document.getElementById('btnClose');
+    leave.scrollIntoView({ block: 'nearest' });
+    var lr = leave.getBoundingClientRect();
+    out.leaveReachable = lr.top >= 0 && lr.bottom <= window.innerHeight + 1;
+    return out;
+  })()`);
+  // Focus stays trapped inside the scrolled Store under real Tab traversal.
+  let scrolledTrap = true;
+  for (let i = 0; i < 15; i++) {
+    await page.keyboard.press('Tab');
+    scrolledTrap = scrolledTrap && await page.evaluate(
+      `document.getElementById('shopModal').contains(document.activeElement)`);
+  }
+  const r2 = await page.evaluate(`(() => {
+    closeShop();
+    var out = { stackClean: modalStack.length === 0 };
+    switchProfile();
+    localStorage.clear();
+    return out;
+  })()`);
+  const allBounded = ['mathModal','shopModal','dumplingModal','saveToolsModal','seedPicker',
+    'cookingModal','doubleBatchModal','combatModal','questModal','characterModal']
+    .every(id => r1.bounded[id]);
+  check('SCROLL-43: every registered modal panel bounded + scroll-contained at phone', allBounded);
+  check('SCROLL-44: populated long Store scrolls inside its bounded panel', r1.storeScrolls && r1.pageStaysPut);
+  check('SCROLL-45: the Store Leave action is reachable after scrolling', r1.leaveReachable);
+  check('SCROLL-46: focus stays trapped in the scrolled Store (real Tab presses)', scrolledTrap && r2.stackClean);
+  check('SCROLL: no console errors', errors.length === 0);
+  if (errors.length) console.log('  errors: ' + errors.join(' | '));
+  await browser.close();
 }
 
 // --- Visual evidence: corrected title, fully equipped screen + bag, upgrade

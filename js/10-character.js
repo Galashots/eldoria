@@ -102,7 +102,7 @@ function renderCharacterStats() {
     ['XP', player.xp + ' / ' + xpForNextLevel()],
     ['HP', player.hp + ' / ' + player.maxHp],
     ['Attack (total)', total],
-    ['· from level', baseLevel],
+    ['· base + level', baseLevel],
     ['· from gear', '+' + gearBonus],
     ['· from Training', '+' + trainBonus],
     ['Heart Crystals', player.hpUpgrades],
@@ -179,9 +179,13 @@ function renderCharacter() {
   var name = profileDisplayName(currentProfile);
   var nameEl = document.getElementById('characterName');
   var roleEl = document.getElementById('characterRole');
-  // The custom name stays the hero's name; the canonical role stays visible beside it.
+  // The custom name stays the hero's name; the canonical role stays visible beside
+  // it. When the display name IS the role (no custom name yet), the heading already
+  // states the role, so the subtitle keeps just the grade instead of repeating it.
   if (nameEl) nameEl.innerHTML = escapeHtml(name);
-  if (roleEl) roleEl.textContent = ident.role + ' · ' + ident.gradeLabel;
+  if (roleEl) roleEl.textContent = (name === ident.role)
+    ? ident.gradeLabel
+    : ident.role + ' · ' + ident.gradeLabel;
   renderPaperDoll();
   renderCharacterStats();
   renderEquippedSlots();

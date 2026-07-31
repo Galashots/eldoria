@@ -249,7 +249,8 @@ var GEAR = {
   crystal_crown:  { name: 'Crystal Crown',   slot: 'head',   damage: 3, tier: 2, source: 'Deep Woods' },
   guardian_armor: { name: 'Guardian Armor',  slot: 'body',   damage: 4, tier: 2, source: 'Deep Woods' },
   shadow_cape:    { name: 'Shadow Cape',     slot: 'cape',   damage: 3, tier: 2, source: 'Deep Woods' },
-  // Boss reward (Shadow Warden) — the best weapon in the game, a guaranteed first-kill trophy.
+  // Boss reward (Shadow Warden) — the best weapon in the game, a guaranteed boss/trophy
+  // drop on every win (chance 1 in the loot table).
   eldoria_blade:  { name: 'Eldoria Blade',   slot: 'weapon', damage: 12, tier: 2, source: 'Shadow Warden', trophy: 'Shadow Warden' },
   // Tier 3 (Mine drops, slice 20) — all stronger than their tier-2 slot-mates. Weapons stay
   // BELOW the Eldoria Blade (12) so slice 17's "best weapon in the game" promise holds.

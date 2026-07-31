@@ -70,11 +70,16 @@ An optional animated overlay uses the same four-frame horizontal format as a bas
 strip: `<hero>-<direction>-<slot>-walk.png`. If it is absent, the static overlay remains
 visible while the base body walks.
 
-The slot overlays are generic per-slot art (one helmet look for every head item, one
-weapon look for every weapon, and so on). That is an intentional interim gap until
-per-item/state art is approved and generated; the Character screen names the exact item
-in text. Base sprites wear only the permanent, child-safe underlayer — reserve all armor,
-capes, helmets, footwear, and weapon silhouettes for overlays.
+Three layers of identity art, in governance order:
+
+1. **Permanent canonical identity clothing/props live in the base hero.** The approved
+   Ranger and Mage bases carry their own canonical outfits and silhouettes — future
+   asset work must preserve that identity, never strip it back to an underlayer.
+2. **Generic progression overlays** (one helmet look for every head item, one weapon
+   look for every weapon, and so on) layer over that identity to show equipment
+   progression. The Character screen names the exact item in text.
+3. **Item-specific art is still deferred** — an intentional interim gap until future
+   per-item/state art is approved and generated.
 
 ## Terrain and crop sprites
 
