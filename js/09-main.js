@@ -542,6 +542,10 @@ var KEY_DIR = {
   w: 'up', s: 'down', a: 'left', d: 'right'
 };
 window.addEventListener('keydown', function (e) {
+  // While a modal is active the shared modal shell (js/01) owns the keyboard:
+  // it routes Escape to that modal's safe path and traps Tab. World controls are
+  // inert behind the overlay, so movement/action keys must not leak through either.
+  if (activeModalId()) return;
   if (KEY_DIR[e.key]) {
     var dir = KEY_DIR[e.key];
     held[dir] = true;
@@ -550,15 +554,6 @@ window.addEventListener('keydown', function (e) {
   }
   // Space or E = action
   if (e.key === ' ' || e.key === 'e' || e.key === 'E') { doAction(); e.preventDefault(); }
-  // Escape closes whichever modal is open
-  if (e.key === 'Escape' && seedPickerOpen) closeSeedPicker();
-  if (e.key === 'Escape' && questOpen) closeQuest();
-  if (e.key === 'Escape' && shopOpen) closeShop();
-  if (e.key === 'Escape' && mathOpen) closeMathBonus();
-  if (e.key === 'Escape' && combatOpen) fleeCombat();
-  if (e.key === 'Escape' && cookingOpen) closeCooking();
-  if (e.key === 'Escape' && dumplingOpen) closeDumplingVendor();
-  if (e.key === 'Escape' && document.getElementById('saveToolsModal').classList.contains('open')) closeSaveTools();
 });
 window.addEventListener('keyup', function (e) {
   if (KEY_DIR[e.key]) { held[KEY_DIR[e.key]] = false; e.preventDefault(); }

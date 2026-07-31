@@ -430,28 +430,33 @@ function saveGame() {
   try { localStorage.setItem('eldoria_save_' + currentProfile, JSON.stringify(data)); } catch (e) {}
 }
 
-// The neutral default label for each slot, shown until the player types their own name.
-var DEFAULT_NAMES = { adventurer: 'Adventurer', mage: 'Mage' };
-
-// What to show for a slot: the player's typed-in name, or the neutral default. The
-// typed name lives only in localStorage on this device — it is never in the game files.
+// What to show for a slot: the player's typed-in name, or the manifest's default role
+// name (HERO_IDENTITIES — Ranger / Mage). The typed name lives only in localStorage on
+// this device — it is never in the game files — and always wins as the hero's name.
 function profileDisplayName(id) {
   try {
     var n = localStorage.getItem('eldoria_name_' + id);
     if (n && n.trim()) return n.trim();
   } catch (e) {}
-  return DEFAULT_NAMES[id] || 'Hero';
+  return (HERO_IDENTITIES[id] && HERO_IDENTITIES[id].defaultName) || 'Hero';
 }
 
 // (Legacy name-keyed save migration removed for the public release. The old first-version
 // saves were long since copied onto the neutral profile ids; saves now live only under
 // eldoria_save_adventurer / eldoria_save_mage.)
 
-// Repaint the two title-screen buttons with the current display names.
+// Repaint the two title-screen buttons from the identity manifest: display name,
+// grade label, and the approved south-facing title portrait. The manifest is the one
+// source of truth for every player-facing identity surface.
 function refreshTitleLabels() {
-  for (var id in DEFAULT_NAMES) {
+  for (var id in HERO_IDENTITIES) {
+    var ident = HERO_IDENTITIES[id];
     var el = document.getElementById('label-' + id);
     if (el) el.textContent = profileDisplayName(id);
+    var grade = document.getElementById('grade-' + id);
+    if (grade) grade.textContent = ident.gradeLabel;
+    var img = document.getElementById('portrait-' + id);
+    if (img && img.getAttribute('src') !== ident.titlePortrait) img.src = ident.titlePortrait;
   }
 }
 
@@ -487,16 +492,21 @@ function selectProfile(id) {
   document.getElementById('profileName').textContent = profileDisplayName(id);
   document.getElementById('titleScreen').classList.add('hide');
   gameActive = true;
+  var heroBtn = document.getElementById('heroBtn');
+  if (heroBtn) heroBtn.disabled = false;   // the Character screen needs an active profile
   updateHUD();
   if (!gameMuted) bgMusic.play().catch(function() {});
 }
 
-// Save and go back to the profile picker.
+// Save and go back to the profile picker. Every open modal is closed through its safe
+// path first so no overlay (or shell stack entry) can outlive the world it belongs to.
 function switchProfile() {
   saveGame();
-  closeShop();
+  closeAllModals();
   gameActive = false;
   currentProfile = null;
+  var heroBtn = document.getElementById('heroBtn');
+  if (heroBtn) heroBtn.disabled = true;
   bgMusic.pause();
   document.getElementById('titleScreen').classList.remove('hide');
 }
@@ -552,13 +562,12 @@ function openSaveTools() {
   saveToolsProfile = 'adventurer';
   document.getElementById('saveToolsText').value = '';
   refreshSaveToolsUI();
-  document.getElementById('saveToolsModal').classList.add('open');
-  focusModal('saveToolsModal');
+  modalShellOpen('saveToolsModal');
 }
 function closeSaveTools() {
-  document.getElementById('saveToolsModal').classList.remove('open');
-  restoreFocus();
+  modalShellClose('saveToolsModal');
 }
+registerModal('saveToolsModal', closeSaveTools);   // Escape = Done
 function setSaveToolsProfile(id) {
   saveToolsProfile = id;
   document.getElementById('saveToolsText').value = '';

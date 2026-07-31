@@ -349,8 +349,7 @@ function openSeedPicker(key, crop) {
     box.appendChild(btn);
   }
   seedPickerOpen = true;
-  document.getElementById('seedPicker').classList.add('open');
-  focusModal('seedPicker');
+  modalShellOpen('seedPicker');
 }
 
 function onSeedPickerClick(e) {
@@ -363,11 +362,11 @@ function onSeedPickerClick(e) {
 
 function closeSeedPicker() {
   seedPickerOpen = false;
-  document.getElementById('seedPicker').classList.remove('open');
   seedPickerKey = null;
   seedPickerCrop = null;
-  restoreFocus();
+  modalShellClose('seedPicker');
 }
+registerModal('seedPicker', closeSeedPicker);   // Escape = cancel seed selection
 
 // ---- Squishy Dumpling vendor + collection MVP ----
 function dumplingCollectionCount() {
@@ -483,23 +482,22 @@ function renderDumplingModal() {
 
 function openDumplingVendor() {
   if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen ||
-      combatOpen || cookingOpen || dumplingOpen) return;
+      combatOpen || cookingOpen || dumplingOpen || characterOpen) return;
   dumplingOpen = true;
   if (dumplingCollectionCount() === 0) {
     document.getElementById('dumplingStatus').textContent =
       'Choose a pull to meet your first dumpling!';
   }
   renderDumplingModal();
-  document.getElementById('dumplingModal').classList.add('open');
-  focusModal('dumplingModal');
+  modalShellOpen('dumplingModal');
   speak('Welcome to the Squishy Dumpling stall. Save gold for a better bundle deal!');
 }
 
 function closeDumplingVendor() {
   dumplingOpen = false;
-  document.getElementById('dumplingModal').classList.remove('open');
-  restoreFocus();
+  modalShellClose('dumplingModal');
 }
+registerModal('dumplingModal', closeDumplingVendor);   // Escape = leave the stall
 
 function buyDumplingBundle(count) {
   var cost = DUMPLING_BUNDLES[count];
@@ -599,7 +597,7 @@ function interactNPC(npc) {
 function openQuest(npc) {
   var npcName = npc ? npc.name : 'Mira';
   var npcId = npc ? npc.id : 'mira';
-  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen || characterOpen) return;
 
   // Voiced greeting on first interaction this session
   if (!npcGreeted[npcId]) {
@@ -644,8 +642,7 @@ function openQuest(npc) {
   }
 
   questOpen = true;
-  document.getElementById('questModal').classList.add('open');
-  focusModal('questModal');
+  modalShellOpen('questModal');
 }
 
 function onQuestAnswerClick(e) {
@@ -673,9 +670,9 @@ function answerQuest(value) {
 
 function closeQuest() {
   questOpen = false;
-  document.getElementById('questModal').classList.remove('open');
-  restoreFocus();
+  modalShellClose('questModal');
 }
+registerModal('questModal', closeQuest);   // Escape = the existing close/decline path
 
 // ---- Kill quests: Mira assigns "defeat a monster" tasks. ----
 // ELD-PLAY-002 pacing rule: a quest may never ask for more kills than the world can

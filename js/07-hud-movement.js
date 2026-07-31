@@ -182,8 +182,9 @@ function update() {
       }
     }
   }
-  // Freeze the player while a modal (shop, math bonus, quest, or battle) is open.
-  if (!shopOpen && !mathOpen && !seedPickerOpen && !questOpen && !combatOpen && !cookingOpen && !dumplingOpen) {
+  // Freeze the player while a modal (shop, math bonus, quest, battle, or the
+  // Character screen) is open.
+  if (!shopOpen && !mathOpen && !seedPickerOpen && !questOpen && !combatOpen && !cookingOpen && !dumplingOpen && !characterOpen) {
     var oldX = player.x, oldY = player.y;
     var dx = 0, dy = 0;
     if (held.left)  dx -= 1;
@@ -248,7 +249,7 @@ function update() {
   // won't instantly reopen it — you walk away and back to re-trigger.
   var nearEnemy = isNearEnemy();
   if (nearEnemy && !wasNearEnemy && !combatOpen && !shopOpen && !mathOpen &&
-      !questOpen && !seedPickerOpen && !dumplingOpen) openCombat(nearEnemy);
+      !questOpen && !seedPickerOpen && !dumplingOpen && !characterOpen) openCombat(nearEnemy);
   wasNearEnemy = !!nearEnemy;
 
   // Travel: stepping onto an EXIT road tile carries you to the other area.
@@ -260,7 +261,7 @@ function update() {
 
 // ---- Area travel (walk onto an edge EXIT tile) ----
 function checkTravel() {
-  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
+  if (shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen || characterOpen) return;
   var col = Math.floor((player.x + player.size / 2) / TILE);
   var row = Math.floor((player.y + player.size / 2) / TILE);
   if (row < 0 || row >= MAP_H || col < 0 || col >= MAP_W) return;
