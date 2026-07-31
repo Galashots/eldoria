@@ -72,6 +72,35 @@ var OVERLAY_DIRECTIONS = ['down', 'up', 'left', 'right'];
 // sprite-file prefixes (assets/adventurer-down.png, assets/mage-up-walk.png, ...).
 var PLAYER_PROFILES = ['adventurer', 'mage'];
 var EQUIPMENT_SLOTS = ['head', 'body', 'weapon', 'cape'];
+
+// ---- Canonical hero identity manifest (Step 5) ----
+// ONE static table governs every player-facing identity surface: default role label,
+// title-screen identity + grade, title portrait source, and the Character-screen
+// paper doll. 'adventurer' / 'mage' stay the INTERNAL profile IDs, localStorage
+// save-key suffixes, and sprite-file prefixes — the manifest only decides what the
+// kids SEE. Ranger and Mage are equal heroes; the grade label records each reader's
+// math level, never an easier or harder mode.
+var HERO_IDENTITIES = {
+  adventurer: {
+    role: 'Ranger',
+    defaultName: 'Ranger',
+    gradeLabel: 'Grade 5',
+    // down-right IS compass south under the approved eight-direction mapping — the
+    // strongest face-visible view, so it is the title portrait for both heroes.
+    titlePortrait: 'assets/adventurer-down-right.png',
+    // Equipment overlays are authored for the original four facings only (see
+    // OVERLAY_DIRECTIONS), so the paper doll uses 'right' — the face-visible view
+    // that can also dress its hero. The title portrait stays exact south.
+    paperDollDirection: 'right'
+  },
+  mage: {
+    role: 'Mage',
+    defaultName: 'Mage',
+    gradeLabel: 'Grade 2',
+    titlePortrait: 'assets/mage-down-right.png',
+    paperDollDirection: 'right'
+  }
+};
 var WALK_FRAMES = 4;
 var WALK_FRAME_MS = 110;
 for (var pp = 0; pp < PLAYER_PROFILES.length; pp++) {
@@ -303,6 +332,7 @@ var wasNearEnemy = false; // same idea for the Wilds enemy (open the battle only
 var seedPickerOpen = false;  // is the "plant which seed?" picker showing?
 var cookingOpen = false;     // is the cooking modal open?
 var dumplingOpen = false;    // is the dumpling vendor / collection modal open?
+var characterOpen = false;   // is the Character & Equipment screen open?
 var selectedDumplingId = null;
 
 // Totals across all crop types (for HUD and checks).

@@ -17,6 +17,7 @@
     <span class="hud-food">&#x1F356; <span id="food">0</span></span>
     <span class="hud-hp">&#x2764; <span id="hp">20</span>/<span id="maxHp">20</span></span>
     <span class="hud-level">&#x2B50; Lv <span id="level">1</span></span>
+    <button class="hud-hero" id="heroBtn" onclick="openCharacter()" aria-label="Open character and equipment" disabled>Hero</button>
     <button class="hud-switch" id="switchBtn" aria-label="Hold to switch hero profile">Switch</button>
     <button class="hud-mute" id="muteBtn" aria-label="Toggle sound" onclick="toggleMute()">&#x1f50a;</button>
   </div>
@@ -32,15 +33,15 @@
     <p class="title-sub">Who's playing?</p>
     <div class="profile-row">
       <button class="profile-btn adventurer" onclick="selectProfile('adventurer')">
-        <img class="profile-portrait" src="assets/adventurer-portrait.png" alt="">
-        <span class="profile-info"><span id="label-adventurer">Adventurer</span><span class="profile-grade">Grade 5</span></span>
+        <img class="profile-portrait" id="portrait-adventurer" src="assets/adventurer-down-right.png" alt="">
+        <span class="profile-info"><span id="label-adventurer">Ranger</span><span class="profile-grade" id="grade-adventurer">Grade 5</span></span>
       </button>
       <button class="rename-btn" onclick="renameProfile('adventurer')" aria-label="Name this hero">✎</button>
     </div>
     <div class="profile-row">
       <button class="profile-btn mage" onclick="selectProfile('mage')">
-        <img class="profile-portrait" src="assets/mage-portrait.png" alt="">
-        <span class="profile-info"><span id="label-mage">Mage</span><span class="profile-grade">Grade 2</span></span>
+        <img class="profile-portrait" id="portrait-mage" src="assets/mage-down-right.png" alt="">
+        <span class="profile-info"><span id="label-mage">Mage</span><span class="profile-grade" id="grade-mage">Grade 2</span></span>
       </button>
       <button class="rename-btn" onclick="renameProfile('mage')" aria-label="Name this hero">✎</button>
     </div>
@@ -154,7 +155,7 @@
     <p class="shop-hint">Back up or restore a hero. Pick a slot, then Export to copy the
        text somewhere safe, or paste a backup and Import.</p>
     <div class="save-tabs">
-      <button class="save-tab" id="saveTab_adventurer" onclick="setSaveToolsProfile('adventurer')">Adventurer</button>
+      <button class="save-tab" id="saveTab_adventurer" onclick="setSaveToolsProfile('adventurer')">Ranger</button>
       <button class="save-tab" id="saveTab_mage" onclick="setSaveToolsProfile('mage')">Mage</button>
     </div>
     <label for="saveToolsText" class="sr-only">Save data</label>
@@ -253,6 +254,36 @@
   </div>
 </div>
 
+<!-- Character & Equipment screen (Step 5): opened from the Hero HUD button. Identity
+     header, paper doll from the existing committed art, live progression stats, four
+     equipment slots, and the spare-gear bag with child-readable comparisons. All
+     content is (re)built by renderCharacter() from live player state. -->
+<div class="modal-overlay" id="characterModal" role="dialog" aria-modal="true" aria-labelledby="characterTitle">
+  <div class="modal character-modal">
+    <div class="character-heading">
+      <h2 class="modal-title" id="characterTitle">Hero</h2>
+      <button class="dumpling-close-x" onclick="closeCharacter()" aria-label="Close character and equipment">×</button>
+    </div>
+    <div class="character-columns">
+      <div class="character-left">
+        <div class="character-identity">
+          <div class="character-name" id="characterName">—</div>
+          <div class="character-role" id="characterRole">—</div>
+        </div>
+        <div class="paper-doll" id="paperDoll"></div>
+        <div class="character-stats" id="characterStats" aria-label="Progression statistics"></div>
+      </div>
+      <div class="character-right">
+        <h3 class="character-section">Equipped</h3>
+        <div id="equippedSlots"></div>
+        <h3 class="character-section">Bag <span class="character-bag-hint">spare gear</span></h3>
+        <div id="bagList"></div>
+      </div>
+    </div>
+    <button class="btn-close" onclick="closeCharacter()" aria-label="Close character and equipment">Done</button>
+  </div>
+</div>
+
 <div id="joystickZone" aria-label="Movement joystick">
   <div id="joystickBase">
     <span class="joystick-arrow arr-up">&#9650;</span>
@@ -277,6 +308,7 @@
 <script defer src="js/07-hud-movement.js"></script>
 <script defer src="js/08-iso-renderer.js"></script>
 <script defer src="js/09-main.js"></script>
+<script defer src="js/10-character.js"></script>
 
 </body>
 </html>

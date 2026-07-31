@@ -34,6 +34,19 @@
   Crystal Wyrm always take ≥3 answered questions at any attainable loadout;
   spent budgets end the phase promptly with child-readable feedback
   (`questionDamageBudget` in `js/05-combat-cooking.js`).
+- **Identity & progression surface** (Step 5, 2026-07-31): the canonical
+  `HERO_IDENTITIES` manifest (`js/02-data-state.js`) governs every player-facing
+  identity — the visible labels are **Ranger** (internal ID `adventurer`) and
+  **Mage** (internal ID `mage`); internal IDs, save keys, and sprite prefixes are
+  unchanged. Title portraits are the committed south-facing `*-down-right.png`
+  sprites (legacy anime portraits removed). A **shared modal lifecycle**
+  (Foundation C2, `js/01-core-canvas.js`) owns open/close, focus trap, Escape
+  safe paths, and background inertness for all ten overlays. The HUD **Hero**
+  button opens the Character & Equipment screen (`js/10-character.js`): paper
+  doll from committed art, live progression stats, four equipment slots, and a
+  bag with child-readable comparisons plus manual equip/unequip
+  (`equipFromBag`/`unequipSlot` in `js/05`) that preserves the gear-instance
+  multiset and saves immediately. Reference: `docs/CHARACTER_INVENTORY.md`.
 
 ## Accepted delivery landmarks
 

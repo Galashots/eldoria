@@ -34,20 +34,119 @@ ctx.imageSmoothingEnabled = false;
 ctx.mozImageSmoothingEnabled = false;
 ctx.webkitImageSmoothingEnabled = false;
 
-// Focus management for modals: move focus into the dialog on open, restore on close.
-var _priorFocus = null;
-function focusModal(modalId) {
-  _priorFocus = document.activeElement || null;
+// ---- Shared modal lifecycle (Foundation C2) ----
+// ONE controller owns the DOM/accessibility lifecycle of every .modal-overlay:
+// open/close presentation, focus capture + Tab trap, Escape routed to each modal's
+// existing safe close/skip/flee path, background inertness, and stale-state cleanup
+// when something closes a modal indirectly (profile switch, combat victory).
+//
+// Gameplay logic and its boolean flags (shopOpen, combatOpen, cookingOpen, ...) stay
+// with their modals: the shell never decides WHETHER a modal may open, only HOW it
+// presents once its owner opens it. The cooking → double-batch flow stacks two
+// overlays by design, so the shell keeps a stack; only the TOP entry is active
+// (focused, trapping Tab, receiving Escape) and everything beneath is inert.
+var MODAL_SAFE_ESCAPE = {};    // modalId -> that modal's existing safe close path
+var modalStack = [];           // ids of open overlays; the active modal is last
+var _modalPriorFocus = {};     // modalId -> element to refocus when it closes
+
+// Each modal's owner registers its safe Escape route once at load.
+function registerModal(modalId, safeEscape) { MODAL_SAFE_ESCAPE[modalId] = safeEscape; }
+function activeModalId() { return modalStack.length ? modalStack[modalStack.length - 1] : null; }
+
+// Everything that must go inert behind an active modal. Overlays lower in the stack
+// are handled separately in syncModalInert.
+var MODAL_BACKGROUND_IDS = ['stage', 'titleScreen', 'joystickZone', 'actionBtn', 'bonusBtn'];
+
+function setInert(el, on) {
+  if (!el) return;
+  // inert blocks focus/AT/clicks in modern browsers; aria-hidden is the fallback
+  // for engines that don't support it yet. The full-screen overlay already blocks
+  // pointer events visually either way.
+  if ('inert' in el) el.inert = on;
+  if (on) el.setAttribute('aria-hidden', 'true');
+  else el.removeAttribute('aria-hidden');
+}
+
+function syncModalInert() {
+  var active = activeModalId();
+  for (var i = 0; i < MODAL_BACKGROUND_IDS.length; i++)
+    setInert(document.getElementById(MODAL_BACKGROUND_IDS[i]), !!active);
+  for (var s = 0; s < modalStack.length; s++)
+    setInert(document.getElementById(modalStack[s]), modalStack[s] !== active);
+}
+
+// Open a registered overlay: show it, remember who had focus, move focus inside,
+// and push it as the active modal.
+function modalShellOpen(modalId) {
   var el = document.getElementById(modalId);
-  if (el && el.querySelector) {
-    var target = el.querySelector('button, input, textarea, [tabindex]');
-    if (target && target.focus) target.focus();
+  if (!el) return;
+  if (modalStack.indexOf(modalId) === -1) modalStack.push(modalId);
+  _modalPriorFocus[modalId] = document.activeElement || null;
+  el.classList.add('open');
+  syncModalInert();
+  var target = el.querySelector('button, input, textarea, [tabindex]');
+  if (target && target.focus) target.focus();
+}
+
+// Close an overlay wherever it sits in the stack (covers indirect closes), then
+// restore focus to whoever opened it — if that opener is still on screen.
+function modalShellClose(modalId) {
+  var el = document.getElementById(modalId);
+  if (el) el.classList.remove('open');
+  var idx = modalStack.indexOf(modalId);
+  if (idx !== -1) modalStack.splice(idx, 1);
+  syncModalInert();
+  var prior = _modalPriorFocus[modalId];
+  delete _modalPriorFocus[modalId];
+  if (prior && prior.focus && document.contains(prior)) prior.focus();
+}
+
+// Close every open modal through its registered SAFE path (topmost first). Used by
+// profile switching so no overlay or stack entry can outlive the world it belongs to.
+function closeAllModals() {
+  var guard = 0;
+  while (modalStack.length && guard++ < 20) {
+    var top = activeModalId();
+    var esc = MODAL_SAFE_ESCAPE[top];
+    if (esc) esc();
+    // A broken escape path must never loop forever — force-close as a last resort.
+    if (activeModalId() === top) modalShellClose(top);
   }
 }
-function restoreFocus() {
-  if (_priorFocus && _priorFocus.focus) _priorFocus.focus();
-  _priorFocus = null;
-}
+
+// One capture-phase listener enforces the active modal's keyboard contract:
+// Tab / Shift+Tab cycle inside it, Escape follows its safe path. Other keys pass
+// through untouched (typing in the Save Tools textarea must keep working).
+document.addEventListener('keydown', function (e) {
+  var active = activeModalId();
+  if (!active) return;
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    var esc = MODAL_SAFE_ESCAPE[active];
+    if (esc) esc();
+    return;
+  }
+  if (e.key !== 'Tab') return;
+  var el = document.getElementById(active);
+  if (!el) return;
+  var nodes = el.querySelectorAll('button, input, textarea, select, a[href], [tabindex]');
+  var focusables = [];
+  for (var i = 0; i < nodes.length; i++) {
+    if (!nodes[i].disabled && nodes[i].offsetParent !== null) focusables.push(nodes[i]);
+  }
+  if (!focusables.length) { e.preventDefault(); return; }
+  var first = focusables[0], last = focusables[focusables.length - 1];
+  var current = document.activeElement;
+  if (el.contains(current)) {
+    if (!e.shiftKey && current === last) { e.preventDefault(); first.focus(); }
+    else if (e.shiftKey && current === first) { e.preventDefault(); last.focus(); }
+  } else {
+    // Focus escaped (or never entered): pull it back inside the active dialog.
+    e.preventDefault();
+    first.focus();
+  }
+}, true);
 
 var TILE = 32;
 var MAP_W = 30;

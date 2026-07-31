@@ -53,6 +53,7 @@ function equipGear(itemId) {
   player.gear[item.slot] = itemId;
   showToast('Equipped ' + item.name + '! +' + item.damage + ' damage');
   speak('You found a ' + item.name + '! Plus ' + item.damage + ' damage!');
+  if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
 }
 
 // What a spare gear item sells for: 5 gold per damage point (the price IS a multiply —
@@ -99,6 +100,48 @@ function renderGearSell() {
       '</div>';
   }
   list.innerHTML = html;
+}
+
+// ---- Manual equipment actions (Step 5: Character & Equipment screen) ----
+// The kid-facing controls over the SAME player.gear / player.inventory model the
+// auto-equip loot path already uses. Invariants: no item is ever duplicated or lost
+// (the gear-instance multiset is preserved), duplicate IDs stay separate instances
+// (exact-index removal), invalid input is a no-op, manual downgrades are allowed,
+// and every change saves immediately. Attack updates flow through playerDamage()
+// automatically because it reads player.gear live.
+
+// Equip one bag item by its exact index in player.inventory. Returns true on success.
+function equipFromBag(index) {
+  if (typeof index !== 'number' || index % 1 !== 0) return false;
+  if (index < 0 || index >= player.inventory.length) return false;
+  var itemId = player.inventory[index];
+  var item = GEAR[itemId];
+  if (!item) return false;
+  player.inventory.splice(index, 1);            // remove THAT exact instance
+  var current = player.gear[item.slot];
+  if (current) player.inventory.push(current);  // the old item goes into the bag
+  player.gear[item.slot] = itemId;
+  showToast('Equipped ' + item.name + '! (+' + item.damage + ' dmg)');
+  speak('You equipped the ' + item.name + '.');
+  updateHUD();
+  if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
+  saveGame();
+  return true;
+}
+
+// Unequip one slot into the bag. Returns true on success; empty/invalid slot is a no-op.
+function unequipSlot(slot) {
+  if (EQUIPMENT_SLOTS.indexOf(slot) === -1) return false;
+  var itemId = player.gear[slot];
+  if (!itemId || !GEAR[itemId]) return false;
+  player.inventory.push(itemId);
+  player.gear[slot] = null;
+  showToast('Put ' + GEAR[itemId].name + ' in your bag.');
+  speak('You put the ' + GEAR[itemId].name + ' in your bag.');
+  updateHUD();
+  if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
+  saveGame();
+  return true;
 }
 
 // XP needed to reach the next level (kept simple: level × 50).
@@ -166,17 +209,16 @@ function updateCombatBars() {
 
 // Start a fight with a specific Wilds enemy. Makes a COPY so the template stays pristine.
 function openCombat(enemyEntry) {
-  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen || characterOpen) return;
   if (!enemyEntry) enemyEntry = isNearEnemy();
   if (!enemyEntry || !enemyEntry.alive) return;
   combatSource = enemyEntry;
   var base = ENEMIES[enemyEntry.type];
   combatEnemy = { name: base.name, hp: base.hp, maxHp: base.hp, attack: base.attack, xpReward: base.xpReward, type: enemyEntry.type };
   combatOpen = true;
-  document.getElementById('combatModal').classList.add('open');
   document.getElementById('combatTitle').textContent = 'A wild ' + combatEnemy.name + '!';
   nextCombatTurn('Solve the problem to attack!');
-  focusModal('combatModal');
+  modalShellOpen('combatModal');   // after the turn renders, so focus lands on an answer
 }
 
 // Show the next question (and the result of the last turn) and refresh the bars.
@@ -550,10 +592,10 @@ function closeCombat() {
   var zone = document.getElementById('slashZone');
   if (zone) zone.style.display = 'none';
   var overlay = document.getElementById('combatModal');
-  overlay.classList.remove('open');
   overlay.classList.remove('slash-mode');
-  restoreFocus();
+  modalShellClose('combatModal');
 }
+registerModal('combatModal', fleeCombat);   // Escape = the existing safe flee path
 
 // ---- Cooking (slice 13a) ----
 // Walk up to the Farm cooking pot and turn crops into food. Each recipe shows its
@@ -579,12 +621,11 @@ function recipeCostText(recipeId) {
 }
 
 function openCooking() {
-  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen || characterOpen) return;
   cookingOpen = true;
-  document.getElementById('cookingModal').classList.add('open');
   renderCooking();
+  modalShellOpen('cookingModal');   // after render, so focus lands on a live row button
   speakToAll('Cook your crops into food. Which dish heals the most?');
-  focusModal('cookingModal');
 }
 
 // (Re)build the recipe rows and the "your food" rows from current state.
@@ -680,8 +721,9 @@ function cookRecipe(recipeId) {
     box.appendChild(btn);
   }
 
-  document.getElementById('doubleBatchModal').classList.add('open');
-  focusModal('doubleBatchModal');
+  // Stacks over the still-open cooking modal by design: the shell makes the bonus
+  // question the active modal and the cooking screen inert underneath it.
+  modalShellOpen('doubleBatchModal');
 }
 
 function makeDoubleBatchQuestion(recipeId) {
@@ -702,8 +744,7 @@ function onDoubleBatchClick(e) {
 }
 
 function answerDoubleBatch(value) {
-  document.getElementById('doubleBatchModal').classList.remove('open');
-  restoreFocus();
+  modalShellClose('doubleBatchModal');
   var correct = (value === doubleBatchAnswer);
   var rec = RECIPES[doubleBatchRecipe];
   if (correct) {
@@ -739,14 +780,17 @@ function eatFood(foodId) {
 
 function closeCooking() {
   cookingOpen = false;
-  document.getElementById('cookingModal').classList.remove('open');
-  restoreFocus();
+  modalShellClose('cookingModal');
 }
+registerModal('cookingModal', closeCooking);            // Escape = leave the pot
+registerModal('doubleBatchModal', function () {          // Escape = the existing skip
+  answerDoubleBatch(-1);                                 // path (keeps the first portion)
+});
 
 // ---- Shop open/close (walk-in building) ----
 function openShop() {
   shopOpen = true;
-  document.getElementById('shopModal').classList.add('open');
+  modalShellOpen('shopModal');
   updateHUD();
   if (currentProfile === 'mage') {
     var lines = 'Welcome to the store! You can buy seeds: ';
@@ -763,13 +807,12 @@ function openShop() {
   } else {
     speakToAll('Which seed earns the most gold profit per harvest? Sell price take away seed cost.');
   }
-  focusModal('shopModal');
 }
 function closeShop() {
   shopOpen = false;
-  document.getElementById('shopModal').classList.remove('open');
-  restoreFocus();
+  modalShellClose('shopModal');
 }
+registerModal('shopModal', closeShop);   // Escape = leave the shop
 
 // ---- Math-bonus auto-harvest (slice 7) ----
 // Answer one quick question right -> auto-harvest ALL ready crops in this area as a
@@ -823,7 +866,7 @@ function makeOptions(answer) {
 }
 
 function openMathBonus() {
-  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen) return;
+  if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen || combatOpen || cookingOpen || dumplingOpen || characterOpen) return;
   if (countReady() === 0) { showToast('No crops ready yet!'); return; }
 
   var q = makeQuestion();
@@ -846,8 +889,7 @@ function openMathBonus() {
   }
 
   mathOpen = true;
-  document.getElementById('mathModal').classList.add('open');
-  focusModal('mathModal');
+  modalShellOpen('mathModal');
 }
 
 function onAnswerClick(e) {
@@ -870,9 +912,9 @@ function answerMath(value) {
 
 function closeMathBonus() {
   mathOpen = false;
-  document.getElementById('mathModal').classList.remove('open');
-  restoreFocus();
+  modalShellClose('mathModal');
 }
+registerModal('mathModal', closeMathBonus);   // Escape = the existing skip path
 
 // Harvest every ready crop in the current area at once; returns how many were collected.
 function autoHarvestReady() {

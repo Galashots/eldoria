@@ -485,6 +485,15 @@
     background: #b0683a; color: #fff; border: 2px solid #ffd666;
     border-radius: 6px; padding: 2px 10px; font-weight: bold; cursor: pointer;
   }
+  /* Hero button: opens the Character & Equipment screen. Sized to the 44px touch
+     target the Character-screen contract requires everywhere. */
+  .hud-hero {
+    background: linear-gradient(180deg, #99dd66 0%, #6aaa33 100%);
+    color: #1a3300; border: 2px solid #ffd666;
+    border-radius: 6px; padding: 2px 12px; font-weight: bold; cursor: pointer;
+    min-width: 44px; min-height: 44px;
+  }
+  .hud-hero:disabled { background: #556644; color: #888; cursor: default; }
   .hud-mute {
     background: #b0683a; color: #fff; border: 2px solid #ffd666;
     border-radius: 6px; padding: 2px 10px; font-size: 1.1rem; cursor: pointer;
@@ -555,11 +564,15 @@
   .profile-btn:active { transform: scale(0.97); }
   .profile-btn.adventurer { background: #88cc55; }
   .profile-btn.mage       { background: #66bbdd; }
+  /* Title portraits are the approved committed hero sprites (south-facing down-right
+     slot). contain + pixelated keeps every head, gear piece, and foot visible and the
+     pixel grid crisp — never crop or smooth the identity art. */
   .profile-portrait {
     width: 52px; height: 52px;
     border-radius: 8px;
     border: 2px solid rgba(0,0,0,0.25);
-    object-fit: cover;
+    object-fit: contain;
+    image-rendering: pixelated;
     flex-shrink: 0;
     background: linear-gradient(135deg, #d4eaff 0%, #f0e8d8 100%);
   }
@@ -628,6 +641,93 @@
   }
   .btn-reset.danger { background: #7a2a2a; }
   .btn-reset:active { transform: scale(0.97); }
+
+  /* ---- Character & Equipment screen (Step 5) ---- */
+  /* Layout target ≈ 75% Diablo / 25% Minecraft: the hero and the four armor slots
+     are the stars; the bag with its plain comparisons sits beside them. Desktop and
+     iPad landscape show two columns; phone portrait falls back to ONE scrolling
+     column (identity + doll first, slots before bag) with no horizontal overflow. */
+  .character-modal {
+    width: min(94vw, 640px);
+    max-height: 90dvh;
+    overflow-y: auto;
+    text-align: left;
+  }
+  .character-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,214,102,0.25);
+    padding-bottom: 6px;
+  }
+  .character-heading .modal-title { flex: 1; margin: 0; padding: 0; border: 0; text-align: left; }
+  .character-columns { display: flex; gap: 16px; align-items: flex-start; }
+  .character-left  { flex: 0 0 42%; display: flex; flex-direction: column; gap: 10px; }
+  .character-right { flex: 1 1 auto; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .character-name { font-size: 1.25rem; font-weight: bold; color: #fff; }
+  .character-role { font-size: 0.9rem; color: #ffe0a0; }
+  /* Paper doll: the base hero with its equipment overlays stacked in draw order.
+     All layers are the same 1:1 committed frames, so absolute-fill stacking keeps
+     them pixel-registered at any display size. */
+  .paper-doll {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 220px;
+    align-self: center;
+    background: radial-gradient(circle at 50% 65%, rgba(255,214,102,0.18), rgba(0,0,0,0.35) 70%);
+    border: 3px solid #92724b;
+    border-radius: 14px;
+  }
+  .paper-doll img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+  .character-stats { display: flex; flex-direction: column; gap: 2px; font-size: 0.9rem; }
+  .character-stats .stat-row { display: flex; justify-content: space-between; gap: 8px; }
+  .character-stats .stat-row b { color: #ffe0a0; font-weight: normal; }
+  .character-stats .stat-row span { color: #fff; font-weight: bold; }
+  .character-section {
+    color: #ffd666;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255,214,102,0.25);
+    padding-bottom: 4px;
+    margin-top: 4px;
+  }
+  .character-bag-hint { font-size: 0.75rem; color: #c8b080; font-weight: normal; }
+  .slot-row, .bag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,214,102,0.12);
+    border-radius: 8px;
+    padding: 6px 8px;
+  }
+  .slot-row.empty { opacity: 0.75; }
+  .slot-info { flex: 1; text-align: left; line-height: 1.3; min-width: 0; }
+  .slot-info small { display: block; font-size: 0.8rem; color: #c8b080; }
+  .slot-info .trophy { color: #ffd666; }
+  .slot-info .cmp-up   { color: #99dd66; }
+  .slot-info .cmp-down { color: #ff9a9a; }
+  .slot-info .cmp-same { color: #c8b080; }
+  /* Equip/Unequip actions keep the contract's 44px touch target. */
+  .modal .btn-equip, .modal .btn-unequip {
+    min-width: 44px; min-height: 44px;
+    padding: 8px 14px; font-size: 0.95rem;
+  }
+  .btn-equip   { background: linear-gradient(180deg, #99dd66 0%, #6aaa33 100%); color: #1a3300; border-color: #4a7722; }
+  .btn-unequip { background: linear-gradient(180deg, #c07a44 0%, #8a5020 100%); color: #fff; border-color: #6a3a10; }
+  .bag-empty { color: #ffe0a0; font-style: italic; font-size: 0.95rem; }
+  @media (max-width: 640px) {
+    .character-columns { flex-direction: column; }
+    .character-left { flex: 1 1 auto; width: 100%; }
+    .character-right { width: 100%; }
+  }
 
   /* Screen-reader-only: hidden visually but announced by assistive tech. */
   .sr-only {
