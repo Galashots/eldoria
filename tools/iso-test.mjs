@@ -720,9 +720,11 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('travel: Farm arrival is inside the map bounds', r.farmInside === true);
   check('save: iso and top-down Town saves share one schema', r.sameSchema === true);
   check('save: world-space position is render-mode independent', r.samePosition === true);
-  // 2 is the schema version this slice started from; porting Town must not migrate saves.
-  check('save: iso Town does not bump the save version',
-    r.saveVersion === 2 && r.version === 2);
+  // The iso Town port itself must not migrate saves. The schema later moved to v3
+  // under the owner-authorized profile-state migration (2026-07-30) — this pin now
+  // guards that ISO work rides the current schema rather than bumping it again.
+  check('save: iso Town rides the current save version without bumping it',
+    r.saveVersion === 3 && r.version === 3);
   check('save: a Town save reloads to the exact same world position',
     r.restored.x === 14 * 32 + 7 && r.restored.y === 11 * 32 + 3 && r.restored.area === 'town');
   await browser.close();

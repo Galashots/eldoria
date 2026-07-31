@@ -1,11 +1,19 @@
 // ---- Profiles & saving (localStorage, one save per kid) ----
-// SAVE FORMAT v2 (slice 14, audit-hardening). The save is now versioned and grouped:
-//   { version:2, area, x, y, player:{...}, areas:{ farm:{tiles}, town:{tiles}, wilds:{tiles} } }
+// SAVE FORMAT v3 (profile & quest-state integrity). Versioned and grouped:
+//   { version:3, area, x, y, player:{...},
+//     areas:{ <name>: { tiles: {...}|null, enemies: { <spawnId>: {alive,respawnAt} } } } }
 // `player` holds everything about the hero (gold, seeds, crops, combat, gear, food);
-// `areas.<name>.tiles` holds each area's per-plot soil state (keyed "row,col").
-// applyState() still loads every OLDER flat save (v1/v0: farmTiles/townTiles/tiles,
-// numeric seeds/crops) by normalizing it into the same shape — see normalizeSave().
-var SAVE_VERSION = 2;
+// `areas.<name>.tiles` holds each area's per-plot soil state (keyed "row,col");
+// `areas.<name>.enemies` holds THIS PROFILE's mutable enemy life state keyed by the
+// stable spawn ID (see enemySpawnId) — the spawn definitions themselves are the
+// immutable ENEMY_SPAWNS templates and are never saved.
+//
+// ALL save input — normal profile loading, pasted imports, and file imports — flows
+// through ONE central parse → validate → migrate → canonicalize path (ingestSaveText /
+// ingestSaveObject below). Older shapes (v2 nested; v1/v0 flat with farmTiles/townTiles/
+// tiles and numeric seeds/crops) migrate deterministically to v3 with every enemy
+// initially alive. Invalid input is rejected without touching the stored save.
+var SAVE_VERSION = 3;
 
 function defaultState() {
   return {
@@ -20,39 +28,278 @@ function defaultState() {
       gear: { weapon: null, head: null, body: null, cape: null },
       inventory: [],
       food: { veggie_soup: 0, carrot_stew: 0, corn_chowder: 0, pumpkin_pie: 0, starfruit_elixir: 0 },
+      killCounts: {},
+      killQuest: null,
+      friends: {},
       dumplings: {},
       dumplingDough: 0,
       pullsSinceLegendary: 0
     },
-    areas: { farm: { tiles: null }, town: { tiles: null }, wilds: { tiles: null }, deepwoods: { tiles: null }, mine: { tiles: null } }
+    areas: {
+      farm:      { tiles: null, enemies: {} },
+      town:      { tiles: null, enemies: {} },
+      wilds:     { tiles: null, enemies: {} },
+      deepwoods: { tiles: null, enemies: {} },
+      mine:      { tiles: null, enemies: {} }
+    }
   };
 }
 
-// Normalize ANY saved shape (v2 nested, or v1/v0 flat) into one predictable object:
-//   { area, x, y, p:{...player fields...}, tiles:{ farm, town, wilds } }
-// This is the single place that knows about old layouts, so applyState() below stays clean.
-function normalizeSave(s) {
-  s = s || {};
-  var out = { area: s.area, x: s.x, y: s.y, p: {}, tiles: {} };
-  if (s.version >= 2 && s.player) {
-    // v2: hero fields live under .player, soil under .areas.<name>.tiles
-    out.p = s.player;
-    out.tiles.farm      = (s.areas && s.areas.farm)      ? s.areas.farm.tiles      : null;
-    out.tiles.town      = (s.areas && s.areas.town)      ? s.areas.town.tiles      : null;
-    out.tiles.wilds     = (s.areas && s.areas.wilds)     ? s.areas.wilds.tiles     : null;
-    out.tiles.deepwoods = (s.areas && s.areas.deepwoods) ? s.areas.deepwoods.tiles : null;
-    out.tiles.mine      = (s.areas && s.areas.mine)      ? s.areas.mine.tiles      : null;
+// ---- Central save ingestion: parse → validate → migrate → canonicalize ----
+// Dependency-free. Shared verbatim by profile loading, paste import, and file import,
+// so every entry point accepts exactly the same saves and rejects exactly the same junk.
+
+function isPlainObject(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+function isFiniteNumber(v) { return typeof v === 'number' && isFinite(v); }
+// A field that is present but not a finite number is a corrupt save, not a legacy gap.
+function badNumber(v) { return v != null && !isFiniteNumber(v); }
+
+// Returns an error string, or null when the shape is acceptable to migrate.
+// Missing legacy fields are fine (they get documented defaults in migrateSaveToV3);
+// PRESENT-but-wrong fields are rejected.
+function validateSaveShape(s) {
+  if (!isPlainObject(s)) return 'save must be a plain JSON object';
+  if (s.version != null) {
+    if (!isFiniteNumber(s.version) || s.version % 1 !== 0 || s.version < 0)
+      return 'invalid version field';
+    if (s.version > SAVE_VERSION) return 'save is from a newer game version';
+  }
+  if (s.area != null) {
+    if (typeof s.area !== 'string') return 'invalid area field';
+    if (!areas[s.area]) return 'unknown area: ' + s.area;   // critical ID — never defaulted
+  }
+  if (badNumber(s.x) || badNumber(s.y)) return 'invalid position';
+
+  var nested = (s.version >= 2);
+  if (nested && !isPlainObject(s.player)) return 'missing player block';
+  var p = nested ? s.player : s;
+
+  var nums = ['gold', 'questsDone', 'hp', 'maxHp', 'level', 'xp',
+              'hpUpgrades', 'atkUpgrades', 'dumplingDough', 'pullsSinceLegendary'];
+  for (var i = 0; i < nums.length; i++)
+    if (badNumber(p[nums[i]])) return 'invalid numeric field: ' + nums[i];
+  if (p.maxHp != null && p.maxHp <= 0) return 'nonsensical maxHp';
+  if (p.level != null && p.level < 1) return 'nonsensical level';
+  // Nonsensical values are rejected, never silently clamped into a playable save.
+  var nonNeg = ['gold', 'questsDone', 'hp', 'xp', 'hpUpgrades', 'atkUpgrades',
+                'dumplingDough', 'pullsSinceLegendary'];
+  for (var nn = 0; nn < nonNeg.length; nn++)
+    if (p[nonNeg[nn]] != null && p[nonNeg[nn]] < 0) return 'negative ' + nonNeg[nn];
+  // The last valid tile origin is (MAP_-1) * TILE; MAP_ * TILE is already off-map.
+  if (s.x != null && (s.x < 0 || s.x > (MAP_W - 1) * TILE)) return 'off-map position x';
+  if (s.y != null && (s.y < 0 || s.y > (MAP_H - 1) * TILE)) return 'off-map position y';
+
+  // seeds/crops: legacy numeric, per-type object, or absent — anything else is corrupt.
+  if (p.seeds != null && typeof p.seeds !== 'number' && !isPlainObject(p.seeds))
+    return 'invalid seeds field';
+  if (p.crops != null && typeof p.crops !== 'number' && !isPlainObject(p.crops))
+    return 'invalid crops field';
+
+  if (p.gear != null && !isPlainObject(p.gear)) return 'invalid gear field';
+  if (p.inventory != null && !Array.isArray(p.inventory)) return 'invalid inventory field';
+  var maps = ['food', 'killCounts', 'friends', 'dumplings'];
+  for (var m = 0; m < maps.length; m++)
+    if (p[maps[m]] != null && !isPlainObject(p[maps[m]])) return 'invalid ' + maps[m] + ' field';
+
+  if (p.killQuest != null) {
+    if (!isPlainObject(p.killQuest)) return 'invalid killQuest field';
+    if (typeof p.killQuest.target !== 'string' || !ENEMIES[p.killQuest.target])
+      return 'unknown killQuest target';
+    if (badNumber(p.killQuest.count) || badNumber(p.killQuest.progress) ||
+        badNumber(p.killQuest.reward)) return 'invalid killQuest numbers';
+  }
+
+  if (s.areas != null) {
+    if (!isPlainObject(s.areas)) return 'invalid areas block';
+    for (var a in s.areas) {
+      if (!areas[a]) return 'unknown area: ' + a;
+      var blk = s.areas[a];
+      if (blk == null) continue;
+      if (!isPlainObject(blk)) return 'invalid area block: ' + a;
+      if (blk.tiles != null) {
+        var tileErr = validateAreaTiles(a, blk.tiles);
+        if (tileErr) return tileErr;
+      }
+      if (blk.enemies != null) {
+        if (!isPlainObject(blk.enemies)) return 'invalid enemies block: ' + a;
+        for (var eid in blk.enemies) {
+          var es = blk.enemies[eid];
+          if (!isPlainObject(es) || typeof es.alive !== 'boolean' ||
+              badNumber(es.respawnAt) || (es.respawnAt != null && es.respawnAt < 0))
+            return 'invalid enemy state: ' + eid;
+        }
+      }
+    }
+  }
+  // v1/v0 flat soil blocks get the same per-tile validation as nested ones.
+  if (!nested) {
+    var flatErr = (s.farmTiles != null && validateAreaTiles('farm', s.farmTiles)) ||
+                  (s.tiles != null && validateAreaTiles('farm', s.tiles)) ||
+                  (s.townTiles != null && validateAreaTiles('town', s.townTiles));
+    if (flatErr) return flatErr;
+  }
+  return null;
+}
+
+// Validate one area's saved soil map, record by record. restoreAreaCrops dereferences
+// each record's fields, so a null/garbage entry that slipped through here would crash
+// profile loading — every key and record must be provably safe before migration.
+var CROP_TILE_STATUSES = { empty: 1, growing: 1, ready: 1 };
+function validateAreaTiles(areaName, tiles) {
+  if (!isPlainObject(tiles)) return 'invalid tiles: ' + areaName;
+  for (var key in tiles) {
+    var mtch = /^(\d+),(\d+)$/.exec(key);
+    if (!mtch) return 'invalid tile key: ' + areaName + ' ' + key;
+    var tr = parseInt(mtch[1], 10), tc = parseInt(mtch[2], 10);
+    if (tr >= MAP_H || tc >= MAP_W || areas[areaName].map[tr][tc] !== SOIL)
+      return 'tile is not soil: ' + areaName + ' ' + key;
+    var rec = tiles[key];
+    if (!isPlainObject(rec)) return 'invalid tile record: ' + areaName + ' ' + key;
+    if (!CROP_TILE_STATUSES[rec.status]) return 'invalid tile status: ' + areaName + ' ' + key;
+    if (rec.type != null && CROP_TYPES.indexOf(rec.type) < 0)
+      return 'invalid tile crop type: ' + areaName + ' ' + key;
+    if (rec.plantedAt != null && (!isFiniteNumber(rec.plantedAt) || rec.plantedAt < 0))
+      return 'invalid tile plantedAt: ' + areaName + ' ' + key;
+    if (rec.status !== 'empty' && rec.plantedAt == null)
+      return 'growing tile missing plantedAt: ' + areaName + ' ' + key;
+  }
+  return null;
+}
+
+// Deterministically migrate a VALIDATED save of any supported version (v0–v3) into
+// the canonical v3 shape. Pure: reads globals' static data tables only, mutates nothing.
+// Documented defaults for missing legacy fields match the pre-v3 loader exactly.
+function migrateSaveToV3(s) {
+  var nested = (s.version >= 2 && isPlainObject(s.player));
+  var p = nested ? s.player : s;
+  var out = defaultState();
+  var op = out.player;
+
+  if (typeof s.area === 'string') out.area = s.area; // validated known; absent → farm
+  if (s.x != null) out.x = s.x;
+  if (s.y != null) out.y = s.y;
+
+  if (p.gold != null) op.gold = p.gold;
+  op.questsDone = (p.questsDone != null) ? p.questsDone : 0;
+  op.level = (p.level != null) ? p.level : 1;
+  op.maxHp = (p.maxHp != null) ? p.maxHp : 20;
+  op.hp = (p.hp != null) ? p.hp : op.maxHp;
+  if (op.hp > op.maxHp) op.hp = op.maxHp;
+  op.xp = (p.xp != null) ? p.xp : 0;
+  op.hpUpgrades = (p.hpUpgrades != null) ? p.hpUpgrades : 0;
+  op.atkUpgrades = (p.atkUpgrades != null) ? p.atkUpgrades : 0;
+
+  // Gear: keep only real gear ids (a corrupt/edited save can't break the paper doll).
+  for (var gs = 0; gs < EQUIPMENT_SLOTS.length; gs++) {
+    var slot = EQUIPMENT_SLOTS[gs];
+    var gid = p.gear ? p.gear[slot] : null;
+    op.gear[slot] = (gid && GEAR[gid]) ? gid : null;
+  }
+  op.inventory = [];
+  if (Array.isArray(p.inventory))
+    for (var iv = 0; iv < p.inventory.length; iv++)
+      if (GEAR[p.inventory[iv]]) op.inventory.push(p.inventory[iv]);
+
+  for (var fi = 0; fi < FOOD_TYPES.length; fi++)
+    op.food[FOOD_TYPES[fi]] = (p.food && isFiniteNumber(p.food[FOOD_TYPES[fi]]))
+      ? p.food[FOOD_TYPES[fi]] : 0;
+
+  op.killCounts = {};
+  if (isPlainObject(p.killCounts))
+    for (var kc in p.killCounts)
+      if (ENEMIES[kc] && isFiniteNumber(p.killCounts[kc]) && p.killCounts[kc] > 0)
+        op.killCounts[kc] = p.killCounts[kc];
+
+  // Active kill quests are NORMALIZED against the CURRENT quest table, never copied
+  // through — otherwise a legacy "Slay 3 Slimes" save would still hit the ELD-PLAY-002
+  // waiting problem this schema exists to remove. Deterministic rules:
+  //   - the quest becomes the current definition for its target (one kill, singular
+  //     name, scaled reward), keeping min(saved progress, new count);
+  //   - if saved progress ALREADY satisfies the current objective, the quest resolves
+  //     during migration: the CURRENT scaled reward is credited to gold and the quest
+  //     clears — non-punitive, no extra kill required (tested);
+  //   - a target with no current quest definition drops the quest (cannot happen with
+  //     today's tables — every legacy target still has a definition).
+  op.killQuest = null;
+  if (isPlainObject(p.killQuest) && ENEMIES[p.killQuest.target]) {
+    var qdef = null;
+    for (var kqi = 0; kqi < KILL_QUESTS.length; kqi++)
+      if (KILL_QUESTS[kqi].target === p.killQuest.target) { qdef = KILL_QUESTS[kqi]; break; }
+    var qprog = isFiniteNumber(p.killQuest.progress) ? Math.max(0, p.killQuest.progress) : 0;
+    if (qdef) {
+      if (qprog >= qdef.count) {
+        op.gold += qdef.reward;   // resolved at migration: credit the scaled reward once
+      } else {
+        op.killQuest = { target: qdef.target, count: qdef.count, reward: qdef.reward,
+                         name: qdef.name, progress: qprog };
+      }
+    }
+  }
+
+  op.friends = {};
+  for (var fr = 0; fr < NPCS.length; fr++)
+    op.friends[NPCS[fr].id] = (p.friends && isFiniteNumber(p.friends[NPCS[fr].id]))
+      ? p.friends[NPCS[fr].id] : 0;
+
+  op.dumplings = {};
+  for (var du = 0; du < DUMPLINGS.length; du++) {
+    var savedCount = p.dumplings && parseInt(p.dumplings[DUMPLINGS[du].id], 10);
+    if (savedCount > 0) op.dumplings[DUMPLINGS[du].id] = savedCount;
+  }
+  op.dumplingDough = Math.max(0, parseInt(p.dumplingDough, 10) || 0);
+  op.pullsSinceLegendary = Math.max(0,
+    Math.min(DUMPLING_PITY_PULLS - 1, parseInt(p.pullsSinceLegendary, 10) || 0));
+
+  // Seeds/crops: legacy plain numbers become per-type objects (count lands on turnip).
+  if (typeof p.seeds === 'number' || p.seeds == null) {
+    var sc = (p.seeds != null) ? p.seeds : 4;
+    for (var st = 0; st < CROP_TYPES.length; st++) op.seeds[CROP_TYPES[st]] = 0;
+    op.seeds.turnip = sc;
   } else {
-    // v1/v0 (flat): hero fields sit directly on the save; soil under farmTiles/townTiles
-    // (and the very first single-area saves used `tiles` for the farm).
-    out.p = s;
-    out.tiles.farm      = s.farmTiles || s.tiles || null;
-    out.tiles.town      = s.townTiles || null;
-    out.tiles.wilds     = null;
-    out.tiles.deepwoods = null;
-    out.tiles.mine      = null;
+    for (var s1 = 0; s1 < CROP_TYPES.length; s1++)
+      op.seeds[CROP_TYPES[s1]] = isFiniteNumber(p.seeds[CROP_TYPES[s1]]) ? p.seeds[CROP_TYPES[s1]] : 0;
+  }
+  if (typeof p.crops === 'number' || p.crops == null) {
+    var cc = (p.crops != null) ? p.crops : 0;
+    for (var ct = 0; ct < CROP_TYPES.length; ct++) op.crops[CROP_TYPES[ct]] = 0;
+    op.crops.turnip = cc;
+  } else {
+    for (var c1 = 0; c1 < CROP_TYPES.length; c1++)
+      op.crops[CROP_TYPES[c1]] = isFiniteNumber(p.crops[CROP_TYPES[c1]]) ? p.crops[CROP_TYPES[c1]] : 0;
+  }
+
+  // Soil tiles by version family; enemy state exists only in v3 saves — every older
+  // save migrates with all enemies alive and timers cleared (empty enemies map).
+  var names = ['farm', 'town', 'wilds', 'deepwoods', 'mine'];
+  for (var an = 0; an < names.length; an++) {
+    var nm = names[an];
+    var tiles = null, enemies = {};
+    if (nested) {
+      var blk = (s.areas && isPlainObject(s.areas[nm])) ? s.areas[nm] : null;
+      if (blk && isPlainObject(blk.tiles)) tiles = blk.tiles;
+      if (s.version >= 3 && blk && isPlainObject(blk.enemies)) enemies = blk.enemies;
+    } else if (nm === 'farm') {
+      tiles = isPlainObject(s.farmTiles) ? s.farmTiles : (isPlainObject(s.tiles) ? s.tiles : null);
+    } else if (nm === 'town') {
+      tiles = isPlainObject(s.townTiles) ? s.townTiles : null;
+    }
+    out.areas[nm] = { tiles: tiles, enemies: enemies };
   }
   return out;
+}
+
+// The one ingestion door. Text in → { ok:true, state, canonicalText } or { ok:false, error }.
+function ingestSaveText(txt) {
+  var parsed;
+  try { parsed = JSON.parse(txt); }
+  catch (e) { return { ok: false, error: 'not valid JSON' }; }
+  return ingestSaveObject(parsed);
+}
+function ingestSaveObject(s) {
+  var err = validateSaveShape(s);
+  if (err) return { ok: false, error: err };
+  var v3 = migrateSaveToV3(s);
+  return { ok: true, state: v3, canonicalText: JSON.stringify(v3) };
 }
 
 // Restore one area's crops: reset all its plots, then lay saved progress back on.
@@ -70,108 +317,85 @@ function restoreAreaCrops(name, tiles) {
   }
 }
 
-function applyState(s) {
-  var n = normalizeSave(s);
-  var p = n.p;
+// Apply a CANONICAL v3 state (always the output of ingestSaveObject/ingestSaveText or
+// defaultState) to the live game. All legacy-shape knowledge lives in the ingestion
+// path above; this function is a straight setter.
+function applyState(v3) {
+  var p = v3.player;
 
-  player.gold = (p.gold != null) ? p.gold : 10;
-  player.questsDone = (p.questsDone != null) ? p.questsDone : 0;
+  player.gold = p.gold;
+  player.questsDone = p.questsDone;
+  player.level = p.level;
+  player.maxHp = p.maxHp;
+  player.hp = p.hp;
+  player.xp = p.xp;
+  player.hpUpgrades = p.hpUpgrades;
+  player.atkUpgrades = p.atkUpgrades;
 
-  // Combat fields (slice 10c). Old saves predate these — default to a fresh level-1
-  // hero at full HP so they load with no errors and no lost progress.
-  player.level = (p.level != null) ? p.level : 1;
-  player.maxHp = (p.maxHp != null) ? p.maxHp : 20;
-  player.hp = (p.hp != null) ? p.hp : player.maxHp;
-  if (player.hp > player.maxHp) player.hp = player.maxHp;   // guard against odd saves
-  player.xp = (p.xp != null) ? p.xp : 0;
-  // Heart Crystals bought (slice 19). Old saves predate it — default to 0.
-  player.hpUpgrades = (p.hpUpgrades != null) ? p.hpUpgrades : 0;
-  // Training sessions bought (slice 21). Old saves predate it — default to 0.
-  player.atkUpgrades = (p.atkUpgrades != null) ? p.atkUpgrades : 0;
+  player.gear = {};
+  for (var gs = 0; gs < EQUIPMENT_SLOTS.length; gs++)
+    player.gear[EQUIPMENT_SLOTS[gs]] = p.gear[EQUIPMENT_SLOTS[gs]] || null;
+  player.inventory = p.inventory.slice();
 
-  // Gear (slice 10c-ii). Old saves have no gear field — default to all-empty slots.
-  if (p.gear) {
-    player.gear = {};
-    for (var gs = 0; gs < EQUIPMENT_SLOTS.length; gs++)
-      player.gear[EQUIPMENT_SLOTS[gs]] = p.gear[EQUIPMENT_SLOTS[gs]] || null;
-  } else {
-    player.gear = { weapon: null, head: null, body: null, cape: null };
-  }
-
-  // Spare-gear bag (slice 18). Old saves predate it — default to empty. Keep only ids
-  // that are real gear, so a corrupt/edited save can't break the shop's sell list.
-  player.inventory = [];
-  if (Array.isArray(p.inventory)) {
-    for (var iv = 0; iv < p.inventory.length; iv++)
-      if (GEAR[p.inventory[iv]]) player.inventory.push(p.inventory[iv]);
-  }
-
-  // Food (slice 13a). Old saves predate it — default to an empty larder.
   player.food = {};
   for (var fi = 0; fi < FOOD_TYPES.length; fi++)
-    player.food[FOOD_TYPES[fi]] = (p.food && p.food[FOOD_TYPES[fi]]) || 0;
+    player.food[FOOD_TYPES[fi]] = p.food[FOOD_TYPES[fi]] || 0;
 
-  // Kill quest tracking (slice 26). Old saves default to empty.
-  player.killCounts = p.killCounts || {};
-  player.killQuest = p.killQuest || null;
+  player.killCounts = {};
+  for (var kc in p.killCounts) player.killCounts[kc] = p.killCounts[kc];
+  player.killQuest = p.killQuest ? {
+    target: p.killQuest.target, count: p.killQuest.count, reward: p.killQuest.reward,
+    name: p.killQuest.name, progress: p.killQuest.progress
+  } : null;
 
-  // Friendship meters (town villagers). Old saves default to 0.
   player.friends = {};
-  for (var fi2 = 0; fi2 < NPCS.length; fi2++)
-    player.friends[NPCS[fi2].id] = (p.friends && p.friends[NPCS[fi2].id]) || 0;
+  for (var fr = 0; fr < NPCS.length; fr++)
+    player.friends[NPCS[fr].id] = p.friends[NPCS[fr].id] || 0;
 
-  // Squishy Dumpling collection MVP. Old saves predate it and start with an empty shelf.
   player.dumplings = {};
-  for (var du = 0; du < DUMPLINGS.length; du++) {
-    var savedCount = p.dumplings && parseInt(p.dumplings[DUMPLINGS[du].id], 10);
-    if (savedCount > 0) player.dumplings[DUMPLINGS[du].id] = savedCount;
-  }
-  player.dumplingDough = Math.max(0, parseInt(p.dumplingDough, 10) || 0);
-  player.pullsSinceLegendary = Math.max(0,
-    Math.min(DUMPLING_PITY_PULLS - 1, parseInt(p.pullsSinceLegendary, 10) || 0));
+  for (var du in p.dumplings) player.dumplings[du] = p.dumplings[du];
+  player.dumplingDough = p.dumplingDough;
+  player.pullsSinceLegendary = p.pullsSinceLegendary;
   selectedDumplingId = firstOwnedDumplingId();
 
-  // Old saves stored seeds/crops as plain numbers → convert to per-type objects.
-  if (typeof p.seeds === 'number' || p.seeds == null) {
-    var sc = (p.seeds != null) ? p.seeds : 4;
-    player.seeds = { turnip: sc, carrot: 0, pumpkin: 0 };
-  } else {
-    player.seeds = {};
-    for (var i = 0; i < CROP_TYPES.length; i++)
-      player.seeds[CROP_TYPES[i]] = p.seeds[CROP_TYPES[i]] || 0;
-  }
-  if (typeof p.crops === 'number' || p.crops == null) {
-    var cc = (p.crops != null) ? p.crops : 0;
-    player.crops = { turnip: cc, carrot: 0, pumpkin: 0 };
-  } else {
-    player.crops = {};
-    for (var i2 = 0; i2 < CROP_TYPES.length; i2++)
-      player.crops[CROP_TYPES[i2]] = p.crops[CROP_TYPES[i2]] || 0;
+  player.seeds = {};
+  player.crops = {};
+  for (var i = 0; i < CROP_TYPES.length; i++) {
+    player.seeds[CROP_TYPES[i]] = p.seeds[CROP_TYPES[i]] || 0;
+    player.crops[CROP_TYPES[i]] = p.crops[CROP_TYPES[i]] || 0;
   }
 
-  // Per-area soil state (farm/town/wilds). Wilds has no soil today, so its tiles stay
-  // empty — but the slot exists so future Wilds plots/chests can save with no new format.
-  restoreAreaCrops('farm', n.tiles.farm);
-  restoreAreaCrops('town', n.tiles.town);
-  restoreAreaCrops('wilds', n.tiles.wilds);
-  restoreAreaCrops('deepwoods', n.tiles.deepwoods);
-  restoreAreaCrops('mine', n.tiles.mine);
+  // THIS PROFILE's enemy world: rebuilt from the immutable templates + saved life
+  // state. Expired respawn timers normalize to alive inside buildProfileEnemies.
+  AREA_ENEMIES = buildProfileEnemies(v3.areas);
 
-  var area = areas[n.area] ? n.area : 'farm';   // accept any known area; default to farm
-  activateArea(area);
+  // Per-area soil state. Wilds/Deep Woods/Mine have no soil today, but the slots
+  // exist so future plots/chests can save with no new format.
+  restoreAreaCrops('farm', v3.areas.farm.tiles);
+  restoreAreaCrops('town', v3.areas.town.tiles);
+  restoreAreaCrops('wilds', v3.areas.wilds.tiles);
+  restoreAreaCrops('deepwoods', v3.areas.deepwoods.tiles);
+  restoreAreaCrops('mine', v3.areas.mine.tiles);
 
-  player.x = (n.x != null) ? n.x : 5 * TILE;
-  player.y = (n.y != null) ? n.y : 8 * TILE;
+  activateArea(areas[v3.area] ? v3.area : 'farm');
+
+  player.x = v3.x;
+  player.y = v3.y;
 
   // Visual overlays need no sync step: they read player.gear directly, which this
   // function has already restored (see hasVisualEquipment).
 }
 
+// Load one profile's stored save through the central ingestion path. Returns the
+// CANONICAL v3 state, null when no save exists, or { corrupt: true, error } when the
+// stored text exists but fails ingestion — callers must not overwrite that raw data.
 function loadGame(profile) {
-  try {
-    var raw = localStorage.getItem('eldoria_save_' + profile);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) { return null; }
+  var raw = null;
+  try { raw = localStorage.getItem('eldoria_save_' + profile); } catch (e) {}
+  if (!raw) return null;
+  var result = ingestSaveText(raw);
+  if (!result.ok) return { corrupt: true, error: result.error };
+  return result.state;
 }
 
 function saveGame() {
@@ -192,13 +416,16 @@ function saveGame() {
       dumplingDough: player.dumplingDough,
       pullsSinceLegendary: player.pullsSinceLegendary
     },
-    areas: {
-      farm:      { tiles: areas.farm.crops },
-      town:      { tiles: areas.town.crops },
-      wilds:     { tiles: areas.wilds.crops },
-      deepwoods: { tiles: areas.deepwoods.crops },
-      mine:      { tiles: areas.mine.crops }
-    }
+    areas: (function () {
+      var enemyState = serializeProfileEnemies();   // wilds/deepwoods/mine only
+      return {
+        farm:      { tiles: areas.farm.crops,      enemies: {} },
+        town:      { tiles: areas.town.crops,      enemies: {} },
+        wilds:     { tiles: areas.wilds.crops,     enemies: enemyState.wilds },
+        deepwoods: { tiles: areas.deepwoods.crops, enemies: enemyState.deepwoods },
+        mine:      { tiles: areas.mine.crops,      enemies: enemyState.mine }
+      };
+    })()
   };
   try { localStorage.setItem('eldoria_save_' + currentProfile, JSON.stringify(data)); } catch (e) {}
 }
@@ -243,10 +470,20 @@ function renameProfile(id) {
   }
 }
 
-// Pick a slot: migrate any old save, load it (or a fresh start), and begin playing.
+// Pick a slot: ingest+migrate any stored save, load it (or a fresh start), and begin
+// playing. A CORRUPT stored save refuses entry instead of loading defaults: entering
+// would let the 3-second autosave silently overwrite recoverable raw data. The raw
+// text stays untouched in localStorage for Save Tools export/repair/reset.
 function selectProfile(id) {
+  var loaded = loadGame(id);
+  if (loaded && loaded.corrupt) {
+    showToast(profileDisplayName(id) + "'s save looks damaged (" + loaded.error +
+      '). Open Save Tools to export, repair, or reset it — nothing was erased.');
+    speak('That save looks damaged. Ask a grown-up to open Save Tools and fix it.');
+    return;
+  }
   currentProfile = id;
-  applyState(loadGame(id) || defaultState());
+  applyState(loaded || defaultState());
   document.getElementById('profileName').textContent = profileDisplayName(id);
   document.getElementById('titleScreen').classList.add('hide');
   gameActive = true;
@@ -368,24 +605,29 @@ function loadSaveFile(evt) {
   reader.onload = function (e) {
     var txt = (e.target.result || '').trim();
     var name = profileDisplayName(saveToolsProfile);
-    try { JSON.parse(txt); } catch (err) { showToast("That file isn't a valid save."); return; }
+    var result = ingestSaveText(txt);   // same central path as pasted imports
+    if (!result.ok) { showToast("That file isn't a valid save (" + result.error + ').'); return; }
     try {
-      localStorage.setItem('eldoria_save_' + saveToolsProfile, txt);
+      // Store the CANONICAL v3 form, never the submitted raw text.
+      localStorage.setItem('eldoria_save_' + saveToolsProfile, result.canonicalText);
       showToast('Loaded ' + name + "'s save from file!");
-      document.getElementById('saveToolsText').value = txt;
+      document.getElementById('saveToolsText').value = result.canonicalText;
     } catch (err) { showToast('Could not save (storage full?).'); }
   };
   reader.readAsText(file);
   evt.target.value = '';
 }
-// Import: validate pasted text is real JSON, then write it into the selected slot.
+// Import: run pasted text through the central ingestion path, then store the
+// canonical v3 result. A failed import never touches the existing stored save.
 function importSave() {
   var txt = (document.getElementById('saveToolsText').value || '').trim();
   var name = profileDisplayName(saveToolsProfile);
   if (!txt) { showToast('Paste a backup first.'); return; }
-  try { JSON.parse(txt); } catch (e) { showToast("That isn't valid save text."); return; }
+  var result = ingestSaveText(txt);   // same central path as file imports
+  if (!result.ok) { showToast("That isn't valid save text (" + result.error + ').'); return; }
   try {
-    localStorage.setItem('eldoria_save_' + saveToolsProfile, txt);
+    // Store the CANONICAL v3 form, never the submitted raw text.
+    localStorage.setItem('eldoria_save_' + saveToolsProfile, result.canonicalText);
     showToast('Imported into ' + name + '!');
   } catch (e) { showToast('Could not save (storage full?).'); }
 }

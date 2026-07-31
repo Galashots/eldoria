@@ -257,28 +257,90 @@ var GEAR = {
   wyrm_scale:     { name: 'Wyrm Scale Armor', slot: 'body',  damage: 9 }
 };
 
-// ---- Area enemies (slice 10c-ii / 16): monsters along each combat area's trail, easy → hard.
-// Walk into one (or tap Action beside it) to start a battle. `alive` flips false when
-// defeated and back to true whenever the player re-enters that area, so enemies respawn. ----
-var WILDS_ENEMIES = [
-  { row: 8, col: 8,  type: 'slime',  alive: true },
-  { row: 8, col: 14, type: 'bat',    alive: true },
-  { row: 8, col: 20, type: 'goblin', alive: true }
-];
-var DEEPWOODS_ENEMIES = [
-  { row: 8, col: 8,  type: 'wolf',  alive: true },
-  { row: 8, col: 14, type: 'bear',  alive: true },
-  { row: 8, col: 20, type: 'troll', alive: true },
-  { row: 8, col: 22, type: 'shadow_warden', alive: true }  // the boss, at the very end of the trail
-];
-// The Mine (slice 20): tier-3 trail, two enemies then the Crystal Wyrm boss at the end.
-var MINE_ENEMIES = [
-  { row: 8, col: 8,  type: 'rock_golem',   alive: true },
-  { row: 8, col: 14, type: 'magma_slug',   alive: true },
-  { row: 8, col: 22, type: 'crystal_wyrm', alive: true }  // the boss, at the very end of the trail
-];
-// Which enemy list belongs to which area. Areas not listed (farm/town) have no enemies.
-var AREA_ENEMIES = { wilds: WILDS_ENEMIES, deepwoods: DEEPWOODS_ENEMIES, mine: MINE_ENEMIES };
+// ---- Area enemies (slice 10c-ii / 16, reworked for profile-owned state): monsters along
+// each combat area's trail, easy → hard. Walk into one (or tap Action beside it) to start
+// a battle.
+//
+// ENEMY_SPAWNS holds the IMMUTABLE spawn definitions (where each enemy stands and what it
+// is). It is a shared template: nothing at runtime may mutate it. The MUTABLE life state
+// ({ alive, respawnAt }) belongs to the selected PROFILE: it is rebuilt from the profile's
+// save on load (buildProfileEnemies) and persisted per profile under
+// areas.<area>.enemies.<spawnId> in save v3, so one kid's defeats never touch the other's
+// world. Dead enemies revive when their 30-second respawnAt expires; the timer is honored
+// across travel, reload, and profile switches — leaving and returning does NOT revive
+// anything early.
+var ENEMY_SPAWNS = {
+  wilds: [
+    { row: 8, col: 8,  type: 'slime'  },
+    { row: 8, col: 14, type: 'bat'    },
+    { row: 8, col: 20, type: 'goblin' }
+  ],
+  deepwoods: [
+    { row: 8, col: 8,  type: 'wolf'  },
+    { row: 8, col: 14, type: 'bear'  },
+    { row: 8, col: 20, type: 'troll' },
+    { row: 8, col: 22, type: 'shadow_warden' }  // the boss, at the very end of the trail
+  ],
+  // The Mine (slice 20): tier-3 trail, two enemies then the Crystal Wyrm boss at the end.
+  mine: [
+    { row: 8, col: 8,  type: 'rock_golem'   },
+    { row: 8, col: 14, type: 'magma_slug'   },
+    { row: 8, col: 22, type: 'crystal_wyrm' }  // the boss, at the very end of the trail
+  ]
+};
+
+// Stable, area-qualified spawn ID — the save key for one placed enemy's mutable state.
+// Derived from area + type + position so it survives reordering of the spawn arrays.
+function enemySpawnId(area, spawn) {
+  return area + ':' + spawn.type + ':r' + spawn.row + 'c' + spawn.col;
+}
+
+// Build the selected profile's runtime enemy collections from the immutable templates
+// plus that profile's saved mutable state ({ alive, respawnAt } by spawn ID). Unknown
+// saved IDs are ignored; missing entries mean "alive" (the legacy default); an already-
+// expired respawn timer normalizes to alive right here so stale timers never linger.
+function buildProfileEnemies(savedAreas) {
+  var built = {};
+  for (var area in ENEMY_SPAWNS) {
+    var savedForArea = (savedAreas && savedAreas[area] && savedAreas[area].enemies) || {};
+    built[area] = [];
+    for (var i = 0; i < ENEMY_SPAWNS[area].length; i++) {
+      var spawn = ENEMY_SPAWNS[area][i];
+      var id = enemySpawnId(area, spawn);
+      var saved = savedForArea[id];
+      var runtime = { id: id, row: spawn.row, col: spawn.col, type: spawn.type,
+                      alive: true, respawnAt: 0 };
+      if (saved && saved.alive === false) {
+        if (typeof saved.respawnAt === 'number' && isFinite(saved.respawnAt) &&
+            saved.respawnAt > Date.now()) {
+          runtime.alive = false;
+          runtime.respawnAt = saved.respawnAt;
+        }
+        // else: timer expired (or malformed) → stays alive with a cleared timer.
+      }
+      built[area].push(runtime);
+    }
+  }
+  return built;
+}
+
+// Serialize the profile-owned runtime state back into the save v3 shape.
+function serializeProfileEnemies() {
+  var out = {};
+  for (var area in AREA_ENEMIES) {
+    out[area] = {};
+    for (var i = 0; i < AREA_ENEMIES[area].length; i++) {
+      var e = AREA_ENEMIES[area][i];
+      out[area][e.id] = { alive: !!e.alive, respawnAt: e.alive ? 0 : (e.respawnAt || 0) };
+    }
+  }
+  return out;
+}
+
+// The SELECTED PROFILE's runtime enemy collections, keyed by area. Rebuilt on every
+// profile load (applyState → buildProfileEnemies). Areas not listed (farm/town) have
+// no enemies.
+var AREA_ENEMIES = buildProfileEnemies(null);
 // Live pointer to the current area's enemies (mirrors how `map`/`cropData` work).
 var currentEnemies = [];
 

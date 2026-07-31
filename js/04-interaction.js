@@ -677,17 +677,27 @@ function closeQuest() {
   restoreFocus();
 }
 
-// ---- Kill quests: Mira assigns "defeat N monsters" tasks. ----
+// ---- Kill quests: Mira assigns "defeat a monster" tasks. ----
+// ELD-PLAY-002 pacing rule: a quest may never ask for more kills than the world can
+// offer at once. Each combat area currently places exactly ONE of every enemy type
+// (see ENEMY_SPAWNS), and dead enemies take 30 seconds to respawn — so a multi-kill
+// quest forced the kid to stand around waiting. Until multiple simultaneous instances
+// exist, every offered quest requires ONE kill.
+// Rewards keep the old per-kill economics deterministically:
+//   new reward = Math.round(old reward / old count)   (round half up)
+// slime 15/3→5 · bat 15/3→5 · goblin 20/2→10 · wolf 25/3→8 · bear 30/2→15 ·
+// troll 35/2→18 · rock_golem 40/2→20 · magma_slug 40/2→20 · crystal_wyrm 50/1→50
+// (already one kill — unchanged).
 var KILL_QUESTS = [
-  { target: 'slime',        count: 3,  reward: 15, name: 'Slay 3 Slimes',       tier: 1 },
-  { target: 'bat',          count: 3,  reward: 15, name: 'Slay 3 Bats',         tier: 1 },
-  { target: 'goblin',       count: 2,  reward: 20, name: 'Slay 2 Goblins',      tier: 1 },
-  { target: 'wolf',         count: 3,  reward: 25, name: 'Slay 3 Wolves',       tier: 2 },
-  { target: 'bear',         count: 2,  reward: 30, name: 'Slay 2 Bears',        tier: 2 },
-  { target: 'troll',        count: 2,  reward: 35, name: 'Slay 2 Trolls',       tier: 2 },
-  { target: 'rock_golem',   count: 2,  reward: 40, name: 'Slay 2 Rock Golems',  tier: 3 },
-  { target: 'magma_slug',   count: 2,  reward: 40, name: 'Slay 2 Magma Slugs',  tier: 3 },
-  { target: 'crystal_wyrm', count: 1,  reward: 50, name: 'Slay the Crystal Wyrm', tier: 3 }
+  { target: 'slime',        count: 1, reward: 5,  name: 'Slay a Slime',          tier: 1 },
+  { target: 'bat',          count: 1, reward: 5,  name: 'Slay a Bat',            tier: 1 },
+  { target: 'goblin',       count: 1, reward: 10, name: 'Slay a Goblin',         tier: 1 },
+  { target: 'wolf',         count: 1, reward: 8,  name: 'Slay a Wolf',           tier: 2 },
+  { target: 'bear',         count: 1, reward: 15, name: 'Slay a Bear',           tier: 2 },
+  { target: 'troll',        count: 1, reward: 18, name: 'Slay a Troll',          tier: 2 },
+  { target: 'rock_golem',   count: 1, reward: 20, name: 'Slay a Rock Golem',     tier: 3 },
+  { target: 'magma_slug',   count: 1, reward: 20, name: 'Slay a Magma Slug',     tier: 3 },
+  { target: 'crystal_wyrm', count: 1, reward: 50, name: 'Slay the Crystal Wyrm', tier: 3 }
 ];
 
 function assignKillQuest() {
