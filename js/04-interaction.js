@@ -618,7 +618,6 @@ function openQuest(npc) {
       player.killQuest = { target: kq.target, count: kq.count, reward: kq.reward, name: kq.name, progress: 0 };
       showToast('New quest: ' + kq.name + '!');
       speak(npcName + ' says: Can you help? ' + kq.name + '! I will pay ' + kq.reward + ' gold.');
-      recordOnboardingMilestone('acceptedQuest');
       saveGame();
     }
   } else if (npcId === 'mira' && player.killQuest) {

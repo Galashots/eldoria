@@ -400,6 +400,7 @@ function draw() {
   pops = keep;
 
   // End screen shake
+  drawOnboardingWorldHighlight(now);
   if (now < shakeUntil) ctx.restore();
 }
 

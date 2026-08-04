@@ -214,6 +214,7 @@ function drawIsoWorld() {
   }
   drawIsoCues(now);
   drawIsoPops(now);
+  drawOnboardingWorldHighlight(now);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 

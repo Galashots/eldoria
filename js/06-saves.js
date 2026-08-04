@@ -15,8 +15,9 @@
 // ingestSaveObject below). Older shapes (v3 without onboarding; v2 nested; v1/v0 flat
 // with farmTiles/townTiles/tiles and numeric seeds/crops) migrate deterministically to
 // v4 with every enemy initially alive. Every pre-v4 save migrates with the guide
-// 'skipped' — an established player is never forced into the tutorial. Invalid input
-// is rejected without touching the stored save.
+// 'skipped' — an established player is never forced into the tutorial. A v4 save
+// missing the whole onboarding block is a supported recovery case and also migrates
+// to 'skipped'. Invalid input is rejected without touching the stored save.
 var SAVE_VERSION = 4;
 
 // The canonical onboarding milestone ids, in guide order (mirrors ONBOARDING_MILESTONES
@@ -121,20 +122,31 @@ function validateSaveShape(s) {
   for (var m = 0; m < maps.length; m++)
     if (p[maps[m]] != null && !isPlainObject(p[maps[m]])) return 'invalid ' + maps[m] + ' field';
 
-  // Onboarding (v4): absent is fine (pre-v4 saves migrate to 'skipped'); a PRESENT
-  // block must be exactly the canonical shape — unknown statuses, unknown milestone
-  // keys, or non-boolean milestone values are a corrupt save, never defaulted.
-  if (p.onboarding != null) {
+  // Onboarding (v4): absent is fine (pre-v4 saves and v4 recovery saves migrate to
+  // 'skipped'); a PRESENT v4 block must contain exactly the six canonical boolean
+  // milestones. Unknown or missing keys, bad values, and contradictory completed
+  // states are corrupt saves, never defaulted.
+  if (p.onboarding != null && s.version >= 4) {
     var ob = p.onboarding;
     if (!isPlainObject(ob)) return 'invalid onboarding field';
     if (!ONBOARDING_STATUSES[ob.status]) return 'invalid onboarding status';
     if (!isPlainObject(ob.milestones)) return 'invalid onboarding milestones';
+    if (Object.keys(ob.milestones).length !== ONBOARDING_MILESTONE_IDS.length)
+      return 'onboarding milestones must contain exactly six keys';
+    for (var oi = 0; oi < ONBOARDING_MILESTONE_IDS.length; oi++)
+      if (!(ONBOARDING_MILESTONE_IDS[oi] in ob.milestones))
+        return 'missing onboarding milestone: ' + ONBOARDING_MILESTONE_IDS[oi];
     for (var om in ob.milestones) {
       if (ONBOARDING_MILESTONE_IDS.indexOf(om) < 0)
         return 'unknown onboarding milestone: ' + om;
       if (typeof ob.milestones[om] !== 'boolean')
         return 'invalid onboarding milestone value: ' + om;
     }
+    var allOnboardingDone = ONBOARDING_MILESTONE_IDS.every(function (id) {
+      return ob.milestones[id] === true;
+    });
+    if (ob.status === 'completed' && !allOnboardingDone)
+      return 'completed onboarding requires all milestones';
   }
 
   if (p.killQuest != null) {
@@ -274,14 +286,20 @@ function migrateSaveToV4(s) {
 
   // Onboarding (Mira's Guide): only a v4 save carries real guide state. EVERY pre-v4
   // save — and a v4 save missing the block — migrates 'skipped': those players
-  // already know the loop, and a forced tutorial would be punitive. A valid stored
-  // block copies through with any missing milestone defaulting to false.
+  // already know the loop, and a forced tutorial would be punitive. A present v4
+  // block is exact-shape validated and copies every milestone through. An active
+  // block with all six true canonicalizes to completed during migration.
   if (s.version >= 4 && isPlainObject(p.onboarding)) {
     op.onboarding = defaultOnboarding(p.onboarding.status);
     for (var om = 0; om < ONBOARDING_MILESTONE_IDS.length; om++) {
       var omId = ONBOARDING_MILESTONE_IDS[om];
-      if (p.onboarding.milestones[omId] === true) op.onboarding.milestones[omId] = true;
+      op.onboarding.milestones[omId] = p.onboarding.milestones[omId] === true;
     }
+    var migratedAllOnboardingDone = ONBOARDING_MILESTONE_IDS.every(function (id) {
+      return op.onboarding.milestones[id] === true;
+    });
+    if (op.onboarding.status === 'active' && migratedAllOnboardingDone)
+      op.onboarding.status = 'completed';
   } else {
     op.onboarding = defaultOnboarding('skipped');
   }

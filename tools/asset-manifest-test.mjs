@@ -823,10 +823,10 @@ function resolveBaseRef() {
   }
   if (enforce) {
     check('49: no runtime JS/HTML/CSS diff vs main (governance-only gate, EXPECT_NO_RUNTIME_DELTA=1)',
-      baseRef ? runtimeDiff.trim() === '' : true);
-    if (!baseRef) console.log('  (49: could not resolve a main ref in this checkout to diff against — the PR\'s own GitHub diff view and the CI worktree-clean gate are the enforcement here instead)');
+      baseRef ? runtimeDiff.trim() === '' : false);
+    if (!baseRef) console.log('  (49: could not resolve a main ref in this checkout — failing closed because EXPECT_NO_RUNTIME_DELTA=1)');
   } else {
-    check('49: runtime-delta gate not requested (feature PR — visual evidence is the PR capture set)', true);
+    console.log('SKIP 49: runtime-delta gate not requested (feature PR — visual evidence is the PR capture set)');
   }
 }
 // 50/51/53: these restate facts already enforced by the npm test / assets:verify
