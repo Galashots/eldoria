@@ -138,7 +138,7 @@ function updateOnboardingChip() {
   var hud = document.querySelector('.hud');
   if (hud) {
     var top = (hud.offsetTop + hud.offsetHeight + 4) + 'px';
-    if (el.style.top !== top) el.style.top = top;
+    if (panel.style.top !== top) panel.style.top = top;
   }
   var ob = (gameActive && currentProfile) ? player.onboarding : null;
   var active = !!(ob && ob.status === 'active' && !combatOpen);

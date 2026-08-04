@@ -92,6 +92,39 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     out.activeAllCanonicalizes = activeAllResult.ok &&
       activeAllResult.state.player.onboarding.status === 'completed';
 
+    // ELD-SAVE-001: draft-build saves may contain metMira without acceptedQuest.
+    // The ingestion door repairs the pair before runtime can complete the guide.
+    var divergentMilestones = Object.assign({}, fullFalse, {
+      planted: true, harvested: true, usedCrop: true, metMira: true
+    });
+    var divergent = { version: 4,
+      player: { onboarding: { status: 'active', milestones: divergentMilestones } }, areas: {} };
+    var repaired = ingestSaveObject(divergent);
+    out.divergentPairRepairs = repaired.ok &&
+      repaired.state.player.onboarding.milestones.metMira === true &&
+      repaired.state.player.onboarding.milestones.acceptedQuest === true;
+
+    // Full regression: store the divergent save, load through the public profile
+    // door, enter the Wilds through the real travel verb, and reload the completion.
+    switchProfile();
+    localStorage.setItem('eldoria_save_mage', JSON.stringify(divergent));
+    selectProfile('mage');
+    activateArea('town');
+    var divergentExitRow = 10;
+    for (var der = 0; der < MAP_H; der++)
+      if (areas.town.map[der][MAP_W - 1] === EXIT) { divergentExitRow = der; break; }
+    player.x = (MAP_W - 1) * TILE; player.y = divergentExitRow * TILE;
+    checkTravel();
+    var divergentReload = loadGame('mage');
+    out.divergentPairFullPath = currentArea === 'wilds' &&
+      player.onboarding.status === 'completed' && divergentReload &&
+      divergentReload.corrupt !== true &&
+      divergentReload.player.onboarding.status === 'completed' &&
+      divergentReload.player.onboarding.milestones.acceptedQuest === true;
+    switchProfile();
+    localStorage.removeItem('eldoria_save_mage');
+    selectProfile('adventurer');
+
     // (6) Save/reload preserves recorded progress for the active profile.
     recordOnboardingMilestone('planted');
     saveGame();
@@ -123,6 +156,8 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('ONB-STATE: malformed onboarding blocks are rejected', r.rejects.every(Boolean));
   check('ONB-STATE: active/skipped/completed all survive canonical re-ingestion', r.statusesSurvive);
   check('ONB-STATE: active with all six true canonicalizes to completed', r.activeAllCanonicalizes);
+  check('ONB-STATE: divergent Mira milestone pairs repair at ingestion', r.divergentPairRepairs);
+  check('ONB-STATE: repaired divergent save completes and reloads through Wilds', r.divergentPairFullPath);
   check('ONB-STATE: save/reload preserves recorded progress', r.reloadKeepsProgress);
   check('ONB-STATE: onboarding progress is profile-isolated', r.profileIsolated);
   check('ONB-STATE: SAVE_VERSION is exactly 4, stored saves carry it', r.version4);
@@ -132,6 +167,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
 // --- Progress behavior through the real gameplay verbs ---
 {
   const { browser, page } = await launch();
+  await page.setViewport({ width: 375, height: 667 });
   const r = await page.evaluate(() => {
     localStorage.clear();
     var out = {};
@@ -351,6 +387,9 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
 
     var oldWidth = document.documentElement.scrollWidth;
     out.noPhoneOverflow = oldWidth <= document.documentElement.clientWidth;
+    var hudRect = document.querySelector('.hud').getBoundingClientRect();
+    var guideRect = document.getElementById('onboardingGuide').getBoundingClientRect();
+    out.anchorBelowHud = guideRect.top >= hudRect.bottom;
 
     // Highlight selection follows the actual milestone and current world targets.
     activateArea('farm');
@@ -410,6 +449,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('ONB-UI: skip uses a focusable two-step confirmation', r.skipArmed);
   check('ONB-UI: skip persists and makes recording inert', r.skipPersists && r.skipInert);
   check('ONB-UI: phone portrait has no horizontal overflow', r.noPhoneOverflow);
+  check('ONB-UI: phone guide panel anchors below the rendered HUD', r.anchorBelowHud);
   check('ONB-UI: plant and crop highlight target selection', r.highlightPlant && r.highlightHarvest);
   check('ONB-UI: pot and store highlight target selection', r.highlightPot && r.highlightStore);
   check('ONB-UI: Mira and Wilds route highlight target selection', r.highlightMira && r.highlightExit);

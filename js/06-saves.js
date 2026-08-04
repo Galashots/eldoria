@@ -295,6 +295,12 @@ function migrateSaveToV4(s) {
       var omId = ONBOARDING_MILESTONE_IDS[om];
       op.onboarding.milestones[omId] = p.onboarding.milestones[omId] === true;
     }
+    // Mira's interaction is one real gameplay event. Repair saves from the draft
+    // build (or imported edits) that captured metMira without acceptedQuest before
+    // applying the active/completed canonicalization below; otherwise a later Wilds
+    // completion could write a save that this same ingestion door rejects.
+    if (op.onboarding.milestones.metMira)
+      op.onboarding.milestones.acceptedQuest = true;
     var migratedAllOnboardingDone = ONBOARDING_MILESTONE_IDS.every(function (id) {
       return op.onboarding.milestones[id] === true;
     });
