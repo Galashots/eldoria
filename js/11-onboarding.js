@@ -126,13 +126,14 @@ function onboardingDeferMiraNarration() {
   onboardingMiraNarrationDeferred = true;
 }
 
-function onboardingFlushMiraNarration() {
+function onboardingFlushMiraNarration(queued) {
   var pending = onboardingMiraNarrationPending;
   onboardingMiraNarrationDeferred = false;
   onboardingMiraNarrationPending = false;
   if (pending) {
     showToast(ONBOARDING_MIRA_TOAST);
-    speak(ONBOARDING_MIRA_SPOKEN);
+    if (queued) speakQueued(ONBOARDING_MIRA_SPOKEN);
+    else speak(ONBOARDING_MIRA_SPOKEN);
   }
 }
 

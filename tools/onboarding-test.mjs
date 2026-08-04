@@ -304,12 +304,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     localStorage.clear();
     var out = {};
     selectProfile('mage');
-    activateArea('town');
-    player.onboarding.milestones.planted = true;
-    player.onboarding.milestones.harvested = true;
-    player.onboarding.milestones.usedCrop = true;
     var mira = NPCS.filter(function (n) { return n.id === 'mira'; })[0];
-    player.x = mira.col * TILE; player.y = (mira.row + 1) * TILE;
     var speech = window.speechSynthesis;
     var spoken = [];
     var oldSpeak = speech && speech.speak;
@@ -318,6 +313,30 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
       speech.speak = function (utterance) { spoken.push(utterance && utterance.text || ''); };
       speech.cancel = function () {};
     }
+    var prepare = function () {
+      if (questOpen) closeQuest();
+      player.onboarding = defaultOnboarding('active');
+      player.onboarding.milestones.planted = true;
+      player.onboarding.milestones.harvested = true;
+      player.onboarding.milestones.usedCrop = true;
+      player.killQuest = null;
+      npcGreeted = {};
+      spoken.length = 0;
+      activateArea('town');
+      player.x = mira.col * TILE; player.y = (mira.row + 1) * TILE;
+    };
+    var guideCount = function () {
+      return spoken.filter(function (text) { return text === ONBOARDING_MIRA_SPOKEN; }).length;
+    };
+    var feedbackAfterGuideCheck = function (feedback) {
+      var feedbackIndex = spoken.indexOf(feedback);
+      var guideIndex = spoken.lastIndexOf(ONBOARDING_MIRA_SPOKEN);
+      return feedbackIndex >= 0 && guideIndex > feedbackIndex && guideCount() === 1 &&
+        document.getElementById('toast').textContent === ONBOARDING_MIRA_TOAST;
+    };
+
+    // Escape/direct close keeps the round-3 immediate flush behavior.
+    prepare();
     interactNPC(mira);
     var spokenWhileOpen = spoken.slice();
     out.modalOpen = questOpen === true;
@@ -326,19 +345,36 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     });
     out.guideWaitsForClose = spokenWhileOpen.indexOf(ONBOARDING_MIRA_SPOKEN) < 0;
     closeQuest();
-    out.guideToastAfterClose = document.getElementById('toast').textContent === ONBOARDING_MIRA_TOAST;
-    out.guideLastAfterClose = spoken[spoken.length - 1] === ONBOARDING_MIRA_SPOKEN;
-    out.guideExactlyOnce = spoken.filter(function (text) {
-      return text === ONBOARDING_MIRA_SPOKEN;
-    }).length === 1;
+    out.directCloseGuide = document.getElementById('toast').textContent === ONBOARDING_MIRA_TOAST &&
+      spoken[spoken.length - 1] === ONBOARDING_MIRA_SPOKEN && guideCount() === 1;
+
+    // Correct answer: unchanged feedback first, queued guide transition second.
+    prepare();
+    interactNPC(mira);
+    answerQuest(questAnswer);
+    out.correctAnswerOrder = feedbackAfterGuideCheck('Correct! You earned 5 gold!');
+
+    // Wrong answer: unchanged feedback first, queued guide transition second.
+    prepare();
+    interactNPC(mira);
+    answerQuest(questAnswer + 1);
+    out.wrongAnswerOrder = feedbackAfterGuideCheck('Good try! Ask me again.');
+
+    // Profile switching closes through the same close path and must not replay it.
+    prepare();
+    interactNPC(mira);
+    switchProfile();
+    out.profileSwitchExactlyOnce = guideCount() === 1;
     if (speech) { speech.speak = oldSpeak; speech.cancel = oldCancel; }
     localStorage.clear();
     return out;
   });
   check('ONB-VOICE: real Mira modal keeps guide narration deferred while open', r.modalOpen && r.guideWaitsForClose);
   check('ONB-VOICE: math question is still read aloud while the modal is open', r.mathReadAloudWhileOpen);
-  check('ONB-VOICE: Mira guide toast and line fire once after modal close',
-    r.guideToastAfterClose && r.guideLastAfterClose && r.guideExactlyOnce);
+  check('ONB-VOICE: direct close flushes Mira guide exactly once', r.directCloseGuide);
+  check('ONB-VOICE: correct answer feedback precedes queued Mira guide narration', r.correctAnswerOrder);
+  check('ONB-VOICE: wrong answer feedback precedes queued Mira guide narration', r.wrongAnswerOrder);
+  check('ONB-VOICE: profile switch flushes pending Mira guide exactly once', r.profileSwitchExactlyOnce);
   await browser.close();
 }
 

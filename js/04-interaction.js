@@ -660,7 +660,10 @@ function onQuestAnswerClick(e) {
 
 function answerQuest(value) {
   var correct = (value === questAnswer);
-  closeQuest();
+  // Keep the guide transition pending until the answer feedback has had its
+  // normal toast + cancel-first speech turn. It is flushed below as a queued
+  // follow-up so the child hears both lines in order.
+  closeQuest({ deferMiraNarration: true });
   if (correct) {
     // Learning pays gold (the economy lever). The harder multiplication problems pay more.
     var reward = (currentProfile === 'adventurer') ? 8 : 5;
@@ -675,12 +678,13 @@ function answerQuest(value) {
     showToast('Not quite — ask me again!');
     speak('Good try! Ask me again.');
   }
+  onboardingFlushMiraNarration(true);
 }
 
-function closeQuest() {
+function closeQuest(options) {
   questOpen = false;
   modalShellClose('questModal');
-  onboardingFlushMiraNarration();
+  if (!(options && options.deferMiraNarration)) onboardingFlushMiraNarration(false);
 }
 registerModal('questModal', closeQuest);   // Escape = the existing close/decline path
 

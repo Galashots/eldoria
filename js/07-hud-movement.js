@@ -112,6 +112,18 @@ function speak(text) {
   } catch (e) {}
 }
 
+// Queue a follow-up line without cancelling speech that just finished. Used when
+// feedback must be heard first (for example, the answer -> Mira guide sequence).
+function speakQueued(text) {
+  if (currentProfile !== 'mage') return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
 // Read aloud to BOTH boys (used for the shop hint nudge).
 function speakToAll(text) {
   if (!('speechSynthesis' in window)) return;
