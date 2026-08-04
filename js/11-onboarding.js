@@ -40,6 +40,8 @@ var ONBOARDING_MILESTONES = [
 var ONBOARDING_DONE_TOAST = 'You know the whole realm now — adventure awaits!';
 var ONBOARDING_MIRA_TOAST = 'Mira gave you a quest! Head into the Wilds!';
 var ONBOARDING_MIRA_SPOKEN = 'Mira gave you a quest! Head into the Wilds!';
+var onboardingMiraNarrationDeferred = false;
+var onboardingMiraNarrationPending = false;
 
 // The first incomplete visible milestone (in chain order), or null when all are done.
 function onboardingNextMilestone() {
@@ -65,8 +67,73 @@ function onboardingObjectiveId() {
   return next ? next.id : 'done';
 }
 
-function onboardingObjectiveLabel(next) {
-  return '🧭 Mira’s Guide: ' + next.objective;
+function onboardingAreaName(area) {
+  var names = {
+    farm: 'the Farm', town: 'Town', wilds: 'the Wilds',
+    deepwoods: 'the Deep Woods', mine: 'the Mine'
+  };
+  return names[area] || area;
+}
+
+function onboardingObjectiveArea(next) {
+  if (!next) return null;
+  if (next.id === 'planted' || next.id === 'harvested' || next.id === 'usedCrop') return 'farm';
+  if (next.id === 'metMira') return 'town';
+  if (next.id === 'enteredWilds') return 'wilds';
+  return null;
+}
+
+function onboardingNativeTargetAvailable(next) {
+  if (!next) return false;
+  if ((next.id === 'planted' || next.id === 'harvested') && currentArea === 'farm') return true;
+  if (next.id === 'usedCrop' && (currentArea === 'farm' || currentArea === 'town')) return true;
+  if (next.id === 'metMira' && (currentArea === 'farm' || currentArea === 'town')) return true;
+  if (next.id === 'enteredWilds' && currentArea === 'town') return true;
+  return false;
+}
+
+// Use the same linear adjacency source as checkTravel in js/07-hud-movement.js.
+// This is presentation-only: the overlay never changes the travel or collision rules.
+function onboardingRoutePresentation(next) {
+  var objectiveArea = onboardingObjectiveArea(next);
+  var currentIndex = AREA_ORDER.indexOf(currentArea);
+  var objectiveIndex = AREA_ORDER.indexOf(objectiveArea);
+  if (!objectiveArea || onboardingNativeTargetAvailable(next) || currentArea === objectiveArea ||
+      currentIndex < 0 || objectiveIndex < 0)
+    return null;
+  var direction = objectiveIndex < currentIndex ? 'left' : 'right';
+  var nextHop = AREA_ORDER[currentIndex + (direction === 'left' ? -1 : 1)];
+  if (!nextHop) return null;
+  var destination = onboardingAreaName(nextHop);
+  return {
+    objective: 'Head ' + direction + ' to ' + destination + '!',
+    spoken: 'Head ' + direction + ' to ' + destination + '!',
+    direction: direction,
+    nextHop: nextHop
+  };
+}
+
+function onboardingObjectivePresentation(next) {
+  return onboardingRoutePresentation(next) || { objective: next.objective, spoken: next.spoken };
+}
+
+function onboardingObjectiveLabel(next, presentation) {
+  var view = presentation || onboardingObjectivePresentation(next);
+  return '🧭 Mira’s Guide: ' + view.objective;
+}
+
+function onboardingDeferMiraNarration() {
+  onboardingMiraNarrationDeferred = true;
+}
+
+function onboardingFlushMiraNarration() {
+  var pending = onboardingMiraNarrationPending;
+  onboardingMiraNarrationDeferred = false;
+  onboardingMiraNarrationPending = false;
+  if (pending) {
+    showToast(ONBOARDING_MIRA_TOAST);
+    speak(ONBOARDING_MIRA_SPOKEN);
+  }
 }
 
 // Record one successfully-completed gameplay milestone. Idempotent: repeating an
@@ -91,15 +158,19 @@ function recordOnboardingMilestone(id) {
   var afterObjective = onboardingObjectiveId();
   if (beforeObjective !== afterObjective) {
     if (id === 'metMira') {
-      showToast(ONBOARDING_MIRA_TOAST);
-      speak(ONBOARDING_MIRA_SPOKEN);
+      if (onboardingMiraNarrationDeferred) onboardingMiraNarrationPending = true;
+      else {
+        showToast(ONBOARDING_MIRA_TOAST);
+        speak(ONBOARDING_MIRA_SPOKEN);
+      }
     } else if (!next) {
       soundWin();
       showToast(ONBOARDING_DONE_TOAST);
       speak(ONBOARDING_DONE_TOAST);
     } else {
-      showToast(next.objective);
-      speak(next.spoken);
+      var presentation = onboardingObjectivePresentation(next);
+      showToast(presentation.objective);
+      speak(presentation.spoken);
     }
   }
   updateOnboardingChip();
@@ -143,7 +214,8 @@ function updateOnboardingChip() {
   var ob = (gameActive && currentProfile) ? player.onboarding : null;
   var active = !!(ob && ob.status === 'active' && !combatOpen);
   var next = active ? onboardingNextMilestone() : null;
-  var text = active && next ? onboardingObjectiveLabel(next) : '';
+  var presentation = active && next ? onboardingObjectivePresentation(next) : null;
+  var text = active && next ? onboardingObjectiveLabel(next, presentation) : '';
   var key = (active && next) ? (text + '|' + next.id + '|' + onboardingProgressCount() +
     '|' + onboardingChipCollapsed + '|' + onboardingSkipArmed) : 'inactive';
   if (key === onboardingChipLast) return;
@@ -159,7 +231,7 @@ function updateOnboardingChip() {
     skipBtn.hidden = onboardingChipCollapsed;
     el.setAttribute('aria-label', 'Hide Mira’s Guide objective');
     compass.setAttribute('aria-label', 'Show Mira’s Guide objective');
-    speakBtn.setAttribute('aria-label', 'Read aloud: ' + next.objective);
+    speakBtn.setAttribute('aria-label', 'Read aloud: ' + presentation.objective);
     skipBtn.textContent = onboardingSkipArmed ? 'Tap again to skip' : 'Skip';
     skipBtn.classList.toggle('armed', onboardingSkipArmed);
   } else {
@@ -213,6 +285,11 @@ function onboardingHighlightTargets() {
   var next = onboardingNextMilestone();
   if (combatOpen || !next || !player.onboarding || player.onboarding.status !== 'active') return [];
   var targets = [];
+  var objectiveArea = onboardingObjectiveArea(next);
+  if (!onboardingNativeTargetAvailable(next) && objectiveArea && currentArea !== objectiveArea) {
+    var routeTarget = onboardingRouteTargetToward(objectiveArea);
+    if (routeTarget) return [routeTarget];
+  }
   var addNearestCrop = function (predicate) {
     var best = null, bestDist = Infinity;
     for (var key in cropData) {
@@ -249,9 +326,25 @@ function onboardingHighlightTargets() {
 }
 
 function onboardingRightExitTarget() {
+  return onboardingEdgeExitTarget('right', 'exit');
+}
+
+function onboardingEdgeExitTarget(direction, label) {
+  var col = direction === 'left' ? 0 : MAP_W - 1;
   for (var r = 0; r < MAP_H; r++)
-    if (map[r][MAP_W - 1] === EXIT) return { row: r, col: MAP_W - 1, label: 'exit' };
+    if (map[r][col] === EXIT)
+      return { row: r, col: col, label: label || 'route', direction: direction };
   return null;
+}
+
+function onboardingRouteTargetToward(objectiveArea) {
+  var currentIndex = AREA_ORDER.indexOf(currentArea);
+  var objectiveIndex = AREA_ORDER.indexOf(objectiveArea);
+  if (currentIndex < 0 || objectiveIndex < 0 || currentIndex === objectiveIndex) return null;
+  var direction = objectiveIndex < currentIndex ? 'left' : 'right';
+  // Keep the original semantic label for the Town → Wilds onboarding exit.
+  var label = (currentArea === 'town' && objectiveArea === 'wilds') ? 'exit' : 'route';
+  return onboardingEdgeExitTarget(direction, label);
 }
 
 function drawOnboardingWorldHighlight(now) {

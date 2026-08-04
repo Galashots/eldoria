@@ -297,6 +297,51 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Mira narration timing through the real quest modal ---
+{
+  const { browser, page } = await launch();
+  const r = await page.evaluate(() => {
+    localStorage.clear();
+    var out = {};
+    selectProfile('mage');
+    activateArea('town');
+    player.onboarding.milestones.planted = true;
+    player.onboarding.milestones.harvested = true;
+    player.onboarding.milestones.usedCrop = true;
+    var mira = NPCS.filter(function (n) { return n.id === 'mira'; })[0];
+    player.x = mira.col * TILE; player.y = (mira.row + 1) * TILE;
+    var speech = window.speechSynthesis;
+    var spoken = [];
+    var oldSpeak = speech && speech.speak;
+    var oldCancel = speech && speech.cancel;
+    if (speech) {
+      speech.speak = function (utterance) { spoken.push(utterance && utterance.text || ''); };
+      speech.cancel = function () {};
+    }
+    interactNPC(mira);
+    var spokenWhileOpen = spoken.slice();
+    out.modalOpen = questOpen === true;
+    out.mathReadAloudWhileOpen = spokenWhileOpen.some(function (text) {
+      return text.indexOf(' asks: ') >= 0;
+    });
+    out.guideWaitsForClose = spokenWhileOpen.indexOf(ONBOARDING_MIRA_SPOKEN) < 0;
+    closeQuest();
+    out.guideToastAfterClose = document.getElementById('toast').textContent === ONBOARDING_MIRA_TOAST;
+    out.guideLastAfterClose = spoken[spoken.length - 1] === ONBOARDING_MIRA_SPOKEN;
+    out.guideExactlyOnce = spoken.filter(function (text) {
+      return text === ONBOARDING_MIRA_SPOKEN;
+    }).length === 1;
+    if (speech) { speech.speak = oldSpeak; speech.cancel = oldCancel; }
+    localStorage.clear();
+    return out;
+  });
+  check('ONB-VOICE: real Mira modal keeps guide narration deferred while open', r.modalOpen && r.guideWaitsForClose);
+  check('ONB-VOICE: math question is still read aloud while the modal is open', r.mathReadAloudWhileOpen);
+  check('ONB-VOICE: Mira guide toast and line fire once after modal close',
+    r.guideToastAfterClose && r.guideLastAfterClose && r.guideExactlyOnce);
+  await browser.close();
+}
+
 // --- Cooking satisfies usedCrop the same as selling ---
 {
   const { browser, page } = await launch();
@@ -426,6 +471,43 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     updateOnboardingChip();
     out.highlightExit = onboardingHighlightTargets().some(function (t) { return t.label === 'exit'; });
 
+    // Off-area objectives guide to the next edge hop using AREA_ORDER, the same
+    // adjacency source that checkTravel uses. The native Town → Wilds exit keeps
+    // its existing semantic label and target.
+    player.onboarding = defaultOnboarding('active');
+    activateArea('wilds');
+    onboardingChipLast = '';
+    updateOnboardingChip();
+    var wildsRoute = onboardingHighlightTargets()[0];
+    out.routeFarmFromWilds = wildsRoute && wildsRoute.direction === 'left' &&
+      wildsRoute.col === 0 && chip.textContent.indexOf('Head left to Town!') >= 0;
+
+    activateArea('deepwoods');
+    onboardingChipLast = '';
+    updateOnboardingChip();
+    var deepwoodsRoute = onboardingHighlightTargets()[0];
+    out.routeFarmFromDeepwoods = deepwoodsRoute && deepwoodsRoute.direction === 'left' &&
+      deepwoodsRoute.col === 0 && chip.textContent.indexOf('Head left to the Wilds!') >= 0;
+
+    player.onboarding.milestones.planted = true;
+    player.onboarding.milestones.harvested = true;
+    player.onboarding.milestones.usedCrop = true;
+    activateArea('wilds');
+    onboardingChipLast = '';
+    updateOnboardingChip();
+    var miraRoute = onboardingHighlightTargets()[0];
+    out.routeMiraFromWilds = miraRoute && miraRoute.direction === 'left' &&
+      miraRoute.col === 0 && chip.textContent.indexOf('Head left to Town!') >= 0;
+
+    player.onboarding.milestones.metMira = true;
+    player.onboarding.milestones.acceptedQuest = true;
+    activateArea('farm');
+    onboardingChipLast = '';
+    updateOnboardingChip();
+    var wildsRouteFromFarm = onboardingHighlightTargets()[0];
+    out.routeWildsFromFarm = wildsRouteFromFarm && wildsRouteFromFarm.direction === 'right' &&
+      wildsRouteFromFarm.col === MAP_W - 1 && chip.textContent.indexOf('Head right to Town!') >= 0;
+
     // Completed and skipped guides both remove the chip.
     for (var i = 0; i < ONBOARDING_MILESTONE_IDS.length; i++)
       recordOnboardingMilestone(ONBOARDING_MILESTONE_IDS[i]);
@@ -453,6 +535,9 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('ONB-UI: plant and crop highlight target selection', r.highlightPlant && r.highlightHarvest);
   check('ONB-UI: pot and store highlight target selection', r.highlightPot && r.highlightStore);
   check('ONB-UI: Mira and Wilds route highlight target selection', r.highlightMira && r.highlightExit);
+  check('ONB-UI: Farm objectives route from Wilds and deeper areas', r.routeFarmFromWilds && r.routeFarmFromDeepwoods);
+  check('ONB-UI: Mira objective routes back to Town from the Wilds', r.routeMiraFromWilds);
+  check('ONB-UI: Wilds objective routes toward Town from the Farm', r.routeWildsFromFarm);
   check('ONB-UI: chip hides while combat is open', r.hiddenInCombat);
   check('ONB-UI: chip returns after combat closes', r.backAfterCombat);
   check('ONB-UI: a completed guide removes the chip', r.hiddenWhenCompleted);

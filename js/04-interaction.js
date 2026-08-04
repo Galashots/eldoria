@@ -609,7 +609,10 @@ function openQuest(npc) {
   }
 
   // A real Mira interaction reached (all modal/adjacency guards above passed).
-  if (npcId === 'mira') recordOnboardingMilestone('metMira');
+  if (npcId === 'mira') {
+    onboardingDeferMiraNarration();
+    recordOnboardingMilestone('metMira');
+  }
 
   // Offer a kill quest if the player doesn't have one active (Mira only)
   if (npcId === 'mira' && !player.killQuest) {
@@ -677,6 +680,7 @@ function answerQuest(value) {
 function closeQuest() {
   questOpen = false;
   modalShellClose('questModal');
+  onboardingFlushMiraNarration();
 }
 registerModal('questModal', closeQuest);   // Escape = the existing close/decline path
 
