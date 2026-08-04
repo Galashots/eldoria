@@ -721,10 +721,11 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('save: iso and top-down Town saves share one schema', r.sameSchema === true);
   check('save: world-space position is render-mode independent', r.samePosition === true);
   // The iso Town port itself must not migrate saves. The schema later moved to v3
-  // under the owner-authorized profile-state migration (2026-07-30) — this pin now
-  // guards that ISO work rides the current schema rather than bumping it again.
+  // (2026-07-30) and to v4 under the owner-authorized Step 7 onboarding migration
+  // (2026-08-04) — this pin now guards that ISO work rides the current schema
+  // rather than bumping it again.
   check('save: iso Town rides the current save version without bumping it',
-    r.saveVersion === 3 && r.version === 3);
+    r.saveVersion === 4 && r.version === 4);
   check('save: a Town save reloads to the exact same world position',
     r.restored.x === 14 * 32 + 7 && r.restored.y === 11 * 32 + 3 && r.restored.area === 'town');
   await browser.close();

@@ -55,13 +55,13 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
         return Object.keys(st.areas[a].enemies).length === 0;
       });
     }
-    out.v0 = r0.ok && r0.state.version === 3 && r0.state.player.gold === 33 &&
+    out.v0 = r0.ok && r0.state.version === 4 && r0.state.player.gold === 33 &&
       r0.state.player.seeds.turnip === 3 && r0.state.player.crops.turnip === 2 &&
       r0.state.areas.farm.tiles['3,14'].status === 'growing' && allAlive(r0.state);
     // Legacy ACTIVE quest whose progress (1) already satisfies the current one-kill
     // objective: it resolves during migration — the CURRENT scaled reward (5g for
     // slime) is credited exactly once and the quest clears. Documented in
-    // migrateSaveToV3.
+    // migrateSaveToV4.
     out.v1 = r1.ok && r1.state.player.gold === 49 && r1.state.player.level === 4 &&
       r1.state.player.gear.weapon === 'wooden_sword' &&
       r1.state.areas.farm.tiles['4,15'].type === 'corn' &&
@@ -164,7 +164,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   });
   check('SAVE: all junk/future/malformed inputs rejected', r.rejects.every(Boolean));
   check('SAVE: failed import leaves prior save byte-for-byte unchanged', r.failedImportUntouched);
-  check('SAVE: v0 fixture migrates to canonical v3, all enemies alive', r.v0);
+  check('SAVE: v0 fixture migrates to canonical v4, all enemies alive', r.v0);
   check('SAVE: v1 satisfied legacy quest resolves at migration, scaled reward credited once', r.v1);
   check('SAVE: v1 unfinished legacy quest normalizes to the current one-kill definition', r.v1b);
   check('SAVE: v2 fixture migrates with progression intact, unknown gear dropped', r.v2);
@@ -172,7 +172,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('SAVE: the last valid tile origin is still accepted', r.boundaryOk);
   check('SAVE: unknown top-level area in an existing save refuses entry, storage untouched', r.badAreaRefused);
   check('SAVE: malformed tile in an existing save refuses entry, storage untouched', r.badTileRefused);
-  check('SAVE: paste and file import share one door and store identical canonical v3', r.sameDoor);
+  check('SAVE: paste and file import share one door and store identical canonical v4', r.sameDoor);
   check('SAVE: export -> import -> load round-trip preserves canonical state', r.roundTrip);
   check('SAVE: corrupt existing profile refuses entry', r.corruptRefused);
   check('SAVE: corrupt existing save is never silently overwritten', r.corruptPreserved);

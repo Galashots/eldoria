@@ -22,6 +22,8 @@
     <button class="hud-mute" id="muteBtn" aria-label="Toggle sound" onclick="toggleMute()">&#x1f50a;</button>
   </div>
   <div id="questTracker" class="quest-tracker"></div>
+  <button id="onboardingChip" class="onboarding-chip" type="button"
+          onclick="toggleOnboardingChip()" aria-label="Mira's Guide objective" hidden></button>
   <canvas id="game" width="640" height="480" aria-label="Game world — move your hero to farm, shop, and explore"></canvas>
 </div>
 
@@ -307,6 +309,9 @@
 <script defer src="js/06-saves.js"></script>
 <script defer src="js/07-hud-movement.js"></script>
 <script defer src="js/08-iso-renderer.js"></script>
+<!-- 11-onboarding must load before 09-main: main's top-level boot (updateHUD/loop)
+     already calls updateOnboardingChip on its first synchronous frame. -->
+<script defer src="js/11-onboarding.js"></script>
 <script defer src="js/09-main.js"></script>
 <script defer src="js/10-character.js"></script>
 

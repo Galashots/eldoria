@@ -54,7 +54,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     out.v3Loads = player.gold === 123 && player.gear.weapon === 'crystal_blade' &&
       player.inventory.length === 1 && player.inventory[0] === 'wooden_sword' &&
       localStorage.getItem('eldoria_save_adventurer') === storedBefore &&
-      JSON.parse(storedBefore).version === 3;
+      JSON.parse(storedBefore).version === 4;
     switchProfile();
     localStorage.clear();
     return out;
@@ -322,8 +322,8 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
       slotsHtml.indexOf('Trophy from Shadow Warden') !== -1 &&
       slotsHtml.indexOf('Trophy from Crystal Wyrm') !== -1;
 
-    // (33) SAVE_VERSION remains 3.
-    out.saveVersion = SAVE_VERSION === 3;
+    // (33) SAVE_VERSION remains 4.
+    out.saveVersion = SAVE_VERSION === 4;
 
     // (34) Displayed progression matches live state.
     player.level = 4; player.xp = 30; player.hp = 18; player.maxHp = 35;
@@ -390,7 +390,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('EQUIP-30: equipped gear absent from the General Store sell list', r.sellList);
   check('EQUIP-31: spare gear sale price remains damage x 5', r.sellPrice);
   check('EQUIP-32: Eldoria Blade and Wyrm Scale show boss-trophy treatment', r.trophies);
-  check('EQUIP-33: SAVE_VERSION remains 3', r.saveVersion);
+  check('EQUIP-33: SAVE_VERSION remains 4', r.saveVersion);
   check('DISPLAY-34: progression display matches live player state', r.statsLive);
   check('DISPLAY-35: empty slots and empty bag have child-readable states', r.emptyStates);
   check('DISPLAY-36: screen updates immediately after equip/unequip/switch', r.liveUpdates);

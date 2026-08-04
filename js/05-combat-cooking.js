@@ -701,6 +701,7 @@ function cookRecipe(recipeId) {
   for (var crop in rec.cost) player.crops[crop] -= rec.cost[crop];
   player.food[recipeId]++;
   soundCook();
+  recordOnboardingMilestone('usedCrop');   // cooking counts the same as selling
 
   // Offer a doubling question: answer right → free bonus portion.
   var q = makeDoubleBatchQuestion(recipeId);

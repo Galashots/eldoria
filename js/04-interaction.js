@@ -167,6 +167,7 @@ function interactCropTile(tile) {
     addPop(tile.row, tile.col, '+1');
     soundHarvest();
     showToast('Harvested 1 ' + CROPS[harvestType].name + '!');
+    recordOnboardingMilestone('harvested');
   } else if (crop.status === 'growing') {
     var ct = crop.type || 'turnip';
     var pct = Math.round(((Date.now() - crop.plantedAt) / CROPS[ct].grow) * 100);
@@ -312,6 +313,7 @@ function sellCrops() {
   soundCoin();
   player.gold += earned;
   for (var i = 0; i < CROP_TYPES.length; i++) player.crops[CROP_TYPES[i]] = 0;
+  recordOnboardingMilestone('usedCrop');   // guarded above: only a real positive sale
   updateHUD();
   saveGame();
 }
@@ -323,6 +325,7 @@ function plantSeed(key, crop, type) {
   crop.plantedAt = Date.now();
   crop.type = type;
   showToast('Planted ' + CROPS[type].name + '! (-1 seed)');
+  recordOnboardingMilestone('planted');
   updateHUD();
   saveGame();
 }
@@ -605,6 +608,9 @@ function openQuest(npc) {
     speak(npcName + ' says: ' + (NPC_GREETINGS[npcId] || 'Hello!'));
   }
 
+  // A real Mira interaction reached (all modal/adjacency guards above passed).
+  if (npcId === 'mira') recordOnboardingMilestone('metMira');
+
   // Offer a kill quest if the player doesn't have one active (Mira only)
   if (npcId === 'mira' && !player.killQuest) {
     var kq = assignKillQuest();
@@ -612,6 +618,7 @@ function openQuest(npc) {
       player.killQuest = { target: kq.target, count: kq.count, reward: kq.reward, name: kq.name, progress: 0 };
       showToast('New quest: ' + kq.name + '!');
       speak(npcName + ' says: Can you help? ' + kq.name + '! I will pay ' + kq.reward + ' gold.');
+      recordOnboardingMilestone('acceptedQuest');
       saveGame();
     }
   } else if (npcId === 'mira' && player.killQuest) {

@@ -205,7 +205,7 @@ const LOADOUTS = `
     };
 
     // (13) SAVE_VERSION untouched. (14) Profile isolation intact after boss kills.
-    out.saveVersion = SAVE_VERSION === 3;
+    out.saveVersion = SAVE_VERSION === 4;
     switchProfile();
     selectProfile('mage');
     activateArea('mine');
@@ -232,7 +232,7 @@ const LOADOUTS = `
   check('BOSS: lethal phase grants kill credit exactly once', r.lethal.killOnce);
   check('BOSS: guaranteed boss loot arrives', r.lethal.lootOnce);
   check('BOSS: the kill persists to the profile save', r.lethal.persisted);
-  check('REGRESSION: SAVE_VERSION remains 3', r.saveVersion);
+  check('REGRESSION: SAVE_VERSION remains 4', r.saveVersion);
   check('REGRESSION: profile-owned enemy state stays isolated', r.mageIsolated);
   check('REGRESSION: both profiles keep question generators + speech wiring',
     r.mageQuestion && r.advQuestion && r.speakWired);
