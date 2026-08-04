@@ -5,6 +5,13 @@ shapes automatically; no code changes are needed. Every asset is optional, so a 
 broken file falls back safely to the legacy player art (when available), then the existing
 colored shape.
 
+**The exhaustive, machine-checked inventory of every committed asset and every runtime
+asset slot — including which are required, which are optional, and what each one's
+fallback is — lives in [`assets/manifest.json`](manifest.json), documented in
+[`docs/ASSET_MANIFEST.md`](../docs/ASSET_MANIFEST.md).** This README stays the human
+authoring guide (naming conventions, canvas sizes, draw order); it does not duplicate the
+manifest's per-file listing.
+
 - **Format:** PNG. Use transparent backgrounds for crops and players.
 - **Size:** the game draws every sprite into a **32 x 32** tile. Make sprites **32 x 32**
   (or a clean multiple, such as 64 x 64, that can scale down cleanly).
@@ -48,8 +55,11 @@ static base sprite instead.
 
 ## Equipment overlays
 
-Base heroes are intentionally drawn without permanent armor, capes, or weapons. Optional
-equipment is a separate transparent 32 x 32 PNG for the same hero and direction:
+The approved Ranger and Mage bases carry their own permanent canonical identity clothing
+and props (see the three-layer governance below) — equipment overlays are a separate,
+*additional* progression layer on top of that identity, not a replacement for a bare
+underlayer. Optional equipment is a separate transparent 32 x 32 PNG for the same hero
+and direction:
 
 | Pattern | Slot | Draw order |
 |---|---|---|

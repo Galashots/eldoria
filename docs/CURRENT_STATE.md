@@ -1,7 +1,7 @@
 # Current Project State
 
-**Updated:** 2026-07-29  
-**Baseline:** `main` at `a91135c1e95b5aec4b35faca41ca602bcb4e7d97`  
+**Updated:** 2026-07-31  
+**Baseline:** `main` at `789b0c3e37ac6e8930d0488ef5c8124e3e8ecce4`  
 **Purpose:** cold-start continuity for the next implementation lead. This file records status; it does not grant authority or supersede the AI Team Charter.
 
 ## Live architecture
@@ -47,6 +47,16 @@
   bag with child-readable comparisons plus manual equip/unequip
   (`equipFromBag`/`unequipSlot` in `js/05`) that preserves the gear-instance
   multiset and saves immediately. Reference: `docs/CHARACTER_INVENTORY.md`.
+- **Foundation D — repository-wide asset manifest** (Step 6, 2026-07-31):
+  `assets/manifest.json` inventories every committed media/source-art file
+  (scope/domain/status/visual-review/provenance) and declares every runtime
+  asset slot the game code actually references — including which are required,
+  which are intentionally optional, and each one's documented fallback.
+  `tools/asset-manifest.mjs --check` is wired into `npm run assets:verify`;
+  a live puppeteer cross-check (`tools/asset-manifest-test.mjs`, wired into
+  `npm test`) verifies the declared bindings against the real running game's
+  `SPRITES` registry rather than trusting a hand-maintained table alone. See
+  `docs/ASSET_MANIFEST.md`. Governance only — no runtime, save, or visual delta.
 
 ## Accepted delivery landmarks
 
@@ -56,6 +66,8 @@
 | [PR #12](https://github.com/Galashots/eldoria/pull/12) | Merged first Town isometric slice at head `078476822768d88aade4e9a0dcf3f8f689b09154`; CI run 101 passed. |
 | [PR #13](https://github.com/Galashots/eldoria/pull/13) | Deliberately closed, not merged, as the reusable record that the probed TRELLIS/primitive-blockout route did not meet the North Star. |
 | [PR #15](https://github.com/Galashots/eldoria/pull/15) | Merged the production asset-pipeline tools and decision record at head `1c6be80d672609923647150fdd28413015269019`; CI run 99 passed. |
+| [PR #36](https://github.com/Galashots/eldoria/pull/36)–[#41](https://github.com/Galashots/eldoria/pull/41) | PixelLab doc corrections, Foundation B (mechanical `index.html` split), North Star v2, save-schema v3, per-question combat damage budgets, and the Ranger/Mage identity + Character screen surface — all merged, `main` green throughout. |
+| Foundation D (this PR) | Repository-wide asset manifest and integrity gate — see above. |
 
 ## Art and pipeline state
 
@@ -69,28 +81,31 @@
 
 ## Recommended next outcome
 
-Leo has authorized one **LARGE** next PR. “Large” permits coordinated delivery under one coherent outcome; it does not permit unrelated gameplay, map, save, economy, curriculum, or architecture changes.
+Leo has authorized ongoing **LARGE** PRs under the sequence he agreed with ChatGPT
+(see the "PR Review and Repo Sync" ChatGPT chat for the full scope contracts).
+After Foundation D merges, the next planned player-facing outcome is:
 
-Recommended outcome: **Phase 3 production-art integration foundation for the already-isometric Farm and bounded Town slice.**
+**Step 7 — the Mira-led onboarding/objective-chain surface.** A short,
+dismissible chain of on-world highlights and toasts routing a new player through
+the existing verbs in order: plant → harvest → sell or cook → visit Town/Mira →
+accept an adventure objective → enter the Wilds. One visible objective at a
+time, no long instruction modal, Mage read-aloud support preserved. Scoped
+independently from Foundation D because persistent onboarding-completion state
+may require a deliberate save-migration decision (`SAVE_VERSION` v4), which
+Foundation D and Step 6 explicitly do not touch.
 
-In scope:
+Out of scope for both Foundation D and Step 7 unless Leo explicitly expands them:
 
-1. produce/ingest the approved-style Farm landscape and the minimum approved building/character assets needed by the Farm plus the General Store/Mira slice;
-2. normalize and validate every production asset through the merged pipeline;
-3. add the smallest asset registry/loading and bottom-anchor integration needed in `index.html`, retaining placeholder fallback when any asset is missing;
-4. extend automated tests for asset presence, fallback behavior, anchors, depth order, Farm↔Town travel, direct tap and Action interaction, save invariance, and zero console errors;
-5. retain desktop, phone portrait, iPad landscape, overlap/depth, and interaction evidence for exact-head review; and
-6. update this status file and the relevant pipeline inventory to the delivered state.
-
-Out of scope unless Leo explicitly expands it:
-
-- Wilds, Deep Woods, or Mine conversion;
-- map, collision, progression, economy, curriculum, dialogue, quest, or save-schema changes;
+- map, collision, economy, curriculum, or combat-budget changes;
 - retirement of top-down rendering;
-- unapproved visual identities or silent North Star replacement; and
+- unapproved visual identities or silent North Star replacement;
+- PixelLab generation of any kind (remains paused; the ~100-generation
+  calibration batch requires Leo's explicit re-open); and
 - framework, bundler, TypeScript, or real-time 3D migration.
 
-If the required building or character art cannot clear visual review, keep the validated placeholder for that item and record the gap. Do not lower the North Star bar to make the PR appear complete.
+If required art cannot clear visual review, keep the validated placeholder for
+that item and record the gap. Do not lower the North Star bar to make a PR
+appear complete.
 
 ## Required gates for the large PR
 

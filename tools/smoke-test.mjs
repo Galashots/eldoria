@@ -7,7 +7,7 @@ import { resolve, dirname } from 'node:path';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const GAME_URL = pathToFileURL(resolve(root, 'index.html')).href;
 
-export async function launch(urlSuffix = '') {
+export async function launch(urlSuffix = '', { onPage } = {}) {
   // --allow-file-access-from-files: game art loads via file:// in tests; without this,
   // drawImage() taints the canvas and getImageData() assertions throw SecurityError.
   const browser = await puppeteer.launch({ args: ['--no-sandbox', '--allow-file-access-from-files'] });
@@ -20,6 +20,11 @@ export async function launch(urlSuffix = '') {
     if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text());
   });
   page.on('pageerror', e => errors.push(String(e)));
+  // Optional hook to attach page listeners (e.g. 'requestfailed') BEFORE
+  // navigation, since every missing-asset request fires and settles during
+  // the initial load below — a caller that attaches its own listener only
+  // after launch() returns would miss all of them.
+  if (onPage) await onPage(page);
   await page.goto(GAME_URL + urlSuffix, { waitUntil: 'load' });
   await new Promise(r => setTimeout(r, 1500)); // let sprite onerror fallbacks settle
   return { browser, page, errors };

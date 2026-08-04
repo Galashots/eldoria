@@ -58,11 +58,24 @@ VALIDATE (machine gates, exit code)                 tools/pipeline/validate_spri
    size / alpha / anchor / padding / scale spread / walk stability
         │
         ▼
-REVIEW (human + North Star)   →   commit to assets/
+REVIEW (human + North Star)
+        │
+        ▼
+MANIFEST (Foundation D, deterministic)              tools/asset-manifest.mjs
+   classify (scope/domain/status/visualReview) → --write → --check
+        │
+        ▼
+   commit to assets/  →  exact-head CI
 ```
 
 The generate stage is swappable by design — if PixelLab disappoints, the
 normalize/validate contract doesn't change; only the client does.
+
+Promotion of any asset into committed or runtime status requires, in order:
+(1) normalization/validation, (2) human visual review, (3) a North Star decision,
+(4) manifest classification, (5) `node tools/asset-manifest.mjs --check` passing,
+and (6) exact-head CI. See [`docs/ASSET_MANIFEST.md`](../../docs/ASSET_MANIFEST.md)
+for the manifest's schema and the classification rules a new asset must clear.
 
 ## Camera + direction policy (source locked; eight-direction runtime)
 
