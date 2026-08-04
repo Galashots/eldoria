@@ -57,6 +57,55 @@ TILE_SPRITE[CAVE]  = 'assets/cave-floor.png';
 
 // Kick off loading everything up front (async; sprites pop in as they finish).
 for (var ts in TILE_SPRITE) loadSprite('tile_' + ts, TILE_SPRITE[ts]);
+
+// Farm iso terrain is preloaded as one complete batch. The renderer never creates
+// terrain image requests on first use: every required transition and grass-base
+// variant is registered while the data script is booting, then decoded before the
+// first textured Farm frame is allowed to display.
+var ISO_TERRAIN_FAMILIES = ['path', 'soil', 'water'];
+var ISO_TERRAIN_MASKS = [];
+var ISO_TERRAIN_ASSET_NAMES = [];
+var isoTerrainDecodedCount = 0;
+var isoTerrainSettledCount = 0;
+var isoTerrainAllDecoded = false;
+var isoTerrainPreloadSettled = false;
+for (var im = 0; im < 16; im++) ISO_TERRAIN_MASKS.push(im);
+
+function loadIsoTerrainSprite(name, file) {
+  var rec = { img: new Image(), ready: false };
+  rec.img.decoding = 'sync';
+  rec.img.onload = function () {
+    var finish = function () {
+      if (rec.ready) return;
+      rec.ready = true;
+      isoTerrainDecodedCount++;
+      isoTerrainSettledCount++;
+      isoTerrainAllDecoded = isoTerrainDecodedCount === ISO_TERRAIN_ASSET_NAMES.length;
+      isoTerrainPreloadSettled = isoTerrainSettledCount === ISO_TERRAIN_ASSET_NAMES.length;
+    };
+    if (typeof rec.img.decode === 'function') rec.img.decode().then(finish, finish);
+    else finish();
+  };
+  rec.img.onerror = function () {
+    rec.ready = false;
+    isoTerrainSettledCount++;
+    isoTerrainPreloadSettled = isoTerrainSettledCount === ISO_TERRAIN_ASSET_NAMES.length;
+  };
+  rec.img.src = file;
+  SPRITES[name] = rec;
+  ISO_TERRAIN_ASSET_NAMES.push(name);
+}
+
+for (var itf = 0; itf < ISO_TERRAIN_FAMILIES.length; itf++) {
+  var terrainFamily = ISO_TERRAIN_FAMILIES[itf];
+  for (var itm = 0; itm < ISO_TERRAIN_MASKS.length; itm++) {
+    var terrainMask = String(ISO_TERRAIN_MASKS[itm]).padStart(2, '0');
+    loadIsoTerrainSprite('iso_terrain_' + terrainFamily + '_' + terrainMask,
+                         'assets/iso/terrain/' + terrainFamily + '-' + terrainMask + '.png');
+  }
+  loadIsoTerrainSprite('iso_terrain_grass_base_' + terrainFamily,
+                       'assets/iso/terrain/grass-base-' + terrainFamily + '.png');
+}
 // Profile-specific, eight-direction player sprites. The legacy player.png stays loaded
 // as a compatibility fallback while new art is still being added one file at a time.
 // The original four slots keep their names and iso art mapping (right=SE, down=SW,

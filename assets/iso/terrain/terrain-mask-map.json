@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "maskConvention": {
+    "bit0": "north",
+    "bit1": "east",
+    "bit2": "south",
+    "bit3": "west",
+    "bitSetMeaning": "the cardinal neighbor is the same material family as the center tile",
+    "sourceMaskMeaning": "the explicit source-sheet tile selected after applying center-family polarity"
+  },
+  "sourceGrid": [
+    { "mask": 0, "row": 0, "column": 0, "sourceTile": "tile_0", "label": "none" },
+    { "mask": 1, "row": 0, "column": 1, "sourceTile": "tile_1", "label": "north" },
+    { "mask": 2, "row": 0, "column": 2, "sourceTile": "tile_2", "label": "east" },
+    { "mask": 3, "row": 0, "column": 3, "sourceTile": "tile_3", "label": "north + east" },
+    { "mask": 4, "row": 1, "column": 0, "sourceTile": "tile_4", "label": "south" },
+    { "mask": 5, "row": 1, "column": 1, "sourceTile": "tile_5", "label": "north + south" },
+    { "mask": 6, "row": 1, "column": 2, "sourceTile": "tile_6", "label": "east + south" },
+    { "mask": 7, "row": 1, "column": 3, "sourceTile": "tile_7", "label": "north + east + south" },
+    { "mask": 8, "row": 2, "column": 0, "sourceTile": "tile_8", "label": "west" },
+    { "mask": 9, "row": 2, "column": 1, "sourceTile": "tile_9", "label": "north + west" },
+    { "mask": 10, "row": 2, "column": 2, "sourceTile": "tile_10", "label": "east + west" },
+    { "mask": 11, "row": 2, "column": 3, "sourceTile": "tile_11", "label": "north + east + west" },
+    { "mask": 12, "row": 3, "column": 0, "sourceTile": "tile_12", "label": "south + west" },
+    { "mask": 13, "row": 3, "column": 1, "sourceTile": "tile_13", "label": "north + south + west" },
+    { "mask": 14, "row": 3, "column": 2, "sourceTile": "tile_14", "label": "east + south + west" },
+    { "mask": 15, "row": 3, "column": 3, "sourceTile": "tile_15", "label": "north + east + south + west" }
+  ],
+  "sourceCropLayout": {
+    "sheet": "259x195",
+    "cell": "64x48",
+    "topFace": "64x32 native runtime diamond",
+    "gutter": "1px internal gutter on both axes",
+    "xOrigins": [0, 65, 130, 195],
+    "yOrigins": [0, 49, 98, 147],
+    "rowOrder": "north-to-south",
+    "columnOrder": "west-to-east"
+  },
+  "families": {
+    "path": {
+      "sourcePrefix": "grass-to-path",
+      "runtimePrefix": "iso_terrain_path_",
+      "secondaryMaterial": "path"
+    },
+    "soil": {
+      "sourcePrefix": "grass-to-soil",
+      "runtimePrefix": "iso_terrain_soil_",
+      "secondaryMaterial": "soil"
+    },
+    "water": {
+      "sourcePrefix": "grass-to-water",
+      "runtimePrefix": "iso_terrain_water_",
+      "secondaryMaterial": "water"
+    }
+  },
+  "materialPriorityHighToLow": ["water", "soil", "path", "grass"],
+  "selection": {
+    "grassCenter": "sourceMask = sameFamilyMask; choose the highest-priority adjacent non-grass family",
+    "secondaryCenter": "sourceMask = 15 XOR sameFamilyMask when no higher-priority neighbor exists",
+    "higherPriorityNeighbor": "hard edge: use sourceMask 0 for the current secondary material",
+    "plainGrass": "choose one of the three grass-base-* variants by deterministic row/column hash"
+  },
+  "checkerboardTieBreak": "If a 2x2 saddle contains multiple non-grass families, the center tile chooses the highest-priority adjacent family; equal-priority ties resolve water, then soil, then path, then grass. The runtime never uses sheet order to resolve a saddle."
+}

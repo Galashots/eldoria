@@ -449,6 +449,7 @@ function activateArea(name) {
   map = areas[name].map;
   cropData = areas[name].crops;
   currentEnemies = AREA_ENEMIES[name] || [];
+  if (typeof isoTerrainAreaActivated === 'function') isoTerrainAreaActivated(name);
   applyCanvasMode();   // iso areas resize the canvas; legacy areas restore 640x480
 }
 
