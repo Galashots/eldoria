@@ -1,8 +1,10 @@
 // ---- Profiles & saving (localStorage, one save per kid) ----
-// SAVE FORMAT v3 (profile & quest-state integrity). Versioned and grouped:
-//   { version:3, area, x, y, player:{...},
+// SAVE FORMAT v4 (v3 + Mira's Guide onboarding). Versioned and grouped:
+//   { version:4, area, x, y, player:{..., onboarding:{status, milestones}},
 //     areas:{ <name>: { tiles: {...}|null, enemies: { <spawnId>: {alive,respawnAt} } } } }
 // `player` holds everything about the hero (gold, seeds, crops, combat, gear, food);
+// `player.onboarding` holds the Mira's Guide state (see js/11-onboarding.js):
+// status 'active'|'skipped'|'completed' plus one boolean per guide milestone;
 // `areas.<name>.tiles` holds each area's per-plot soil state (keyed "row,col");
 // `areas.<name>.enemies` holds THIS PROFILE's mutable enemy life state keyed by the
 // stable spawn ID (see enemySpawnId) — the spawn definitions themselves are the
@@ -10,10 +12,20 @@
 //
 // ALL save input — normal profile loading, pasted imports, and file imports — flows
 // through ONE central parse → validate → migrate → canonicalize path (ingestSaveText /
-// ingestSaveObject below). Older shapes (v2 nested; v1/v0 flat with farmTiles/townTiles/
-// tiles and numeric seeds/crops) migrate deterministically to v3 with every enemy
-// initially alive. Invalid input is rejected without touching the stored save.
-var SAVE_VERSION = 3;
+// ingestSaveObject below). Older shapes (v3 without onboarding; v2 nested; v1/v0 flat
+// with farmTiles/townTiles/tiles and numeric seeds/crops) migrate deterministically to
+// v4 with every enemy initially alive. Every pre-v4 save migrates with the guide
+// 'skipped' — an established player is never forced into the tutorial. A v4 save
+// missing the whole onboarding block is a supported recovery case and also migrates
+// to 'skipped'. Invalid input is rejected without touching the stored save.
+var SAVE_VERSION = 4;
+
+// The canonical onboarding milestone ids, in guide order (mirrors ONBOARDING_MILESTONES
+// in js/11-onboarding.js; duplicated as plain data so the ingestion path stays
+// dependency-free the way the rest of this module is).
+var ONBOARDING_MILESTONE_IDS = ['planted', 'harvested', 'usedCrop',
+                                'metMira', 'acceptedQuest', 'enteredWilds'];
+var ONBOARDING_STATUSES = { active: 1, skipped: 1, completed: 1 };
 
 function defaultState() {
   return {
@@ -33,7 +45,8 @@ function defaultState() {
       friends: {},
       dumplings: {},
       dumplingDough: 0,
-      pullsSinceLegendary: 0
+      pullsSinceLegendary: 0,
+      onboarding: defaultOnboarding('active')
     },
     areas: {
       farm:      { tiles: null, enemies: {} },
@@ -43,6 +56,14 @@ function defaultState() {
       mine:      { tiles: null, enemies: {} }
     }
   };
+}
+
+// A fresh onboarding block: every milestone false, in the given status.
+function defaultOnboarding(status) {
+  var milestones = {};
+  for (var i = 0; i < ONBOARDING_MILESTONE_IDS.length; i++)
+    milestones[ONBOARDING_MILESTONE_IDS[i]] = false;
+  return { status: status, milestones: milestones };
 }
 
 // ---- Central save ingestion: parse → validate → migrate → canonicalize ----
@@ -55,7 +76,7 @@ function isFiniteNumber(v) { return typeof v === 'number' && isFinite(v); }
 function badNumber(v) { return v != null && !isFiniteNumber(v); }
 
 // Returns an error string, or null when the shape is acceptable to migrate.
-// Missing legacy fields are fine (they get documented defaults in migrateSaveToV3);
+// Missing legacy fields are fine (they get documented defaults in migrateSaveToV4);
 // PRESENT-but-wrong fields are rejected.
 function validateSaveShape(s) {
   if (!isPlainObject(s)) return 'save must be a plain JSON object';
@@ -100,6 +121,33 @@ function validateSaveShape(s) {
   var maps = ['food', 'killCounts', 'friends', 'dumplings'];
   for (var m = 0; m < maps.length; m++)
     if (p[maps[m]] != null && !isPlainObject(p[maps[m]])) return 'invalid ' + maps[m] + ' field';
+
+  // Onboarding (v4): absent is fine (pre-v4 saves and v4 recovery saves migrate to
+  // 'skipped'); a PRESENT v4 block must contain exactly the six canonical boolean
+  // milestones. Unknown or missing keys, bad values, and contradictory completed
+  // states are corrupt saves, never defaulted.
+  if (p.onboarding != null && s.version >= 4) {
+    var ob = p.onboarding;
+    if (!isPlainObject(ob)) return 'invalid onboarding field';
+    if (!ONBOARDING_STATUSES[ob.status]) return 'invalid onboarding status';
+    if (!isPlainObject(ob.milestones)) return 'invalid onboarding milestones';
+    if (Object.keys(ob.milestones).length !== ONBOARDING_MILESTONE_IDS.length)
+      return 'onboarding milestones must contain exactly six keys';
+    for (var oi = 0; oi < ONBOARDING_MILESTONE_IDS.length; oi++)
+      if (!(ONBOARDING_MILESTONE_IDS[oi] in ob.milestones))
+        return 'missing onboarding milestone: ' + ONBOARDING_MILESTONE_IDS[oi];
+    for (var om in ob.milestones) {
+      if (ONBOARDING_MILESTONE_IDS.indexOf(om) < 0)
+        return 'unknown onboarding milestone: ' + om;
+      if (typeof ob.milestones[om] !== 'boolean')
+        return 'invalid onboarding milestone value: ' + om;
+    }
+    var allOnboardingDone = ONBOARDING_MILESTONE_IDS.every(function (id) {
+      return ob.milestones[id] === true;
+    });
+    if (ob.status === 'completed' && !allOnboardingDone)
+      return 'completed onboarding requires all milestones';
+  }
 
   if (p.killQuest != null) {
     if (!isPlainObject(p.killQuest)) return 'invalid killQuest field';
@@ -166,10 +214,10 @@ function validateAreaTiles(areaName, tiles) {
   return null;
 }
 
-// Deterministically migrate a VALIDATED save of any supported version (v0–v3) into
-// the canonical v3 shape. Pure: reads globals' static data tables only, mutates nothing.
+// Deterministically migrate a VALIDATED save of any supported version (v0–v4) into
+// the canonical v4 shape. Pure: reads globals' static data tables only, mutates nothing.
 // Documented defaults for missing legacy fields match the pre-v3 loader exactly.
-function migrateSaveToV3(s) {
+function migrateSaveToV4(s) {
   var nested = (s.version >= 2 && isPlainObject(s.player));
   var p = nested ? s.player : s;
   var out = defaultState();
@@ -236,6 +284,32 @@ function migrateSaveToV3(s) {
     }
   }
 
+  // Onboarding (Mira's Guide): only a v4 save carries real guide state. EVERY pre-v4
+  // save — and a v4 save missing the block — migrates 'skipped': those players
+  // already know the loop, and a forced tutorial would be punitive. A present v4
+  // block is exact-shape validated and copies every milestone through. An active
+  // block with all six true canonicalizes to completed during migration.
+  if (s.version >= 4 && isPlainObject(p.onboarding)) {
+    op.onboarding = defaultOnboarding(p.onboarding.status);
+    for (var om = 0; om < ONBOARDING_MILESTONE_IDS.length; om++) {
+      var omId = ONBOARDING_MILESTONE_IDS[om];
+      op.onboarding.milestones[omId] = p.onboarding.milestones[omId] === true;
+    }
+    // Mira's interaction is one real gameplay event. Repair saves from the draft
+    // build (or imported edits) that captured metMira without acceptedQuest before
+    // applying the active/completed canonicalization below; otherwise a later Wilds
+    // completion could write a save that this same ingestion door rejects.
+    if (op.onboarding.milestones.metMira)
+      op.onboarding.milestones.acceptedQuest = true;
+    var migratedAllOnboardingDone = ONBOARDING_MILESTONE_IDS.every(function (id) {
+      return op.onboarding.milestones[id] === true;
+    });
+    if (op.onboarding.status === 'active' && migratedAllOnboardingDone)
+      op.onboarding.status = 'completed';
+  } else {
+    op.onboarding = defaultOnboarding('skipped');
+  }
+
   op.friends = {};
   for (var fr = 0; fr < NPCS.length; fr++)
     op.friends[NPCS[fr].id] = (p.friends && isFiniteNumber(p.friends[NPCS[fr].id]))
@@ -298,8 +372,8 @@ function ingestSaveText(txt) {
 function ingestSaveObject(s) {
   var err = validateSaveShape(s);
   if (err) return { ok: false, error: err };
-  var v3 = migrateSaveToV3(s);
-  return { ok: true, state: v3, canonicalText: JSON.stringify(v3) };
+  var v4 = migrateSaveToV4(s);
+  return { ok: true, state: v4, canonicalText: JSON.stringify(v4) };
 }
 
 // Restore one area's crops: reset all its plots, then lay saved progress back on.
@@ -317,11 +391,17 @@ function restoreAreaCrops(name, tiles) {
   }
 }
 
-// Apply a CANONICAL v3 state (always the output of ingestSaveObject/ingestSaveText or
+// Apply a CANONICAL v4 state (always the output of ingestSaveObject/ingestSaveText or
 // defaultState) to the live game. All legacy-shape knowledge lives in the ingestion
 // path above; this function is a straight setter.
 function applyState(v3) {
   var p = v3.player;
+
+  // Deep-copy the guide state so live play never mutates the ingested snapshot.
+  player.onboarding = defaultOnboarding(p.onboarding.status);
+  for (var oi = 0; oi < ONBOARDING_MILESTONE_IDS.length; oi++)
+    player.onboarding.milestones[ONBOARDING_MILESTONE_IDS[oi]] =
+      p.onboarding.milestones[ONBOARDING_MILESTONE_IDS[oi]] === true;
 
   player.gold = p.gold;
   player.questsDone = p.questsDone;
@@ -387,7 +467,7 @@ function applyState(v3) {
 }
 
 // Load one profile's stored save through the central ingestion path. Returns the
-// CANONICAL v3 state, null when no save exists, or { corrupt: true, error } when the
+// CANONICAL v4 state, null when no save exists, or { corrupt: true, error } when the
 // stored text exists but fails ingestion — callers must not overwrite that raw data.
 function loadGame(profile) {
   var raw = null;
@@ -414,7 +494,8 @@ function saveGame() {
       friends: player.friends,
       dumplings: player.dumplings,
       dumplingDough: player.dumplingDough,
-      pullsSinceLegendary: player.pullsSinceLegendary
+      pullsSinceLegendary: player.pullsSinceLegendary,
+      onboarding: player.onboarding
     },
     areas: (function () {
       var enemyState = serializeProfileEnemies();   // wilds/deepwoods/mine only
@@ -507,6 +588,7 @@ function switchProfile() {
   currentProfile = null;
   var heroBtn = document.getElementById('heroBtn');
   if (heroBtn) heroBtn.disabled = true;
+  updateOnboardingChip();   // no active profile → the guide chip leaves the screen
   bgMusic.pause();
   document.getElementById('titleScreen').classList.remove('hide');
 }
@@ -617,7 +699,7 @@ function loadSaveFile(evt) {
     var result = ingestSaveText(txt);   // same central path as pasted imports
     if (!result.ok) { showToast("That file isn't a valid save (" + result.error + ').'); return; }
     try {
-      // Store the CANONICAL v3 form, never the submitted raw text.
+      // Store the CANONICAL v4 form, never the submitted raw text.
       localStorage.setItem('eldoria_save_' + saveToolsProfile, result.canonicalText);
       showToast('Loaded ' + name + "'s save from file!");
       document.getElementById('saveToolsText').value = result.canonicalText;

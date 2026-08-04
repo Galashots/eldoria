@@ -1,15 +1,17 @@
 # Current Project State
 
-**Updated:** 2026-07-31  
-**Baseline:** `main` at `789b0c3e37ac6e8930d0488ef5c8124e3e8ecce4`  
+**Updated:** 2026-08-04  
+**Baseline:** `main` at `561ce385a95a0f6a1fdcc655c97a1bf794c9f65b`  
 **Purpose:** cold-start continuity for the next implementation lead. This file records status; it does not grant authority or supersede the AI Team Charter.
 
 ## Live architecture
 
 - One offline, vanilla HTML/CSS/JavaScript game rooted in `index.html`.
   Since Foundation B (2026-07-30) the inline blocks are extracted verbatim
-  into `eldoria.css` and nine classic **deferred** scripts `js/01-*.js` …
-  `js/09-*.js` loaded in numbered order at the end of `<body>`; split points
+  into `eldoria.css` and classic **deferred** scripts `js/01-*.js` …
+  `js/11-*.js` at the end of `<body>` (numbered order, except
+  `js/11-onboarding.js`, which loads before `js/09-main.js` because main's
+  top-level boot calls into it); split points
   are existing top-level section comments only, all declarations remain
   `var`/`function` globals, and behavior/rendering/DOM timing are unchanged
   (proven byte-identical by reconstruction, full suite green, and 16/16
@@ -17,8 +19,15 @@
 - World coordinates, collision, maps, saves, economy, quests, and combat remain orthogonal and shared by both render modes.
 - Farm and Town default to the isometric renderer. Wilds, Deep Woods, and Mine remain top-down by default; under the `?iso=1` development override they render in iso with real enemy sprites, but flipping their defaults stays out of scope until the iso spec's combat/quest parity gates are met.
 - Town's validated isometric scope is intentionally partial: the General Store and Mira have dedicated placeholder treatments; the Forge and remaining villagers still use generic placeholders.
-- The save schema is **version 3** (profile & quest-state integrity, 2026-07-30,
-  owner-authorized migration): enemy life state (`alive`/`respawnAt` by stable
+- The save schema is **version 4** (Step 7 Mira's Guide onboarding, 2026-08-04,
+  owner-authorized migration): `player.onboarding` carries the guide status
+  (`active`/`skipped`/`completed`) plus one boolean per milestone (`planted`,
+  `harvested`, `usedCrop`, `metMira`, `acceptedQuest`, `enteredWilds`).
+  Brand-new profiles start `active`; every pre-v4 save migrates `skipped` so
+  established players are never forced into the tutorial; malformed onboarding
+  blocks are rejected by the same central ingestion door as everything else.
+  The v3 layer (profile & quest-state integrity, 2026-07-30) is unchanged
+  underneath: enemy life state (`alive`/`respawnAt` by stable
   spawn ID) is profile-owned under `areas.<name>.enemies`, spawn definitions are
   the immutable `ENEMY_SPAWNS` templates, and ALL save input (profile load,
   paste import, file import) flows through one central
@@ -67,7 +76,8 @@
 | [PR #13](https://github.com/Galashots/eldoria/pull/13) | Deliberately closed, not merged, as the reusable record that the probed TRELLIS/primitive-blockout route did not meet the North Star. |
 | [PR #15](https://github.com/Galashots/eldoria/pull/15) | Merged the production asset-pipeline tools and decision record at head `1c6be80d672609923647150fdd28413015269019`; CI run 99 passed. |
 | [PR #36](https://github.com/Galashots/eldoria/pull/36)–[#41](https://github.com/Galashots/eldoria/pull/41) | PixelLab doc corrections, Foundation B (mechanical `index.html` split), North Star v2, save-schema v3, per-question combat damage budgets, and the Ranger/Mage identity + Character screen surface — all merged, `main` green throughout. |
-| Foundation D (this PR) | Repository-wide asset manifest and integrity gate — see above. |
+| [PR #42](https://github.com/Galashots/eldoria/pull/42)–[#43](https://github.com/Galashots/eldoria/pull/43) | Foundation D (repository-wide asset manifest and integrity gate) plus its crop-carrot container-repair prerequisite — merged 2026-08-04. |
+| Step 7 (this PR) | Mira's Guide onboarding: save v4 `player.onboarding`, milestone chain, derived-objective chip — see above. |
 
 ## Art and pipeline state
 
@@ -82,19 +92,15 @@
 ## Recommended next outcome
 
 Leo has authorized ongoing **LARGE** PRs under the sequence he agreed with ChatGPT
-(see the "PR Review and Repo Sync" ChatGPT chat for the full scope contracts).
-After Foundation D merges, the next planned player-facing outcome is:
+(see the "Eldoria Independent Playtest" ChatGPT chat for the full scope
+contracts). For the current sprint Leo has swapped the planning lead: Claude
+authors the plan and its bounded decisions, ChatGPT reviews. **Step 7 (Mira's
+Guide onboarding) is delivered by this PR**; the next outcome will be chosen
+from the reconciled playtest queue (HUD polish items, dumpling modal scrolling,
+iPad double-tap zoom, wrong-answer quest friction, raster-decoder hardening)
+plus the environment-art integration track.
 
-**Step 7 — the Mira-led onboarding/objective-chain surface.** A short,
-dismissible chain of on-world highlights and toasts routing a new player through
-the existing verbs in order: plant → harvest → sell or cook → visit Town/Mira →
-accept an adventure objective → enter the Wilds. One visible objective at a
-time, no long instruction modal, Mage read-aloud support preserved. Scoped
-independently from Foundation D because persistent onboarding-completion state
-may require a deliberate save-migration decision (`SAVE_VERSION` v4), which
-Foundation D and Step 6 explicitly do not touch.
-
-Out of scope for both Foundation D and Step 7 unless Leo explicitly expands them:
+Out of scope unless Leo explicitly expands it:
 
 - map, collision, economy, curriculum, or combat-budget changes;
 - retirement of top-down rendering;

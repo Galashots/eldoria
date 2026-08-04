@@ -39,6 +39,7 @@ function updateHUD() {
     }
   }
   renderGearSell();
+  updateOnboardingChip();
 }
 
 // ---- Toast ----
@@ -105,6 +106,18 @@ function speak(text) {
   if (!('speechSynthesis' in window)) return;
   try {
     window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+// Queue a follow-up line without cancelling speech that just finished. Used when
+// feedback must be heard first (for example, the answer -> Mira guide sequence).
+function speakQueued(text) {
+  if (currentProfile !== 'mage') return;
+  if (!('speechSynthesis' in window)) return;
+  try {
     var u = new SpeechSynthesisUtterance(text);
     u.rate = 0.95;
     window.speechSynthesis.speak(u);
@@ -257,6 +270,7 @@ function update() {
 
   updateCrops();
   updateActionLabel();
+  updateOnboardingChip();   // per-frame: guarantees the chip hides while combat is open
 }
 
 // ---- Area travel (walk onto an edge EXIT tile) ----
@@ -277,6 +291,7 @@ function checkTravel() {
   // Land just inside the destination's matching entrance: came from the left →
   // arrive on its right side; came from the right → arrive on its left side.
   activateArea(dest);
+  if (dest === 'wilds') recordOnboardingMilestone('enteredWilds');
   // The selected profile's enemy state persists across travel. Normal 30-second
   // respawnAt timers are honored on re-entry; leaving and returning must not
   // instantly revive bosses (and never touches the other profile's world).

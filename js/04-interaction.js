@@ -167,6 +167,7 @@ function interactCropTile(tile) {
     addPop(tile.row, tile.col, '+1');
     soundHarvest();
     showToast('Harvested 1 ' + CROPS[harvestType].name + '!');
+    recordOnboardingMilestone('harvested');
   } else if (crop.status === 'growing') {
     var ct = crop.type || 'turnip';
     var pct = Math.round(((Date.now() - crop.plantedAt) / CROPS[ct].grow) * 100);
@@ -312,6 +313,7 @@ function sellCrops() {
   soundCoin();
   player.gold += earned;
   for (var i = 0; i < CROP_TYPES.length; i++) player.crops[CROP_TYPES[i]] = 0;
+  recordOnboardingMilestone('usedCrop');   // guarded above: only a real positive sale
   updateHUD();
   saveGame();
 }
@@ -323,6 +325,7 @@ function plantSeed(key, crop, type) {
   crop.plantedAt = Date.now();
   crop.type = type;
   showToast('Planted ' + CROPS[type].name + '! (-1 seed)');
+  recordOnboardingMilestone('planted');
   updateHUD();
   saveGame();
 }
@@ -605,6 +608,12 @@ function openQuest(npc) {
     speak(npcName + ' says: ' + (NPC_GREETINGS[npcId] || 'Hello!'));
   }
 
+  // A real Mira interaction reached (all modal/adjacency guards above passed).
+  if (npcId === 'mira') {
+    onboardingDeferMiraNarration();
+    recordOnboardingMilestone('metMira');
+  }
+
   // Offer a kill quest if the player doesn't have one active (Mira only)
   if (npcId === 'mira' && !player.killQuest) {
     var kq = assignKillQuest();
@@ -651,7 +660,10 @@ function onQuestAnswerClick(e) {
 
 function answerQuest(value) {
   var correct = (value === questAnswer);
-  closeQuest();
+  // Keep the guide transition pending until the answer feedback has had its
+  // normal toast + cancel-first speech turn. It is flushed below as a queued
+  // follow-up so the child hears both lines in order.
+  closeQuest({ deferMiraNarration: true });
   if (correct) {
     // Learning pays gold (the economy lever). The harder multiplication problems pay more.
     var reward = (currentProfile === 'adventurer') ? 8 : 5;
@@ -666,11 +678,13 @@ function answerQuest(value) {
     showToast('Not quite — ask me again!');
     speak('Good try! Ask me again.');
   }
+  onboardingFlushMiraNarration(true);
 }
 
-function closeQuest() {
+function closeQuest(options) {
   questOpen = false;
   modalShellClose('questModal');
+  if (!(options && options.deferMiraNarration)) onboardingFlushMiraNarration(false);
 }
 registerModal('questModal', closeQuest);   // Escape = the existing close/decline path
 
