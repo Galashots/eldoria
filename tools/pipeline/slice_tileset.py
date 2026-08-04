@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministically crop Eldoria's 259x195 Farm transition sheets.
+"""Deterministically crop and flatten Eldoria's 259x195 Farm transition sheets.
 
 The source sheets are RGBA PNGs with a one-pixel gutter between 64x48 cells:
 origins are x={0,65,130,195}, y={0,49,98,147}.  The encoder below is deliberately
@@ -14,8 +14,10 @@ Production invocation:
     --out-dir assets/iso/terrain \
     --provenance-out assets/iso/terrain/terrain-provenance.json
 
-No image is resized, colour-converted, or alpha-matted.  ``--self-test`` runs
-without external files and proves crop coordinates, pixel preservation, and
+The committed derivatives retain source pixels 1:1 inside an inset 64x32 top-face
+diamond.  The authored 16px skirt and the repeated outer perimeter are made transparent;
+the renderer supplies the continuous flat material diamond underneath.  ``--self-test``
+runs without external files and proves crop coordinates, the flattening transform, and
 byte-stability twice.
 """
 
@@ -35,10 +37,14 @@ import zlib
 MAGIC = b"\x89PNG\r\n\x1a\n"
 SHEET_SIZE = (259, 195)
 CELL_SIZE = (64, 48)
+TOP_FACE_HEIGHT = 32
+TOP_FACE_HALF_HEIGHT = 16
+PERIMETER_INSET = 2
 X_ORIGINS = (0, 65, 130, 195)
 Y_ORIGINS = (0, 49, 98, 147)
 MASKS = tuple(range(16))
-ENCODER = "eldoria-terrain-slicer/1; stdlib PNG RGBA8; filter=0; zlib-level=9"
+ENCODER = "eldoria-terrain-slicer/2; stdlib PNG RGBA8; filter=0; zlib-level=9"
+FLATTENING_TRANSFORM = "flatten-raised-block-v1; preserve native RGBA inside inset diamond; alpha=0 for skirt and perimeter"
 
 
 def sha256(data: bytes) -> str:
@@ -135,6 +141,34 @@ def crop_pixels(pixels: bytes, width: int, x: int, y: int) -> bytes:
     )
 
 
+def top_face_bounds(row: int) -> tuple[int, int]:
+    """Return the authored 64x32 diamond's inclusive outer bounds for one row."""
+    if not 0 <= row < TOP_FACE_HEIGHT:
+        raise ValueError(f"top-face row out of range: {row}")
+    if row < TOP_FACE_HALF_HEIGHT:
+        return 31 - 2 * row, 32 + 2 * row
+    distance = row - TOP_FACE_HALF_HEIGHT
+    return 2 * distance, 63 - 2 * distance
+
+
+def flatten_top_face(crop: bytes) -> bytes:
+    """Make a raised-block crop a transparent, inset native-resolution overlay."""
+    expected = CELL_SIZE[0] * CELL_SIZE[1] * 4
+    if len(crop) != expected:
+        raise ValueError(f"crop payload is {len(crop)} bytes; expected {expected}")
+    flattened = bytearray(expected)
+    for row in range(TOP_FACE_HEIGHT):
+        outer_left, outer_right = top_face_bounds(row)
+        left = outer_left + PERIMETER_INSET
+        right = outer_right - PERIMETER_INSET
+        if left > right:
+            continue
+        for column in range(max(0, left), min(CELL_SIZE[0] - 1, right) + 1):
+            source = (row * CELL_SIZE[0] + column) * 4
+            flattened[source:source + 4] = crop[source:source + 4]
+    return bytes(flattened)
+
+
 def parse_sources(values: list[str]) -> dict[str, Path]:
     result: dict[str, Path] = {}
     for value in values:
@@ -166,6 +200,14 @@ def slice_sources(sources: dict[str, Path], out_dir: Path, provenance_out: Path,
             "columnOrder": "west-to-east, columns 0..3",
             "maskOrder": "explicit mask map; not inferred at runtime",
         },
+        "flatteningTransform": {
+            "name": FLATTENING_TRANSFORM,
+            "topFaceHeight": TOP_FACE_HEIGHT,
+            "skirtRows": [TOP_FACE_HEIGHT, CELL_SIZE[1] - 1],
+            "diamondOuterBounds": "64x32, two-pixel flat top, rows 0..15 expand by 2px and rows 16..31 contract by 2px",
+            "perimeterInset": PERIMETER_INSET,
+            "sourcePixels": "preserved byte-for-byte inside the inset top-face bounds; all other output pixels are transparent",
+        },
         "sources": [],
         "outputs": [],
     }
@@ -185,7 +227,8 @@ def slice_sources(sources: dict[str, Path], out_dir: Path, provenance_out: Path,
         for mask in MASKS:
             row, column = divmod(mask, 4)
             origin = (X_ORIGINS[column], Y_ORIGINS[row])
-            crop = crop_pixels(pixels, width, *origin)
+            source_crop = crop_pixels(pixels, width, *origin)
+            crop = flatten_top_face(source_crop)
             filename = f"{family}-{mask:02d}.png"
             output_path = out_dir / filename
             output_bytes = encode_png(CELL_SIZE[0], CELL_SIZE[1], crop)
@@ -200,6 +243,7 @@ def slice_sources(sources: dict[str, Path], out_dir: Path, provenance_out: Path,
                 "row": row,
                 "column": column,
                 "cropOrigin": {"x": origin[0], "y": origin[1]},
+                "sourcePixelSha256": sha256(source_crop),
                 "pixelSha256": sha256(crop),
                 "sha256": sha256(output_bytes),
                 "dimensions": {"width": CELL_SIZE[0], "height": CELL_SIZE[1]},
@@ -209,7 +253,8 @@ def slice_sources(sources: dict[str, Path], out_dir: Path, provenance_out: Path,
         # Mask 15 is the all-grass base crop. Keep one deterministic variant per
         # source family so the Farm's plain grass has stable, authored variety.
         base_filename = f"grass-base-{family}.png"
-        base_crop = crop_pixels(pixels, width, X_ORIGINS[3], Y_ORIGINS[3])
+        base_source_crop = crop_pixels(pixels, width, X_ORIGINS[3], Y_ORIGINS[3])
+        base_crop = flatten_top_face(base_source_crop)
         base_bytes = encode_png(CELL_SIZE[0], CELL_SIZE[1], base_crop)
         (out_dir / base_filename).write_bytes(base_bytes)
         base_record = {
@@ -222,6 +267,7 @@ def slice_sources(sources: dict[str, Path], out_dir: Path, provenance_out: Path,
             "row": 3,
             "column": 3,
             "cropOrigin": {"x": X_ORIGINS[3], "y": Y_ORIGINS[3]},
+            "sourcePixelSha256": sha256(base_source_crop),
             "pixelSha256": sha256(base_crop),
             "sha256": sha256(base_bytes),
             "dimensions": {"width": CELL_SIZE[0], "height": CELL_SIZE[1]},
@@ -262,9 +308,16 @@ def self_test() -> None:
                 raise AssertionError(f"output bytes differ between runs: {path.name}")
         sample = first / "path-07.png"
         _w, _h, actual = decode_png(sample, None)
-        expected = crop_pixels(bytes(pixels), SHEET_SIZE[0], X_ORIGINS[3], Y_ORIGINS[1])
+        expected = flatten_top_face(crop_pixels(bytes(pixels), SHEET_SIZE[0], X_ORIGINS[3], Y_ORIGINS[1]))
         if actual != expected:
-            raise AssertionError("pixel-for-pixel crop mismatch at mask 7")
+            raise AssertionError("pixel-for-pixel flattened crop mismatch at mask 7")
+        for row in range(CELL_SIZE[1]):
+            for column in range(CELL_SIZE[0]):
+                alpha = actual[(row * CELL_SIZE[0] + column) * 4 + 3]
+                outer_left, outer_right = top_face_bounds(row) if row < TOP_FACE_HEIGHT else (1, 0)
+                inside = row < TOP_FACE_HEIGHT and outer_left + PERIMETER_INSET <= column <= outer_right - PERIMETER_INSET
+                if alpha and not inside:
+                    raise AssertionError(f"flattening left opaque pixel outside overlay at {column},{row}")
         if len(list(first.glob("*.png"))) != 51:
             raise AssertionError("expected 48 transition outputs plus 3 grass bases")
     print("PASS terrain slicer self-test: crop origins, pixels, and bytes are stable")

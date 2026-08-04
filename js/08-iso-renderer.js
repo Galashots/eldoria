@@ -5,9 +5,9 @@
 var isoCamPX = 0, isoCamPY = 0;
 
 // Farm ground records are precomputed when the active map changes. The draw loop only
-// looks up a decoded image and paints it at its native 64x48 size; it never scans
-// neighbors, allocates terrain records, or builds a pattern. Town and every non-Farm
-// area retain the existing flat-diamond path.
+// looks up a decoded image and paints its transparent native 64x48 overlay over the
+// continuous flat diamond underneath; it never scans neighbors, allocates terrain
+// records, or builds a pattern. Town and every non-Farm area retain the existing path.
 var ISO_TERRAIN_BITS = { north: 1, east: 2, south: 4, west: 8 };
 var ISO_TERRAIN_PRIORITY = { grass: 0, path: 1, soil: 2, water: 3 };
 var ISO_TERRAIN_PRIORITY_ORDER = ['water', 'soil', 'path', 'grass'];
@@ -108,18 +108,24 @@ function isoTerrainAreaActivated(name) {
 }
 
 function drawIsoTerrainRecord(record) {
+  // The flat diamond is always drawn first so adjacent Farm cells share one continuous
+  // ground plane. Flattened terrain derivatives contain only an inset top-face overlay:
+  // their authored skirt and perimeter are transparent, so they cannot form a raised
+  // block lattice between cells.
+  drawIsoTileDiamond(record.cx, record.cy, record.fallbackColor);
+
   // The preload barrier settles only after every requested terrain file has either
   // decoded or failed. This prevents a first-use decode hitch while preserving the
   // exact legacy fallback for an individual missing sprite.
   var image = isoTerrainPreloadSettled && record.spriteKey ? spr(record.spriteKey) : null;
   if (image) {
-    // Source top face is already the exact ISO_TW x ISO_TH diamond. Its center is
-    // anchored at (cx, cy); the authored 16px skirt extends below the diamond.
+    // The overlay is already the exact ISO_TW x ISO_TH top-face canvas at native
+    // resolution. Its center is anchored at (cx, cy); transparent rows preserve the
+    // 64x48 runtime canvas without shifting the ground diamond.
     ctx.drawImage(image, record.cx - ISO_TW / 2, record.cy - ISO_TH / 2);
   } else if (record.fallbackTile === SOIL) {
+    // Preserve the exact existing missing-art fallback over the flat underlay.
     drawIsoSoilTile(record.cx, record.cy);
-  } else {
-    drawIsoTileDiamond(record.cx, record.cy, record.fallbackColor);
   }
 }
 

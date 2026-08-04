@@ -47,14 +47,16 @@ source filenames and hashes reviewable.
    `tools/pipeline/slice_tileset.py`.
 2. The slicer crops exactly sixteen 64x48 rectangles at x origins `0,65,130,195` and y
    origins `0,49,98,147`; the one-pixel internal gutters are not copied (the sheets have
-   no outer margin). It does not resize, resample, recolor, or alter alpha.
+   no outer margin). It does not resize, resample, or recolor source pixels.
 3. Each crop is encoded as a deterministic RGBA8 PNG using the committed stdlib encoder
    (`filter=0`, zlib level 9) and assigned its explicit mask, runtime key, and Pass 1 layer.
-4. The 64x32 top-face diamond is drawn at native runtime size; the lower sixteen pixels
-   remain the authored tile skirt and are positioned with the ground diamond anchor.
-5. The renderer decodes every derived image during initial sprite preload, precomputes Farm
-   draw records at area activation, and falls back to the existing color-diamond behavior
-   if an image is missing.
+4. The deterministic `flatten-raised-block-v1` transform preserves source RGBA pixels
+   inside a two-pixel-inset 64x32 diamond, makes the authored 16px skirt and repeated
+   outer perimeter transparent, and records both source-crop and transformed hashes.
+5. The renderer draws the existing flat material diamond first, then the native 64x48
+   transparent overlay; it decodes every derived image during initial sprite preload,
+   precomputes Farm draw records at area activation, and falls back to the existing
+   color-diamond behavior if an image is missing.
 
 The owned July-batch normalized files are provenance/evidence inputs only. Props, roads,
 probe sheets, raw source sheets, and all other landscape artifacts remain outside the PR B

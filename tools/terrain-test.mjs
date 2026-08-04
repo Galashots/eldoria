@@ -69,6 +69,48 @@ try {
     };
     map = originalMap;
     isoTerrainAreaActivated('farm');
+    function flattenedOverlayGeometry() {
+      var probe = document.createElement('canvas');
+      probe.width = 64; probe.height = 48;
+      var probeCtx = probe.getContext('2d');
+      function bounds(row) {
+        if (row < 16) return [31 - 2 * row, 32 + 2 * row];
+        var distance = row - 16;
+        return [2 * distance, 63 - 2 * distance];
+      }
+      for (var familyIndex = 0; familyIndex < ISO_TERRAIN_FAMILIES.length; familyIndex++) {
+        var family = ISO_TERRAIN_FAMILIES[familyIndex];
+        for (var mask = 0; mask < 16; mask++) {
+          var transition = spr('iso_terrain_' + family + '_' + String(mask).padStart(2, '0'));
+          probeCtx.clearRect(0, 0, 64, 48);
+          probeCtx.drawImage(transition, 0, 0);
+          var pixels = probeCtx.getImageData(0, 0, 64, 48).data;
+          var opaque = 0;
+          for (var row = 0; row < 48; row++) for (var column = 0; column < 64; column++) {
+            var alpha = pixels[(row * 64 + column) * 4 + 3];
+            if (!alpha) continue;
+            opaque++;
+            var outer = row < 32 ? bounds(row) : [1, 0];
+            if (row >= 32 || column < outer[0] + 2 || column > outer[1] - 2) return false;
+          }
+          if (!opaque) return false;
+        }
+        var base = spr('iso_terrain_grass_base_' + family);
+        probeCtx.clearRect(0, 0, 64, 48);
+        probeCtx.drawImage(base, 0, 0);
+        var basePixels = probeCtx.getImageData(0, 0, 64, 48).data;
+        var baseOpaque = 0;
+        for (var baseRow = 0; baseRow < 48; baseRow++) for (var baseColumn = 0; baseColumn < 64; baseColumn++) {
+          var baseAlpha = basePixels[(baseRow * 64 + baseColumn) * 4 + 3];
+          if (!baseAlpha) continue;
+          baseOpaque++;
+          var baseOuter = baseRow < 32 ? bounds(baseRow) : [1, 0];
+          if (baseRow >= 32 || baseColumn < baseOuter[0] + 2 || baseColumn > baseOuter[1] - 2) return false;
+        }
+        if (!baseOpaque) return false;
+      }
+      return true;
+    }
     var pairs = {};
     for (var r = 0; r < MAP_H; r++) for (var c = 0; c < MAP_W; c++) {
       var family = isoTerrainFamily(map[r][c]);
@@ -102,6 +144,7 @@ try {
       allDecoded: isoTerrainAllDecoded,
       records: isoTerrainRecords.length,
       nonNullRecords: isoTerrainRecords.filter(function (record) { return record.spriteKey; }).length,
+      flattenedOverlayGeometry: flattenedOverlayGeometry(),
       cases: cases,
       pairs: Object.keys(pairs).sort(),
       fallbackNoThrow: fallbackNoThrow,
@@ -114,6 +157,7 @@ try {
   });
   check('preload: all terrain requests settle before Farm render', result.preloadSettled);
   check('preload: all 51 terrain images decode', result.allDecoded);
+  check('assets: every terrain derivative is an inset transparent overlay', result.flattenedOverlayGeometry);
   check('activation: one precomputed record per Farm cell', result.records === 30 * 22 && result.nonNullRecords === result.records,
     `records=${result.records} nonNull=${result.nonNullRecords}`);
   check('mask: isolated case selects soil-15', result.cases.isolated.mask === 0 && result.cases.isolated.key === 'iso_terrain_soil_15');

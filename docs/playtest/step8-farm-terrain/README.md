@@ -14,12 +14,20 @@ forces the existing flat-diamond fallback for the `before` image.
 
 Capture command: `node tools/terrain-capture.mjs`
 
+Flattening proofs: `open-grass-8x8-proof.png` is an 8x8 native-scale open-grass tiling
+proof; `mixed-topology-proof.png` is a labeled mixed grass/path/soil/water topology sheet.
+Both use the same flat-diamond-underlay plus transparent-overlay composition as the live
+renderer.
+
 Focused gate: `node tools/terrain-test.mjs`
 
 ## Evidence summary
 
-- Native 64×32 top-face geometry is retained; the 64×48 sprite anchor keeps the authored
-  lower skirt below the ground diamond without row drift.
+- Native 64×32 top-face pixels are retained inside a deterministic two-pixel-inset
+  overlay; the authored 16px raised-block skirt and repeated perimeter are transparent.
+  The renderer draws a continuous flat material diamond underneath every Farm cell.
+- The open-grass 8x8 proof shows continuous ground without the former dark raised-block
+  lattice; the mixed topology proof shows material transitions without false elevation.
 - Grass, packed path, tilled soil, and deep water remain distinguishable at all three
   viewports; both hero silhouettes and the Mira onboarding cue remain readable.
 - The Farm adjacency scan found `grass|path`, `grass|soil`, `grass|water`, and `path|soil`.

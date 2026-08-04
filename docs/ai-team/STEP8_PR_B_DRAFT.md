@@ -130,20 +130,28 @@ terrain, or other render layers are admitted in PR B; they remain source-only or
 ## Delivered implementation and evidence
 
 - deterministic native-resolution slicer with exact crop origins and a pinned stdlib PNG encoder;
+- deterministic `flatten-raised-block-v1` derivative transform: the authored 16px skirt
+  and repeated outer perimeter are transparent, while source pixels remain native inside
+  a two-pixel-inset 64×32 top-face diamond;
 - bit convention `bit0=N`, `bit1=E`, `bit2=S`, `bit3=W`, documented material priority and
   checkerboard tie-break;
 - Farm adjacency-pair scan and activation-time precomputed draw records;
-- decode-all-before-first-Farm-display, with soil → `drawIsoSoilTile` and all other missing
+- decode-all-before-first-Farm-display, with a flat `drawIsoTileDiamond` underlay and the
+  transparent overlay above it; missing soil → `drawIsoSoilTile`, all other missing
   families → `drawIsoTileDiamond` + `TILE_COLOR` fallbacks;
 - manifest `--write --accept-new`, then `--check`;
 - slicer byte-stability, exact dimensions, pixel-for-pixel July-source comparison, mask
   cases, fallback, boot, and render-only save-byte-equivalence tests;
 - deterministic identical-state before/after captures for desktop, iPad landscape, and
   phone portrait, with both heroes.
+- committed `open-grass-8x8-proof.png` and `mixed-topology-proof.png` proving native-scale
+  continuous open grass and mixed-material transition composition before recapturing the
+  six identical-state viewport pairs.
 
 Focused gates passed:
 
 - `python tools/pipeline/slice_tileset.py --self-test`
+- `node tools/terrain-proof.mjs`
 - `node tools/terrain-test.mjs`
 - `node tools/asset-manifest.mjs --check` (`264 assets, 243 runtime bindings`)
 - `node tools/asset-manifest-test.mjs`
@@ -159,10 +167,10 @@ Windows-local `iso-test` timeout/hang with no output; no stale port-5173 listene
 present. Per the contract, CI on the pushed head is the gate of record for that known
 environment issue.
 
-Deterministic before/after captures are recorded in
-`docs/playtest/step8-farm-terrain/README.md`. North Star alignment is **Intentional
-interim gap**: this bounded integration improves crisp pixel readability and terrain
-distinction against v2 without claiming final environment-art polish. No PixelLab API
-or generation call was made.
+Deterministic before/after captures and both round-2 visual proofs are recorded in
+`docs/playtest/step8-farm-terrain/README.md`. North Star alignment remains **Intentional
+interim gap** pending the visual lead's round-2 verdict; the raised-block normalization
+is bounded to the slicer derivative and renderer composition. No PixelLab API or
+generation call was made.
 
 No map, collision, save, gameplay, top-down, or PixelLab changes are permitted.
