@@ -159,6 +159,9 @@ var ISO_TW = 64, ISO_TH = 32;            // ground diamond size in projected px
 var ISO_X_OFF = MAP_H * TILE;            // shifts projected x non-negative (704)
 var TARGET_VIEW_ROWS = 18;               // vertical FOV in world rows — the ONE zoom knob
                                          // (14 felt zoomed-in on Leo's phone, 2026-07-27)
+// iPad tuning knob: iso projection feels slower on screen, while top-down keeps the
+// established player.speed. Leo may tune this without changing the shared base speed.
+var ISO_SPEED_MULT = 1.5;
 
 function isoPX(px, py) { return (px - py) + ISO_X_OFF; }
 function isoPY(px, py) { return (px + py) / 2; }

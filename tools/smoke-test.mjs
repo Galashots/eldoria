@@ -7,7 +7,7 @@ import { resolve, dirname } from 'node:path';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const GAME_URL = pathToFileURL(resolve(root, 'index.html')).href;
 
-export async function launch(urlSuffix = '', { onPage } = {}) {
+export async function launch(urlSuffix = '', { onPage, tolerateNavigationTimeout = false, navigationTimeout = 30000 } = {}) {
   // --allow-file-access-from-files: game art loads via file:// in tests; without this,
   // drawImage() taints the canvas and getImageData() assertions throw SecurityError.
   const browser = await puppeteer.launch({ args: ['--no-sandbox', '--allow-file-access-from-files'] });
@@ -25,7 +25,15 @@ export async function launch(urlSuffix = '', { onPage } = {}) {
   // the initial load below — a caller that attaches its own listener only
   // after launch() returns would miss all of them.
   if (onPage) await onPage(page);
-  await page.goto(GAME_URL + urlSuffix, { waitUntil: 'load' });
+  try {
+    await page.goto(GAME_URL + urlSuffix, { waitUntil: 'load', timeout: navigationTimeout });
+  } catch (err) {
+    // A local Windows Chromium session can finish executing the offline game while one
+    // optional image load leaves the file:// load event pending. Focused callers may
+    // opt into the already-loaded page rather than treating that harness quirk as a
+    // product failure; the default smoke gate stays strict.
+    if (!tolerateNavigationTimeout) throw err;
+  }
   await new Promise(r => setTimeout(r, 1500)); // let sprite onerror fallbacks settle
   return { browser, page, errors };
 }

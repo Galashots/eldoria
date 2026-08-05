@@ -1,0 +1,17 @@
+{
+  "capture": "iPad reference viewport 1194x834 CSS px, DPR 2",
+  "doubleTap": {
+    "before": 1,
+    "after": 1
+  },
+  "state": {
+    "viewport": {
+      "width": 1194,
+      "height": 834,
+      "scale": 1
+    },
+    "isoSpeedMultiplier": 1.5,
+    "viewportMeta": "width=device-width, initial-scale=1.0"
+  },
+  "consoleErrors": []
+}
