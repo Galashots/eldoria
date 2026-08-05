@@ -508,6 +508,15 @@ const RULES = [
     }),
   },
   {
+    name: 'iso-npc-source-idle',
+    test: p => /^docs\/visual\/reviews\/npc-sprite-integration-20260805\/source-rotations\/(?:mira|bram|gunnar)\/(?:south|south-east|east|north-east|north|north-west|west|south-west)\.png$/.test(p),
+    classify: () => ({
+      domain: 'iso-npc-sprite-source', scope: 'source', status: 'provisional', visualReview: 'aligned',
+      governedBy: 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
+      notes: 'Canonical retained NPC idle direction source; exact 64x64 crop/translation output with no resampling. Source ZIP custody, character ID, direction mapping, and pixel hashes are recorded in npc-direction-map.json.',
+    }),
+  },
+  {
     name: 'enemy-sprite',
     test: p => /^assets\/enemy_[a-z_]+\.png$/.test(p),
     classify: () => ({
@@ -521,7 +530,7 @@ const RULES = [
     classify: () => ({
       domain: 'iso-npc-sprite', scope: 'runtime', status: 'provisional', visualReview: 'intentional-interim-gap',
       governedBy: 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
-      notes: 'Normalized south-facing/down-right idle frame for the stationary Town NPC renderer. The supplied packs also contain seven other idle rotations per NPC, but no facing/state runtime path exists yet; those rotations remain source-only outside this bounded integration. Falls back to the existing procedural NPC shape.',
+      notes: 'Lossless crop/translate-only south-facing/down-right idle frame for the stationary Town NPC renderer. The other seven canonical directions are retained as source assets; no facing/state runtime path exists yet. Falls back to the existing procedural NPC shape.',
     }),
   },
   {

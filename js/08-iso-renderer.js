@@ -483,7 +483,8 @@ function drawIsoBuildingTile(cx, cy, tile) {
 function drawIsoNpc(cx, cy, npc, now) {
   var npcImg = spr('iso_npc_' + npc.id + '_' + ISO_NPC_IDLE_DIRECTION_KEY);
   if (npcImg) {
-    // Normalized 64x64 art has its feet on the world anchor at (cx, cy).
+    // Lossless 64x64 art is translated so its feet meet the Town tile's south
+    // corner at (cx, cy + 16), matching the existing prism footprint.
     ctx.drawImage(npcImg, cx - 32, cy - 48, 64, 64);
     if (window.__isoDebug) {
       if (!window.__isoNpcDraws) window.__isoNpcDraws = [];
