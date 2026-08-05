@@ -464,6 +464,13 @@ joystickZone.addEventListener('pointercancel', function(e) {
   if (e.pointerId === joystickId) joystickReset();
 });
 
+// iPad Safari can synthesize dblclick after rapid taps. Suppress that browser gesture
+// only on game controls, leaving the rest of the document and pinch zoom accessible.
+[document.getElementById('stage'), document.getElementById('actionBtn'), document.getElementById('bonusBtn')]
+  .forEach(function(surface) {
+    surface.addEventListener('dblclick', function(e) { e.preventDefault(); });
+  });
+
 // ---- Direct world taps ----
 // Convert a canvas backing-store point into the world tile under it. Iso uses the
 // same inverse projection and camera as rendering; top-down uses its follow camera.

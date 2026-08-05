@@ -232,8 +232,11 @@ function update() {
       dx *= 0.7071;
       dy *= 0.7071;
     }
-    dx *= player.speed;
-    dy *= player.speed;
+    // Keep the long-established top-down pace exactly as it is. Iso projects half of
+    // world-y onto the screen, so it uses its own explicit tuning knob instead.
+    var moveSpeed = player.speed * (isoMoved ? ISO_SPEED_MULT : 1);
+    dx *= moveSpeed;
+    dy *= moveSpeed;
 
     if (dx !== 0 && !boxIsBlocked(player.x + dx, player.y)) player.x += dx;
     if (dy !== 0 && !boxIsBlocked(player.x, player.y + dy)) player.y += dy;

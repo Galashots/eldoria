@@ -6,7 +6,9 @@
     font-family: system-ui, -apple-system, sans-serif;
     color: #f5e6c8;
     overflow: hidden;
-    touch-action: none;
+    /* Keep browser pinch zoom available as an accessibility affordance. Game controls
+       opt into `manipulation` below so rapid play taps do not trigger double-tap zoom. */
+    touch-action: auto;
     -webkit-user-select: none;
     user-select: none;
   }
@@ -22,6 +24,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
+    touch-action: manipulation;
   }
 
   /* ---- HUD (top bar) ---- */
@@ -38,6 +41,7 @@
     border-radius: 10px;
     padding: 5px 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,214,102,0.1);
+    touch-action: manipulation;
   }
   .hud > span {
     display: inline-flex;
@@ -58,7 +62,7 @@
     width: min(96vw, 960px);
     height: auto;
     image-rendering: pixelated;
-    touch-action: none;
+    touch-action: manipulation;
   }
 
   /* Iso mode: the canvas fills what is left under the in-flow HUD. It used to ask for a
@@ -368,6 +372,7 @@
     cursor: pointer;
     z-index: 50;
     line-height: 1.1;
+    touch-action: manipulation;
   }
   #actionBtn:active, #actionBtn.flash {
     background: rgba(255, 214, 102, 0.9);
@@ -394,6 +399,7 @@
     cursor: pointer;
     z-index: 50;
     line-height: 1.1;
+    touch-action: manipulation;
   }
   #bonusBtn:active { background: rgba(170, 120, 230, 0.95); color: #1a0a2a; }
   /* dim it when there's nothing ready to bonus-harvest */
