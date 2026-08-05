@@ -477,10 +477,23 @@ function drawIsoBuildingTile(cx, cy, tile) {
   ctx.stroke();
 }
 
-// Villagers read as people, not crates: a narrow body prism under a lighter head block.
+// Villagers read as people, not crates. The supplied Town idle art is currently
+// stationary, so only its south-facing/down-right frame is used; the existing
+// procedural shape remains the honest fallback until NPC facing/state data lands.
 function drawIsoNpc(cx, cy, npc, now) {
-  drawIsoPrism(cx, cy, 26, npc.color, { w: 0.42 });
-  drawIsoPrism(cx, cy - 26, 10, '#f0c8a0', { w: 0.3 });
+  var npcImg = spr('iso_npc_' + npc.id + '_' + ISO_NPC_IDLE_DIRECTION_KEY);
+  if (npcImg) {
+    // Lossless 64x64 art is translated so its feet meet the Town tile's south
+    // corner at (cx, cy + 16), matching the existing prism footprint.
+    ctx.drawImage(npcImg, cx - 32, cy - 48, 64, 64);
+    if (window.__isoDebug) {
+      if (!window.__isoNpcDraws) window.__isoNpcDraws = [];
+      window.__isoNpcDraws.push(npc.id);
+    }
+  } else {
+    drawIsoPrism(cx, cy, 26, npc.color, { w: 0.42 });
+    drawIsoPrism(cx, cy - 26, 10, '#f0c8a0', { w: 0.3 });
+  }
   var bob = Math.sin(now / 250) * 3;
   ctx.fillStyle = '#fff2b0';
   ctx.font = 'bold 18px system-ui, sans-serif';

@@ -1,0 +1,571 @@
+{
+  "frameSize": {
+    "width": 64,
+    "height": 64
+  },
+  "directionMap": {
+    "south": "down-right",
+    "south-east": "right",
+    "east": "up-right",
+    "north-east": "up",
+    "north": "up-left",
+    "north-west": "left",
+    "west": "down-left",
+    "south-west": "down"
+  },
+  "processing": "lossless crop of transparent outer margin, then integer translation onto a 64x64 transparent canvas; no resampling, recolouring, thresholding, sharpening, or redraw",
+  "packs": [
+    {
+      "npcId": "bram",
+      "characterId": "c51c8a9f-4f10-4dde-9cec-2db6b7988512",
+      "sourceZip": "Bram_-_Sturdy_bearded_Ge-Idle.zip",
+      "sourceZipSha256": "c8e2a1a6f827b0943e5559756bca41d7ee847615a672eda5f630157c7bc10303",
+      "frames": [
+        {
+          "vendorDirection": "south",
+          "engineSlot": "down-right",
+          "sourceMember": "Idle/rotations/south.png",
+          "sourcePngSha256": "68a0b87ad0857a16b677dbed549b74708578d030f6f3c76e3b07020cca4b2a38",
+          "sourceOpaqueBbox": [
+            46,
+            32,
+            82,
+            96
+          ],
+          "sourceCropSize": [
+            36,
+            64
+          ],
+          "sourceCropRgbaSha256": "4c67f0d57c653b81a29cd7242d03aab83a0fb20a1ca3d9f2c0b6c08d94a8816e",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/bram/south.png",
+          "outputSha256": "f5f59cf6278251c1c20f04121ce6af851e522b3f2e65152750932b4cfcc3f5b8",
+          "outputPixelCropSha256": "4c67f0d57c653b81a29cd7242d03aab83a0fb20a1ca3d9f2c0b6c08d94a8816e",
+          "runtimePath": "assets/iso/npc/bram-down-right.png",
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "south-east",
+          "engineSlot": "right",
+          "sourceMember": "Idle/rotations/south-east.png",
+          "sourcePngSha256": "dbe22830cdb54254adfd3d3ef22792cb11cea3883d3f384771bb12ae947e63dd",
+          "sourceOpaqueBbox": [
+            47,
+            33,
+            79,
+            96
+          ],
+          "sourceCropSize": [
+            32,
+            63
+          ],
+          "sourceCropRgbaSha256": "0b8a9cff0754edb00c2513e00cf33686826530d1b6197b2e4c8ecdca445ff500",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/bram/south-east.png",
+          "outputSha256": "7326d1b465844e1c7a8c1c0176b7878c4f16d74fffe5561eb92202cad5c2f6b2",
+          "outputPixelCropSha256": "0b8a9cff0754edb00c2513e00cf33686826530d1b6197b2e4c8ecdca445ff500",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "east",
+          "engineSlot": "up-right",
+          "sourceMember": "Idle/rotations/east.png",
+          "sourcePngSha256": "1668604087b64ec14df290e49bdf914020470b94ef8ef1a73708db6e87d69fac",
+          "sourceOpaqueBbox": [
+            53,
+            33,
+            79,
+            96
+          ],
+          "sourceCropSize": [
+            26,
+            63
+          ],
+          "sourceCropRgbaSha256": "d081b546973742de858fda23dc40c8b2b494bde4ab5dd28d8d5a8d60fd11d2b6",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/bram/east.png",
+          "outputSha256": "ee205a73ecf4ce5f887898495912cd3cb3efe235f8278af268b15b323842575f",
+          "outputPixelCropSha256": "d081b546973742de858fda23dc40c8b2b494bde4ab5dd28d8d5a8d60fd11d2b6",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north-east",
+          "engineSlot": "up",
+          "sourceMember": "Idle/rotations/north-east.png",
+          "sourcePngSha256": "f0ae9fe3827540473aaae257310d662c7b0921fafbf9265faedb23225b6f0a28",
+          "sourceOpaqueBbox": [
+            50,
+            32,
+            77,
+            95
+          ],
+          "sourceCropSize": [
+            27,
+            63
+          ],
+          "sourceCropRgbaSha256": "57003f4357e8621a14fdaf8ac6943ded8bc1cbb1b3d63b83501398bccd8feda4",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/bram/north-east.png",
+          "outputSha256": "ec44e1b4fedf9493b9e2726f03102b742a06c700b180e14e14d59426e6bb3ca5",
+          "outputPixelCropSha256": "57003f4357e8621a14fdaf8ac6943ded8bc1cbb1b3d63b83501398bccd8feda4",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north",
+          "engineSlot": "up-left",
+          "sourceMember": "Idle/rotations/north.png",
+          "sourcePngSha256": "7c04d3d546109fc0ba31122b48c41f347beb204656f269f4618b75c180f8d00e",
+          "sourceOpaqueBbox": [
+            46,
+            32,
+            82,
+            94
+          ],
+          "sourceCropSize": [
+            36,
+            62
+          ],
+          "sourceCropRgbaSha256": "40e15543df6be0b84d06aad7293055aaf95ea64bf640dc38d8ab535462276f37",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/bram/north.png",
+          "outputSha256": "d31122ac1247b46295c8690fe58b998849006b7ea8ec6f2cb961d6a3117f93db",
+          "outputPixelCropSha256": "40e15543df6be0b84d06aad7293055aaf95ea64bf640dc38d8ab535462276f37",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north-west",
+          "engineSlot": "left",
+          "sourceMember": "Idle/rotations/north-west.png",
+          "sourcePngSha256": "cf797ad31e6a2d1589cf2c2b8a706360599cf3096200f65e4aa10a35c9b91b66",
+          "sourceOpaqueBbox": [
+            50,
+            32,
+            77,
+            95
+          ],
+          "sourceCropSize": [
+            27,
+            63
+          ],
+          "sourceCropRgbaSha256": "375b985af180af19a82dcd2cb5a1de3a9f9fcb21e393e13e9474c3baabc0de30",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/bram/north-west.png",
+          "outputSha256": "5f2af5d18ec25272625c0af20db9ed1dc9df1a039ef5b0a98913c893333c4a9c",
+          "outputPixelCropSha256": "375b985af180af19a82dcd2cb5a1de3a9f9fcb21e393e13e9474c3baabc0de30",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "west",
+          "engineSlot": "down-left",
+          "sourceMember": "Idle/rotations/west.png",
+          "sourcePngSha256": "cd0d05d067f590fbdc120bee4d8fa643be5a59dd10075b081735dd3f6d50e52b",
+          "sourceOpaqueBbox": [
+            48,
+            33,
+            73,
+            96
+          ],
+          "sourceCropSize": [
+            25,
+            63
+          ],
+          "sourceCropRgbaSha256": "759368f8f847597570a6ab16cee4a452b23e740c3fba7d34331f7c8b0160f36b",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/bram/west.png",
+          "outputSha256": "9d0d91ebdd31a5efdf9dafb36823c662c34777c38fc86a2bde139260b695e179",
+          "outputPixelCropSha256": "759368f8f847597570a6ab16cee4a452b23e740c3fba7d34331f7c8b0160f36b",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "south-west",
+          "engineSlot": "down",
+          "sourceMember": "Idle/rotations/south-west.png",
+          "sourcePngSha256": "1c0a0278cc27364c325604ae7212e2f3600c0901f1c97720031d12e8b63cc410",
+          "sourceOpaqueBbox": [
+            49,
+            33,
+            80,
+            96
+          ],
+          "sourceCropSize": [
+            31,
+            63
+          ],
+          "sourceCropRgbaSha256": "bc9e4fdc4f1a11b165bcbae69ea2a94becfb6dc39d499a9fa8fb0b1aa01325e2",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/bram/south-west.png",
+          "outputSha256": "e98c40098d77d6ac70a21489f6d0ebf925f0a31ae54f8a1a703e47a27569a59c",
+          "outputPixelCropSha256": "bc9e4fdc4f1a11b165bcbae69ea2a94becfb6dc39d499a9fa8fb0b1aa01325e2",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        }
+      ]
+    },
+    {
+      "npcId": "gunnar",
+      "characterId": "aa10971b-ebbf-4293-b701-5b28db54c9a9",
+      "sourceZip": "Gunnar_-_Dwarf-style_broad_weathered.zip",
+      "sourceZipSha256": "14a5887f4bff3a0d29725910086699ef7eb573f30defa1e9c2329c4856b054ef",
+      "frames": [
+        {
+          "vendorDirection": "south",
+          "engineSlot": "down-right",
+          "sourceMember": "Idle/rotations/south.png",
+          "sourcePngSha256": "14d8ad0516869eedcee4494bfb356d5ae1a6d16fd4f9618d027dccfb36c13d8a",
+          "sourceOpaqueBbox": [
+            42,
+            32,
+            85,
+            96
+          ],
+          "sourceCropSize": [
+            43,
+            64
+          ],
+          "sourceCropRgbaSha256": "b84c4064984d91de4b80d4a116400f5d18e1da5d3d1433346e22ca69dd76e40c",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/gunnar/south.png",
+          "outputSha256": "36c154146d8b07d39e5f2d58c555c33d9cf35a751531c6db7378608a25b2f867",
+          "outputPixelCropSha256": "b84c4064984d91de4b80d4a116400f5d18e1da5d3d1433346e22ca69dd76e40c",
+          "runtimePath": "assets/iso/npc/gunnar-down-right.png",
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "south-east",
+          "engineSlot": "right",
+          "sourceMember": "Idle/rotations/south-east.png",
+          "sourcePngSha256": "56c1d4dfb43212f539a99aff4ea43c2db8bfaec569355f08964470d65f0f7ffa",
+          "sourceOpaqueBbox": [
+            43,
+            32,
+            82,
+            96
+          ],
+          "sourceCropSize": [
+            39,
+            64
+          ],
+          "sourceCropRgbaSha256": "9c3ae727a00a07179726f51cc8387905467159329c2567ad58d02e03ea01e4ca",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/gunnar/south-east.png",
+          "outputSha256": "08f97d77d1c218a680a86c11e818ba0b2b83712e642c2dbe66eec2e84705a473",
+          "outputPixelCropSha256": "9c3ae727a00a07179726f51cc8387905467159329c2567ad58d02e03ea01e4ca",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "east",
+          "engineSlot": "up-right",
+          "sourceMember": "Idle/rotations/east.png",
+          "sourcePngSha256": "b5a2cf068f2f2c0e90d63d7d1bcade4c804b93e2623a2021537a4f3334b25f41",
+          "sourceOpaqueBbox": [
+            50,
+            32,
+            76,
+            96
+          ],
+          "sourceCropSize": [
+            26,
+            64
+          ],
+          "sourceCropRgbaSha256": "502f6a618c53cdfbc7b63d4ac67a5a03d3c729d7a91a26380b85cdc5b39b18c6",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/gunnar/east.png",
+          "outputSha256": "e39e0820de6ff0b04dd3ef2a9cd76217b9c512288cb6aec32ef5c330bce05df4",
+          "outputPixelCropSha256": "502f6a618c53cdfbc7b63d4ac67a5a03d3c729d7a91a26380b85cdc5b39b18c6",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north-east",
+          "engineSlot": "up",
+          "sourceMember": "Idle/rotations/north-east.png",
+          "sourcePngSha256": "84b06a86aac4b2a013902a20e0ec13b3e24f04a77ae4555d75640318779cf844",
+          "sourceOpaqueBbox": [
+            45,
+            32,
+            78,
+            96
+          ],
+          "sourceCropSize": [
+            33,
+            64
+          ],
+          "sourceCropRgbaSha256": "b0da5bddab04896c73763625560ca7bb28032cfbb7305dabed9ef0119edd3d88",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/gunnar/north-east.png",
+          "outputSha256": "cde855d792435d07f3761e562f7c06a81874b66a87a6a25943049db023d9e9d0",
+          "outputPixelCropSha256": "b0da5bddab04896c73763625560ca7bb28032cfbb7305dabed9ef0119edd3d88",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north",
+          "engineSlot": "up-left",
+          "sourceMember": "Idle/rotations/north.png",
+          "sourcePngSha256": "30f8aa2f89b833a92af829d89b13cf23b7dcbb5a64bd6f4b7c6f218b1bd5a84f",
+          "sourceOpaqueBbox": [
+            42,
+            32,
+            85,
+            94
+          ],
+          "sourceCropSize": [
+            43,
+            62
+          ],
+          "sourceCropRgbaSha256": "cedac33f08d8aaaa9986cc2b3a1125a756b77974df3f88bccbb13e759521cc2b",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/gunnar/north.png",
+          "outputSha256": "c35a2d9611428f624ffc1537952ec88fe2858318b36f1c1f04c03436dafd3dee",
+          "outputPixelCropSha256": "cedac33f08d8aaaa9986cc2b3a1125a756b77974df3f88bccbb13e759521cc2b",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north-west",
+          "engineSlot": "left",
+          "sourceMember": "Idle/rotations/north-west.png",
+          "sourcePngSha256": "946e809a2a8811e5c94aa5c8e1137cc02ad0839f16109ff32b5f7a0a13d54492",
+          "sourceOpaqueBbox": [
+            48,
+            32,
+            82,
+            96
+          ],
+          "sourceCropSize": [
+            34,
+            64
+          ],
+          "sourceCropRgbaSha256": "64b3a4529c053a3ede5eed1bbeef1b14184f52598b2368ada0c943fbaaa1cd35",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/gunnar/north-west.png",
+          "outputSha256": "29e04b9aecc11450c30f0bce0f61c07d501004853c2487ab38956fecf843a2bb",
+          "outputPixelCropSha256": "64b3a4529c053a3ede5eed1bbeef1b14184f52598b2368ada0c943fbaaa1cd35",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "west",
+          "engineSlot": "down-left",
+          "sourceMember": "Idle/rotations/west.png",
+          "sourcePngSha256": "411960b8231ac4da1a1051cb31cd9bbda31d0a42f5e325f346ff3530d838f9bb",
+          "sourceOpaqueBbox": [
+            50,
+            32,
+            76,
+            96
+          ],
+          "sourceCropSize": [
+            26,
+            64
+          ],
+          "sourceCropRgbaSha256": "aa29835bb040302c8825bce37650390e7d992906e35ccedad5c2c363504e9f12",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/gunnar/west.png",
+          "outputSha256": "b059bef1299a07aa191c02604f90e8fb27872215438ca3665c907f65d28d426e",
+          "outputPixelCropSha256": "aa29835bb040302c8825bce37650390e7d992906e35ccedad5c2c363504e9f12",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "south-west",
+          "engineSlot": "down",
+          "sourceMember": "Idle/rotations/south-west.png",
+          "sourcePngSha256": "237a038372c5782e7ac7c70dd394649073c7c6339c98c6be4204c1f914384692",
+          "sourceOpaqueBbox": [
+            45,
+            32,
+            84,
+            96
+          ],
+          "sourceCropSize": [
+            39,
+            64
+          ],
+          "sourceCropRgbaSha256": "4db8c80329cc2627d6d5477a86659d83d735f39a672cd065a435ca5439098fb1",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/gunnar/south-west.png",
+          "outputSha256": "a509211be67001e0ee8438e318ee7a1a31ef247a4485dca6ca317d456cc134a5",
+          "outputPixelCropSha256": "4db8c80329cc2627d6d5477a86659d83d735f39a672cd065a435ca5439098fb1",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        }
+      ]
+    },
+    {
+      "npcId": "mira",
+      "characterId": "fe739371-4690-48f1-bac3-dcbe9b76c4d1",
+      "sourceZip": "Mira_-_Warm_capable_Town-Idle (1).zip",
+      "sourceZipSha256": "02507cf04fe9cee1694d73e4e90751437af7de0e6ae3a37d3a2e0e679f4ce41f",
+      "frames": [
+        {
+          "vendorDirection": "south",
+          "engineSlot": "down-right",
+          "sourceMember": "Idle/rotations/south.png",
+          "sourcePngSha256": "544e4ca889c595908fe708ab041f7bd988dea2357392dc496eb374cae43765b0",
+          "sourceOpaqueBbox": [
+            47,
+            32,
+            81,
+            96
+          ],
+          "sourceCropSize": [
+            34,
+            64
+          ],
+          "sourceCropRgbaSha256": "00aec3c6afec0005bf83ccce28bb6b93d783806b61366e30f212bc0f93e03909",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/mira/south.png",
+          "outputSha256": "fb4aef6e975456021d26436994fa839e51133ceac086e94c1accf4c98b25a3b0",
+          "outputPixelCropSha256": "00aec3c6afec0005bf83ccce28bb6b93d783806b61366e30f212bc0f93e03909",
+          "runtimePath": "assets/iso/npc/mira-down-right.png",
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "south-east",
+          "engineSlot": "right",
+          "sourceMember": "Idle/rotations/south-east.png",
+          "sourcePngSha256": "f3d35613e01b4be85a7b3eb474817f37d13d01d8f0433dabc05e1f4e366f0036",
+          "sourceOpaqueBbox": [
+            49,
+            33,
+            73,
+            96
+          ],
+          "sourceCropSize": [
+            24,
+            63
+          ],
+          "sourceCropRgbaSha256": "66abe0ee81799fbdb536d6235ce35d27e9efb4c42d6a55d4393edf4d32d228f2",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/mira/south-east.png",
+          "outputSha256": "9e87b015c9b7ad0b2db4d10994ad4f1595a0acf68d1ed3cdcd7b6a8d266eb006",
+          "outputPixelCropSha256": "66abe0ee81799fbdb536d6235ce35d27e9efb4c42d6a55d4393edf4d32d228f2",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "east",
+          "engineSlot": "up-right",
+          "sourceMember": "Idle/rotations/east.png",
+          "sourcePngSha256": "9a47af4244296700a318dac3edbaddfbe71451a33f0076e5198762b4bbb70344",
+          "sourceOpaqueBbox": [
+            52,
+            35,
+            73,
+            96
+          ],
+          "sourceCropSize": [
+            21,
+            61
+          ],
+          "sourceCropRgbaSha256": "4dae518702a19faea405f113c0e2ae4ecd427cd9595ee5465b51c92b499252b5",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/mira/east.png",
+          "outputSha256": "af3da337f19b8866b34eb5aa3bedfecdbec1ef7c3134e24eab1ab0f90ce427f4",
+          "outputPixelCropSha256": "4dae518702a19faea405f113c0e2ae4ecd427cd9595ee5465b51c92b499252b5",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north-east",
+          "engineSlot": "up",
+          "sourceMember": "Idle/rotations/north-east.png",
+          "sourcePngSha256": "741149f57bc117f41da48d0bb7e295ebb0ab564418a472a68142d5399d819d1d",
+          "sourceOpaqueBbox": [
+            47,
+            35,
+            76,
+            95
+          ],
+          "sourceCropSize": [
+            29,
+            60
+          ],
+          "sourceCropRgbaSha256": "a7b258d6bf28c040aa104b2163716bc1ba2efa249f283b7818216dd13b0a2c25",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/mira/north-east.png",
+          "outputSha256": "d1ee53e0a477c91fdd0fd595028fc6d8009d1c994f45f1d362de388c39c9900b",
+          "outputPixelCropSha256": "a7b258d6bf28c040aa104b2163716bc1ba2efa249f283b7818216dd13b0a2c25",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north",
+          "engineSlot": "up-left",
+          "sourceMember": "Idle/rotations/north.png",
+          "sourcePngSha256": "dcbf029bd4d8e7c2f86920eff3bbe923d61e2669f1e9d69dcf6428734f867146",
+          "sourceOpaqueBbox": [
+            47,
+            34,
+            81,
+            93
+          ],
+          "sourceCropSize": [
+            34,
+            59
+          ],
+          "sourceCropRgbaSha256": "13f7030b30bebac967a50ecde513aa9c3ed3bb9eb7d993ef738799c4512c4cf8",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/mira/north.png",
+          "outputSha256": "46a8530269760dc18118d6ba3ad3d2884cc042731d885c5b97e588b9308c782b",
+          "outputPixelCropSha256": "13f7030b30bebac967a50ecde513aa9c3ed3bb9eb7d993ef738799c4512c4cf8",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north-west",
+          "engineSlot": "left",
+          "sourceMember": "Idle/rotations/north-west.png",
+          "sourcePngSha256": "13ef221348b3d95dc3c31ac8c505e02845966d87122e29d795f3d8c07e491b6e",
+          "sourceOpaqueBbox": [
+            52,
+            35,
+            77,
+            94
+          ],
+          "sourceCropSize": [
+            25,
+            59
+          ],
+          "sourceCropRgbaSha256": "8672b6962013daf7cac29057c4f8e74847d7c6fe1894deeb2776a52b12ccf2c6",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/mira/north-west.png",
+          "outputSha256": "5af111aa67ab16e03bd676dfca8d1ba351cecdd38b7cfc8ad91f6eeec8cbcb55",
+          "outputPixelCropSha256": "8672b6962013daf7cac29057c4f8e74847d7c6fe1894deeb2776a52b12ccf2c6",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "west",
+          "engineSlot": "down-left",
+          "sourceMember": "Idle/rotations/west.png",
+          "sourcePngSha256": "d75e7b9167d9ee0556f62e853383467bc75cb736800f8855e597fed6df1f9b95",
+          "sourceOpaqueBbox": [
+            54,
+            35,
+            76,
+            96
+          ],
+          "sourceCropSize": [
+            22,
+            61
+          ],
+          "sourceCropRgbaSha256": "c7ea8a57f7e64e7e7c7f26069999b6f166c59fba0c9012cf739bd3a2f43e1805",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/mira/west.png",
+          "outputSha256": "2f6e43f79371cee601ef7274c810bc07f42bb9e54df0cfa2ad2dedce5f0d146a",
+          "outputPixelCropSha256": "c7ea8a57f7e64e7e7c7f26069999b6f166c59fba0c9012cf739bd3a2f43e1805",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "south-west",
+          "engineSlot": "down",
+          "sourceMember": "Idle/rotations/south-west.png",
+          "sourcePngSha256": "242ae22311de5c032ca05a2faa1e4343fd4ac6d14607dc5499feea05bde90584",
+          "sourceOpaqueBbox": [
+            48,
+            33,
+            81,
+            96
+          ],
+          "sourceCropSize": [
+            33,
+            63
+          ],
+          "sourceCropRgbaSha256": "337c8c2edbea008fac6f010071bfba6220d232b36e89550a8055423b007e10ec",
+          "outputPath": "docs/visual/reviews/npc-sprite-integration-20260805/source-rotations/mira/south-west.png",
+          "outputSha256": "220cc574c7f943a8ef496bf0d7249441b22826aa0908a75b19adc63225ce4fb1",
+          "outputPixelCropSha256": "337c8c2edbea008fac6f010071bfba6220d232b36e89550a8055423b007e10ec",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        }
+      ]
+    }
+  ]
+}

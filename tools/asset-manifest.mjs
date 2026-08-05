@@ -508,11 +508,29 @@ const RULES = [
     }),
   },
   {
+    name: 'iso-npc-source-idle',
+    test: p => /^docs\/visual\/reviews\/npc-sprite-integration-20260805\/source-rotations\/(?:mira|bram|gunnar)\/(?:south|south-east|east|north-east|north|north-west|west|south-west)\.png$/.test(p),
+    classify: () => ({
+      domain: 'iso-npc-sprite-source', scope: 'source', status: 'provisional', visualReview: 'aligned',
+      governedBy: 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
+      notes: 'Canonical retained NPC idle direction source; exact 64x64 crop/translation output with no resampling. Source ZIP custody, character ID, direction mapping, and pixel hashes are recorded in npc-direction-map.json.',
+    }),
+  },
+  {
     name: 'enemy-sprite',
     test: p => /^assets\/enemy_[a-z_]+\.png$/.test(p),
     classify: () => ({
       domain: 'enemy-sprite', scope: 'runtime', status: 'approved', visualReview: 'aligned',
       governedBy: '', notes: 'Optional; falls back to a procedurally drawn per-type shape if absent.',
+    }),
+  },
+  {
+    name: 'iso-npc-idle-sprite',
+    test: p => /^assets\/iso\/npc\/(?:mira|bram|gunnar)-down-right\.png$/.test(p),
+    classify: () => ({
+      domain: 'iso-npc-sprite', scope: 'runtime', status: 'provisional', visualReview: 'intentional-interim-gap',
+      governedBy: 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
+      notes: 'Lossless crop/translate-only south-facing/down-right idle frame for the stationary Town NPC renderer. The other seven canonical directions are retained as source assets; no facing/state runtime path exists yet. Falls back to the existing procedural NPC shape.',
     }),
   },
   {
@@ -873,6 +891,12 @@ function buildRuntimeBindings() {
     push({ key: `enemy_${type}`, family: 'enemy-sprite', path: `assets/enemy_${type}.png`,
       owner: 'js/02-data-state.js + js/09-main.js drawEnemyShape()', required: false,
       fallback: 'procedurally drawn per-type enemy shape', fallbackKind: 'engine-drawn', use: { enemyType: type } });
+  }
+  for (const id of ['mira', 'bram', 'gunnar']) {
+    push({ key: `iso_npc_${id}_down_right`, family: 'iso-npc-sprite', path: `assets/iso/npc/${id}-down-right.png`,
+      owner: 'js/02-data-state.js + js/08-iso-renderer.js drawIsoNpc()', required: false,
+      fallback: 'existing procedural drawIsoNpc body/head shape', fallbackKind: 'engine-drawn',
+      use: { npcId: id, direction: 'down-right', state: 'idle', renderMode: 'iso' } });
   }
   // Verified against js/02-data-state.js: only 'npc_mira' has an actual
   // loadSprite() registration. bram/gunnar/dumpling_vendor have NO

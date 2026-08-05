@@ -12,7 +12,7 @@
     "ranger-walk:process": "node tools/process-ranger-walk-source.mjs",
     "ranger-proof:self-test": "node tools/ranger-proof.mjs --self-test",
     "ranger-proof:candidate": "node tools/ranger-proof.mjs --input-dir art/ranger-proof/normalized --output-dir artifacts/ranger-proof-candidate-v1",
-    "test": "npm run ranger-proof:integrity && npm run ranger-proof:self-test && node tools/smoke-test.mjs && node tools/iso-test.mjs && node tools/terrain-test.mjs && node tools/playtest-fixes-test.mjs && node tools/zoom-speed-test.mjs && node tools/adaptive-joystick-test.mjs && node tools/profile-state-test.mjs && node tools/combat-progression-test.mjs && node tools/identity-progression-test.mjs && node tools/onboarding-test.mjs && node tools/asset-manifest-test.mjs",
+    "test": "npm run ranger-proof:integrity && npm run ranger-proof:self-test && python tools/npc-static-contract-test.py && node tools/smoke-test.mjs && node tools/npc-sprite-test.mjs && node tools/iso-test.mjs && node tools/terrain-test.mjs && node tools/playtest-fixes-test.mjs && node tools/zoom-speed-test.mjs && node tools/adaptive-joystick-test.mjs && node tools/profile-state-test.mjs && node tools/combat-progression-test.mjs && node tools/identity-progression-test.mjs && node tools/onboarding-test.mjs && node tools/asset-manifest-test.mjs",
     "verify:all": "npm test && npm run assets:verify && npm run ranger-proof:candidate",
     "ranger-proof:integrity": "node tools/check-ranger-png-integrity.mjs"
   },
