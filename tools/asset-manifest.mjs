@@ -516,6 +516,15 @@ const RULES = [
     }),
   },
   {
+    name: 'iso-npc-idle-sprite',
+    test: p => /^assets\/iso\/npc\/(?:mira|bram|gunnar)-down-right\.png$/.test(p),
+    classify: () => ({
+      domain: 'iso-npc-sprite', scope: 'runtime', status: 'provisional', visualReview: 'intentional-interim-gap',
+      governedBy: 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
+      notes: 'Normalized south-facing/down-right idle frame for the stationary Town NPC renderer. The supplied packs also contain seven other idle rotations per NPC, but no facing/state runtime path exists yet; those rotations remain source-only outside this bounded integration. Falls back to the existing procedural NPC shape.',
+    }),
+  },
+  {
     // Mira is explicitly named in docs/CURRENT_STATE.md as a "dedicated
     // placeholder treatment" within Town's intentionally partial isometric
     // scope — classification must say so, not blanket-mark every NPC sprite
@@ -873,6 +882,12 @@ function buildRuntimeBindings() {
     push({ key: `enemy_${type}`, family: 'enemy-sprite', path: `assets/enemy_${type}.png`,
       owner: 'js/02-data-state.js + js/09-main.js drawEnemyShape()', required: false,
       fallback: 'procedurally drawn per-type enemy shape', fallbackKind: 'engine-drawn', use: { enemyType: type } });
+  }
+  for (const id of ['mira', 'bram', 'gunnar']) {
+    push({ key: `iso_npc_${id}_down_right`, family: 'iso-npc-sprite', path: `assets/iso/npc/${id}-down-right.png`,
+      owner: 'js/02-data-state.js + js/08-iso-renderer.js drawIsoNpc()', required: false,
+      fallback: 'existing procedural drawIsoNpc body/head shape', fallbackKind: 'engine-drawn',
+      use: { npcId: id, direction: 'down-right', state: 'idle', renderMode: 'iso' } });
   }
   // Verified against js/02-data-state.js: only 'npc_mira' has an actual
   // loadSprite() registration. bram/gunnar/dumpling_vendor have NO
