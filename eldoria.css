@@ -317,8 +317,9 @@
     position: fixed;
     left: 18px;
     bottom: 18px;
-    width: 140px;
-    height: 140px;
+    /* Bounded catchment: wide enough to find without covering the lower-left world. */
+    width: 240px;
+    height: 220px;
     z-index: 50;
     touch-action: none;
   }
@@ -328,6 +329,9 @@
     border-radius: 50%;
     background: rgba(120, 80, 40, 0.5);
     border: 3px solid rgba(255, 214, 102, 0.6);
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
   }
   #joystickThumb {
     position: absolute;
@@ -338,6 +342,12 @@
     left: 43px; top: 43px;
     pointer-events: none;
     transition: none;
+    visibility: hidden;
+    opacity: 0;
+  }
+  #joystickBase.joystick-visible, #joystickThumb.joystick-visible {
+    visibility: visible;
+    opacity: 1;
   }
   .joystick-arrow {
     position: absolute;

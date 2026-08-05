@@ -1,0 +1,20 @@
+{
+  "capture": "iPad reference viewport 1194x834 CSS px, DPR 2",
+  "state": {
+    "viewport": {
+      "width": 1194,
+      "height": 834,
+      "scale": 1
+    },
+    "joystickZone": {
+      "left": 18,
+      "top": 596,
+      "right": 258,
+      "bottom": 816,
+      "width": 240,
+      "height": 220
+    },
+    "deadzone": 0.2
+  },
+  "consoleErrors": []
+}
