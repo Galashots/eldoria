@@ -1,30 +1,30 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "maskConvention": {
-    "bit0": "north",
-    "bit1": "east",
-    "bit2": "south",
-    "bit3": "west",
-    "bitSetMeaning": "the cardinal neighbor is the same material family as the center tile",
-    "sourceMaskMeaning": "the explicit source-sheet tile selected after applying center-family polarity"
+    "bit0": "bottom screen corner / world SE vertex",
+    "bit1": "left screen corner / world SW vertex",
+    "bit2": "right screen corner / world NE vertex",
+    "bit3": "top screen corner / world NW vertex",
+    "bitSetMeaning": "that diamond corner resolves to grass",
+    "sourceMaskMeaning": "vendor cell index used directly as the grass-corner mask; no polarity conversion or mirroring"
   },
   "sourceGrid": [
     { "mask": 0, "row": 0, "column": 0, "sourceTile": "tile_0", "label": "none" },
-    { "mask": 1, "row": 0, "column": 1, "sourceTile": "tile_1", "label": "north" },
-    { "mask": 2, "row": 0, "column": 2, "sourceTile": "tile_2", "label": "east" },
-    { "mask": 3, "row": 0, "column": 3, "sourceTile": "tile_3", "label": "north + east" },
-    { "mask": 4, "row": 1, "column": 0, "sourceTile": "tile_4", "label": "south" },
-    { "mask": 5, "row": 1, "column": 1, "sourceTile": "tile_5", "label": "north + south" },
-    { "mask": 6, "row": 1, "column": 2, "sourceTile": "tile_6", "label": "east + south" },
-    { "mask": 7, "row": 1, "column": 3, "sourceTile": "tile_7", "label": "north + east + south" },
-    { "mask": 8, "row": 2, "column": 0, "sourceTile": "tile_8", "label": "west" },
-    { "mask": 9, "row": 2, "column": 1, "sourceTile": "tile_9", "label": "north + west" },
-    { "mask": 10, "row": 2, "column": 2, "sourceTile": "tile_10", "label": "east + west" },
-    { "mask": 11, "row": 2, "column": 3, "sourceTile": "tile_11", "label": "north + east + west" },
-    { "mask": 12, "row": 3, "column": 0, "sourceTile": "tile_12", "label": "south + west" },
-    { "mask": 13, "row": 3, "column": 1, "sourceTile": "tile_13", "label": "north + south + west" },
-    { "mask": 14, "row": 3, "column": 2, "sourceTile": "tile_14", "label": "east + south + west" },
-    { "mask": 15, "row": 3, "column": 3, "sourceTile": "tile_15", "label": "north + east + south + west" }
+    { "mask": 1, "row": 0, "column": 1, "sourceTile": "tile_1", "label": "bottom / SE" },
+    { "mask": 2, "row": 0, "column": 2, "sourceTile": "tile_2", "label": "left / SW" },
+    { "mask": 3, "row": 0, "column": 3, "sourceTile": "tile_3", "label": "bottom + left / SE + SW" },
+    { "mask": 4, "row": 1, "column": 0, "sourceTile": "tile_4", "label": "right / NE" },
+    { "mask": 5, "row": 1, "column": 1, "sourceTile": "tile_5", "label": "bottom + right / SE + NE" },
+    { "mask": 6, "row": 1, "column": 2, "sourceTile": "tile_6", "label": "left + right / SW + NE" },
+    { "mask": 7, "row": 1, "column": 3, "sourceTile": "tile_7", "label": "bottom + left + right / SE + SW + NE" },
+    { "mask": 8, "row": 2, "column": 0, "sourceTile": "tile_8", "label": "top / NW" },
+    { "mask": 9, "row": 2, "column": 1, "sourceTile": "tile_9", "label": "bottom + top / SE + NW" },
+    { "mask": 10, "row": 2, "column": 2, "sourceTile": "tile_10", "label": "left + top / SW + NW" },
+    { "mask": 11, "row": 2, "column": 3, "sourceTile": "tile_11", "label": "bottom + left + top / SE + SW + NW" },
+    { "mask": 12, "row": 3, "column": 0, "sourceTile": "tile_12", "label": "right + top / NE + NW" },
+    { "mask": 13, "row": 3, "column": 1, "sourceTile": "tile_13", "label": "bottom + right + top / SE + NE + NW" },
+    { "mask": 14, "row": 3, "column": 2, "sourceTile": "tile_14", "label": "left + right + top / SW + NE + NW" },
+    { "mask": 15, "row": 3, "column": 3, "sourceTile": "tile_15", "label": "all four corners" }
   ],
   "sourceCropLayout": {
     "sheet": "259x195",
@@ -54,11 +54,12 @@
     }
   },
   "materialPriorityHighToLow": ["water", "soil", "path", "grass"],
-  "selection": {
-    "grassCenter": "sourceMask = sameFamilyMask; choose the highest-priority adjacent non-grass family",
-    "secondaryCenter": "sourceMask = 15 XOR sameFamilyMask when no higher-priority neighbor exists",
-    "higherPriorityNeighbor": "hard edge: use sourceMask 0 for the current secondary material",
-    "plainGrass": "choose one of the three grass-base-* variants by deterministic row/column hash"
+  "vertexResolution": {
+    "sharedCells": "A vertex at (row,column) reads the four cells [row-1,column-1], [row-1,column], [row,column-1], [row,column].",
+    "mixedMaterials": "Choose the highest-priority in-bounds family: water > soil > path > grass.",
+    "mapBoundary": "Ignore out-of-bounds cells; if no in-bounds cell exists, resolve the vertex as grass. This prevents an artificial grass border around a solid map-edge region.",
+    "tileSelection": "For a grass center, choose the highest-priority non-grass family present at its resolved vertices and use the direct grass-corner mask. A non-grass center uses its family mask 0 hard-edge tile.",
+    "grassLocalization": "Soil-derived grass owns open Farm ground; path- and water-derived grass appears only in its own transition boundary."
   },
-  "checkerboardTieBreak": "If a 2x2 saddle contains multiple non-grass families, the center tile chooses the highest-priority adjacent family; equal-priority ties resolve water, then soil, then path, then grass. The runtime never uses sheet order to resolve a saddle."
+  "checkerboardTieBreak": "Cells 6 and 9 are valid opposite-corner checkerboards under the direct corner mask. Equal-priority mixed vertices use the fixed order water, soil, path, grass; no sheet order, XOR, flipping, or mirroring is used."
 }

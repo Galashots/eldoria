@@ -1,4 +1,4 @@
-// Deterministic visual proofs for the flattened Farm terrain derivatives.
+// Deterministic visual proofs for the direct corner-mask Farm terrain renderer.
 // The proofs draw the same native 64x32 flat diamonds and 64x48 transparent overlays
 // used by the renderer, without upscaling or smoothing.
 import { mkdir } from 'node:fs/promises';
@@ -56,10 +56,8 @@ try {
       };
 
       if (proofKind === 'open') {
-        const baseFamilies = ['path', 'soil', 'water'];
         for (let row = 0; row < 8; row++) for (let column = 0; column < 8; column++) {
-          const baseFamily = baseFamilies[(row * 31 + column * 17) % baseFamilies.length];
-          drawCell(row, column, 'grass', 'iso_terrain_grass_base_' + baseFamily, 256, 48);
+          drawCell(row, column, 'grass', 'iso_terrain_grass_base_soil', 256, 48);
         }
       } else {
         const pattern = [
@@ -82,14 +80,16 @@ try {
         }
         const originalMap = map;
         map = topology;
+        isoTerrainAreaActivated('farm');
         for (let row = 0; row < pattern.length; row++) for (let column = 0; column < pattern[row].length; column++) {
           const symbol = pattern[row][column];
           const family = symbols[symbol];
           const absoluteRow = baseRow + row;
           const absoluteColumn = baseColumn + column;
-          drawCell(row, column, family, isoTerrainSpriteKey(absoluteRow, absoluteColumn, family), 256, 48);
+          drawCell(row, column, family, isoTerrainRecords[absoluteRow * MAP_W + absoluteColumn].spriteKey, 256, 48);
         }
         map = originalMap;
+        isoTerrainAreaActivated('farm');
         proof.font = '10px monospace';
         proof.fillStyle = '#f2d28b';
         proof.fillText('grass', 8, 382);

@@ -406,6 +406,9 @@ function draw() {
 
 // ---- Main loop ----
 function loop() {
+  // Deterministic browser evidence may freeze the live loop after boot and
+  // invoke the real renderer explicitly for a captured state.
+  if (window.__terrainCaptureFrozen) return;
   update();
   draw();
   requestAnimationFrame(loop);

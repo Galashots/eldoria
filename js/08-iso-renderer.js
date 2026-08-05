@@ -4,11 +4,13 @@
 // Both modes share the ONE tile palette: TILE_COLOR.
 var isoCamPX = 0, isoCamPY = 0;
 
-// Farm ground records are precomputed when the active map changes. The draw loop only
-// looks up a decoded image and paints its transparent native 64x48 overlay over the
-// continuous flat diamond underneath; it never scans neighbors, allocates terrain
-// records, or builds a pattern. Town and every non-Farm area retain the existing path.
-var ISO_TERRAIN_BITS = { north: 1, east: 2, south: 4, west: 8 };
+// Farm ground records are precomputed when the active map changes. Activation resolves
+// each tile's four shared vertices once; the draw loop only looks up a decoded image and
+// paints its transparent native 64x48 overlay over the continuous flat diamond underneath.
+// Town and every non-Farm area retain the existing path.
+// Vendor transition indices are direct grass-corner masks, not cardinal-edge
+// masks. The bit order follows the screen-facing corners of one diamond.
+var ISO_TERRAIN_BITS = { bottom: 1, left: 2, right: 4, top: 8 };
 var ISO_TERRAIN_PRIORITY = { grass: 0, path: 1, soil: 2, water: 3 };
 var ISO_TERRAIN_PRIORITY_ORDER = ['water', 'soil', 'path', 'grass'];
 var isoTerrainRecords = null;
@@ -32,31 +34,54 @@ function isoTerrainFamily(tile) {
   return null;
 }
 
-function isoTerrainNeighborFamily(row, col, centerFamily) {
-  if (row < 0 || row >= MAP_H || col < 0 || col >= MAP_W) return centerFamily;
-  return isoTerrainFamily(map[row][col]) || centerFamily;
+function isoTerrainMapFamily(row, col) {
+  if (row < 0 || row >= MAP_H || col < 0 || col >= MAP_W) return null;
+  return isoTerrainFamily(map[row][col]);
 }
 
-function isoTerrainSameMask(row, col, centerFamily) {
+// A vertex at (row, col) is shared by [row-1,col-1], [row-1,col],
+// [row,col-1], and [row,col]. Out-of-bounds cells contribute no material;
+// this keeps a map edge from inventing a grass border around a solid region.
+// If a caller asks for a completely out-of-bounds vertex, grass is the neutral
+// fallback. Every real Farm-tile vertex includes its owning in-bounds cell.
+function isoTerrainVertexFamily(row, col) {
+  var families = [
+    isoTerrainMapFamily(row - 1, col - 1),
+    isoTerrainMapFamily(row - 1, col),
+    isoTerrainMapFamily(row, col - 1),
+    isoTerrainMapFamily(row, col)
+  ];
+  var best = 'grass';
+  for (var i = 0; i < families.length; i++) {
+    var family = families[i];
+    if (!family) continue;
+    if (ISO_TERRAIN_PRIORITY[family] > ISO_TERRAIN_PRIORITY[best]) best = family;
+  }
+  return best;
+}
+
+// The four entries are in vendor-mask bit order. The screen-corner/world-
+// vertex mapping is: bottom=SE, left=SW, right=NE, top=NW.
+function isoTerrainCornerFamilies(row, col) {
+  return [
+    { bit: ISO_TERRAIN_BITS.bottom, family: isoTerrainVertexFamily(row + 1, col + 1) },
+    { bit: ISO_TERRAIN_BITS.left, family: isoTerrainVertexFamily(row + 1, col) },
+    { bit: ISO_TERRAIN_BITS.right, family: isoTerrainVertexFamily(row, col + 1) },
+    { bit: ISO_TERRAIN_BITS.top, family: isoTerrainVertexFamily(row, col) }
+  ];
+}
+
+function isoTerrainGrassCornerMask(corners) {
   var mask = 0;
-  if (isoTerrainNeighborFamily(row - 1, col, centerFamily) === centerFamily) mask |= ISO_TERRAIN_BITS.north;
-  if (isoTerrainNeighborFamily(row, col + 1, centerFamily) === centerFamily) mask |= ISO_TERRAIN_BITS.east;
-  if (isoTerrainNeighborFamily(row + 1, col, centerFamily) === centerFamily) mask |= ISO_TERRAIN_BITS.south;
-  if (isoTerrainNeighborFamily(row, col - 1, centerFamily) === centerFamily) mask |= ISO_TERRAIN_BITS.west;
+  for (var i = 0; i < corners.length; i++) if (corners[i].family === 'grass') mask |= corners[i].bit;
   return mask;
 }
 
-function isoTerrainHighestAdjacentFamily(row, col, centerFamily) {
+function isoTerrainHighestNonGrassFamily(corners) {
   var best = null;
-  var neighbours = [
-    isoTerrainNeighborFamily(row - 1, col, centerFamily),
-    isoTerrainNeighborFamily(row, col + 1, centerFamily),
-    isoTerrainNeighborFamily(row + 1, col, centerFamily),
-    isoTerrainNeighborFamily(row, col - 1, centerFamily)
-  ];
-  for (var i = 0; i < neighbours.length; i++) {
-    var family = neighbours[i];
-    if (!family || family === centerFamily || ISO_TERRAIN_PRIORITY[family] <= ISO_TERRAIN_PRIORITY[centerFamily]) continue;
+  for (var i = 0; i < corners.length; i++) {
+    var family = corners[i].family;
+    if (!family || family === 'grass') continue;
     if (!best || ISO_TERRAIN_PRIORITY[family] > ISO_TERRAIN_PRIORITY[best] ||
         (ISO_TERRAIN_PRIORITY[family] === ISO_TERRAIN_PRIORITY[best] &&
          ISO_TERRAIN_PRIORITY_ORDER.indexOf(family) < ISO_TERRAIN_PRIORITY_ORDER.indexOf(best))) best = family;
@@ -65,22 +90,21 @@ function isoTerrainHighestAdjacentFamily(row, col, centerFamily) {
 }
 
 function isoTerrainSpriteKey(row, col, centerFamily) {
-  var sameMask = isoTerrainSameMask(row, col, centerFamily);
-  var higher = isoTerrainHighestAdjacentFamily(row, col, centerFamily);
+  var corners = isoTerrainCornerFamilies(row, col);
+  var grassMask = isoTerrainGrassCornerMask(corners);
   if (centerFamily === 'grass') {
-    if (!higher) {
-      var base = (row * 31 + col * 17) % 3;
-      return 'iso_terrain_grass_base_' + ISO_TERRAIN_FAMILIES[base];
-    }
-    // A grass center uses the selected higher-priority transition family. The
-    // explicit mask convention is same-family neighbors, so grass is mask 15
-    // in open ground and loses one bit per adjacent secondary material.
-    return 'iso_terrain_' + higher + '_' + isoTerrainPadMask(sameMask);
+    // Soil-derived grass owns open Farm ground. Other grass bases are reserved
+    // for their own transition family below, so palettes never mix freely.
+    if (grassMask === 15) return 'iso_terrain_grass_base_soil';
+    var transitionFamily = isoTerrainHighestNonGrassFamily(corners);
+    if (!transitionFamily) return 'iso_terrain_grass_base_soil';
+    // The vendor index is used directly: set bits are the corners that remain
+    // grass. There is deliberately no polarity inversion or mirroring.
+    return 'iso_terrain_' + transitionFamily + '_' + isoTerrainPadMask(grassMask);
   }
-  // A higher-priority neighbor owns a hard edge. The source mask 0 is the
-  // authored full-current-material tile; sheet order never decides this case.
-  if (higher) return 'iso_terrain_' + centerFamily + '_00';
-  return 'iso_terrain_' + centerFamily + '_' + isoTerrainPadMask(15 ^ sameMask);
+  // A non-grass center owns every shared vertex it touches under the material
+  // priority rule, so its authored full-secondary tile is the stable hard edge.
+  return 'iso_terrain_' + centerFamily + '_00';
 }
 
 function isoTerrainAreaActivated(name) {
