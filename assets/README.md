@@ -109,3 +109,15 @@ Three layers of identity art, in governance order:
 `crop_growing.png` is anchored to the bottom of the plot and grows taller in code, so draw
 the plant sitting on the ground. The bobbing harvest arrows and blinking highlights remain
 on top of all art as gameplay cues.
+
+### Farm iso terrain (Step 8)
+
+Farm ground Pass 1 uses the required native-resolution transition set under
+[`assets/iso/terrain/`](iso/terrain/). The 48 `path-*`, `soil-*`, and `water-*` files are
+64×48 RGBA transparent overlays retaining native source pixels inside an inset 64×32
+runtime diamond; the authored raised-block skirt and perimeter are flattened. The three
+`grass-base-*` files provide deterministic plain-grass variation. Their fixed mask
+convention, crop layout, flattening transform, and provenance are recorded in
+[`terrain-mask-map.json`](iso/terrain/terrain-mask-map.json) and
+[`terrain-provenance.json`](iso/terrain/terrain-provenance.json). Missing soil art uses
+`drawIsoSoilTile`; other missing Farm ground art uses the existing `TILE_COLOR` diamond.

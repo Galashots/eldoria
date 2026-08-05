@@ -4,6 +4,131 @@
 // Both modes share the ONE tile palette: TILE_COLOR.
 var isoCamPX = 0, isoCamPY = 0;
 
+// Farm ground records are precomputed when the active map changes. The draw loop only
+// looks up a decoded image and paints its transparent native 64x48 overlay over the
+// continuous flat diamond underneath; it never scans neighbors, allocates terrain
+// records, or builds a pattern. Town and every non-Farm area retain the existing path.
+var ISO_TERRAIN_BITS = { north: 1, east: 2, south: 4, west: 8 };
+var ISO_TERRAIN_PRIORITY = { grass: 0, path: 1, soil: 2, water: 3 };
+var ISO_TERRAIN_PRIORITY_ORDER = ['water', 'soil', 'path', 'grass'];
+var isoTerrainRecords = null;
+var isoTerrainMapRef = null;
+
+function isoTerrainPadMask(mask) { return String(mask).padStart(2, '0'); }
+
+function isoTerrainFloorTile(tile) {
+  if (tile === TREE || tile === HOUSE) return GRASS;
+  if (tile === ROCK) return CAVE;
+  if (tile === DOOR || tile === EXIT) return PATH;
+  return tile;
+}
+
+function isoTerrainFamily(tile) {
+  tile = isoTerrainFloorTile(tile);
+  if (tile === WATER) return 'water';
+  if (tile === SOIL) return 'soil';
+  if (tile === PATH) return 'path';
+  if (tile === GRASS) return 'grass';
+  return null;
+}
+
+function isoTerrainNeighborFamily(row, col, centerFamily) {
+  if (row < 0 || row >= MAP_H || col < 0 || col >= MAP_W) return centerFamily;
+  return isoTerrainFamily(map[row][col]) || centerFamily;
+}
+
+function isoTerrainSameMask(row, col, centerFamily) {
+  var mask = 0;
+  if (isoTerrainNeighborFamily(row - 1, col, centerFamily) === centerFamily) mask |= ISO_TERRAIN_BITS.north;
+  if (isoTerrainNeighborFamily(row, col + 1, centerFamily) === centerFamily) mask |= ISO_TERRAIN_BITS.east;
+  if (isoTerrainNeighborFamily(row + 1, col, centerFamily) === centerFamily) mask |= ISO_TERRAIN_BITS.south;
+  if (isoTerrainNeighborFamily(row, col - 1, centerFamily) === centerFamily) mask |= ISO_TERRAIN_BITS.west;
+  return mask;
+}
+
+function isoTerrainHighestAdjacentFamily(row, col, centerFamily) {
+  var best = null;
+  var neighbours = [
+    isoTerrainNeighborFamily(row - 1, col, centerFamily),
+    isoTerrainNeighborFamily(row, col + 1, centerFamily),
+    isoTerrainNeighborFamily(row + 1, col, centerFamily),
+    isoTerrainNeighborFamily(row, col - 1, centerFamily)
+  ];
+  for (var i = 0; i < neighbours.length; i++) {
+    var family = neighbours[i];
+    if (!family || family === centerFamily || ISO_TERRAIN_PRIORITY[family] <= ISO_TERRAIN_PRIORITY[centerFamily]) continue;
+    if (!best || ISO_TERRAIN_PRIORITY[family] > ISO_TERRAIN_PRIORITY[best] ||
+        (ISO_TERRAIN_PRIORITY[family] === ISO_TERRAIN_PRIORITY[best] &&
+         ISO_TERRAIN_PRIORITY_ORDER.indexOf(family) < ISO_TERRAIN_PRIORITY_ORDER.indexOf(best))) best = family;
+  }
+  return best;
+}
+
+function isoTerrainSpriteKey(row, col, centerFamily) {
+  var sameMask = isoTerrainSameMask(row, col, centerFamily);
+  var higher = isoTerrainHighestAdjacentFamily(row, col, centerFamily);
+  if (centerFamily === 'grass') {
+    if (!higher) {
+      var base = (row * 31 + col * 17) % 3;
+      return 'iso_terrain_grass_base_' + ISO_TERRAIN_FAMILIES[base];
+    }
+    // A grass center uses the selected higher-priority transition family. The
+    // explicit mask convention is same-family neighbors, so grass is mask 15
+    // in open ground and loses one bit per adjacent secondary material.
+    return 'iso_terrain_' + higher + '_' + isoTerrainPadMask(sameMask);
+  }
+  // A higher-priority neighbor owns a hard edge. The source mask 0 is the
+  // authored full-current-material tile; sheet order never decides this case.
+  if (higher) return 'iso_terrain_' + centerFamily + '_00';
+  return 'iso_terrain_' + centerFamily + '_' + isoTerrainPadMask(15 ^ sameMask);
+}
+
+function isoTerrainAreaActivated(name) {
+  isoTerrainRecords = null;
+  isoTerrainMapRef = null;
+  if (name !== 'farm') return;
+  isoTerrainRecords = [];
+  isoTerrainMapRef = map;
+  for (var row = 0; row < MAP_H; row++) {
+    for (var col = 0; col < MAP_W; col++) {
+      var tile = map[row][col];
+      var floorTile = isoTerrainFloorTile(tile);
+      var family = isoTerrainFamily(tile);
+      isoTerrainRecords.push({
+        row: row,
+        col: col,
+        cx: isoPX((col + 0.5) * TILE, (row + 0.5) * TILE),
+        cy: isoPY((col + 0.5) * TILE, (row + 0.5) * TILE),
+        spriteKey: family ? isoTerrainSpriteKey(row, col, family) : null,
+        fallbackTile: floorTile,
+        fallbackColor: TILE_COLOR[floorTile] || '#333333'
+      });
+    }
+  }
+}
+
+function drawIsoTerrainRecord(record) {
+  // The flat diamond is always drawn first so adjacent Farm cells share one continuous
+  // ground plane. Flattened terrain derivatives contain only an inset top-face overlay:
+  // their authored skirt and perimeter are transparent, so they cannot form a raised
+  // block lattice between cells.
+  drawIsoTileDiamond(record.cx, record.cy, record.fallbackColor);
+
+  // The preload barrier settles only after every requested terrain file has either
+  // decoded or failed. This prevents a first-use decode hitch while preserving the
+  // exact legacy fallback for an individual missing sprite.
+  var image = isoTerrainPreloadSettled && record.spriteKey ? spr(record.spriteKey) : null;
+  if (image) {
+    // The overlay is already the exact ISO_TW x ISO_TH top-face canvas at native
+    // resolution. Its center is anchored at (cx, cy); transparent rows preserve the
+    // 64x48 runtime canvas without shifting the ground diamond.
+    ctx.drawImage(image, record.cx - ISO_TW / 2, record.cy - ISO_TH / 2);
+  } else if (record.fallbackTile === SOIL) {
+    // Preserve the exact existing missing-art fallback over the flat underlay.
+    drawIsoSoilTile(record.cx, record.cy);
+  }
+}
+
 // Half-width/half-height variant: prisms narrower than a tile (villagers) share this path.
 function drawIsoDiamondAt(cx, cy, hw, hh, fillColor) {
   ctx.beginPath();
@@ -152,18 +277,25 @@ function drawIsoWorld() {
   isoUpdateCamera();
   var now = Date.now();
   ctx.setTransform(isoScale, 0, 0, isoScale, -isoCamPX * isoScale, -isoCamPY * isoScale);
+  var farmTerrainActive = currentArea === 'farm' && !window.__isoTerrainForceFallback;
+  if (farmTerrainActive && (!isoTerrainRecords || isoTerrainMapRef !== map))
+    isoTerrainAreaActivated(currentArea);
   for (var r = 0; r < MAP_H; r++) {
     for (var c = 0; c < MAP_W; c++) {
       var wx = (c + 0.5) * TILE, wy = (r + 0.5) * TILE;
       var cx = isoPX(wx, wy), cy = isoPY(wx, wy);
       var t = map[r][c];
-      // Tall tile types become Pass-2 prisms; their floor shows the ground beneath.
-      var floorColor = TILE_COLOR[t] || '#333333';
-      if (t === TREE || t === HOUSE) floorColor = TILE_COLOR[GRASS];
-      else if (t === ROCK) floorColor = TILE_COLOR[CAVE];   // rock stands on cavern floor, not grass
-      else if (t === DOOR || t === EXIT) floorColor = TILE_COLOR[PATH];
-      if (t === SOIL) drawIsoSoilTile(cx, cy);
-      else drawIsoTileDiamond(cx, cy, floorColor);
+      if (farmTerrainActive) {
+        drawIsoTerrainRecord(isoTerrainRecords[r * MAP_W + c]);
+      } else {
+        // Tall tile types become Pass-2 prisms; their floor shows the ground beneath.
+        var floorColor = TILE_COLOR[t] || '#333333';
+        if (t === TREE || t === HOUSE) floorColor = TILE_COLOR[GRASS];
+        else if (t === ROCK) floorColor = TILE_COLOR[CAVE];   // rock stands on cavern floor, not grass
+        else if (t === DOOR || t === EXIT) floorColor = TILE_COLOR[PATH];
+        if (t === SOIL) drawIsoSoilTile(cx, cy);
+        else drawIsoTileDiamond(cx, cy, floorColor);
+      }
       var crop = cropData[r + ',' + c];
       if (crop && crop.status !== 'empty') drawIsoCrop(cx, cy, crop, now);
     }
@@ -442,4 +574,8 @@ function drawCaveFloorTile(sx, sy, r, c) {
     ctx.fillRect(sx + 2, sy + TILE / 2 - 1, TILE - 4, 3);
   }
 }
+
+// The initial live pointer is established by js/03 before this renderer script
+// loads, so build Farm's records once before the main loop can draw it.
+if (typeof currentArea !== 'undefined') isoTerrainAreaActivated(currentArea);
 

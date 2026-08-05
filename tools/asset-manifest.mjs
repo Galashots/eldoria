@@ -498,6 +498,16 @@ const RULES = [
     }),
   },
   {
+    name: 'farm-iso-terrain',
+    test: p => /^assets\/iso\/terrain\/(?:path|soil|water)-(?:0[0-9]|1[0-5])\.png$/.test(p)
+      || /^assets\/iso\/terrain\/grass-base-(?:path|soil|water)\.png$/.test(p),
+    classify: () => ({
+      domain: 'farm-iso-terrain', scope: 'runtime', status: 'provisional', visualReview: 'intentional-interim-gap',
+      governedBy: 'docs/ai-team/STEP8_ENVART_CONTRACT_20260804.md',
+      notes: 'Farm ground Pass 1 terrain; native 64x48 sprites with 64x32 top-face diamonds. Required runtime files have exact slicer/provenance and fallback gates; final visual review remains a non-author gate.',
+    }),
+  },
+  {
     name: 'enemy-sprite',
     test: p => /^assets\/enemy_[a-z_]+\.png$/.test(p),
     classify: () => ({
@@ -824,6 +834,31 @@ function buildRuntimeBindings() {
     push({ key: `iso_crop_${crop}`, family: 'crop-iso-strip', path: `assets/iso/crop-${crop}.png`,
       owner: 'js/02-data-state.js + js/08-iso-renderer.js', required: false,
       fallback: 'deterministic canvas crop proof', fallbackKind: 'engine-drawn', use: { crop } });
+  }
+  for (const family of ['path', 'soil', 'water']) {
+    for (let mask = 0; mask < 16; mask++) {
+      const suffix = String(mask).padStart(2, '0');
+      push({
+        key: `iso_terrain_${family}_${suffix}`,
+        family: 'farm-iso-terrain-transition',
+        path: `assets/iso/terrain/${family}-${suffix}.png`,
+        owner: 'js/02-data-state.js + js/08-iso-renderer.js Farm ground Pass 1',
+        required: true,
+        fallback: family === 'soil' ? 'drawIsoSoilTile' : 'drawIsoTileDiamond with TILE_COLOR',
+        fallbackKind: 'engine-drawn',
+        use: { terrainFamily: family, mask, renderLayer: 'Farm ground Pass 1' },
+      });
+    }
+    push({
+      key: `iso_terrain_grass_base_${family}`,
+      family: 'farm-iso-terrain-grass-base',
+      path: `assets/iso/terrain/grass-base-${family}.png`,
+      owner: 'js/02-data-state.js + js/08-iso-renderer.js Farm ground Pass 1',
+      required: true,
+      fallback: 'drawIsoTileDiamond with TILE_COLOR',
+      fallbackKind: 'engine-drawn',
+      use: { terrainFamily: 'grass', sourceVariant: family, renderLayer: 'Farm ground Pass 1' },
+    });
   }
   for (const type of ['slime', 'bat', 'goblin', 'wolf', 'bear', 'troll', 'rock_golem', 'magma_slug', 'crystal_wyrm', 'shadow_warden']) {
     push({ key: `enemy_${type}`, family: 'enemy-sprite', path: `assets/enemy_${type}.png`,

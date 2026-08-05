@@ -1,0 +1,2215 @@
+{
+  "encoder": "eldoria-terrain-slicer/2; stdlib PNG RGBA8; filter=0; zlib-level=9",
+  "flatteningTransform": {
+    "diamondOuterBounds": "64x32, two-pixel flat top, rows 0..15 expand by 2px and rows 16..31 contract by 2px",
+    "name": "flatten-raised-block-v1; preserve native RGBA inside inset diamond; alpha=0 for skirt and perimeter",
+    "perimeterInset": 2,
+    "skirtRows": [
+      32,
+      47
+    ],
+    "sourcePixels": "preserved byte-for-byte inside the inset top-face bounds; all other output pixels are transparent",
+    "topFaceHeight": 32
+  },
+  "outputs": [
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-grass-base",
+      "mask": 15,
+      "path": "assets/iso/terrain/grass-base-path.png",
+      "pixelSha256": "ed699013d71202cdc39f2bfc053b8fca13501b684009b6ad16ae9855676527ca",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_grass_base_path",
+      "sha256": "03c6c5b88e6f97c597c1bdc5db1500706ccee44d445d21f0a0f03721d6aae13d",
+      "sourcePixelSha256": "f6cd5ac4874607fd8deea7a8da05833cffca0993f0d8189a440e915718750eef",
+      "sourceTile": "tile_15"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-grass-base",
+      "mask": 15,
+      "path": "assets/iso/terrain/grass-base-soil.png",
+      "pixelSha256": "c2235e1d77dd884d214ef70c5cfe6a57eea3b1b38f452a7770eee1d737308dca",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_grass_base_soil",
+      "sha256": "0682b653a4d3a2c00da0767f6c1851ad5dfbc29ee8381ef3fe45cfad07273007",
+      "sourcePixelSha256": "31ec96509a78bf695f62c19cb324ef7b83116d94309ec48aaf4441f945c56d4b",
+      "sourceTile": "tile_15"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-grass-base",
+      "mask": 15,
+      "path": "assets/iso/terrain/grass-base-water.png",
+      "pixelSha256": "c875b4c1d0aabfa05de9f6c7636308d8ebce22b078e9d7129efb171c2a9bc1be",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_grass_base_water",
+      "sha256": "614c66bcb582859c96148de95662381f6e797023f7aa306cac1612ff52f59882",
+      "sourcePixelSha256": "3e7cd21bcbd531d810a419a6eea89c246527beef5719eba475247a475635fc8e",
+      "sourceTile": "tile_15"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 0,
+      "path": "assets/iso/terrain/path-00.png",
+      "pixelSha256": "a1d0589217d9eaea94e5c70074414bf449b1b6192a300f689ec5a19ca8eef244",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_path_00",
+      "sha256": "4262a3ebb6ddb60b38f523ab9ec728b9329b4c1e32beaaa9e6c49be41a7b8404",
+      "sourcePixelSha256": "83e4ccc2dda18f51ee024dc70d83c31ab2eac6ccee8d3bd64c52d85b3d91ff14",
+      "sourceTile": "tile_0"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 1,
+      "path": "assets/iso/terrain/path-01.png",
+      "pixelSha256": "61738faa8d7ccd8cff1f85daacc152ffced5189bd635eebd49c197416baa921f",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_path_01",
+      "sha256": "083b0e32896cf48e5186cda203756e0a2e5b5d5b2677bf7c3f71002b7521c3b0",
+      "sourcePixelSha256": "4648dd11987df50c67f617e5330190d44906123ffae456de73d03cb31c089cd1",
+      "sourceTile": "tile_1"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 2,
+      "path": "assets/iso/terrain/path-02.png",
+      "pixelSha256": "e464f0c8ce6213d53f943367abd41010f36080725e0ad5711a36969bf9ee9a73",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_path_02",
+      "sha256": "b88cc4280a26c75bf7b72cf87d4909e979f1f7b736bb588ff050404bcc13e454",
+      "sourcePixelSha256": "e872e85ad6f7fb0c0ed885a0ae7919c69beb996fe19678b994dc7ad1d9bb3cc4",
+      "sourceTile": "tile_2"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 3,
+      "path": "assets/iso/terrain/path-03.png",
+      "pixelSha256": "8e877d818a2704034540843aab89d6ea0ba1d03052258e6af4c596425a9cc631",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_path_03",
+      "sha256": "fae5ed9b2ea3780e9c6cbd4fbb09c6753f8b1a1dd71333dcab9937980596591d",
+      "sourcePixelSha256": "9bd6f3203e9fc6d3e73d6ae51b702345330d0aef9ff5749d6d3c94061f00e9dd",
+      "sourceTile": "tile_3"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 4,
+      "path": "assets/iso/terrain/path-04.png",
+      "pixelSha256": "8eb5a732219e90d0d390bdc331eddf227fecab536f8f05e93ebe5581a41f8ff6",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_path_04",
+      "sha256": "2e6c3e05fa9bcb1c4cbe1634f8b938eeec3146bb917bf84bd527ea67d5d92b64",
+      "sourcePixelSha256": "40c699b0387f68ec195528f35b73a1fce074af5c29c1d877bb5b1f440f473338",
+      "sourceTile": "tile_4"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 5,
+      "path": "assets/iso/terrain/path-05.png",
+      "pixelSha256": "1005a46ca7c4dba600c77c1d334c04d7b770a8fe2dc2a5cd33d0e2c4ddb8535e",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_path_05",
+      "sha256": "05d73d6c8554cbd1f1e52f7d24e6f943f829d555f97247af9319314a8cb4fb82",
+      "sourcePixelSha256": "fed63ea16ec1ff4480ee6c300afaf35c4f61f5b1556c49bd6e7c6e7cee00748e",
+      "sourceTile": "tile_5"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 6,
+      "path": "assets/iso/terrain/path-06.png",
+      "pixelSha256": "70bc21ba70b244d61e8defe994a4cd6dc714d30d4492e3f99da8b5b3a1f04b41",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_path_06",
+      "sha256": "0ff77ef89967d26ee946f52d5c78a99c82c9933cbb82856f33eb422409e528a5",
+      "sourcePixelSha256": "bfc4a19b893667351782ee25e28d2b829a5185297571d946894b972935ce5d3b",
+      "sourceTile": "tile_6"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 7,
+      "path": "assets/iso/terrain/path-07.png",
+      "pixelSha256": "abd18015a1c18112456c978ea650b175d2965e8598f7905ccd59fec14c254125",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_path_07",
+      "sha256": "d0b56903b4e3718192bda61ad2e684dd4995e2b1e48120e4b203be33276e17bd",
+      "sourcePixelSha256": "2e1891f8133a9c9ebe8e32553ec9afc88d3a960edf76d635ad3d0b7ba0ff7ef7",
+      "sourceTile": "tile_7"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 8,
+      "path": "assets/iso/terrain/path-08.png",
+      "pixelSha256": "cef9b8083cd08384e57a91b19960c625ad4c42d1913c5fde3c6b906b23840888",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_path_08",
+      "sha256": "9ef2d83446644a8f24280d83c4d9ba8705c59eb7a3c465b5b14d454c0670cb6d",
+      "sourcePixelSha256": "7cd327d36fc135298b340f1203b4bca73307a8c2fb4e7f506dc1a4ab4164ab35",
+      "sourceTile": "tile_8"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 9,
+      "path": "assets/iso/terrain/path-09.png",
+      "pixelSha256": "d9795f5b9ff1a219bd9abeef0eaa3f10f0441e77b7c6d7e191dd11fffc047069",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_path_09",
+      "sha256": "00e1638ef890cbcf091f79d7bbb2670a4bb6008994f57e6c40796f85de030b26",
+      "sourcePixelSha256": "11cce8c652b8058d678b428bd25bc685f0e760b65e779cdcb76956aeae7ea8fb",
+      "sourceTile": "tile_9"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 10,
+      "path": "assets/iso/terrain/path-10.png",
+      "pixelSha256": "b7a06e69c2d943b4024259a685f46fc547cbb63faedf56958ccfebf6463246c0",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_path_10",
+      "sha256": "7346d576f47b24fbc3765a1f5f55be43cbaa1776f52cc672e7627866c0359887",
+      "sourcePixelSha256": "edeca8c686f0d151a247289c36301b49b4d05ea20a5c58dc91130d0767dcc499",
+      "sourceTile": "tile_10"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 11,
+      "path": "assets/iso/terrain/path-11.png",
+      "pixelSha256": "e8d0d0a910479a0fea61f4059869959d8990d41b90f03e29fe1ba631e7fc1c87",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_path_11",
+      "sha256": "2efaefdbf1c54ea7bc690a44a264d4a756fff029a75c8ea7474ba8fa6a183b10",
+      "sourcePixelSha256": "ab0a04cdd29739b9070f3924014a1dc8d00f9a5ecdbae7d3a9afbeb3a3a959c6",
+      "sourceTile": "tile_11"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 12,
+      "path": "assets/iso/terrain/path-12.png",
+      "pixelSha256": "f31df97f2caec01d75eec7d29906256590908ff55ad79a10c8a68c69c46dac78",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_path_12",
+      "sha256": "9f91efb18b978aec6e9cddb52ce027fc7fdd185ac599dcab19aab059607b8899",
+      "sourcePixelSha256": "6a0e666e965d45e0cc9bcaf336dff3cf08e997c616bd2d3f9a370e6a358e2a1b",
+      "sourceTile": "tile_12"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 13,
+      "path": "assets/iso/terrain/path-13.png",
+      "pixelSha256": "4a2c603d7024b59dda5829d0b9c1e3cabc172dee1b5b9b6ea9d5e6f57b3d65bb",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_path_13",
+      "sha256": "300e19f690b147f0d397e3db05e5a22933ddb0beb5d19adaefd0bb6b6d7c3299",
+      "sourcePixelSha256": "a4a99cfaf88a76e99d07c66ae178c34bf02bee71956ffe76684a4fbbe4b2166f",
+      "sourceTile": "tile_13"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 14,
+      "path": "assets/iso/terrain/path-14.png",
+      "pixelSha256": "1f6ae55141fc6131c169716596100a15c0ead91c606a03fa986df4056cdc2d85",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_path_14",
+      "sha256": "c8b8bb1e92b0daf49eb38c8aec574ab1471fea7cd02b1dcdef1bc929539b374c",
+      "sourcePixelSha256": "15e988875a931203ec4c99a88bb7957a9b4aebd7cbc0c904c30954dd6a237d7f",
+      "sourceTile": "tile_14"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 15,
+      "path": "assets/iso/terrain/path-15.png",
+      "pixelSha256": "ed699013d71202cdc39f2bfc053b8fca13501b684009b6ad16ae9855676527ca",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_path_15",
+      "sha256": "03c6c5b88e6f97c597c1bdc5db1500706ccee44d445d21f0a0f03721d6aae13d",
+      "sourcePixelSha256": "f6cd5ac4874607fd8deea7a8da05833cffca0993f0d8189a440e915718750eef",
+      "sourceTile": "tile_15"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 0,
+      "path": "assets/iso/terrain/soil-00.png",
+      "pixelSha256": "f41903b50e9bfa1d9af1531d3411f719be99545b5e2e2072ef6a14f8a819955f",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_soil_00",
+      "sha256": "3e3282bc69e46c9e6acc99f19061fa75d6b0940ad56c9c17832d33c8dea4c12e",
+      "sourcePixelSha256": "ee3c354524c4f63fb231860f71e7636274d2007298ff56f61ca462685f5de6eb",
+      "sourceTile": "tile_0"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 1,
+      "path": "assets/iso/terrain/soil-01.png",
+      "pixelSha256": "c0a8c435b56b931dd7434bf8a35bc0e03b080e918f8b6e7dec3354cfb5397d1c",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_soil_01",
+      "sha256": "32c04ee9950c5df9ed94c4ca95010ff564981f6df54289c7ed8942f39c434907",
+      "sourcePixelSha256": "033401ab73c736b019e4e8b8db5bea44bfe72f641d5641a55cb2031172cec19c",
+      "sourceTile": "tile_1"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 2,
+      "path": "assets/iso/terrain/soil-02.png",
+      "pixelSha256": "d41ace962ab9b07c4c20bb6129b6cc4edff03ef7b71385d93baee05c34261066",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_soil_02",
+      "sha256": "40d7f1de84ac4ae14cfef789f99cda56798d895dc867a9c4437b0f09da171f7f",
+      "sourcePixelSha256": "2480b50f43217a991faadf6d674224d5e86a08a7a6241544c166ada2b21a361a",
+      "sourceTile": "tile_2"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 3,
+      "path": "assets/iso/terrain/soil-03.png",
+      "pixelSha256": "531d9dd8287825078df073aeb506e26608202ccf43eaacc399b5560f406b2807",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_soil_03",
+      "sha256": "21a4d4e009008bcad607d624f4c7ddacaf5a0b02cf518b07989daa4abe36b2ac",
+      "sourcePixelSha256": "f1c991c8da477e958c67fa5ec85fbfb02a78dd5cc176ef1a34ae5ee51b311992",
+      "sourceTile": "tile_3"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 4,
+      "path": "assets/iso/terrain/soil-04.png",
+      "pixelSha256": "06f54c1db162a03ca818760e3274cf99fc926315b806866535783a8aaf3a446c",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_soil_04",
+      "sha256": "e9f253a1aa98228380eaee0e23ccb2688ff618c4f49b5afd43dd6f7d139eb12b",
+      "sourcePixelSha256": "44106781f19ebf07a63164b11a8e12da15462fb067b8a68b258cf404c33e875e",
+      "sourceTile": "tile_4"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 5,
+      "path": "assets/iso/terrain/soil-05.png",
+      "pixelSha256": "048494683978a397f9c0b07c8900700b24b4735c11cf47f1adb21b63277dfafb",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_soil_05",
+      "sha256": "cc1de352784a9d3d26d52b43598129331950ed4ab55ad411878af3d168b3f097",
+      "sourcePixelSha256": "2627153c31760d8f39d50be668145244a7c93a84a03fbbe4054d7f8e030797fb",
+      "sourceTile": "tile_5"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 6,
+      "path": "assets/iso/terrain/soil-06.png",
+      "pixelSha256": "e19f99f3a1bcb7ee328a5edb44c396e6fa125181419be53120adf5c1b58f7fae",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_soil_06",
+      "sha256": "b5c197cfac12f56700377a109b772a1fbd520eaea39b9169733a31f20d8a4bb7",
+      "sourcePixelSha256": "c6ecef81980f7e19a1221ba04b40eb1fea205aee31a3e8f5a33ee8b903d64c5c",
+      "sourceTile": "tile_6"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 7,
+      "path": "assets/iso/terrain/soil-07.png",
+      "pixelSha256": "caee89a38a52807083dad5773d7a9c58a897b51b9246ae8f0436308c452a4bfe",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_soil_07",
+      "sha256": "48f17b8b0f34baa85f8158b7d139192d6600b06229f96bb97a0dffbe57cbafe2",
+      "sourcePixelSha256": "a019c423dc8f21af200b51baeeb97f82a26cc7c58f6c7e4d77415a36c9d41326",
+      "sourceTile": "tile_7"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 8,
+      "path": "assets/iso/terrain/soil-08.png",
+      "pixelSha256": "ebace595e0c7932c17ba5c35a3779907d3952ee8e9eeda1fad0c19ecd6adcb7b",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_soil_08",
+      "sha256": "6a959290d1a45f0c4ae4249d990a453665f5b701d0f8dd53a952b6ad48968897",
+      "sourcePixelSha256": "193799e762ee7134d8906c3610398023d478e5ec6c6d33676252216545cc09ce",
+      "sourceTile": "tile_8"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 9,
+      "path": "assets/iso/terrain/soil-09.png",
+      "pixelSha256": "faa5cd87749be90dbdb064a0ddd14ce81b8213fb76a51229824f1b09ac3ad4b8",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_soil_09",
+      "sha256": "95ebd733dfd6a5f0b31ac8c48f422b901e0e42bdeb42b0347ab68411db2b57ea",
+      "sourcePixelSha256": "b097735edbbd1c2bed599092fca967f977ea9729d8cdd4a0a54c9064099a855d",
+      "sourceTile": "tile_9"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 10,
+      "path": "assets/iso/terrain/soil-10.png",
+      "pixelSha256": "854654973608d8b41e3935d4cc8fd002c9244c0fa3ea9d4620a257db7d8eb2f9",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_soil_10",
+      "sha256": "286900d7b0b6f6267b96c46e98216b8c4da65d24e278324daefd4c4bcdf31eb7",
+      "sourcePixelSha256": "e9a46284befda1a5668bd5e5283cebb7210e0a259cdb8d0ab5400ff462a97341",
+      "sourceTile": "tile_10"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 11,
+      "path": "assets/iso/terrain/soil-11.png",
+      "pixelSha256": "99249cc553e228ab345ef269e05881601a038b37f6dceeef7561d93e18a412ba",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_soil_11",
+      "sha256": "45e28ebf227fe0cfac00d50c98f856d63df17f7f920495c2be95478e07c0c780",
+      "sourcePixelSha256": "5b18cf2acf4bd074a0e40b04ddf9648a46732c75a65d63d561a98f4fa5296516",
+      "sourceTile": "tile_11"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 12,
+      "path": "assets/iso/terrain/soil-12.png",
+      "pixelSha256": "9dd63bd74893305a1f7ceeed70f7f3705f656a33eba5b873d3ad29c9b5fdc560",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_soil_12",
+      "sha256": "7d09050fd023948855c92743b0b54885eb514746d39d206152b1ddbc0aebf791",
+      "sourcePixelSha256": "75b62f9a1a6032ce989a241e8c87f8cd69515ce85b2e49a13fb44f3bd5d90a6f",
+      "sourceTile": "tile_12"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 13,
+      "path": "assets/iso/terrain/soil-13.png",
+      "pixelSha256": "d4f4fb24860b7c7b1e6be1d4bc65bc6d74c931133abab95868f5e67cae787835",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_soil_13",
+      "sha256": "c553d47e2068df7cc4065de6d2c8e6c82b3c5b83e50162c65ed993c45afc5217",
+      "sourcePixelSha256": "15bc041b62f4a7e1e255ae30dabfe4d1a343dea464300f6a8fd991e5f20370a2",
+      "sourceTile": "tile_13"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 14,
+      "path": "assets/iso/terrain/soil-14.png",
+      "pixelSha256": "f69849a8315d5b83e849daf33558a493475ab74e6cd7e7d00d3baf0a55f67805",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_soil_14",
+      "sha256": "9e92c4bc0f64fadb0443a1436285baecfe91ae86003867d0a24dfef967f414f4",
+      "sourcePixelSha256": "13a3bc65ffc6b7335e23c9e96f5d6bf6a4dff816f7cb3e72a963977759145afa",
+      "sourceTile": "tile_14"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 15,
+      "path": "assets/iso/terrain/soil-15.png",
+      "pixelSha256": "c2235e1d77dd884d214ef70c5cfe6a57eea3b1b38f452a7770eee1d737308dca",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_soil_15",
+      "sha256": "0682b653a4d3a2c00da0767f6c1851ad5dfbc29ee8381ef3fe45cfad07273007",
+      "sourcePixelSha256": "31ec96509a78bf695f62c19cb324ef7b83116d94309ec48aaf4441f945c56d4b",
+      "sourceTile": "tile_15"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 0,
+      "path": "assets/iso/terrain/water-00.png",
+      "pixelSha256": "7dea822899587dc0c6f051cc240a1b66404249731b22de84c70f95ad64a7c212",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_water_00",
+      "sha256": "dad89160cb108db2e2d25388fe241dab4f4aadd8724e730d36a523fed609296d",
+      "sourcePixelSha256": "3809ff63afa62d5629a26f5c5c04833afe80bed77719e9d06e590a52b6109e86",
+      "sourceTile": "tile_0"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 1,
+      "path": "assets/iso/terrain/water-01.png",
+      "pixelSha256": "c739a8a125dfc72ee7fa17c9ecb488f6c75943581856fdc8451b3fd3a5a1361e",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_water_01",
+      "sha256": "94abcd0acbc6e55f2f5d7f2439d938eb9ce71af93e5e36feef7a398f680b5eff",
+      "sourcePixelSha256": "49b6478b03eb5d8d61f4fbc5aa9a985bbe2cafa6e4c01de836f01c1ef0d075af",
+      "sourceTile": "tile_1"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 2,
+      "path": "assets/iso/terrain/water-02.png",
+      "pixelSha256": "564afcf35c7a133b330ee2981e4ba30a350956e309e1c715e3aaacff74d1bb30",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_water_02",
+      "sha256": "6c5ade595db4d44f6f31917aff8cc5d0e7be0128084ca6298f913a7cce99934a",
+      "sourcePixelSha256": "2971f99f8e924677e8988f309eda745c89b427be5c7e954961a0b950043672d1",
+      "sourceTile": "tile_2"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 0
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 3,
+      "path": "assets/iso/terrain/water-03.png",
+      "pixelSha256": "9aabc8d3f78f73c3da2279e0e230e16429581feaa58319a01e329152ce7ab315",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 0,
+      "runtimeKey": "iso_terrain_water_03",
+      "sha256": "88690189d35c074b393cce0dbe5d7d782880dcd9231557bdc20df6975859e6e6",
+      "sourcePixelSha256": "e6fcfae0e575f64564d44f2dce305d06203313b57222a0be2680244ed13e4273",
+      "sourceTile": "tile_3"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 4,
+      "path": "assets/iso/terrain/water-04.png",
+      "pixelSha256": "f11f82061452f2fef13df7e6413f00a538331886bd5a9f44a4122592b93ae79a",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_water_04",
+      "sha256": "3750e38b89ca1d43809cc5aee0a5fb5d410be035e973680235389e72873de81f",
+      "sourcePixelSha256": "5e87c12e100731afdf297a41f21f076c078ecf8d1eaa103fcc2bb3d034661ac9",
+      "sourceTile": "tile_4"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 5,
+      "path": "assets/iso/terrain/water-05.png",
+      "pixelSha256": "509516f5cb91328370c3ee933b239ba7d87d2ac064de9d2df0280ad41fae9d2b",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_water_05",
+      "sha256": "8c578859a813727177d33ed49d75ca1cf9c069f9b2017fba5da547c3e2d830eb",
+      "sourcePixelSha256": "a4e624ad4c41f67369fce871dc16cdf0aa5169113b668531d7930a3bbb39a670",
+      "sourceTile": "tile_5"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 6,
+      "path": "assets/iso/terrain/water-06.png",
+      "pixelSha256": "ad5ca2876990d5d91d598aa7da726545c4f95966a1242e63ca35a9b549964850",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_water_06",
+      "sha256": "89427e1747504cf8b60c2a501a9b84ed7b73dc7b548ed1591e3caf4da37b4a7f",
+      "sourcePixelSha256": "8669374c322160d84517a23a8a618ae0493bd99898511e8172a0daa50f72b8c1",
+      "sourceTile": "tile_6"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 49
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 7,
+      "path": "assets/iso/terrain/water-07.png",
+      "pixelSha256": "db019db546868ff9ba4edd40e3838ea7c7c402a5e745ac2430380f6cc79f2ade",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 1,
+      "runtimeKey": "iso_terrain_water_07",
+      "sha256": "085b6c19dd213e54790fa4e6e47ca043ad8c30f5fd3e6fbe1ed02b1faa13177b",
+      "sourcePixelSha256": "370deb2f7ca816bd6dc9d6f0bad782d3b1d153c781b3637e5983e45f56a31345",
+      "sourceTile": "tile_7"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 8,
+      "path": "assets/iso/terrain/water-08.png",
+      "pixelSha256": "996c57660233df2a3b2873fe76e7067a08fbb8f74313f8ba8037508532daadb8",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_water_08",
+      "sha256": "f1c6d05e3b5fad6a77fddf72437ce33659153a0576754305d7d7ebc131adeee5",
+      "sourcePixelSha256": "f636133108d1b282718e03f24cf4f9901e0093a643bfe86221a13b3c99dbedb3",
+      "sourceTile": "tile_8"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 9,
+      "path": "assets/iso/terrain/water-09.png",
+      "pixelSha256": "24a86ed24941f2c1dd0cc45dbf6e60374ca333c8ae623d25a7ab6c60b3ac09fb",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_water_09",
+      "sha256": "167ceab2201bda91b5e11774af7e86c58bc12bc5cf845f8fea56ec6ca6458171",
+      "sourcePixelSha256": "6ac36873ae71cab6c5ff2feebfbf5045dc50687ea3de1f3a5f278c899730d8b6",
+      "sourceTile": "tile_9"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 10,
+      "path": "assets/iso/terrain/water-10.png",
+      "pixelSha256": "8de81c22d7e36a1af4ced65cc4f49e0499e2e2700292efe1ff205d0179368284",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_water_10",
+      "sha256": "3de75ed8ad0db10b0fde90d398b63ab2701bae49cbaff14e2f9425e7f5643fe5",
+      "sourcePixelSha256": "64932f4ff34f1f484ea98e15c07937c35f0cf919da59f7da6a7cb224409530e7",
+      "sourceTile": "tile_10"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 98
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 11,
+      "path": "assets/iso/terrain/water-11.png",
+      "pixelSha256": "ed25c8c634860c9dff6011ff1dfe8316b9279567f93e804c0276e673357218f3",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 2,
+      "runtimeKey": "iso_terrain_water_11",
+      "sha256": "42b99286e0867b1efabfcf8f165dde730e3ceb3b1f821f9d2d86f8ae54c7a50f",
+      "sourcePixelSha256": "725c7b36d97c8b4d73ea0131fa4acc26f24345c9dd02f231ba12e615147c7f5c",
+      "sourceTile": "tile_11"
+    },
+    {
+      "column": 0,
+      "cropOrigin": {
+        "x": 0,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 12,
+      "path": "assets/iso/terrain/water-12.png",
+      "pixelSha256": "12423e3fde4f9f08c70529bf79ff86c03dfca9da3cbeb1011627d5cf77a6531a",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_water_12",
+      "sha256": "f57cc35a0141df57f20d710713749c911d10d4804e83162cad141e07927b8b6c",
+      "sourcePixelSha256": "c6af5e2dcf85a38987aea9a1b22c5ee73fa8ff0014c189c9883b4676e03c0f65",
+      "sourceTile": "tile_12"
+    },
+    {
+      "column": 1,
+      "cropOrigin": {
+        "x": 65,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 13,
+      "path": "assets/iso/terrain/water-13.png",
+      "pixelSha256": "7f72b15c907536783e666f973e121114e7f4294fedecd81415fac41e731a3636",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_water_13",
+      "sha256": "fd2166dbe1d2a00e5147b9d909e99d7824a4530b0c0db41e9b0b21be8cdea01a",
+      "sourcePixelSha256": "bc9d05333d59b1cbe8ed0c437934e9280c6813cd037e487d630110705420ad86",
+      "sourceTile": "tile_13"
+    },
+    {
+      "column": 2,
+      "cropOrigin": {
+        "x": 130,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 14,
+      "path": "assets/iso/terrain/water-14.png",
+      "pixelSha256": "f76ece95744d47bab64354b8645859ea164baa6ee7556fdf9e4f3c527cbe8019",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_water_14",
+      "sha256": "c5ac8397e37de4ddf1a748409978065e44163f4c62e92dc0352d7b8bb08ef74b",
+      "sourcePixelSha256": "6809297731bd9344f6d0f424ad3afea65bfbf41018e21a0b671c70ac0b40c0c5",
+      "sourceTile": "tile_14"
+    },
+    {
+      "column": 3,
+      "cropOrigin": {
+        "x": 195,
+        "y": 147
+      },
+      "dimensions": {
+        "height": 48,
+        "width": 64
+      },
+      "family": "farm-iso-terrain-transition",
+      "mask": 15,
+      "path": "assets/iso/terrain/water-15.png",
+      "pixelSha256": "c875b4c1d0aabfa05de9f6c7636308d8ebce22b078e9d7129efb171c2a9bc1be",
+      "renderLayer": "Farm ground Pass 1",
+      "row": 3,
+      "runtimeKey": "iso_terrain_water_15",
+      "sha256": "614c66bcb582859c96148de95662381f6e797023f7aa306cac1612ff52f59882",
+      "sourcePixelSha256": "3e7cd21bcbd531d810a419a6eea89c246527beef5719eba475247a475635fc8e",
+      "sourceTile": "tile_15"
+    }
+  ],
+  "schemaVersion": 1,
+  "sourceGeometry": {
+    "cellHeight": 48,
+    "cellWidth": 64,
+    "columnOrder": "west-to-east, columns 0..3",
+    "gutterX": 1,
+    "gutterY": 1,
+    "maskOrder": "explicit mask map; not inferred at runtime",
+    "outerMargin": 0,
+    "rowOrder": "north-to-south, rows 0..3",
+    "sheetHeight": 195,
+    "sheetWidth": 259,
+    "xOrigins": [
+      0,
+      65,
+      130,
+      195
+    ],
+    "yOrigins": [
+      0,
+      49,
+      98,
+      147
+    ]
+  },
+  "sources": [
+    {
+      "downloadDate": "2026-08-04 (local provenance capture)",
+      "family": "path",
+      "grassBase": {
+        "column": 3,
+        "cropOrigin": {
+          "x": 195,
+          "y": 147
+        },
+        "dimensions": {
+          "height": 48,
+          "width": 64
+        },
+        "family": "farm-iso-terrain-grass-base",
+        "mask": 15,
+        "path": "assets/iso/terrain/grass-base-path.png",
+        "pixelSha256": "ed699013d71202cdc39f2bfc053b8fca13501b684009b6ad16ae9855676527ca",
+        "renderLayer": "Farm ground Pass 1",
+        "row": 3,
+        "runtimeKey": "iso_terrain_grass_base_path",
+        "sha256": "03c6c5b88e6f97c597c1bdc5db1500706ccee44d445d21f0a0f03721d6aae13d",
+        "sourcePixelSha256": "f6cd5ac4874607fd8deea7a8da05833cffca0993f0d8189a440e915718750eef",
+        "sourceTile": "tile_15"
+      },
+      "libraryName": "PixelLab generated library transition sheets",
+      "libraryUrl": "https://www.pixellab.ai/termsofservice",
+      "outputs": [
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 0,
+          "path": "assets/iso/terrain/path-00.png",
+          "pixelSha256": "a1d0589217d9eaea94e5c70074414bf449b1b6192a300f689ec5a19ca8eef244",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_path_00",
+          "sha256": "4262a3ebb6ddb60b38f523ab9ec728b9329b4c1e32beaaa9e6c49be41a7b8404",
+          "sourcePixelSha256": "83e4ccc2dda18f51ee024dc70d83c31ab2eac6ccee8d3bd64c52d85b3d91ff14",
+          "sourceTile": "tile_0"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 1,
+          "path": "assets/iso/terrain/path-01.png",
+          "pixelSha256": "61738faa8d7ccd8cff1f85daacc152ffced5189bd635eebd49c197416baa921f",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_path_01",
+          "sha256": "083b0e32896cf48e5186cda203756e0a2e5b5d5b2677bf7c3f71002b7521c3b0",
+          "sourcePixelSha256": "4648dd11987df50c67f617e5330190d44906123ffae456de73d03cb31c089cd1",
+          "sourceTile": "tile_1"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 2,
+          "path": "assets/iso/terrain/path-02.png",
+          "pixelSha256": "e464f0c8ce6213d53f943367abd41010f36080725e0ad5711a36969bf9ee9a73",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_path_02",
+          "sha256": "b88cc4280a26c75bf7b72cf87d4909e979f1f7b736bb588ff050404bcc13e454",
+          "sourcePixelSha256": "e872e85ad6f7fb0c0ed885a0ae7919c69beb996fe19678b994dc7ad1d9bb3cc4",
+          "sourceTile": "tile_2"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 3,
+          "path": "assets/iso/terrain/path-03.png",
+          "pixelSha256": "8e877d818a2704034540843aab89d6ea0ba1d03052258e6af4c596425a9cc631",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_path_03",
+          "sha256": "fae5ed9b2ea3780e9c6cbd4fbb09c6753f8b1a1dd71333dcab9937980596591d",
+          "sourcePixelSha256": "9bd6f3203e9fc6d3e73d6ae51b702345330d0aef9ff5749d6d3c94061f00e9dd",
+          "sourceTile": "tile_3"
+        },
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 4,
+          "path": "assets/iso/terrain/path-04.png",
+          "pixelSha256": "8eb5a732219e90d0d390bdc331eddf227fecab536f8f05e93ebe5581a41f8ff6",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_path_04",
+          "sha256": "2e6c3e05fa9bcb1c4cbe1634f8b938eeec3146bb917bf84bd527ea67d5d92b64",
+          "sourcePixelSha256": "40c699b0387f68ec195528f35b73a1fce074af5c29c1d877bb5b1f440f473338",
+          "sourceTile": "tile_4"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 5,
+          "path": "assets/iso/terrain/path-05.png",
+          "pixelSha256": "1005a46ca7c4dba600c77c1d334c04d7b770a8fe2dc2a5cd33d0e2c4ddb8535e",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_path_05",
+          "sha256": "05d73d6c8554cbd1f1e52f7d24e6f943f829d555f97247af9319314a8cb4fb82",
+          "sourcePixelSha256": "fed63ea16ec1ff4480ee6c300afaf35c4f61f5b1556c49bd6e7c6e7cee00748e",
+          "sourceTile": "tile_5"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 6,
+          "path": "assets/iso/terrain/path-06.png",
+          "pixelSha256": "70bc21ba70b244d61e8defe994a4cd6dc714d30d4492e3f99da8b5b3a1f04b41",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_path_06",
+          "sha256": "0ff77ef89967d26ee946f52d5c78a99c82c9933cbb82856f33eb422409e528a5",
+          "sourcePixelSha256": "bfc4a19b893667351782ee25e28d2b829a5185297571d946894b972935ce5d3b",
+          "sourceTile": "tile_6"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 7,
+          "path": "assets/iso/terrain/path-07.png",
+          "pixelSha256": "abd18015a1c18112456c978ea650b175d2965e8598f7905ccd59fec14c254125",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_path_07",
+          "sha256": "d0b56903b4e3718192bda61ad2e684dd4995e2b1e48120e4b203be33276e17bd",
+          "sourcePixelSha256": "2e1891f8133a9c9ebe8e32553ec9afc88d3a960edf76d635ad3d0b7ba0ff7ef7",
+          "sourceTile": "tile_7"
+        },
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 8,
+          "path": "assets/iso/terrain/path-08.png",
+          "pixelSha256": "cef9b8083cd08384e57a91b19960c625ad4c42d1913c5fde3c6b906b23840888",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_path_08",
+          "sha256": "9ef2d83446644a8f24280d83c4d9ba8705c59eb7a3c465b5b14d454c0670cb6d",
+          "sourcePixelSha256": "7cd327d36fc135298b340f1203b4bca73307a8c2fb4e7f506dc1a4ab4164ab35",
+          "sourceTile": "tile_8"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 9,
+          "path": "assets/iso/terrain/path-09.png",
+          "pixelSha256": "d9795f5b9ff1a219bd9abeef0eaa3f10f0441e77b7c6d7e191dd11fffc047069",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_path_09",
+          "sha256": "00e1638ef890cbcf091f79d7bbb2670a4bb6008994f57e6c40796f85de030b26",
+          "sourcePixelSha256": "11cce8c652b8058d678b428bd25bc685f0e760b65e779cdcb76956aeae7ea8fb",
+          "sourceTile": "tile_9"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 10,
+          "path": "assets/iso/terrain/path-10.png",
+          "pixelSha256": "b7a06e69c2d943b4024259a685f46fc547cbb63faedf56958ccfebf6463246c0",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_path_10",
+          "sha256": "7346d576f47b24fbc3765a1f5f55be43cbaa1776f52cc672e7627866c0359887",
+          "sourcePixelSha256": "edeca8c686f0d151a247289c36301b49b4d05ea20a5c58dc91130d0767dcc499",
+          "sourceTile": "tile_10"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 11,
+          "path": "assets/iso/terrain/path-11.png",
+          "pixelSha256": "e8d0d0a910479a0fea61f4059869959d8990d41b90f03e29fe1ba631e7fc1c87",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_path_11",
+          "sha256": "2efaefdbf1c54ea7bc690a44a264d4a756fff029a75c8ea7474ba8fa6a183b10",
+          "sourcePixelSha256": "ab0a04cdd29739b9070f3924014a1dc8d00f9a5ecdbae7d3a9afbeb3a3a959c6",
+          "sourceTile": "tile_11"
+        },
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 12,
+          "path": "assets/iso/terrain/path-12.png",
+          "pixelSha256": "f31df97f2caec01d75eec7d29906256590908ff55ad79a10c8a68c69c46dac78",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_path_12",
+          "sha256": "9f91efb18b978aec6e9cddb52ce027fc7fdd185ac599dcab19aab059607b8899",
+          "sourcePixelSha256": "6a0e666e965d45e0cc9bcaf336dff3cf08e997c616bd2d3f9a370e6a358e2a1b",
+          "sourceTile": "tile_12"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 13,
+          "path": "assets/iso/terrain/path-13.png",
+          "pixelSha256": "4a2c603d7024b59dda5829d0b9c1e3cabc172dee1b5b9b6ea9d5e6f57b3d65bb",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_path_13",
+          "sha256": "300e19f690b147f0d397e3db05e5a22933ddb0beb5d19adaefd0bb6b6d7c3299",
+          "sourcePixelSha256": "a4a99cfaf88a76e99d07c66ae178c34bf02bee71956ffe76684a4fbbe4b2166f",
+          "sourceTile": "tile_13"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 14,
+          "path": "assets/iso/terrain/path-14.png",
+          "pixelSha256": "1f6ae55141fc6131c169716596100a15c0ead91c606a03fa986df4056cdc2d85",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_path_14",
+          "sha256": "c8b8bb1e92b0daf49eb38c8aec574ab1471fea7cd02b1dcdef1bc929539b374c",
+          "sourcePixelSha256": "15e988875a931203ec4c99a88bb7957a9b4aebd7cbc0c904c30954dd6a237d7f",
+          "sourceTile": "tile_14"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 15,
+          "path": "assets/iso/terrain/path-15.png",
+          "pixelSha256": "ed699013d71202cdc39f2bfc053b8fca13501b684009b6ad16ae9855676527ca",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_path_15",
+          "sha256": "03c6c5b88e6f97c597c1bdc5db1500706ccee44d445d21f0a0f03721d6aae13d",
+          "sourcePixelSha256": "f6cd5ac4874607fd8deea7a8da05833cffca0993f0d8189a440e915718750eef",
+          "sourceTile": "tile_15"
+        }
+      ],
+      "sourceFilename": "lush_green_meadow_grass_transitioning_to_packed_li.png",
+      "sourceSha256": "889d3c706958ccc3a54448d9b4d5a825c850bc709cf60f1d61b2ddb3d074317f"
+    },
+    {
+      "downloadDate": "2026-08-04 (local provenance capture)",
+      "family": "soil",
+      "grassBase": {
+        "column": 3,
+        "cropOrigin": {
+          "x": 195,
+          "y": 147
+        },
+        "dimensions": {
+          "height": 48,
+          "width": 64
+        },
+        "family": "farm-iso-terrain-grass-base",
+        "mask": 15,
+        "path": "assets/iso/terrain/grass-base-soil.png",
+        "pixelSha256": "c2235e1d77dd884d214ef70c5cfe6a57eea3b1b38f452a7770eee1d737308dca",
+        "renderLayer": "Farm ground Pass 1",
+        "row": 3,
+        "runtimeKey": "iso_terrain_grass_base_soil",
+        "sha256": "0682b653a4d3a2c00da0767f6c1851ad5dfbc29ee8381ef3fe45cfad07273007",
+        "sourcePixelSha256": "31ec96509a78bf695f62c19cb324ef7b83116d94309ec48aaf4441f945c56d4b",
+        "sourceTile": "tile_15"
+      },
+      "libraryName": "PixelLab generated library transition sheets",
+      "libraryUrl": "https://www.pixellab.ai/termsofservice",
+      "outputs": [
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 0,
+          "path": "assets/iso/terrain/soil-00.png",
+          "pixelSha256": "f41903b50e9bfa1d9af1531d3411f719be99545b5e2e2072ef6a14f8a819955f",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_soil_00",
+          "sha256": "3e3282bc69e46c9e6acc99f19061fa75d6b0940ad56c9c17832d33c8dea4c12e",
+          "sourcePixelSha256": "ee3c354524c4f63fb231860f71e7636274d2007298ff56f61ca462685f5de6eb",
+          "sourceTile": "tile_0"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 1,
+          "path": "assets/iso/terrain/soil-01.png",
+          "pixelSha256": "c0a8c435b56b931dd7434bf8a35bc0e03b080e918f8b6e7dec3354cfb5397d1c",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_soil_01",
+          "sha256": "32c04ee9950c5df9ed94c4ca95010ff564981f6df54289c7ed8942f39c434907",
+          "sourcePixelSha256": "033401ab73c736b019e4e8b8db5bea44bfe72f641d5641a55cb2031172cec19c",
+          "sourceTile": "tile_1"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 2,
+          "path": "assets/iso/terrain/soil-02.png",
+          "pixelSha256": "d41ace962ab9b07c4c20bb6129b6cc4edff03ef7b71385d93baee05c34261066",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_soil_02",
+          "sha256": "40d7f1de84ac4ae14cfef789f99cda56798d895dc867a9c4437b0f09da171f7f",
+          "sourcePixelSha256": "2480b50f43217a991faadf6d674224d5e86a08a7a6241544c166ada2b21a361a",
+          "sourceTile": "tile_2"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 3,
+          "path": "assets/iso/terrain/soil-03.png",
+          "pixelSha256": "531d9dd8287825078df073aeb506e26608202ccf43eaacc399b5560f406b2807",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_soil_03",
+          "sha256": "21a4d4e009008bcad607d624f4c7ddacaf5a0b02cf518b07989daa4abe36b2ac",
+          "sourcePixelSha256": "f1c991c8da477e958c67fa5ec85fbfb02a78dd5cc176ef1a34ae5ee51b311992",
+          "sourceTile": "tile_3"
+        },
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 4,
+          "path": "assets/iso/terrain/soil-04.png",
+          "pixelSha256": "06f54c1db162a03ca818760e3274cf99fc926315b806866535783a8aaf3a446c",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_soil_04",
+          "sha256": "e9f253a1aa98228380eaee0e23ccb2688ff618c4f49b5afd43dd6f7d139eb12b",
+          "sourcePixelSha256": "44106781f19ebf07a63164b11a8e12da15462fb067b8a68b258cf404c33e875e",
+          "sourceTile": "tile_4"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 5,
+          "path": "assets/iso/terrain/soil-05.png",
+          "pixelSha256": "048494683978a397f9c0b07c8900700b24b4735c11cf47f1adb21b63277dfafb",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_soil_05",
+          "sha256": "cc1de352784a9d3d26d52b43598129331950ed4ab55ad411878af3d168b3f097",
+          "sourcePixelSha256": "2627153c31760d8f39d50be668145244a7c93a84a03fbbe4054d7f8e030797fb",
+          "sourceTile": "tile_5"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 6,
+          "path": "assets/iso/terrain/soil-06.png",
+          "pixelSha256": "e19f99f3a1bcb7ee328a5edb44c396e6fa125181419be53120adf5c1b58f7fae",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_soil_06",
+          "sha256": "b5c197cfac12f56700377a109b772a1fbd520eaea39b9169733a31f20d8a4bb7",
+          "sourcePixelSha256": "c6ecef81980f7e19a1221ba04b40eb1fea205aee31a3e8f5a33ee8b903d64c5c",
+          "sourceTile": "tile_6"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 7,
+          "path": "assets/iso/terrain/soil-07.png",
+          "pixelSha256": "caee89a38a52807083dad5773d7a9c58a897b51b9246ae8f0436308c452a4bfe",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_soil_07",
+          "sha256": "48f17b8b0f34baa85f8158b7d139192d6600b06229f96bb97a0dffbe57cbafe2",
+          "sourcePixelSha256": "a019c423dc8f21af200b51baeeb97f82a26cc7c58f6c7e4d77415a36c9d41326",
+          "sourceTile": "tile_7"
+        },
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 8,
+          "path": "assets/iso/terrain/soil-08.png",
+          "pixelSha256": "ebace595e0c7932c17ba5c35a3779907d3952ee8e9eeda1fad0c19ecd6adcb7b",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_soil_08",
+          "sha256": "6a959290d1a45f0c4ae4249d990a453665f5b701d0f8dd53a952b6ad48968897",
+          "sourcePixelSha256": "193799e762ee7134d8906c3610398023d478e5ec6c6d33676252216545cc09ce",
+          "sourceTile": "tile_8"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 9,
+          "path": "assets/iso/terrain/soil-09.png",
+          "pixelSha256": "faa5cd87749be90dbdb064a0ddd14ce81b8213fb76a51229824f1b09ac3ad4b8",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_soil_09",
+          "sha256": "95ebd733dfd6a5f0b31ac8c48f422b901e0e42bdeb42b0347ab68411db2b57ea",
+          "sourcePixelSha256": "b097735edbbd1c2bed599092fca967f977ea9729d8cdd4a0a54c9064099a855d",
+          "sourceTile": "tile_9"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 10,
+          "path": "assets/iso/terrain/soil-10.png",
+          "pixelSha256": "854654973608d8b41e3935d4cc8fd002c9244c0fa3ea9d4620a257db7d8eb2f9",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_soil_10",
+          "sha256": "286900d7b0b6f6267b96c46e98216b8c4da65d24e278324daefd4c4bcdf31eb7",
+          "sourcePixelSha256": "e9a46284befda1a5668bd5e5283cebb7210e0a259cdb8d0ab5400ff462a97341",
+          "sourceTile": "tile_10"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 11,
+          "path": "assets/iso/terrain/soil-11.png",
+          "pixelSha256": "99249cc553e228ab345ef269e05881601a038b37f6dceeef7561d93e18a412ba",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_soil_11",
+          "sha256": "45e28ebf227fe0cfac00d50c98f856d63df17f7f920495c2be95478e07c0c780",
+          "sourcePixelSha256": "5b18cf2acf4bd074a0e40b04ddf9648a46732c75a65d63d561a98f4fa5296516",
+          "sourceTile": "tile_11"
+        },
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 12,
+          "path": "assets/iso/terrain/soil-12.png",
+          "pixelSha256": "9dd63bd74893305a1f7ceeed70f7f3705f656a33eba5b873d3ad29c9b5fdc560",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_soil_12",
+          "sha256": "7d09050fd023948855c92743b0b54885eb514746d39d206152b1ddbc0aebf791",
+          "sourcePixelSha256": "75b62f9a1a6032ce989a241e8c87f8cd69515ce85b2e49a13fb44f3bd5d90a6f",
+          "sourceTile": "tile_12"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 13,
+          "path": "assets/iso/terrain/soil-13.png",
+          "pixelSha256": "d4f4fb24860b7c7b1e6be1d4bc65bc6d74c931133abab95868f5e67cae787835",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_soil_13",
+          "sha256": "c553d47e2068df7cc4065de6d2c8e6c82b3c5b83e50162c65ed993c45afc5217",
+          "sourcePixelSha256": "15bc041b62f4a7e1e255ae30dabfe4d1a343dea464300f6a8fd991e5f20370a2",
+          "sourceTile": "tile_13"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 14,
+          "path": "assets/iso/terrain/soil-14.png",
+          "pixelSha256": "f69849a8315d5b83e849daf33558a493475ab74e6cd7e7d00d3baf0a55f67805",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_soil_14",
+          "sha256": "9e92c4bc0f64fadb0443a1436285baecfe91ae86003867d0a24dfef967f414f4",
+          "sourcePixelSha256": "13a3bc65ffc6b7335e23c9e96f5d6bf6a4dff816f7cb3e72a963977759145afa",
+          "sourceTile": "tile_14"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 15,
+          "path": "assets/iso/terrain/soil-15.png",
+          "pixelSha256": "c2235e1d77dd884d214ef70c5cfe6a57eea3b1b38f452a7770eee1d737308dca",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_soil_15",
+          "sha256": "0682b653a4d3a2c00da0767f6c1851ad5dfbc29ee8381ef3fe45cfad07273007",
+          "sourcePixelSha256": "31ec96509a78bf695f62c19cb324ef7b83116d94309ec48aaf4441f945c56d4b",
+          "sourceTile": "tile_15"
+        }
+      ],
+      "sourceFilename": "lush_green_meadow_grass_transitioning_to_freshly_t.png",
+      "sourceSha256": "434a9532f1593cfdaa7a2fe5e97814afe8e5da1b16f5246135190e97f0f98274"
+    },
+    {
+      "downloadDate": "2026-08-04 (local provenance capture)",
+      "family": "water",
+      "grassBase": {
+        "column": 3,
+        "cropOrigin": {
+          "x": 195,
+          "y": 147
+        },
+        "dimensions": {
+          "height": 48,
+          "width": 64
+        },
+        "family": "farm-iso-terrain-grass-base",
+        "mask": 15,
+        "path": "assets/iso/terrain/grass-base-water.png",
+        "pixelSha256": "c875b4c1d0aabfa05de9f6c7636308d8ebce22b078e9d7129efb171c2a9bc1be",
+        "renderLayer": "Farm ground Pass 1",
+        "row": 3,
+        "runtimeKey": "iso_terrain_grass_base_water",
+        "sha256": "614c66bcb582859c96148de95662381f6e797023f7aa306cac1612ff52f59882",
+        "sourcePixelSha256": "3e7cd21bcbd531d810a419a6eea89c246527beef5719eba475247a475635fc8e",
+        "sourceTile": "tile_15"
+      },
+      "libraryName": "PixelLab generated library transition sheets",
+      "libraryUrl": "https://www.pixellab.ai/termsofservice",
+      "outputs": [
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 0,
+          "path": "assets/iso/terrain/water-00.png",
+          "pixelSha256": "7dea822899587dc0c6f051cc240a1b66404249731b22de84c70f95ad64a7c212",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_water_00",
+          "sha256": "dad89160cb108db2e2d25388fe241dab4f4aadd8724e730d36a523fed609296d",
+          "sourcePixelSha256": "3809ff63afa62d5629a26f5c5c04833afe80bed77719e9d06e590a52b6109e86",
+          "sourceTile": "tile_0"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 1,
+          "path": "assets/iso/terrain/water-01.png",
+          "pixelSha256": "c739a8a125dfc72ee7fa17c9ecb488f6c75943581856fdc8451b3fd3a5a1361e",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_water_01",
+          "sha256": "94abcd0acbc6e55f2f5d7f2439d938eb9ce71af93e5e36feef7a398f680b5eff",
+          "sourcePixelSha256": "49b6478b03eb5d8d61f4fbc5aa9a985bbe2cafa6e4c01de836f01c1ef0d075af",
+          "sourceTile": "tile_1"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 2,
+          "path": "assets/iso/terrain/water-02.png",
+          "pixelSha256": "564afcf35c7a133b330ee2981e4ba30a350956e309e1c715e3aaacff74d1bb30",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_water_02",
+          "sha256": "6c5ade595db4d44f6f31917aff8cc5d0e7be0128084ca6298f913a7cce99934a",
+          "sourcePixelSha256": "2971f99f8e924677e8988f309eda745c89b427be5c7e954961a0b950043672d1",
+          "sourceTile": "tile_2"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 0
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 3,
+          "path": "assets/iso/terrain/water-03.png",
+          "pixelSha256": "9aabc8d3f78f73c3da2279e0e230e16429581feaa58319a01e329152ce7ab315",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 0,
+          "runtimeKey": "iso_terrain_water_03",
+          "sha256": "88690189d35c074b393cce0dbe5d7d782880dcd9231557bdc20df6975859e6e6",
+          "sourcePixelSha256": "e6fcfae0e575f64564d44f2dce305d06203313b57222a0be2680244ed13e4273",
+          "sourceTile": "tile_3"
+        },
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 4,
+          "path": "assets/iso/terrain/water-04.png",
+          "pixelSha256": "f11f82061452f2fef13df7e6413f00a538331886bd5a9f44a4122592b93ae79a",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_water_04",
+          "sha256": "3750e38b89ca1d43809cc5aee0a5fb5d410be035e973680235389e72873de81f",
+          "sourcePixelSha256": "5e87c12e100731afdf297a41f21f076c078ecf8d1eaa103fcc2bb3d034661ac9",
+          "sourceTile": "tile_4"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 5,
+          "path": "assets/iso/terrain/water-05.png",
+          "pixelSha256": "509516f5cb91328370c3ee933b239ba7d87d2ac064de9d2df0280ad41fae9d2b",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_water_05",
+          "sha256": "8c578859a813727177d33ed49d75ca1cf9c069f9b2017fba5da547c3e2d830eb",
+          "sourcePixelSha256": "a4e624ad4c41f67369fce871dc16cdf0aa5169113b668531d7930a3bbb39a670",
+          "sourceTile": "tile_5"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 6,
+          "path": "assets/iso/terrain/water-06.png",
+          "pixelSha256": "ad5ca2876990d5d91d598aa7da726545c4f95966a1242e63ca35a9b549964850",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_water_06",
+          "sha256": "89427e1747504cf8b60c2a501a9b84ed7b73dc7b548ed1591e3caf4da37b4a7f",
+          "sourcePixelSha256": "8669374c322160d84517a23a8a618ae0493bd99898511e8172a0daa50f72b8c1",
+          "sourceTile": "tile_6"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 49
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 7,
+          "path": "assets/iso/terrain/water-07.png",
+          "pixelSha256": "db019db546868ff9ba4edd40e3838ea7c7c402a5e745ac2430380f6cc79f2ade",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 1,
+          "runtimeKey": "iso_terrain_water_07",
+          "sha256": "085b6c19dd213e54790fa4e6e47ca043ad8c30f5fd3e6fbe1ed02b1faa13177b",
+          "sourcePixelSha256": "370deb2f7ca816bd6dc9d6f0bad782d3b1d153c781b3637e5983e45f56a31345",
+          "sourceTile": "tile_7"
+        },
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 8,
+          "path": "assets/iso/terrain/water-08.png",
+          "pixelSha256": "996c57660233df2a3b2873fe76e7067a08fbb8f74313f8ba8037508532daadb8",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_water_08",
+          "sha256": "f1c6d05e3b5fad6a77fddf72437ce33659153a0576754305d7d7ebc131adeee5",
+          "sourcePixelSha256": "f636133108d1b282718e03f24cf4f9901e0093a643bfe86221a13b3c99dbedb3",
+          "sourceTile": "tile_8"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 9,
+          "path": "assets/iso/terrain/water-09.png",
+          "pixelSha256": "24a86ed24941f2c1dd0cc45dbf6e60374ca333c8ae623d25a7ab6c60b3ac09fb",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_water_09",
+          "sha256": "167ceab2201bda91b5e11774af7e86c58bc12bc5cf845f8fea56ec6ca6458171",
+          "sourcePixelSha256": "6ac36873ae71cab6c5ff2feebfbf5045dc50687ea3de1f3a5f278c899730d8b6",
+          "sourceTile": "tile_9"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 10,
+          "path": "assets/iso/terrain/water-10.png",
+          "pixelSha256": "8de81c22d7e36a1af4ced65cc4f49e0499e2e2700292efe1ff205d0179368284",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_water_10",
+          "sha256": "3de75ed8ad0db10b0fde90d398b63ab2701bae49cbaff14e2f9425e7f5643fe5",
+          "sourcePixelSha256": "64932f4ff34f1f484ea98e15c07937c35f0cf919da59f7da6a7cb224409530e7",
+          "sourceTile": "tile_10"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 98
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 11,
+          "path": "assets/iso/terrain/water-11.png",
+          "pixelSha256": "ed25c8c634860c9dff6011ff1dfe8316b9279567f93e804c0276e673357218f3",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 2,
+          "runtimeKey": "iso_terrain_water_11",
+          "sha256": "42b99286e0867b1efabfcf8f165dde730e3ceb3b1f821f9d2d86f8ae54c7a50f",
+          "sourcePixelSha256": "725c7b36d97c8b4d73ea0131fa4acc26f24345c9dd02f231ba12e615147c7f5c",
+          "sourceTile": "tile_11"
+        },
+        {
+          "column": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 12,
+          "path": "assets/iso/terrain/water-12.png",
+          "pixelSha256": "12423e3fde4f9f08c70529bf79ff86c03dfca9da3cbeb1011627d5cf77a6531a",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_water_12",
+          "sha256": "f57cc35a0141df57f20d710713749c911d10d4804e83162cad141e07927b8b6c",
+          "sourcePixelSha256": "c6af5e2dcf85a38987aea9a1b22c5ee73fa8ff0014c189c9883b4676e03c0f65",
+          "sourceTile": "tile_12"
+        },
+        {
+          "column": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 13,
+          "path": "assets/iso/terrain/water-13.png",
+          "pixelSha256": "7f72b15c907536783e666f973e121114e7f4294fedecd81415fac41e731a3636",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_water_13",
+          "sha256": "fd2166dbe1d2a00e5147b9d909e99d7824a4530b0c0db41e9b0b21be8cdea01a",
+          "sourcePixelSha256": "bc9d05333d59b1cbe8ed0c437934e9280c6813cd037e487d630110705420ad86",
+          "sourceTile": "tile_13"
+        },
+        {
+          "column": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 14,
+          "path": "assets/iso/terrain/water-14.png",
+          "pixelSha256": "f76ece95744d47bab64354b8645859ea164baa6ee7556fdf9e4f3c527cbe8019",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_water_14",
+          "sha256": "c5ac8397e37de4ddf1a748409978065e44163f4c62e92dc0352d7b8bb08ef74b",
+          "sourcePixelSha256": "6809297731bd9344f6d0f424ad3afea65bfbf41018e21a0b671c70ac0b40c0c5",
+          "sourceTile": "tile_14"
+        },
+        {
+          "column": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 147
+          },
+          "dimensions": {
+            "height": 48,
+            "width": 64
+          },
+          "family": "farm-iso-terrain-transition",
+          "mask": 15,
+          "path": "assets/iso/terrain/water-15.png",
+          "pixelSha256": "c875b4c1d0aabfa05de9f6c7636308d8ebce22b078e9d7129efb171c2a9bc1be",
+          "renderLayer": "Farm ground Pass 1",
+          "row": 3,
+          "runtimeKey": "iso_terrain_water_15",
+          "sha256": "614c66bcb582859c96148de95662381f6e797023f7aa306cac1612ff52f59882",
+          "sourcePixelSha256": "3e7cd21bcbd531d810a419a6eea89c246527beef5719eba475247a475635fc8e",
+          "sourceTile": "tile_15"
+        }
+      ],
+      "sourceFilename": "lush_green_meadow_grass_transitioning_to_calm_deep.png",
+      "sourceSha256": "2ce53777f4fe4652a3be766d30f11093e3373093dc10c48e5192dac483398325"
+    }
+  ]
+}
