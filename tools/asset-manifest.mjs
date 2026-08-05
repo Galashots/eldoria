@@ -603,6 +603,15 @@ const RULES = [
     }),
   },
   {
+    name: 'terrain-cell-legend',
+    test: p => /^docs\/visual\/terrain-legend\/(?:path|soil|water)-contact-sheet\.png$/.test(p),
+    classify: () => ({
+      domain: 'terrain-cell-legend', scope: 'evidence', status: 'provisional', visualReview: 'not-applicable',
+      governedBy: 'docs/ai-team/TERRAIN_FIX_BRIEF_20260805.md',
+      notes: 'Gutter-aware vendor-order contact sheet for the human Leo plus ChatGPT legend-verification gate; source-only evidence, no mask or topology inference, not loaded by runtime code.',
+    }),
+  },
+  {
     name: 'north-star-v1',
     test: p => p === 'docs/visual/eldoria-visual-north-star-v1.png',
     classify: () => ({

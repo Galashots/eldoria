@@ -1,0 +1,558 @@
+{
+  "families": [
+    {
+      "cells": [
+        {
+          "cellIndex": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 0
+          },
+          "sourcePixelSha256": "83e4ccc2dda18f51ee024dc70d83c31ab2eac6ccee8d3bd64c52d85b3d91ff14",
+          "vendorColumn": 0,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 0
+          },
+          "sourcePixelSha256": "4648dd11987df50c67f617e5330190d44906123ffae456de73d03cb31c089cd1",
+          "vendorColumn": 1,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 0
+          },
+          "sourcePixelSha256": "e872e85ad6f7fb0c0ed885a0ae7919c69beb996fe19678b994dc7ad1d9bb3cc4",
+          "vendorColumn": 2,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 0
+          },
+          "sourcePixelSha256": "9bd6f3203e9fc6d3e73d6ae51b702345330d0aef9ff5749d6d3c94061f00e9dd",
+          "vendorColumn": 3,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 4,
+          "cropOrigin": {
+            "x": 0,
+            "y": 49
+          },
+          "sourcePixelSha256": "40c699b0387f68ec195528f35b73a1fce074af5c29c1d877bb5b1f440f473338",
+          "vendorColumn": 0,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 5,
+          "cropOrigin": {
+            "x": 65,
+            "y": 49
+          },
+          "sourcePixelSha256": "fed63ea16ec1ff4480ee6c300afaf35c4f61f5b1556c49bd6e7c6e7cee00748e",
+          "vendorColumn": 1,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 6,
+          "cropOrigin": {
+            "x": 130,
+            "y": 49
+          },
+          "sourcePixelSha256": "bfc4a19b893667351782ee25e28d2b829a5185297571d946894b972935ce5d3b",
+          "vendorColumn": 2,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 7,
+          "cropOrigin": {
+            "x": 195,
+            "y": 49
+          },
+          "sourcePixelSha256": "2e1891f8133a9c9ebe8e32553ec9afc88d3a960edf76d635ad3d0b7ba0ff7ef7",
+          "vendorColumn": 3,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 8,
+          "cropOrigin": {
+            "x": 0,
+            "y": 98
+          },
+          "sourcePixelSha256": "7cd327d36fc135298b340f1203b4bca73307a8c2fb4e7f506dc1a4ab4164ab35",
+          "vendorColumn": 0,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 9,
+          "cropOrigin": {
+            "x": 65,
+            "y": 98
+          },
+          "sourcePixelSha256": "11cce8c652b8058d678b428bd25bc685f0e760b65e779cdcb76956aeae7ea8fb",
+          "vendorColumn": 1,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 10,
+          "cropOrigin": {
+            "x": 130,
+            "y": 98
+          },
+          "sourcePixelSha256": "edeca8c686f0d151a247289c36301b49b4d05ea20a5c58dc91130d0767dcc499",
+          "vendorColumn": 2,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 11,
+          "cropOrigin": {
+            "x": 195,
+            "y": 98
+          },
+          "sourcePixelSha256": "ab0a04cdd29739b9070f3924014a1dc8d00f9a5ecdbae7d3a9afbeb3a3a959c6",
+          "vendorColumn": 3,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 12,
+          "cropOrigin": {
+            "x": 0,
+            "y": 147
+          },
+          "sourcePixelSha256": "6a0e666e965d45e0cc9bcaf336dff3cf08e997c616bd2d3f9a370e6a358e2a1b",
+          "vendorColumn": 0,
+          "vendorRow": 3
+        },
+        {
+          "cellIndex": 13,
+          "cropOrigin": {
+            "x": 65,
+            "y": 147
+          },
+          "sourcePixelSha256": "a4a99cfaf88a76e99d07c66ae178c34bf02bee71956ffe76684a4fbbe4b2166f",
+          "vendorColumn": 1,
+          "vendorRow": 3
+        },
+        {
+          "cellIndex": 14,
+          "cropOrigin": {
+            "x": 130,
+            "y": 147
+          },
+          "sourcePixelSha256": "15e988875a931203ec4c99a88bb7957a9b4aebd7cbc0c904c30954dd6a237d7f",
+          "vendorColumn": 2,
+          "vendorRow": 3
+        },
+        {
+          "cellIndex": 15,
+          "cropOrigin": {
+            "x": 195,
+            "y": 147
+          },
+          "sourcePixelSha256": "f6cd5ac4874607fd8deea7a8da05833cffca0993f0d8189a440e915718750eef",
+          "vendorColumn": 3,
+          "vendorRow": 3
+        }
+      ],
+      "dimensions": {
+        "height": 948,
+        "width": 1060
+      },
+      "family": "path",
+      "output": "path-contact-sheet.png",
+      "outputSha256": "f2acc22760fd1cd28f043fb06846db8c4394f938514dd969b7728524de11e6e2",
+      "sourceFilename": "lush_green_meadow_grass_transitioning_to_packed_li.png",
+      "sourceSha256": "889d3c706958ccc3a54448d9b4d5a825c850bc709cf60f1d61b2ddb3d074317f"
+    },
+    {
+      "cells": [
+        {
+          "cellIndex": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 0
+          },
+          "sourcePixelSha256": "ee3c354524c4f63fb231860f71e7636274d2007298ff56f61ca462685f5de6eb",
+          "vendorColumn": 0,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 0
+          },
+          "sourcePixelSha256": "033401ab73c736b019e4e8b8db5bea44bfe72f641d5641a55cb2031172cec19c",
+          "vendorColumn": 1,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 0
+          },
+          "sourcePixelSha256": "2480b50f43217a991faadf6d674224d5e86a08a7a6241544c166ada2b21a361a",
+          "vendorColumn": 2,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 0
+          },
+          "sourcePixelSha256": "f1c991c8da477e958c67fa5ec85fbfb02a78dd5cc176ef1a34ae5ee51b311992",
+          "vendorColumn": 3,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 4,
+          "cropOrigin": {
+            "x": 0,
+            "y": 49
+          },
+          "sourcePixelSha256": "44106781f19ebf07a63164b11a8e12da15462fb067b8a68b258cf404c33e875e",
+          "vendorColumn": 0,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 5,
+          "cropOrigin": {
+            "x": 65,
+            "y": 49
+          },
+          "sourcePixelSha256": "2627153c31760d8f39d50be668145244a7c93a84a03fbbe4054d7f8e030797fb",
+          "vendorColumn": 1,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 6,
+          "cropOrigin": {
+            "x": 130,
+            "y": 49
+          },
+          "sourcePixelSha256": "c6ecef81980f7e19a1221ba04b40eb1fea205aee31a3e8f5a33ee8b903d64c5c",
+          "vendorColumn": 2,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 7,
+          "cropOrigin": {
+            "x": 195,
+            "y": 49
+          },
+          "sourcePixelSha256": "a019c423dc8f21af200b51baeeb97f82a26cc7c58f6c7e4d77415a36c9d41326",
+          "vendorColumn": 3,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 8,
+          "cropOrigin": {
+            "x": 0,
+            "y": 98
+          },
+          "sourcePixelSha256": "193799e762ee7134d8906c3610398023d478e5ec6c6d33676252216545cc09ce",
+          "vendorColumn": 0,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 9,
+          "cropOrigin": {
+            "x": 65,
+            "y": 98
+          },
+          "sourcePixelSha256": "b097735edbbd1c2bed599092fca967f977ea9729d8cdd4a0a54c9064099a855d",
+          "vendorColumn": 1,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 10,
+          "cropOrigin": {
+            "x": 130,
+            "y": 98
+          },
+          "sourcePixelSha256": "e9a46284befda1a5668bd5e5283cebb7210e0a259cdb8d0ab5400ff462a97341",
+          "vendorColumn": 2,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 11,
+          "cropOrigin": {
+            "x": 195,
+            "y": 98
+          },
+          "sourcePixelSha256": "5b18cf2acf4bd074a0e40b04ddf9648a46732c75a65d63d561a98f4fa5296516",
+          "vendorColumn": 3,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 12,
+          "cropOrigin": {
+            "x": 0,
+            "y": 147
+          },
+          "sourcePixelSha256": "75b62f9a1a6032ce989a241e8c87f8cd69515ce85b2e49a13fb44f3bd5d90a6f",
+          "vendorColumn": 0,
+          "vendorRow": 3
+        },
+        {
+          "cellIndex": 13,
+          "cropOrigin": {
+            "x": 65,
+            "y": 147
+          },
+          "sourcePixelSha256": "15bc041b62f4a7e1e255ae30dabfe4d1a343dea464300f6a8fd991e5f20370a2",
+          "vendorColumn": 1,
+          "vendorRow": 3
+        },
+        {
+          "cellIndex": 14,
+          "cropOrigin": {
+            "x": 130,
+            "y": 147
+          },
+          "sourcePixelSha256": "13a3bc65ffc6b7335e23c9e96f5d6bf6a4dff816f7cb3e72a963977759145afa",
+          "vendorColumn": 2,
+          "vendorRow": 3
+        },
+        {
+          "cellIndex": 15,
+          "cropOrigin": {
+            "x": 195,
+            "y": 147
+          },
+          "sourcePixelSha256": "31ec96509a78bf695f62c19cb324ef7b83116d94309ec48aaf4441f945c56d4b",
+          "vendorColumn": 3,
+          "vendorRow": 3
+        }
+      ],
+      "dimensions": {
+        "height": 948,
+        "width": 1060
+      },
+      "family": "soil",
+      "output": "soil-contact-sheet.png",
+      "outputSha256": "6d34ff40e2f741b79ef320b042c108a8764d0a1e97b4034571551cabfdd6be0e",
+      "sourceFilename": "lush_green_meadow_grass_transitioning_to_freshly_t.png",
+      "sourceSha256": "434a9532f1593cfdaa7a2fe5e97814afe8e5da1b16f5246135190e97f0f98274"
+    },
+    {
+      "cells": [
+        {
+          "cellIndex": 0,
+          "cropOrigin": {
+            "x": 0,
+            "y": 0
+          },
+          "sourcePixelSha256": "3809ff63afa62d5629a26f5c5c04833afe80bed77719e9d06e590a52b6109e86",
+          "vendorColumn": 0,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 1,
+          "cropOrigin": {
+            "x": 65,
+            "y": 0
+          },
+          "sourcePixelSha256": "49b6478b03eb5d8d61f4fbc5aa9a985bbe2cafa6e4c01de836f01c1ef0d075af",
+          "vendorColumn": 1,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 2,
+          "cropOrigin": {
+            "x": 130,
+            "y": 0
+          },
+          "sourcePixelSha256": "2971f99f8e924677e8988f309eda745c89b427be5c7e954961a0b950043672d1",
+          "vendorColumn": 2,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 3,
+          "cropOrigin": {
+            "x": 195,
+            "y": 0
+          },
+          "sourcePixelSha256": "e6fcfae0e575f64564d44f2dce305d06203313b57222a0be2680244ed13e4273",
+          "vendorColumn": 3,
+          "vendorRow": 0
+        },
+        {
+          "cellIndex": 4,
+          "cropOrigin": {
+            "x": 0,
+            "y": 49
+          },
+          "sourcePixelSha256": "5e87c12e100731afdf297a41f21f076c078ecf8d1eaa103fcc2bb3d034661ac9",
+          "vendorColumn": 0,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 5,
+          "cropOrigin": {
+            "x": 65,
+            "y": 49
+          },
+          "sourcePixelSha256": "a4e624ad4c41f67369fce871dc16cdf0aa5169113b668531d7930a3bbb39a670",
+          "vendorColumn": 1,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 6,
+          "cropOrigin": {
+            "x": 130,
+            "y": 49
+          },
+          "sourcePixelSha256": "8669374c322160d84517a23a8a618ae0493bd99898511e8172a0daa50f72b8c1",
+          "vendorColumn": 2,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 7,
+          "cropOrigin": {
+            "x": 195,
+            "y": 49
+          },
+          "sourcePixelSha256": "370deb2f7ca816bd6dc9d6f0bad782d3b1d153c781b3637e5983e45f56a31345",
+          "vendorColumn": 3,
+          "vendorRow": 1
+        },
+        {
+          "cellIndex": 8,
+          "cropOrigin": {
+            "x": 0,
+            "y": 98
+          },
+          "sourcePixelSha256": "f636133108d1b282718e03f24cf4f9901e0093a643bfe86221a13b3c99dbedb3",
+          "vendorColumn": 0,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 9,
+          "cropOrigin": {
+            "x": 65,
+            "y": 98
+          },
+          "sourcePixelSha256": "6ac36873ae71cab6c5ff2feebfbf5045dc50687ea3de1f3a5f278c899730d8b6",
+          "vendorColumn": 1,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 10,
+          "cropOrigin": {
+            "x": 130,
+            "y": 98
+          },
+          "sourcePixelSha256": "64932f4ff34f1f484ea98e15c07937c35f0cf919da59f7da6a7cb224409530e7",
+          "vendorColumn": 2,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 11,
+          "cropOrigin": {
+            "x": 195,
+            "y": 98
+          },
+          "sourcePixelSha256": "725c7b36d97c8b4d73ea0131fa4acc26f24345c9dd02f231ba12e615147c7f5c",
+          "vendorColumn": 3,
+          "vendorRow": 2
+        },
+        {
+          "cellIndex": 12,
+          "cropOrigin": {
+            "x": 0,
+            "y": 147
+          },
+          "sourcePixelSha256": "c6af5e2dcf85a38987aea9a1b22c5ee73fa8ff0014c189c9883b4676e03c0f65",
+          "vendorColumn": 0,
+          "vendorRow": 3
+        },
+        {
+          "cellIndex": 13,
+          "cropOrigin": {
+            "x": 65,
+            "y": 147
+          },
+          "sourcePixelSha256": "bc9d05333d59b1cbe8ed0c437934e9280c6813cd037e487d630110705420ad86",
+          "vendorColumn": 1,
+          "vendorRow": 3
+        },
+        {
+          "cellIndex": 14,
+          "cropOrigin": {
+            "x": 130,
+            "y": 147
+          },
+          "sourcePixelSha256": "6809297731bd9344f6d0f424ad3afea65bfbf41018e21a0b671c70ac0b40c0c5",
+          "vendorColumn": 2,
+          "vendorRow": 3
+        },
+        {
+          "cellIndex": 15,
+          "cropOrigin": {
+            "x": 195,
+            "y": 147
+          },
+          "sourcePixelSha256": "3e7cd21bcbd531d810a419a6eea89c246527beef5719eba475247a475635fc8e",
+          "vendorColumn": 3,
+          "vendorRow": 3
+        }
+      ],
+      "dimensions": {
+        "height": 948,
+        "width": 1060
+      },
+      "family": "water",
+      "output": "water-contact-sheet.png",
+      "outputSha256": "d511769e7293fd7edebd95e31d0f323a3c5a1823424ef825bccbe8c993fec642",
+      "sourceFilename": "lush_green_meadow_grass_transitioning_to_calm_deep.png",
+      "sourceSha256": "2ce53777f4fe4652a3be766d30f11093e3373093dc10c48e5192dac483398325"
+    }
+  ],
+  "generator": "eldoria-terrain-legend/1; stdlib PNG RGBA8; filter=0; zlib-level=9",
+  "purpose": "Human cell legend only; no mask or topology inference is recorded.",
+  "rendering": {
+    "filter": "nearest-neighbor integer replication only",
+    "label": "decimal cell index only",
+    "outputDimensions": {
+      "height": 948,
+      "width": 1060
+    },
+    "smoothing": false,
+    "upscale": 4
+  },
+  "schemaVersion": 1,
+  "sourceGeometry": {
+    "cellHeight": 48,
+    "cellWidth": 64,
+    "gutterX": 1,
+    "gutterY": 1,
+    "order": "vendor reading order: row north-to-south, column west-to-east",
+    "outerMargin": 0,
+    "sheetHeight": 195,
+    "sheetWidth": 259,
+    "xOrigins": [
+      0,
+      65,
+      130,
+      195
+    ],
+    "yOrigins": [
+      0,
+      49,
+      98,
+      147
+    ]
+  }
+}
