@@ -70,5 +70,32 @@ const options = { tolerateNavigationTimeout: true, navigationTimeout: 2000 };
   await browser.close();
 }
 
+// The persisted opt-out must restore the original fixed-corner behavior for iPad A/B.
+{
+  const { browser, page, errors } = await launch('?iso=1&fixedJoystick=1', options);
+  await page.setViewport({ width: 1194, height: 834, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    var zone = document.getElementById('joystickZone'), base = document.getElementById('joystickBase');
+    var zoneRect = zone.getBoundingClientRect(), before = base.getBoundingClientRect();
+    var x = zoneRect.right - 4, y = zoneRect.top + zoneRect.height / 2;
+    zone.dispatchEvent(new PointerEvent('pointerdown', {
+      bubbles: true, pointerId: 601, pointerType: 'touch', clientX: x, clientY: y
+    }));
+    var after = base.getBoundingClientRect();
+    return {
+      persisted: localStorage.getItem('eldoria_fixed_joystick'), fixed: fixedJoystickActive(),
+      zone: { width: zoneRect.width, height: zoneRect.height }, alwaysVisible: base.classList.contains('joystick-visible'),
+      baseStayedFixed: before.left === after.left && before.top === after.top,
+      centerOriginDrivesRight: held.right && !held.left && !held.up && !held.down
+    };
+  });
+  check('joystick fallback: persisted flag restores the 140px fixed corner zone', r.persisted === '1' && r.fixed && r.zone.width === 140 && r.zone.height === 140);
+  check('joystick fallback: base remains visible and does not spawn at the touch point', r.alwaysVisible && r.baseStayedFixed);
+  check('joystick fallback: touch offsets are measured from the fixed zone center', r.centerOriginDrivesRight);
+  check('joystick fallback: no console errors', errors.length === 0);
+  await browser.close();
+}
+
 if (fails.length) { console.error('ADAPTIVE JOYSTICK TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Adaptive joystick test passed.');

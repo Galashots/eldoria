@@ -428,6 +428,27 @@ var JOYSTICK_THUMB_RADIUS = 27;
 var joystickOrigin = null;
 var joystickBaseCenter = null;
 
+// iPad A/B escape hatch: ?fixedJoystick=1 persists the original fixed corner rig;
+// ?fixedJoystick=0 returns to adaptive placement. Match the existing ?iso=0 pattern
+// so Leo can compare feel on-device without waiting for a redeploy.
+if (location.search.indexOf('fixedJoystick=1') !== -1) {
+  try { localStorage.setItem('eldoria_fixed_joystick', '1'); } catch (e) {}
+}
+if (location.search.indexOf('fixedJoystick=0') !== -1) {
+  try { localStorage.removeItem('eldoria_fixed_joystick'); } catch (e) {}
+}
+
+function fixedJoystickActive() {
+  try { return localStorage.getItem('eldoria_fixed_joystick') === '1'; } catch (e) { return false; }
+}
+
+function applyJoystickMode() {
+  var fixed = fixedJoystickActive();
+  joystickZone.classList.toggle('fixed-joystick', fixed);
+  if (fixed) joystickShow();
+  else joystickHide();
+}
+
 // Keep this geometry independent from the DOM so its lower-left bounds can be tested
 // without event dispatch. The base itself may overflow this catchment, but the zone
 // never expands into the rest of the playfield.
@@ -474,13 +495,26 @@ function joystickHide() {
 }
 
 function joystickUpdate(cx, cy) {
-  var ox = cx - joystickOrigin.x;
-  var oy = cy - joystickOrigin.y;
+  var fixed = fixedJoystickActive();
+  var ox, oy;
+  if (fixed) {
+    var rect = joystickZone.getBoundingClientRect();
+    ox = cx - (rect.left + rect.width / 2);
+    oy = cy - (rect.top + rect.height / 2);
+  } else {
+    ox = cx - joystickOrigin.x;
+    oy = cy - joystickOrigin.y;
+  }
   var dist = Math.sqrt(ox * ox + oy * oy);
   var maxDist = JOYSTICK_RADIUS - JOYSTICK_THUMB_RADIUS;
   if (dist > maxDist) { ox = ox / dist * maxDist; oy = oy / dist * maxDist; }
-  joystickSetElementCenter(joystickThumb, joystickBaseCenter.x + ox, joystickBaseCenter.y + oy,
-                           JOYSTICK_THUMB_RADIUS);
+  if (fixed) {
+    joystickThumb.style.left = (JOYSTICK_RADIUS - JOYSTICK_THUMB_RADIUS + ox) + 'px';
+    joystickThumb.style.top = (JOYSTICK_RADIUS - JOYSTICK_THUMB_RADIUS + oy) + 'px';
+  } else {
+    joystickSetElementCenter(joystickThumb, joystickBaseCenter.x + ox, joystickBaseCenter.y + oy,
+                             JOYSTICK_THUMB_RADIUS);
+  }
   var nx = dist > 0 ? ox / maxDist : 0;
   var ny = dist > 0 ? oy / maxDist : 0;
   held.left  = nx < -JOYSTICK_DEAD;
@@ -494,7 +528,13 @@ function joystickReset() {
   joystickId = null;
   joystickOrigin = null;
   joystickBaseCenter = null;
-  joystickHide();
+  if (fixedJoystickActive()) {
+    joystickThumb.style.left = '43px';
+    joystickThumb.style.top = '43px';
+    joystickShow();
+  } else {
+    joystickHide();
+  }
   held.left = held.right = held.up = held.down = false;
 }
 
@@ -504,11 +544,19 @@ joystickZone.addEventListener('pointerdown', function(e) {
   e.preventDefault();
   joystickActive = true;
   joystickId = e.pointerId;
-  joystickOrigin = { x: e.clientX, y: e.clientY };
-  joystickBaseCenter = joystickClampBaseCenter(e.clientX, e.clientY, window.innerWidth, window.innerHeight);
-  joystickSetElementCenter(joystickBase, joystickBaseCenter.x, joystickBaseCenter.y, JOYSTICK_RADIUS);
-  joystickSetElementCenter(joystickThumb, joystickBaseCenter.x, joystickBaseCenter.y, JOYSTICK_THUMB_RADIUS);
-  joystickShow();
+  if (fixedJoystickActive()) {
+    // Original behavior: the circle remains in the corner and input is measured from
+    // its center, not from the touch-down point.
+    joystickOrigin = null;
+    joystickBaseCenter = null;
+    joystickShow();
+  } else {
+    joystickOrigin = { x: e.clientX, y: e.clientY };
+    joystickBaseCenter = joystickClampBaseCenter(e.clientX, e.clientY, window.innerWidth, window.innerHeight);
+    joystickSetElementCenter(joystickBase, joystickBaseCenter.x, joystickBaseCenter.y, JOYSTICK_RADIUS);
+    joystickSetElementCenter(joystickThumb, joystickBaseCenter.x, joystickBaseCenter.y, JOYSTICK_THUMB_RADIUS);
+    joystickShow();
+  }
   // Synthetic test events have no browser-owned pointer to capture. Real touch/mouse
   // input always does, and keeps drag tracking alive after the finger leaves the zone.
   if (e.isTrusted) joystickZone.setPointerCapture(e.pointerId);
@@ -526,6 +574,8 @@ joystickZone.addEventListener('pointerup', function(e) {
 joystickZone.addEventListener('pointercancel', function(e) {
   if (e.pointerId === joystickId) joystickReset();
 });
+
+applyJoystickMode();
 
 // iPad Safari can synthesize dblclick after rapid taps. Suppress that browser gesture
 // only on game controls, leaving the rest of the document and pinch zoom accessible.

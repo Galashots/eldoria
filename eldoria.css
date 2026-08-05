@@ -323,6 +323,11 @@
     z-index: 50;
     touch-action: none;
   }
+  /* Immediate iPad fallback: matches the pre-adaptive 140px corner control. */
+  #joystickZone.fixed-joystick {
+    width: 140px;
+    height: 140px;
+  }
   #joystickBase {
     position: absolute;
     width: 140px; height: 140px;
@@ -346,6 +351,11 @@
     opacity: 0;
   }
   #joystickBase.joystick-visible, #joystickThumb.joystick-visible {
+    visibility: visible;
+    opacity: 1;
+  }
+  #joystickZone.fixed-joystick #joystickBase,
+  #joystickZone.fixed-joystick #joystickThumb {
     visibility: visible;
     opacity: 1;
   }
