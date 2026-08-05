@@ -58,6 +58,18 @@ source filenames and hashes reviewable.
    precomputes Farm draw records at area activation, and falls back to the existing
    color-diamond behavior if an image is missing.
 
+### Future visual-only item: cross-set grass harmonization
+
+The three admitted transition families intentionally retain different grass palettes for
+now. Measured mean absolute RGB deltas are **27.9** for path↔soil, **22.7** for
+path↔water, and **30.9** for soil↔water; the respective grass palette sizes are **20**,
+**18**, and **11** colors. A future, separately reviewed visual-only PR may add a
+deterministic slicer recolor pass that maps each set's grass colors to one canonical Farm
+grass palette and records before/after pixel hashes and the palette mapping in provenance.
+Because the palette sizes differ, that mapping must use nearest-color or rank-based
+matching rather than a 1:1 color substitution. This terrain-placement fix does not
+perform the harmonization.
+
 The owned July-batch normalized files are provenance/evidence inputs only. Props, roads,
 probe sheets, raw source sheets, and all other landscape artifacts remain outside the PR B
 allowlist and are source-only/deferred.

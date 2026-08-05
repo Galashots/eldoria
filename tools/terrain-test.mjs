@@ -1,5 +1,5 @@
-// Farm iso terrain gates: deterministic slicer, explicit masks, render fallback,
-// adjacency coverage, preload settlement, and render-only save equivalence.
+// Farm iso terrain gates: deterministic slicer, direct corner masks, four-cell
+// vertex resolution, striping regression, render fallback, and save equivalence.
 import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { launch } from './smoke-test.mjs';
@@ -22,7 +22,20 @@ const pngDimensions = (buf) => ({
   height: buf.readUInt32BE(20),
 });
 const provenance = JSON.parse(await readFile('assets/iso/terrain/terrain-provenance.json', 'utf8'));
+const maskMap = JSON.parse(await readFile('assets/iso/terrain/terrain-mask-map.json', 'utf8'));
 const outputs = provenance.outputs || [];
+check('map: schema uses direct corner-mask semantics',
+  maskMap.schemaVersion === 2 &&
+  maskMap.maskConvention.bit0.includes('bottom') &&
+  maskMap.maskConvention.bit1.includes('left') &&
+  maskMap.maskConvention.bit2.includes('right') &&
+  maskMap.maskConvention.bit3.includes('top') &&
+  maskMap.maskConvention.bitSetMeaning.includes('grass'));
+check('map: vendor cells map directly 0..15 in gutter-aware order',
+  maskMap.sourceGrid.length === 16 && maskMap.sourceGrid.every((entry, index) =>
+    entry.mask === index && entry.sourceTile === `tile_${index}` &&
+    entry.row === Math.floor(index / 4) && entry.column === index % 4));
+check('map: no cardinal polarity conversion remains', !JSON.stringify(maskMap).includes('15 XOR'));
 check('assets: provenance enumerates 51 derived files', outputs.length === 51);
 check('assets: every derived file is 64x48', outputs.every((asset) => asset.dimensions.width === 64 && asset.dimensions.height === 48));
 check('assets: transition coverage is exactly 16x3',
@@ -58,15 +71,61 @@ try {
       if (neighbours.south !== undefined) map[centerRow + 1][centerCol] = neighbours.south;
       if (neighbours.west !== undefined) map[centerRow][centerCol - 1] = neighbours.west;
       var family = isoTerrainFamily(center);
-      return { mask: isoTerrainSameMask(centerRow, centerCol, family), key: isoTerrainSpriteKey(centerRow, centerCol, family) };
+      var corners = isoTerrainCornerFamilies(centerRow, centerCol);
+      return {
+        mask: isoTerrainGrassCornerMask(corners),
+        corners: corners.map(function (corner) { return corner.family; }),
+        key: isoTerrainSpriteKey(centerRow, centerCol, family)
+      };
     }
     var cases = {
-      isolated: caseResult(SOIL, {}),
-      edge: caseResult(SOIL, { north: SOIL }),
-      innerCorner: caseResult(SOIL, { north: SOIL, east: SOIL }),
-      outerCorner: caseResult(SOIL, { north: SOIL, west: SOIL }),
-      fullSurround: caseResult(SOIL, { north: SOIL, east: SOIL, south: SOIL, west: SOIL })
+      grassOpen: caseResult(GRASS, {}),
+      grassNorthSoil: caseResult(GRASS, { north: SOIL }),
+      grassEastSoil: caseResult(GRASS, { east: SOIL }),
+      grassSouthSoil: caseResult(GRASS, { south: SOIL }),
+      grassWestSoil: caseResult(GRASS, { west: SOIL }),
+      mixedPriority: caseResult(GRASS, { north: SOIL, east: WATER }),
+      soilBoundary: caseResult(SOIL, { west: GRASS })
     };
+    var boundaryMap = makeGrid();
+    var boundaryColumn = 12;
+    for (var boundaryRow = 0; boundaryRow < MAP_H; boundaryRow++) {
+      for (var boundaryCol = boundaryColumn; boundaryCol < MAP_W; boundaryCol++) boundaryMap[boundaryRow][boundaryCol] = SOIL;
+    }
+    map = boundaryMap;
+    var currentBoundarySamples = [];
+    for (var sampleCol = boundaryColumn - 1; sampleCol < boundaryColumn + 3; sampleCol++) {
+      var sampleFamily = isoTerrainFamily(map[10][sampleCol]);
+      var sampleKey = isoTerrainSpriteKey(10, sampleCol, sampleFamily);
+      currentBoundarySamples.push({ family: sampleFamily, key: sampleKey, mask: sampleKey.match(/_(\d\d)$/) ? Number(sampleKey.slice(-2)) : null });
+    }
+    var boundaryCornerMap = makeGrid();
+    boundaryCornerMap[0][0] = SOIL;
+    map = boundaryCornerMap;
+    var boundaryVertex = isoTerrainVertexFamily(0, 0);
+    var fullyOutsideVertex = isoTerrainVertexFamily(-1, -1);
+    map = originalMap;
+    // Reproduce the pre-fix terrain-mask-map selection only as a RED baseline.
+    // The production renderer below must never call this cardinal/XOR path.
+    function legacyNeighbourFamily(row, col, centerFamily) {
+      if (row < 0 || row >= MAP_H || col < 0 || col >= MAP_W) return centerFamily;
+      return isoTerrainFamily(map[row][col]) || centerFamily;
+    }
+    function legacySameMask(row, col, centerFamily) {
+      var mask = 0;
+      if (legacyNeighbourFamily(row - 1, col, centerFamily) === centerFamily) mask |= 1;
+      if (legacyNeighbourFamily(row, col + 1, centerFamily) === centerFamily) mask |= 2;
+      if (legacyNeighbourFamily(row + 1, col, centerFamily) === centerFamily) mask |= 4;
+      if (legacyNeighbourFamily(row, col - 1, centerFamily) === centerFamily) mask |= 8;
+      return mask;
+    }
+    function legacyKey(row, col, centerFamily) {
+      var sameMask = legacySameMask(row, col, centerFamily);
+      if (centerFamily === 'grass') return 'iso_terrain_soil_' + String(sameMask).padStart(2, '0');
+      return 'iso_terrain_' + centerFamily + '_' + String(15 ^ sameMask).padStart(2, '0');
+    }
+    map = boundaryMap;
+    var legacyBoundaryKey = legacyKey(10, boundaryColumn, 'soil');
     map = originalMap;
     isoTerrainAreaActivated('farm');
     function flattenedOverlayGeometry() {
@@ -144,6 +203,10 @@ try {
       allDecoded: isoTerrainAllDecoded,
       records: isoTerrainRecords.length,
       nonNullRecords: isoTerrainRecords.filter(function (record) { return record.spriteKey; }).length,
+      boundarySamples: currentBoundarySamples,
+      legacyBoundaryKey: legacyBoundaryKey,
+      boundaryVertex: boundaryVertex,
+      fullyOutsideVertex: fullyOutsideVertex,
       flattenedOverlayGeometry: flattenedOverlayGeometry(),
       cases: cases,
       pairs: Object.keys(pairs).sort(),
@@ -160,11 +223,18 @@ try {
   check('assets: every terrain derivative is an inset transparent overlay', result.flattenedOverlayGeometry);
   check('activation: one precomputed record per Farm cell', result.records === 30 * 22 && result.nonNullRecords === result.records,
     `records=${result.records} nonNull=${result.nonNullRecords}`);
-  check('mask: isolated case selects soil-15', result.cases.isolated.mask === 0 && result.cases.isolated.key === 'iso_terrain_soil_15');
-  check('mask: edge case selects soil-14', result.cases.edge.mask === 1 && result.cases.edge.key === 'iso_terrain_soil_14');
-  check('mask: inner-corner case selects soil-12', result.cases.innerCorner.mask === 3 && result.cases.innerCorner.key === 'iso_terrain_soil_12');
-  check('mask: outer-corner case selects soil-06', result.cases.outerCorner.mask === 9 && result.cases.outerCorner.key === 'iso_terrain_soil_06');
-  check('mask: full-surround case selects soil-00', result.cases.fullSurround.mask === 15 && result.cases.fullSurround.key === 'iso_terrain_soil_00');
+  check('mask: open grass uses soil-derived base', result.cases.grassOpen.mask === 15 && result.cases.grassOpen.key === 'iso_terrain_grass_base_soil');
+  check('mask: north secondary resolves direct grass mask 03', result.cases.grassNorthSoil.mask === 3 && result.cases.grassNorthSoil.key === 'iso_terrain_soil_03');
+  check('mask: east secondary resolves direct grass mask 10', result.cases.grassEastSoil.mask === 10 && result.cases.grassEastSoil.key === 'iso_terrain_soil_10');
+  check('mask: south secondary resolves direct grass mask 12', result.cases.grassSouthSoil.mask === 12 && result.cases.grassSouthSoil.key === 'iso_terrain_soil_12');
+  check('mask: west secondary resolves direct grass mask 05', result.cases.grassWestSoil.mask === 5 && result.cases.grassWestSoil.key === 'iso_terrain_soil_05');
+  check('vertex: four-cell mixed priority chooses water', result.cases.mixedPriority.corners.join(',') === 'water,grass,water,soil' && result.cases.mixedPriority.mask === 2 && result.cases.mixedPriority.key === 'iso_terrain_water_02');
+  check('mask: non-grass center uses full-secondary mask 00', result.cases.soilBoundary.mask === 0 && result.cases.soilBoundary.key === 'iso_terrain_soil_00');
+  check('vertex: map boundary ignores out-of-bounds cells', result.boundaryVertex === 'soil' && result.fullyOutsideVertex === 'grass');
+  check('striping: pre-fix XOR polarity is RED', result.legacyBoundaryKey === 'iso_terrain_soil_08');
+  check('striping: fixed straight boundary is GREEN',
+    result.boundarySamples.map((sample) => sample.family).join('|') === 'grass|soil|soil|soil' &&
+    result.boundarySamples.slice(1).every((sample) => sample.mask === 0));
   check('adjacency: current Farm pair scan is covered', JSON.stringify(result.pairs) === JSON.stringify(['grass|path', 'grass|soil', 'grass|water', 'path|soil']));
   check('fallback: missing terrain sprite keeps Farm render alive', result.fallbackNoThrow);
   check('render-only: save v4 is byte-equivalent before/after draw', result.saveEquivalent);
