@@ -26,7 +26,7 @@ No agent's self-review is sufficient for its own material work. Use the proporti
 The current repository-wide visual authority is:
 
 - [Visual North Star rules](docs/VISUAL_NORTH_STAR.md)
-- [Current North Star image](docs/visual/eldoria-visual-north-star-v1.png)
+- [Current North Star image](docs/visual/eldoria-visual-north-star-v2.png)
 
 For visually relevant reviews and decisions, include a brief **North Star alignment** result: **Aligned**, **Intentional interim gap**, or **Refresh candidate**.
 
