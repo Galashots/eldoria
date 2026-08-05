@@ -5,7 +5,8 @@ import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
-const NPC_IDS = ['mira', 'bram', 'gunnar'];
+const NPC_IDS = ['mira', 'bram', 'gunnar', 'dumpling_vendor'];
+const NPC_ASSET_IDS = { mira: 'mira', bram: 'bram', gunnar: 'gunnar', dumpling_vendor: 'momo' };
 const fails = [];
 const check = (name, ok) => {
   console.log((ok ? 'PASS ' : 'FAIL ') + name);
@@ -41,22 +42,20 @@ try {
   check('boot: zero console errors', errors.length === 0);
   if (errors.length) console.log('  errors: ' + errors.join(' | '));
   check('runtime: Town isometric mode is active', result.iso === true);
-  check('runtime: all three normalized NPC idle files load at 64x64',
+  check('runtime: all four normalized NPC idle files load at 64x64',
     result.bindings.every(b => b.ready && b.width === 64 && b.height === 64));
   check('runtime: each Town NPC is drawn through the sprite branch',
     NPC_IDS.every(id => result.draws.indexOf(id) !== -1));
   check('runtime: paths stay in the isometric NPC asset family',
-    result.bindings.every(b => /assets\/iso\/npc\/(mira|bram|gunnar)-down-right\.png$/.test(b.path || '')));
+    result.bindings.every(b => new RegExp('assets/iso/npc/' + NPC_ASSET_IDS[b.id] + '-down-right\\.png$').test(b.path || '')));
 
   if (process.argv.includes('--capture')) {
-    const evidenceDir = fileURLToPath(new URL('../docs/playtest/2026-08-05-npc-sprite-integration/', import.meta.url));
+    const evidenceDir = fileURLToPath(new URL('../docs/playtest/2026-08-05-momo-sprite-integration/', import.meta.url));
     await mkdir(evidenceDir, { recursive: true });
     const captures = [
-      { name: 'town-mira-desktop', width: 1363, height: 936, player: [13, 10] },
-      { name: 'town-bram-desktop', width: 1363, height: 936, player: [6, 7] },
-      { name: 'town-gunnar-desktop', width: 1363, height: 936, player: [20, 7] },
-      { name: 'town-mira-ipad-landscape', width: 1180, height: 820, player: [13, 10] },
-      { name: 'town-mira-phone-portrait', width: 390, height: 780, player: [13, 10] }
+      { name: 'town-momo-desktop', width: 1363, height: 936, player: [15, 14] },
+      { name: 'town-momo-ipad-landscape', width: 1180, height: 820, player: [15, 14] },
+      { name: 'town-momo-phone-portrait', width: 390, height: 780, player: [15, 14] }
     ];
     for (const capture of captures) {
       const { browser: captureBrowser, page: capturePage } = await launch('?iso=1');

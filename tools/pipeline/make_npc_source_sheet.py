@@ -16,7 +16,7 @@ DIRECTIONS = [
     "west",
     "south-west",
 ]
-NPCS = ["mira", "bram", "gunnar"]
+DEFAULT_NPCS = ["mira", "bram", "gunnar"]
 
 
 def main():
@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--source-root", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--cell", type=int, default=128)
+    parser.add_argument("--npcs", nargs="+", default=DEFAULT_NPCS)
     args = parser.parse_args()
 
     root = Path(args.source_root)
@@ -32,14 +33,14 @@ def main():
     label_h = 22
     header_h = 20
     width = pad + len(DIRECTIONS) * (cell + pad)
-    height = header_h + pad + len(NPCS) * (cell + label_h + pad)
+    height = header_h + pad + len(args.npcs) * (cell + label_h + pad)
     sheet = Image.new("RGB", (width, height), (30, 32, 38))
     draw = ImageDraw.Draw(sheet)
     for index, direction in enumerate(DIRECTIONS):
         draw.text((pad + index * (cell + pad), 4), direction, fill=(150, 158, 172))
 
     y = header_h + pad
-    for npc in NPCS:
+    for npc in args.npcs:
         draw.text((pad, y), npc, fill=(235, 235, 235))
         for index, direction in enumerate(DIRECTIONS):
             source = root / npc / f"{direction}.png"
@@ -54,7 +55,7 @@ def main():
     output = Path(args.out)
     output.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(output)
-    print(f"{output}  {width}x{height} ({len(NPCS)} NPCs, {len(DIRECTIONS)} directions each)")
+    print(f"{output}  {width}x{height} ({len(args.npcs)} NPCs, {len(DIRECTIONS)} directions each)")
 
 
 if __name__ == "__main__":
