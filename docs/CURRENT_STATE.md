@@ -1,7 +1,7 @@
 # Current Project State
 
-**Updated:** 2026-08-04  
-**Baseline:** `main` at `561ce385a95a0f6a1fdcc655c97a1bf794c9f65b`  
+**Updated:** 2026-08-05  
+**Baseline:** `main` at `25ed940` (post PR #48)  
 **Purpose:** cold-start continuity for the next implementation lead. This file records status; it does not grant authority or supersede the AI Team Charter.
 
 ## Live architecture
@@ -18,7 +18,30 @@
   pixel-identical artifact captures vs the pre-split baseline).
 - World coordinates, collision, maps, saves, economy, quests, and combat remain orthogonal and shared by both render modes.
 - Farm and Town default to the isometric renderer. Wilds, Deep Woods, and Mine remain top-down by default; under the `?iso=1` development override they render in iso with real enemy sprites, but flipping their defaults stays out of scope until the iso spec's combat/quest parity gates are met.
-- Town's validated isometric scope is intentionally partial: the General Store and Mira have dedicated placeholder treatments; the Forge and remaining villagers still use generic placeholders.
+- Town's isometric NPCs Mira, Bram, and Gunnar render from committed
+  PixelLab idle sprites (PR #48, 2026-08-05): one lossless crop/translate-only
+  south → `down-right` 64×64 frame each via the `spr()` path, with the
+  procedural prism preserved as a live fallback (the `dumpling_vendor` NPC
+  still renders as a prism pending Auntie Momo's sprite). All eight source
+  rotations per NPC are committed as manifest-classified (`scope: source`)
+  reference assets under `docs/visual/reviews/npc-sprite-integration-20260805/`.
+  **Custody standard set by PR #48: committed character art from supplied
+  packs is crop/translate-only — no resampling, recolouring, or pixel
+  alteration** (`tools/npc-static-contract-test.py` enforces it).
+- Farm isometric ground is real sprite terrain (Step 8, PRs #45/#47,
+  2026-08-05): 51 flattened tiles sliced deterministically from three owned
+  transition sheets, **corner-coded masks** (vendor index 0–15 IS the
+  grass-corner mask; bits = bottom/left/right/top screen corners; vertex
+  material resolved from the four meeting cells, priority
+  water > soil > path > grass), soil-derived grass owning open Farm ground
+  with path/water grass confined to their transition boundaries, striping
+  regression gate red-on-old/green-on-new
+  (`assets/iso/terrain/terrain-mask-map.json`, `tools/terrain-test.mjs`).
+- iPad input feel (PR #46, 2026-08-05): double-tap zoom killed via scoped
+  `touch-action: manipulation` (pinch preserved), iso-only movement knob
+  `ISO_SPEED_MULT = 1.5` (`js/01`, beside `TARGET_VIEW_ROWS`), adaptive
+  spawn-at-touch joystick with a bounded 240×220 bottom-left catchment and
+  hide-on-release; `?fixedJoystick=1` persistently restores the fixed rig.
 - The save schema is **version 4** (Step 7 Mira's Guide onboarding, 2026-08-04,
   owner-authorized migration): `player.onboarding` carries the guide status
   (`active`/`skipped`/`completed`) plus one boolean per milestone (`planted`,
@@ -77,7 +100,10 @@
 | [PR #15](https://github.com/Galashots/eldoria/pull/15) | Merged the production asset-pipeline tools and decision record at head `1c6be80d672609923647150fdd28413015269019`; CI run 99 passed. |
 | [PR #36](https://github.com/Galashots/eldoria/pull/36)–[#41](https://github.com/Galashots/eldoria/pull/41) | PixelLab doc corrections, Foundation B (mechanical `index.html` split), North Star v2, save-schema v3, per-question combat damage budgets, and the Ranger/Mage identity + Character screen surface — all merged, `main` green throughout. |
 | [PR #42](https://github.com/Galashots/eldoria/pull/42)–[#43](https://github.com/Galashots/eldoria/pull/43) | Foundation D (repository-wide asset manifest and integrity gate) plus its crop-carrot container-repair prerequisite — merged 2026-08-04. |
-| Step 7 (this PR) | Mira's Guide onboarding: save v4 `player.onboarding`, milestone chain, derived-objective chip — see above. |
+| [PR #44](https://github.com/Galashots/eldoria/pull/44) | Step 7 Mira's Guide onboarding (save v4 `player.onboarding`, milestone chain, derived-objective chip) — merged 2026-08-04 after four review rounds across three seats. |
+| [PR #45](https://github.com/Galashots/eldoria/pull/45), [#47](https://github.com/Galashots/eldoria/pull/47) | Step 8 Farm iso terrain: deterministic slicer + flatten transform, then the corner-mask semantics rebuild after the human-verified cell legend gate — merged 2026-08-05, owner iPad-checked. |
+| [PR #46](https://github.com/Galashots/eldoria/pull/46) | iPad input hotfix: double-tap zoom kill, `ISO_SPEED_MULT` knob, adaptive joystick with `?fixedJoystick` fallback — merged 2026-08-05. |
+| [PR #48](https://github.com/Galashots/eldoria/pull/48) | Town NPC idle sprites (Mira/Bram/Gunnar) with the lossless crop/translate-only custody standard and all 24 source rotations retained — merged 2026-08-05. |
 
 ## Art and pipeline state
 
@@ -85,28 +111,47 @@
 - The four identity concepts (Mage, Mira, Shadow Warden, Crystal Wyrm), the full cast sheet, and the Farm landscape sheet were owner-approved during pipeline calibration.
 - Mage v3 reference rotation preserved the approved identity across all eight generated directions.
 - **Superseded 2026-07-30 by owner call (iso mode):** the four-facing compatibility subset is no longer the iso runtime limit. In iso the engine consumes all eight facings per hero (right=SE, down=SW, left=NW, up=NE, down-right=S, down-left=W, up-left=N, up-right=E), with walk strips per facing sourced from the owner's manual web-Creator regeneration of both heroes, curated to the engine's `{stand, step A, stand, step B}` contract, and played by the iso renderer. The top-down escape hatch keeps cardinal facings so its attack strips and equipment overlays (authored for the original four facings) always resolve.
-- The approved Farm landscape candidates remain generation outputs until they are deliberately normalized, validated, committed under `assets/iso/`, wired into the renderer, and inspected in-game.
+- Farm terrain is committed and live (see Step 8 above); the three source
+  transition sheets' grass bases are intentionally mismatched palettes —
+  cross-set harmonization is a planned separate visual-only PR (measured
+  deltas recorded in `docs/ai-team/TERRAIN_FIX_BRIEF_20260805.md`).
 - Building kits are the next generation need. They must use the approved landscape as the style reference and still pass human and North Star review.
+- **Auntie Momo (Squishy Dumpling Vendor) sprite selected 2026-08-05:** Leo
+  authorized a bounded three-generation probe (a workflow experiment with
+  Codex driving PixelLab via `tools/pipeline/pixellab_client.py`) and picked
+  the `reference-v3` candidate — the only one whose 56–57px figure fits the
+  64×64 frame crop/translate-only. Integration work order:
+  `docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`. All three candidates
+  passed the heading-fidelity screen; the probe is spent and the PixelLab
+  pause is back in force.
 - [`tools/3D_ISO_SPRITE_PIPELINE.md`](../tools/3D_ISO_SPRITE_PIPELINE.md) is historical. Do not restart its generation route; only the retained engine-contract facts explicitly referenced by the v2 pipeline remain applicable.
 
 ## Recommended next outcome
 
-Leo has authorized ongoing **LARGE** PRs under the sequence he agreed with ChatGPT
-(see the "Eldoria Independent Playtest" ChatGPT chat for the full scope
-contracts). For the current sprint Leo has swapped the planning lead: Claude
-authors the plan and its bounded decisions, ChatGPT reviews. **Step 7 (Mira's
-Guide onboarding) is delivered by this PR**; the next outcome will be chosen
-from the reconciled playtest queue (HUD polish items, dumpling modal scrolling,
-iPad double-tap zoom, wrong-answer quest friction, raster-decoder hardening)
-plus the environment-art integration track.
+Seating (Leo, 2026-08-04/05): **Codex implements; Fable (Claude) directs and
+performs exact-head acceptance reviews; ChatGPT is the standing visual lead
+and non-author reviewer; Leo merges.** The agreed queue as of 2026-08-05:
+
+1. Auntie Momo sprite integration (`docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`);
+2. next Codex slot — owner picks between the scoped gameplay item
+   ELD-PT-011/011a (per-profile music/speech/effects volume, "say it again"
+   button, no TTS on routine actions, bulk buy with honest partial-purchase
+   counts) and remaining-area terrain (Town first, one-primary-tileset-per-zone
+   rule);
+3. actor contact shadows (tuned against the landed NPC cast);
+4. camera-feel reassessment from fresh iPad evidence;
+5. env art for buildings/props, then missing NPC/monster sprites;
+6. UI theming LAST, so it is not themed against a temporary baseline;
+7. later: occlusion fading, cross-set grass harmonization, water/weather.
 
 Out of scope unless Leo explicitly expands it:
 
 - map, collision, economy, curriculum, or combat-budget changes;
 - retirement of top-down rendering;
 - unapproved visual identities or silent North Star replacement;
-- PixelLab generation of any kind (remains paused; the ~100-generation
-  calibration batch requires Leo's explicit re-open); and
+- PixelLab generation of any kind (paused again after the completed
+  three-generation Momo probe; the ~100-generation calibration batch still
+  requires Leo's explicit re-open); and
 - framework, bundler, TypeScript, or real-time 3D migration.
 
 If required art cannot clear visual review, keep the validated placeholder for
