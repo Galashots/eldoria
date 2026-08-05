@@ -1,5 +1,14 @@
 # Step 8 contract — Environment art: Farm iso terrain + North Star v3 adoption
 
+> **HISTORICAL EXECUTION RECORD — NOT CURRENT TERRAIN AUTHORITY**
+>
+> This document records the original Step 8 execution contract. Its N/E/S/W
+> edge-mask and XOR assumptions were superseded by PR #47. Current production
+> semantics use direct corner masks: vendor index 0–15 is the grass-corner
+> mask. Agents must follow `docs/ai-team/TERRAIN_FIX_BRIEF_20260805.md` and
+> the current runtime terrain documentation rather than implementing the
+> stale edge-mask sections below.
+
 Status: ACCEPTED by ChatGPT (visual lead) 2026-08-04 with the clauses in the final section,
 which are adopted verbatim into this contract. · Author: Claude (director) · Implementer: Codex
 Date: 2026-08-04 · Baseline: main `ba0d7ffab1173261437e55634b6dac6a6779cad1` (post-#44)

@@ -9,9 +9,9 @@ Every factual claim below was verified against the working tree on 2026-08-05 (f
 
 1. **Custody standard (PR #48):** committed character art from supplied packs is crop/translate-ONLY — no resampling, recolouring, thresholding, or pixel alteration. `tools/npc-static-contract-test.py` enforces it. Sprite review order is always **heading fidelity first** (south family shows the face, north family the back), then drift, then style.
 2. **Terrain standard (PR #47):** vendor transition sheets are corner-coded; vendor index 0–15 IS the grass-corner mask; vertex material resolves from the four meeting cells with priority water > soil > path > grass. One primary tileset per zone; soil-derived grass owns open Farm ground. No cell flipping, ever.
-3. **CI on the pushed head is the authority** — Windows-local `npm test` fails by design (canvas goldens built on CI).
+3. **CI on the pushed head is the authority for known platform variance** — exact-head Linux CI is authoritative for known browser-canvas variance and Windows browser-harness timeouts; focused local suites are still required and must pass; unrelated local failures must not be normalized or ignored.
 4. **Acceptance reviews are exact-head with independent reproduction** (re-run slicers/processors/tests yourself; pixel-diff, don't height-compare).
-5. **PixelLab generation is PAUSED.** The 3-generation Momo probe is spent and closed. Any new spend needs Leo's explicit re-open per item.
+5. **PixelLab generation is PAUSED.** Leo authorized one bounded 64px text-only `create8` probe; Codex produced three distinct characters, including two text-only camera variants and one reference-v3 result, without prior authorization for the additional generations. The overrun was recorded, Leo selected reference-v3, and the pause is back in force. Any new spend needs Leo's explicit re-open per item.
 6. Kid names stay out of this public repo. Verdicts live in PR comments (shared account — GitHub approvals are unusable).
 
 ## Lane 0 — in flight right now
@@ -19,12 +19,11 @@ Every factual claim below was verified against the working tree on 2026-08-05 (f
 | Item | State | Next action |
 | --- | --- | --- |
 | **PR #49 docs reconciliation** (+ this plan) | Draft, CI green | ChatGPT non-author review → Leo merges. |
-| **Momo integration** (`MOMO_INTEGRATION_BRIEF_20260805.md`) | Codex has the work staged locally (runtime frame, 8 source rotations, review README, captures) | Codex pushes PR → Claude exact-head acceptance (independent pixel reproduction against the probe zip) → ChatGPT visual gate (Momo's FIRST formal visual review; must rule on the muted-palette-vs-cast question) → Leo merges. Review nit to catch: three `town-momo-*.png` captures are currently placed in the old `2026-08-05-npc-sprite-integration/` evidence folder — they belong in the PR's own evidence dir. |
-| **Outstanding ruling from PR #47:** faint green seam lines in path interiors at 1:1 (underlay peeking at overlay seams) | Flagged at merge, never ruled | ChatGPT rules from existing captures: pass-at-iPad-scale or queue a bounded fix. Ten-minute item; do it with the Momo gate. |
+| **PR #50 Momo integration** (`MOMO_INTEGRATION_BRIEF_20260805.md`) | Draft, current head `5d4761307f43b78ac2fa83f64fb54f8324faebfa`; 24 Mira/Bram/Gunnar rotations are merged and Momo's additional 8 are pending | Evidence is in `docs/playtest/2026-08-05-momo-sprite-integration/`. Chain: Fable exact-head acceptance → ChatGPT's first in-game integration visual gate (the selected eight-direction source art was already reviewed and accepted) → Leo merges. |
 
 ## Lane A — gameplay (sequenced; one Codex slot at a time)
 
-### A1. ELD-PT-011 + 011a — audio channels, say-it-again, TTS allow-list, bulk buy (NEXT SLOT, owner-scoped 2026-07-29)
+### A1. ELD-PT-011 + 011a — audio channels, say-it-again, TTS allow-list, bulk buy (candidate pending Leo's decision; owner-scoped 2026-07-29)
 Verified current state: no volume controls exist anywhere — one global mute (`eldoria_muted`, `js/02-data-state.js:430`), music hard-coded at 0.35 (`js/02:427`), procedural SFX with fixed gains (`js/07-hud-movement.js:60-90`), speech with no volume set (`js/07:110-133`). Shop buys exactly one seed per tap (`js/04-interaction.js:255-265`).
 Build to Leo's recorded scope: per-profile music/speech/effects levels; every spoken instruction also visible; "say it again" speaker button on the current instruction; **routine actions never spoken** (acceptance: zero speech from purchases/pickups at any tap rate, tested by mashing); bulk buy 1/5/10/15/20 where buying more than affordable buys what gold covers **and says so honestly** (shown count = bought count).
 Note: the TTS allow-list also covers the dumpling stall's spoken welcome (`js/04:496`) — remove that speech here even though the wording fix itself is A2's.
@@ -52,8 +51,16 @@ The larger ELD-PT-001/010 redesign (embedded learning, scaffolded retry ladder) 
 4. **B4. Buildings + env props** — real PixelLab generation (farmhouse/shop kits, `style_images` locked to approved tiles). **Spend-gated on Leo.**
 5. **B5. Iso Phase 2 completion** — port Wilds → Deep Woods → Mine (spec `docs/superpowers/specs/2026-07-27-isometric-conversion-design.md:207`). Note the Mine already upgrades with zero code when real art lands: `assets/rock.png`/`assets/cave-floor.png` are registered-but-absent by design (`js/02:53-56`). Phase 4 default-flip stays gated on combat/quest parity.
 6. **B6. Grass harmonization** — separate visual-only PR, deterministic slicer recolor with before/after palette evidence (measured deltas recorded in `TERRAIN_FIX_BRIEF_20260805.md`).
-7. **B7. NPC eight-direction runtime** — all 24+8 source rotations are now committed; a bounded facing/state system for NPCs/monsters is the audit Leo wants eventually.
+7. **B7. NPC eight-direction runtime** — Mira/Bram/Gunnar's 24 source rotations are merged; Momo's additional 8 are pending PR #50. A bounded facing/state system for NPCs/monsters is the audit Leo wants eventually.
 8. **B-LAST. UI theming** — deliberately last, so the UI is themed against the real world art, not a temporary baseline (owner ordering).
+
+## Later visual debt
+
+- **PR #47 path-interior seams:** the faint green seams were reviewed and
+  accepted as recorded interim visual debt. The future fix is bounded to
+  `path-00` only; preserve masks `1–15` and the corner resolver, and provide
+  native path proof plus iPad before/after evidence. This is not part of the
+  Momo review or the in-flight Lane 0.
 
 ## Lane C — hygiene (small, no gates beyond normal review)
 
@@ -65,14 +72,8 @@ The larger ELD-PT-001/010 redesign (embedded learning, scaffolded retry ladder) 
 
 ## Suggested order of execution
 
-1. **Today:** #49 review+merge → Momo PR through all three gates → seam-line ruling (same ChatGPT sitting) → branch prune (C4).
-2. **Next Codex slot:** A1 (011/011a). It is fully scoped, kid-facing, and unblocks A3's input work later. While Codex builds A1, ChatGPT/Leo do the B1 library browse, and Leo answers the boss-respawn question so A2 is ready next.
-3. **Then:** A2 (dumpling compliance) → B1 (Town terrain) → B2 (shadows) → A3 (timer removal) → B3 (camera) — kid iPad playtest after A2 lands (audio + dumpling changes are the most kid-visible cluster).
-4. **Owner decisions pending, in order of urgency:** boss respawn policy (blocks A2); A1-next confirmation; full-playtest.mjs keep/drop (C1); buildings generation re-open (B4, later).
-
-## Notes for the incoming Claude seat (Opus)
-
-- Session memory lives at `C:\Users\Leo\.claude\projects\C--Users-Leo-Desktop\memory\` — read `MEMORY.md` and `project-realm-of-eldoria-original.md` (tail = newest) before acting.
-- ChatGPT coordination runs through Leo's "Eldoria Independent Playtest" chat in the automation Chrome (superpowers-chrome profile, stay-logged-in). Known hazard: drafts Leo stages in that conversation live-sync into the automation composer and merge into typed messages — verify the POSTED message, not the composer, and stop + coordinate with Leo if contamination recurs.
-- Attach to existing Chrome sessions; never silently spawn fresh ones.
-- Do not run `gh pr review --request-changes` (shared account, same-author error) — verdicts are PR comments.
+1. **Today:** #49 review+merge → PR #50 through its exact-head and visual gates → branch prune (C4).
+2. **After PR #49 and PR #50, Leo chooses the next lane:** A1 (011/011a) or B1 (Town terrain). Recommendation: A1 first because it is fully scoped, kid-facing, and unblocks A3's input work; this remains a recommendation, not authorization.
+3. **If Leo chooses A1:** A1 → A2 (after the boss-respawn decision) → B1 → B2 → A3 → B3, with kid iPad playtest after A2 lands.
+4. **If Leo chooses B1:** B1 → B2 → A1 → A2 (after the boss-respawn decision) → A3 → B3.
+5. **Owner decisions pending, in order of urgency:** post-#49/#50 lane choice (A1 vs B1); boss respawn policy (blocks A2); full-playtest.mjs keep/drop (C1); buildings generation re-open (B4, later).

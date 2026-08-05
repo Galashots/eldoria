@@ -1,11 +1,11 @@
 # Auntie Momo Integration Work Order — 2026-08-05
 
-**Seat:** Codex implements. Fable directs + exact-head acceptance (independent pixel reproduction). **ChatGPT visual gate REQUIRED** (this is Momo's first formal visual review). Leo merges.
+**Seat:** Codex implements. Fable directs + exact-head acceptance (independent pixel reproduction). **ChatGPT visual gate REQUIRED** (this is Momo's first in-game integration visual gate; the selected eight-direction source art was already reviewed and accepted before PR #50). Leo merges.
 **Branch suggestion:** `agent/momo-sprite-integration-20260805`.
 
 ## Probe outcome (decided)
 
-Leo authorized 3 generations for the Auntie Momo probe (workflow experiment) and has picked the winner:
+Leo authorized one bounded 64px text-only `create8` generation for the Auntie Momo workflow experiment. Codex produced three distinct characters — two text-only camera variants and one reference-v3 result — without prior authorization for the additional generations; the overrun was recorded. Leo subsequently picked the winner, and PixelLab generation is paused again:
 
 - **SELECTED: `momo-reference-v3`** — PixelLab character `da8c93d3-17a9-4dae-8726-e29c6ac9bb39`, 120×120 canvas, figure 56–57px. Owner verdict 2026-08-05: "Momo v3 looks good to me."
 - Retired candidates (retain in `_probe_local` only, never commit): `momo-create8-high` `968d2728-5f9f-402e-9ff7-3e9d40063b3d`, `momo-create8-low` `ada91453-5f3b-4e08-9351-f0c44a8247f8`. Record all three character IDs in the review README for custody (server-side recovery), including WHY the others were retired: their 68–70px figures cannot fit the 64×64 frame without resampling, which the PR #48 standard forbids.

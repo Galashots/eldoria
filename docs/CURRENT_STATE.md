@@ -21,10 +21,12 @@
 - Town's isometric NPCs Mira, Bram, and Gunnar render from committed
   PixelLab idle sprites (PR #48, 2026-08-05): one lossless crop/translate-only
   south → `down-right` 64×64 frame each via the `spr()` path, with the
-  procedural prism preserved as a live fallback (the `dumpling_vendor` NPC
-  still renders as a prism pending Auntie Momo's sprite). All eight source
-  rotations per NPC are committed as manifest-classified (`scope: source`)
-  reference assets under `docs/visual/reviews/npc-sprite-integration-20260805/`.
+  procedural prism preserved as a live fallback. All eight source rotations
+  per NPC are committed as manifest-classified (`scope: source`) reference
+  assets under `docs/visual/reviews/npc-sprite-integration-20260805/`.
+  Auntie Momo's additional eight source rotations and the runtime frame are
+  pending PR #50; that PR wires the existing `dumpling_vendor` NPC without
+  changing its position or behavior.
   **Custody standard set by PR #48: committed character art from supplied
   packs is crop/translate-only — no resampling, recolouring, or pixel
   alteration** (`tools/npc-static-contract-test.py` enforces it).
@@ -104,6 +106,7 @@
 | [PR #45](https://github.com/Galashots/eldoria/pull/45), [#47](https://github.com/Galashots/eldoria/pull/47) | Step 8 Farm iso terrain: deterministic slicer + flatten transform, then the corner-mask semantics rebuild after the human-verified cell legend gate — merged 2026-08-05, owner iPad-checked. |
 | [PR #46](https://github.com/Galashots/eldoria/pull/46) | iPad input hotfix: double-tap zoom kill, `ISO_SPEED_MULT` knob, adaptive joystick with `?fixedJoystick` fallback — merged 2026-08-05. |
 | [PR #48](https://github.com/Galashots/eldoria/pull/48) | Town NPC idle sprites (Mira/Bram/Gunnar) with the lossless crop/translate-only custody standard and all 24 source rotations retained — merged 2026-08-05. |
+| [PR #50](https://github.com/Galashots/eldoria/pull/50) | Draft Momo integration, current head `5d4761307f43b78ac2fa83f64fb54f8324faebfa`; pending exact-head acceptance and visual review. Evidence: `docs/playtest/2026-08-05-momo-sprite-integration/`. |
 
 ## Art and pipeline state
 
@@ -115,15 +118,20 @@
   transition sheets' grass bases are intentionally mismatched palettes —
   cross-set harmonization is a planned separate visual-only PR (measured
   deltas recorded in `docs/ai-team/TERRAIN_FIX_BRIEF_20260805.md`).
+- PR #47's faint green seams in full path interiors were reviewed and accepted
+  as interim visual debt. The later bounded follow-up is path-00-only, while
+  preserving masks 1–15 and the corner resolver, with native path proof and
+  iPad before/after evidence.
 - Building kits are the next generation need. They must use the approved landscape as the style reference and still pass human and North Star review.
 - **Auntie Momo (Squishy Dumpling Vendor) sprite selected 2026-08-05:** Leo
-  authorized a bounded three-generation probe (a workflow experiment with
-  Codex driving PixelLab via `tools/pipeline/pixellab_client.py`) and picked
-  the `reference-v3` candidate — the only one whose 56–57px figure fits the
-  64×64 frame crop/translate-only. Integration work order:
-  `docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`. All three candidates
-  passed the heading-fidelity screen; the probe is spent and the PixelLab
-  pause is back in force.
+  authorized one bounded 64px text-only `create8` probe. Codex produced three
+  distinct characters — two text-only camera variants and one
+  reference-v3 result — without prior authorization for the additional
+  generations; the overrun was recorded. Leo subsequently selected the
+  `reference-v3` candidate, the only one whose 56–57px figure fits the 64×64
+  frame crop/translate-only. Integration work order:
+  `docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`. PixelLab generation is
+  paused again.
 - [`tools/3D_ISO_SPRITE_PIPELINE.md`](../tools/3D_ISO_SPRITE_PIPELINE.md) is historical. Do not restart its generation route; only the retained engine-contract facts explicitly referenced by the v2 pipeline remain applicable.
 
 ## Recommended next outcome
@@ -132,12 +140,13 @@ Seating (Leo, 2026-08-04/05): **Codex implements; Fable (Claude) directs and
 performs exact-head acceptance reviews; ChatGPT is the standing visual lead
 and non-author reviewer; Leo merges.** The agreed queue as of 2026-08-05:
 
-1. Auntie Momo sprite integration (`docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`);
-2. next Codex slot — owner picks between the scoped gameplay item
+1. PR #50 Auntie Momo sprite integration is in flight
+   (`docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`);
+2. after PR #49 and PR #50, Leo chooses between the scoped gameplay item
    ELD-PT-011/011a (per-profile music/speech/effects volume, "say it again"
    button, no TTS on routine actions, bulk buy with honest partial-purchase
    counts) and remaining-area terrain (Town first, one-primary-tileset-per-zone
-   rule);
+   rule). Neither lane is authorized until Leo chooses;
 3. actor contact shadows (tuned against the landed NPC cast);
 4. camera-feel reassessment from fresh iPad evidence;
 5. env art for buildings/props, then missing NPC/monster sprites;
@@ -149,9 +158,9 @@ Out of scope unless Leo explicitly expands it:
 - map, collision, economy, curriculum, or combat-budget changes;
 - retirement of top-down rendering;
 - unapproved visual identities or silent North Star replacement;
-- PixelLab generation of any kind (paused again after the completed
-  three-generation Momo probe; the ~100-generation calibration batch still
-  requires Leo's explicit re-open); and
+- PixelLab generation of any kind (paused again after the one-authorized,
+  three-produced Momo probe overrun; the ~100-generation calibration batch
+  still requires Leo's explicit re-open); and
 - framework, bundler, TypeScript, or real-time 3D migration.
 
 If required art cannot clear visual review, keep the validated placeholder for
