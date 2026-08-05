@@ -534,7 +534,7 @@ const RULES = [
       governedBy: p.endsWith('/momo-down-right.png')
         ? 'docs/visual/reviews/momo-sprite-integration-20260805/README.md'
         : 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
-      notes: 'Lossless crop/translate-only south-facing/down-right idle frame for the stationary Town NPC renderer. Momo is the runtime art name for the existing dumpling_vendor NPC; the other seven canonical directions are retained as source assets. Falls back to the existing procedural NPC shape.',
+      notes: 'Lossless crop/translate-only south-facing/down-right idle frame for the stationary Town NPC renderer. The other seven canonical directions are retained as source assets; no facing/state runtime path exists yet. Falls back to the existing procedural NPC shape.',
     }),
   },
   {
