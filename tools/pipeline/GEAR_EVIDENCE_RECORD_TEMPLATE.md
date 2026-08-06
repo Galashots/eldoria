@@ -30,7 +30,9 @@ Generation
 - exact command / params:      <full call, incl. mode, view, no_background>
 - seed:                        <int or "random – not reproducible">
 - approved reference(s):       <path + SHA-256 of each input the batch was approved with>
-- approved mask:               <path + SHA-256 of the (slot,facing) mask, or "n/a – direct route">
+- approved mask:               <path + SHA-256 of the (slot,facing) mask — MANDATORY for every route,
+                                  direct-overlay included. No mask ⇒ record GC4/GC5 as FAIL, not "n/a";
+                                  see GEAR_CUSTODY_CONTRACT.md §2 (fail closed, no route is exempt)>
 
 Size & geometry
 - source dimensions:           <w×h of the fed reference>
@@ -95,7 +97,7 @@ future collation script.
     "route": { "enum": ["direct-overlay", "equipped-state", "transfer-outfit"] },
     "generation": {
       "type": "object",
-      "required": ["tool", "endpoint", "schema_verified_on", "command", "approved_references"],
+      "required": ["tool", "endpoint", "schema_verified_on", "command", "approved_references", "approved_mask"],
       "properties": {
         "tool": { "type": "string" },
         "endpoint": { "type": "string" },
@@ -109,7 +111,9 @@ future collation script.
             "properties": { "path": {"type":"string"}, "sha256": {"type":"string"} } }
         },
         "approved_mask": {
-          "type": ["object", "null"],
+          "description": "MANDATORY for every route, direct-overlay included — GC4/GC5 fail closed with no mask (GEAR_CUSTODY_CONTRACT.md §2).",
+          "type": "object",
+          "required": ["path", "sha256"],
           "properties": { "path": {"type":"string"}, "sha256": {"type":"string"} }
         }
       }
@@ -140,7 +144,10 @@ future collation script.
       "type": "object",
       "required": ["gc5_offmask_pixels_changed"],
       "properties": {
-        "gc4_mask_containment": { "enum": ["PASS", "FAIL", null] },
+        "gc4_mask_containment": {
+          "description": "Fail closed: a finalized record with no approved_mask records FAIL here, never null/n-a. null is only valid mid-fill, before the record is finalized.",
+          "enum": ["PASS", "FAIL", null]
+        },
         "gc5_offmask_pixels_changed": { "type": ["integer", "null"] },
         "gc6_layer_order": { "enum": ["PASS", "FAIL", null] },
         "gc8_determinism": { "enum": ["PASS", "FAIL", null] },

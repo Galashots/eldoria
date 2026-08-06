@@ -440,13 +440,26 @@ Full research artifacts: `GEAR_CUSTODY_CONTRACT.md`,
 
 ### Corrections to prior research/doc claims (the mismatch report)
 
-- **Style-reference anchoring across a gear family is NOT available on the character
-  route.** `style_images` / `StyleImage` / `StyleOptions` exist only on
-  `generate-with-style-v2` and the `create-image-*` / tileset endpoints — flat
-  images with **no 8-direction rotation**. On the identity/state route the only
-  anchor is `create-character-state`'s `use_color_palette_from_reference`, which is
-  **palette only** (not outline/detail/shading). Treat "style-anchor a gear family
-  through the hero route" as unsupported; palette-snap is the ceiling.
+- **Style-reference anchoring across a gear family EXISTS, but only via the
+  expensive `pro` route — corrected 2026-08-06.** A prior pass of this doc said it
+  was "not available on the character route." That was wrong: `CreateCharacterProRequest`
+  has `style_character_id` — *"ID of one of your existing 8-direction characters to
+  use as the style reference. Its 8 directional sprites guide the new character's
+  style in every direction; its south sprite becomes the center style image unless
+  `reference_image` is also provided."* This could point at the approved Ranger
+  `character_id` to style-anchor a generated gear item to the hero's palette/outline
+  across all 8 directions — a real 8-direction anchor, not a flat image.
+  **Excluded from the method probe anyway**, not because it doesn't exist but
+  because it only exists on `create-character-pro` (**20–40 gen/direction**,
+  160–320 for a full set) — cost-prohibitive for exploration; `confirm_cost` must
+  never be set on a first call, and the quote goes to Leo first. `style_images` /
+  `StyleImage` / `StyleOptions` (a separate, unrelated mechanism) remain
+  character-route-absent as originally found — they exist only on
+  `generate-with-style-v2` and the `create-image-*` / tileset endpoints, flat images
+  with no 8-direction rotation. On `create-character-v3` / `create-character-state`
+  (the probe's actual routes) the only anchor remains
+  `create-character-state`'s `use_color_palette_from_reference` — **palette only**,
+  not outline/detail/shading.
 - **"Clothing-only / no-mannequin / no-ghost-body" cannot be a negative prompt on
   these routes.** There is **no `negative_description`** on `create-character-v3`,
   `create-character-state`, or the character animation endpoint (confirms §5). It

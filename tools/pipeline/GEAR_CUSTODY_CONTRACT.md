@@ -61,18 +61,34 @@ of "the pixels this slot is allowed to change."
 
 ## 3. Gates (exit 0 = all pass; nonzero + printed failures otherwise)
 
-Naming `GC#` to distinguish from `validate_sprites.py`'s `G1–G8`, which this
-validator **also runs** on every layer and composite (size, binary alpha, bottom
-anchor, side padding, scale spread).
+Naming `GC#` to distinguish from `validate_sprites.py`'s `G1–G8`.
+**[Fable, 2026-08-06] G1–G8 do NOT apply uniformly to every artifact this
+contract handles.** A lone equipment layer (e.g. a floating chest-piece) is not
+a bottom-anchored character frame — demanding G3 (bottom anchor), G5 (cross-facing
+scale spread), G6/G7 (walk-frame stability/stand-identity), or G8
+(slot-completeness, which is per-*set*, not per-item) of an isolated layer is a
+category error. Applicability by artifact class:
 
-**Structural (per layer and per composite):**
+| Primitive | Isolated layer (pre-composite) | Complete composite (base + layer(s), full character frame) |
+|---|---|---|
+| Canvas size | Yes — layer's own declared canvas | Yes (G1: 64×64, or 256×64 walk strip) |
+| G2 binary alpha | Yes | Yes |
+| G4 side padding | Yes, where the layer's own bbox allows it | Yes |
+| G3 bottom anchor (lowest opaque row = frame bottom) | **No** — a layer need not touch the frame bottom | Yes — the composite is a full character frame |
+| G5 scale spread across facings | **No** — meaningless for one floating item | Yes |
+| G6 walk-centre/top stability, G7 stand-frame identity | **No** — this probe is static-only; applies only once walk strips exist | Yes, for walk strips |
+| G8 slot/facing/state completeness | N/A — that gate is per-*set*; see GC7 below | Yes |
 
-- **GC1 canvas & anchor** — 64×64 RGBA; composite bottom-anchored at row 63; layer
-  shares the base frame's canvas exactly (no offset, no rescale).
-- **GC2 binary alpha** — every pixel alpha ∈ {0, 255} on the layer and composite.
-- **GC3 scale/pivot invariance** — the composite's opaque bbox height/width and
-  centre-x stay within `validate_sprites.py` G5 tolerances of the **approved base**
-  (facings must still read as one character; gear must not resize the hero).
+**Structural (canvas + alpha primitives; class-dependent per the table above):**
+
+- **GC1 canvas & anchor** — layer: shares the base frame's declared canvas with no
+  offset/rescale; own-bbox bottom anchor is NOT required. Composite: full
+  `validate_sprites.py` G1/G3 — correct frame size, bottom-anchored.
+- **GC2 binary alpha** — every pixel alpha ∈ {0, 255}, both artifact classes.
+- **GC3 scale/pivot invariance** — **composite only**: opaque bbox height/width and
+  centre-x stay within G5 tolerances of the **approved base** (facings must still
+  read as one character; gear must not resize the hero). Not applicable to an
+  isolated layer, which has no independent "hero scale" to compare against.
 
 **Custody (the properties PR #48's test cannot express):**
 
@@ -134,7 +150,7 @@ These are recorded as verdicts in the evidence record, not machine gates.
 | Tool | Governs | Stays in force? |
 |---|---|---|
 | `tools/npc-static-contract-test.py` (PR #48) | Static NPC source frames, crop/translate-only | Yes — for that asset class only |
-| `tools/pipeline/validate_sprites.py` (G1–G8) | Normalized hero sprite geometry | Yes — GC re-runs it on every layer/composite |
+| `tools/pipeline/validate_sprites.py` (G1–G8) | Normalized hero sprite geometry | Yes — GC re-runs the *applicable* primitives per §3's table: canvas/alpha/padding on layers, the full G1–G8 set only on complete bottom-anchored composites |
 | **This contract's validator** (GC1–GC8) | **Generated equipment: layers, masks, extraction, composites** | To be implemented under Sub-project A |
 
 Suggested home when implemented: `tools/pipeline/validate_gear.py`, wired into
