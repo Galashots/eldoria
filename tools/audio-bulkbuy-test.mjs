@@ -198,5 +198,93 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Corrections from the non-author review (#5199488793 / #5199507568) ---
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    selectProfile('mage');
+    const spoken = [];
+    const coins = [];
+    window.speechSynthesis.speak = u => spoken.push(u.text);
+    const realCoin = window.soundCoin;
+    window.soundCoin = () => { coins.push(1); realCoin(); };
+
+    // 1. Dragging must not fire a preview per input event.
+    for (let i = 0; i <= 100; i += 5) onAudioSliderInput('effects', i);
+    const previewsDuringDrag = coins.length;
+    onAudioSliderCommit('effects');
+    const previewsAfterRelease = coins.length;
+
+    // 2. Say Again must not leak across profiles.
+    speak('This is the mage instruction.');
+    const mageRemembered = lastSpokenInstruction;
+    switchProfile();
+    const clearedOnSwitch = lastSpokenInstruction;
+    selectProfile('adventurer');
+    const clearedOnSelect = lastSpokenInstruction;
+    const buttonHidden = document.getElementById('sayAgainBtn').hidden;
+
+    // 3. Effects default is full volume.
+    const defaults = JSON.parse(JSON.stringify(AUDIO_LEVEL_DEFAULTS));
+
+    // 4. A partial buy button states the REAL count.
+    player.gold = 7;
+    openShop();
+    setSeedBuyQuantity(20);
+    updateHUD();
+    const btn = document.getElementById('btnBuy_turnip');
+    const partialLabel = btn.textContent;
+    const partialAria = btn.getAttribute('aria-label');
+    setSeedBuyQuantity(1);
+    updateHUD();
+    const fullLabel = btn.textContent;
+
+    // 5. HUD controls meet the 44px touch minimum.
+    const tooSmall = ['sayAgainBtn', 'muteBtn', 'soundSettingsBtn'].filter(id => {
+      const el = document.getElementById(id);
+      el.hidden = false;
+      const box = el.getBoundingClientRect();
+      return box.width < 44 || box.height < 44;
+    });
+    return { previewsDuringDrag, previewsAfterRelease, mageRemembered, clearedOnSwitch,
+             clearedOnSelect, buttonHidden, defaults, partialLabel, partialAria,
+             fullLabel, tooSmall };
+  });
+
+  check('review: dragging a slider previews nothing', r.previewsDuringDrag === 0);
+  check('review: releasing a slider previews exactly once', r.previewsAfterRelease === 1);
+  check('review: Say Again does not leak between profiles',
+    r.mageRemembered !== '' && r.clearedOnSwitch === '' && r.clearedOnSelect === '' && r.buttonHidden === true);
+  check('review: effects default to full volume', r.defaults.effects === 1);
+  check('review: a partial buy button names the real count',
+    r.partialLabel === 'Buy 3 of 20' && /Buy 3 \w+ seeds for 6 gold/i.test(r.partialAria));
+  check('review: a normal buy button is unchanged', r.fullLabel === 'Buy');
+  check('review: HUD audio controls meet 44px', r.tooSmall.length === 0);
+  check('review: no console errors', errors.length === 0);
+  await browser.close();
+}
+
+// --- Automatic gear drops stay spoken (review: they are progression, not menu taps) ---
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    selectProfile('mage');
+    const spoken = [];
+    window.speechSynthesis.speak = u => spoken.push(u.text);
+    player.gear = { weapon: null, head: null, body: null, cape: null };
+    equipGear('crystal_blade');            // automatic drop path
+    const afterDrop = spoken.length;
+    // A manual Character-screen action stays silent.
+    const before = spoken.length;
+    unequipSlot('weapon');               // manual Character-screen action
+    return { afterDrop, manualSpeech: spoken.length - before };
+  });
+
+  check('review: an automatic gear drop is spoken', r.afterDrop >= 1);
+  check('review: a manual unequip stays text-only', r.manualSpeech === 0);
+  check('review: no console errors', errors.length === 0);
+  await browser.close();
+}
+
 console.log(fails.length ? `\n${fails.length} FAILED:\n  ` + fails.join('\n  ') : '\nAll audio/bulk-buy tests passed.');
 process.exit(fails.length ? 1 : 0);

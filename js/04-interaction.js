@@ -269,12 +269,18 @@ function updateSeedBuyUI() {
     if (!btn) continue;
     var info = CROPS[type];
     var can = affordableSeedCount(type, seedBuyQuantity);
-    // Show the real outcome up front rather than after the tap.
-    btn.textContent = seedBuyQuantity === 1 ? 'Buy' : ('Buy ' + seedBuyQuantity);
-    btn.setAttribute('aria-label', 'Buy ' + seedBuyQuantity + ' ' + info.name +
-      ' seed' + (seedBuyQuantity === 1 ? '' : 's') + ' for ' +
-      (seedBuyQuantity * info.cost) + ' gold');
-    btn.classList.toggle('btn-buy-partial', can > 0 && can < seedBuyQuantity);
+    var partial = can > 0 && can < seedBuyQuantity;
+    // Say what the tap will ACTUALLY do. "Buy 20" on a button that can only buy 3 is
+    // the same broken promise the honest-partial rule exists to prevent, so a partial
+    // button names the real count (review catch), and colour is never the only signal.
+    if (seedBuyQuantity === 1) btn.textContent = 'Buy';
+    else if (partial) btn.textContent = 'Buy ' + can + ' of ' + seedBuyQuantity;
+    else btn.textContent = 'Buy ' + seedBuyQuantity;
+    var willBuy = partial ? can : seedBuyQuantity;
+    btn.setAttribute('aria-label', 'Buy ' + willBuy + ' ' + info.name +
+      ' seed' + (willBuy === 1 ? '' : 's') + ' for ' + (willBuy * info.cost) + ' gold' +
+      (partial ? ', all your gold can buy of ' + seedBuyQuantity : ''));
+    btn.classList.toggle('btn-buy-partial', partial);
   }
 }
 

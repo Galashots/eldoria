@@ -183,19 +183,19 @@
     <div class="sound-row">
       <label class="sound-label" for="musicLevel">&#x1F3B5; Music</label>
       <input class="sound-slider" id="musicLevel" type="range" min="0" max="100" step="5"
-             oninput="onAudioSliderInput('music', this.value)" aria-label="Music volume">
+             oninput="onAudioSliderInput('music', this.value)" onchange="onAudioSliderCommit('music')" aria-label="Music volume">
       <span class="sound-value" id="musicLevelValue">35%</span>
     </div>
     <div class="sound-row">
       <label class="sound-label" for="speechLevel">&#x1F5E3; Reading voice</label>
       <input class="sound-slider" id="speechLevel" type="range" min="0" max="100" step="5"
-             oninput="onAudioSliderInput('speech', this.value)" aria-label="Reading voice volume">
+             oninput="onAudioSliderInput('speech', this.value)" onchange="onAudioSliderCommit('speech')" aria-label="Reading voice volume">
       <span class="sound-value" id="speechLevelValue">100%</span>
     </div>
     <div class="sound-row">
       <label class="sound-label" for="effectsLevel">&#x1F514; Sound effects</label>
       <input class="sound-slider" id="effectsLevel" type="range" min="0" max="100" step="5"
-             oninput="onAudioSliderInput('effects', this.value)" aria-label="Sound effects volume">
+             oninput="onAudioSliderInput('effects', this.value)" onchange="onAudioSliderCommit('effects')" aria-label="Sound effects volume">
       <span class="sound-value" id="effectsLevelValue">80%</span>
     </div>
     <p class="sound-note">Every instruction is always written on screen too. Tap &#x1F5E3; on the top bar to hear the last one again.

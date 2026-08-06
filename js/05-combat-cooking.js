@@ -44,13 +44,18 @@ function equipGear(itemId) {
   if (current && GEAR[current] && GEAR[current].damage >= item.damage) {
     // Not an upgrade — keep it in the bag to sell for gold.
     player.inventory.push(itemId);
-    announceRoutine('Found ' + item.name + ' — in your bag to sell (' + gearSellPrice(itemId) + 'g).');
+    // An automatic drop is a rare progression event, not a menu action: it is worth
+    // one spoken line, because a 1.2s toast is easy for an early reader to miss.
+    showToast('Found ' + item.name + ' — in your bag to sell (' + gearSellPrice(itemId) + 'g).');
+    speak('You found a ' + item.name + '. It is in your bag to sell.');
     return;
   }
   // It's an upgrade: the old item (if any) drops into the bag so it's not lost.
   if (current) player.inventory.push(current);
   player.gear[item.slot] = itemId;
-  announceRoutine('Equipped ' + item.name + '! +' + item.damage + ' damage');
+  // Same here: this equip is automatic on a drop, not a tap in the Character screen.
+  showToast('Equipped ' + item.name + '! +' + item.damage + ' damage');
+  speak('You found a ' + item.name + '! Plus ' + item.damage + ' damage!');
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
 }
 

@@ -602,7 +602,8 @@
   .hud-mute {
     background: #b0683a; color: #fff; border: 2px solid #ffd666;
     border-radius: 6px; padding: 2px 10px; font-size: 1.1rem; cursor: pointer;
-    min-width: 38px; min-height: 34px; line-height: 1;
+    /* 44px minimum: these are child-facing HUD controls on a tablet (review #5199507568). */
+    min-width: 44px; min-height: 44px; line-height: 1;
   }
   /* Mira's Guide surface (Step 7): compact, non-modal guidance opposite the
      kill-quest tracker. All controls keep a child-friendly 44px touch target. */

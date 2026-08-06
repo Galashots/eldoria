@@ -447,8 +447,8 @@ if (gameMuted) document.getElementById('muteBtn').innerHTML = '&#x1f507;';
 // Turning speech off is therefore a deliberate, separate act: set the reading-voice
 // level to 0. Do not "fix" mute to cover speech without asking Leo first.
 var AUDIO_CHANNELS = ['music', 'speech', 'effects'];
-var AUDIO_LEVEL_DEFAULTS = { music: 0.35, speech: 1, effects: 0.8 };
-var audioLevels = { music: 0.35, speech: 1, effects: 0.8 };
+var AUDIO_LEVEL_DEFAULTS = { music: 0.35, speech: 1, effects: 1 };
+var audioLevels = { music: 0.35, speech: 1, effects: 1 };
 
 function audioLevelsKey(profile) {
   return 'eldoria_audio_' + (profile || 'default');

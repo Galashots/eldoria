@@ -106,6 +106,14 @@ function triggerShake() { shakeUntil = Date.now() + SHAKE_DURATION; }
 // again (ELD-PT-011). Routine chatter never lands here — only things worth repeating.
 var lastSpokenInstruction = '';
 
+// Say Again must never replay one child's instruction to the other. The buffer is
+// cleared whenever the active profile changes (review catch: it leaked across a
+// profile switch, so a sibling could tap the button and hear the other's prompt).
+function clearLastInstruction() {
+  lastSpokenInstruction = '';
+  updateSayAgainButton();
+}
+
 function rememberInstruction(text) {
   if (!text) return;
   lastSpokenInstruction = text;
@@ -188,13 +196,19 @@ function syncSoundSettingsUI() {
   }
 }
 
+// Dragging fires input continuously. Apply the level live, but never preview here:
+// a slow drag across the bar would fire dozens of coin sounds and speech attempts.
 function onAudioSliderInput(channel, value) {
   setAudioLevel(channel, Number(value) / 100);
   var label = document.getElementById(channel + 'LevelValue');
   if (label) label.textContent = Math.round(audioLevels[channel] * 100) + '%';
-  // Preview the channel you just moved, so the level means something to a child who
-  // cannot yet read the percentage.
-  if (channel === 'effects') soundCoin();
+}
+
+// Preview ONCE, when the child lets go (change fires at the end of a drag). This is
+// the affordance that makes a level mean something to someone who cannot yet read
+// the percentage.
+function onAudioSliderCommit(channel) {
+  if (channel === 'effects' && audioLevels.effects > 0) soundCoin();
   if (channel === 'speech' && audioLevels.speech > 0) speakAloud('Like this.', true);
 }
 

@@ -570,6 +570,7 @@ function selectProfile(id) {
   }
   currentProfile = id;
   loadAudioLevels(id);            // each child keeps their own sound levels
+  if (typeof clearLastInstruction === 'function') clearLastInstruction();
   if (typeof syncSoundSettingsUI === 'function') syncSoundSettingsUI();
   applyState(loaded || defaultState());
   document.getElementById('profileName').textContent = profileDisplayName(id);
@@ -588,6 +589,7 @@ function switchProfile() {
   closeAllModals();
   gameActive = false;
   currentProfile = null;
+  if (typeof clearLastInstruction === 'function') clearLastInstruction();
   var heroBtn = document.getElementById('heroBtn');
   if (heroBtn) heroBtn.disabled = true;
   updateOnboardingChip();   // no active profile → the guide chip leaves the screen
