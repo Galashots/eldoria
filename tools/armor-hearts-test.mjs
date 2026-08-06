@@ -176,5 +176,41 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T4: no console errors', errors.length === 0);
 }
 
+// ---- Task 5: comparisons & display strings ----
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    var out = {};
+    selectProfile('adventurer');
+    player.level = 1; player.hpUpgrades = 0;
+    player.gear = { weapon: 'wooden_sword', head: null, body: 'iron_armor', cape: null };
+    player.inventory = ['guardian_armor', 'crystal_blade'];
+    player.maxHp = computeMaxHp(); player.hp = player.maxHp;
+    openCharacter();
+    var bag = document.getElementById('bagList').innerHTML;
+    var equipped = document.getElementById('equippedSlots').innerHTML;
+    out.noUndefined = bag.indexOf('undefined') === -1 && equipped.indexOf('undefined') === -1;
+    // Armour bag row talks in hearts/HP, weapon bag row talks in Attack.
+    out.armourReadsHearts = /heart|HP/i.test(bag);
+    out.weaponReadsAttack = /Attack/.test(bag);
+    // Equipped armour line shows hearts, not "dmg".
+    out.equippedArmourHearts = /Iron Armor[\s\S]*heart/i.test(equipped) || /Iron Armor[\s\S]*HP/i.test(equipped);
+    closeCharacter();
+    // Shop sell list row for armour must not say "undefined dmg".
+    player.inventory = ['guardian_armor'];
+    renderGearSell();
+    var sell = document.getElementById('gearSellList').innerHTML;
+    out.sellNoUndefined = sell.indexOf('undefined') === -1;
+    return out;
+  });
+  await browser.close();
+  check('T5: no "undefined" in equipped/bag strings', r.noUndefined);
+  check('T5: armour bag row reads in hearts/HP', r.armourReadsHearts);
+  check('T5: weapon bag row reads in Attack', r.weaponReadsAttack);
+  check('T5: equipped armour line shows hearts', r.equippedArmourHearts);
+  check('T5: shop sell row has no "undefined"', r.sellNoUndefined);
+  check('T5: no console errors', errors.length === 0);
+}
+
 if (fails.length) { console.log('\n' + fails.length + ' FAILED'); process.exit(1); }
 console.log('\nAll armor-hearts tests passed.');

@@ -159,7 +159,7 @@ function renderGearSell() {
     if (!g) continue;
     var price = gearSellPrice(id);
     html += '<div class="shop-row">' +
-      '<div class="shop-info"><b>' + g.name + '</b><small>+' + g.damage + ' dmg · sells ' + price + 'g</small></div>' +
+      '<div class="shop-info"><b>' + g.name + '</b><small>' + gearStatText(id) + ' · sells ' + price + 'g</small></div>' +
       '<button class="btn-sell" onclick="sellGear(' + i + ')" aria-label="Sell ' + g.name + ' for ' + price + ' gold">Sell ' + price + 'g</button>' +
       '</div>';
   }
