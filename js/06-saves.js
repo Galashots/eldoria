@@ -230,9 +230,6 @@ function migrateSaveToV4(s) {
   if (p.gold != null) op.gold = p.gold;
   op.questsDone = (p.questsDone != null) ? p.questsDone : 0;
   op.level = (p.level != null) ? p.level : 1;
-  op.maxHp = (p.maxHp != null) ? p.maxHp : 20;
-  op.hp = (p.hp != null) ? p.hp : op.maxHp;
-  if (op.hp > op.maxHp) op.hp = op.maxHp;
   op.xp = (p.xp != null) ? p.xp : 0;
   op.hpUpgrades = (p.hpUpgrades != null) ? p.hpUpgrades : 0;
   op.atkUpgrades = (p.atkUpgrades != null) ? p.atkUpgrades : 0;
@@ -247,6 +244,15 @@ function migrateSaveToV4(s) {
   if (Array.isArray(p.inventory))
     for (var iv = 0; iv < p.inventory.length; iv++)
       if (GEAR[p.inventory[iv]]) op.inventory.push(p.inventory[iv]);
+
+  // Derived-wins max-HP custody (combat-armor spec §4): max HP is DERIVED from level,
+  // Heart Crystals, and equipped armour — the stored maxHp is never trusted. This needs
+  // op.gear resolved first (above). No save-version bump: for every well-formed post-
+  // change save the derivation reproduces the stored value exactly. Current hp clamps
+  // DOWN only; a defeated hero (hp <= 0) is never resurrected by recomputation.
+  op.maxHp = maxHpFor(op.level, op.hpUpgrades, op.gear);
+  var storedHp = (p.hp != null) ? p.hp : op.maxHp;
+  op.hp = Math.min(storedHp, op.maxHp);
 
   for (var fi = 0; fi < FOOD_TYPES.length; fi++)
     op.food[FOOD_TYPES[fi]] = (p.food && isFiniteNumber(p.food[FOOD_TYPES[fi]]))

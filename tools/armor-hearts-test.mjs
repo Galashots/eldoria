@@ -75,5 +75,46 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T2: no console errors', errors.length === 0);
 }
 
+// ---- Task 3: derived-wins ingest custody ----
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    var out = {};
+    // (a) Derived wins over a disagreeing stored maxHp: level 7 + wyrm_scale, stored maxHp lies (20).
+    var s = { version: 4, area: 'wilds',
+      player: { level: 7, hpUpgrades: 0, maxHp: 20, hp: 20,
+                gear: { weapon: null, head: null, body: 'wyrm_scale', cape: null } } };
+    var res = ingestSaveObject(s);
+    // derived = 20 + 6*5 + 20 (wyrm_scale, OWNER 14) = 70; hp clamps DOWN to min(20, 70) = 20 (not resurrected up).
+    out.derivedWins = res.ok && res.state.player.maxHp === 70 && res.state.player.hp === 20;
+    // (b) No resurrection: stored hp 0 stays 0 even though maxHp derives higher.
+    var dead = { version: 4, player: { level: 3, hpUpgrades: 0, maxHp: 30, hp: 0,
+                 gear: { weapon: null, head: null, body: 'iron_armor', cape: null } } };
+    var dres = ingestSaveObject(dead);
+    out.noResurrect = dres.ok && dres.state.player.maxHp === (20 + 2*5 + 5) && dres.state.player.hp === 0;
+    // (c) Clamp DOWN when stored hp exceeds derived max (e.g. armour removed off-line).
+    var over = { version: 4, player: { level: 1, hpUpgrades: 0, maxHp: 999, hp: 999,
+                 gear: { weapon: null, head: null, body: null, cape: null } } };
+    var ores = ingestSaveObject(over);
+    out.clampDown = ores.ok && ores.state.player.maxHp === 20 && ores.state.player.hp === 20;
+    // (d) Idempotent round-trip: ingesting canonicalText reproduces identical state.
+    var re = ingestSaveText(res.canonicalText);
+    out.idempotent = re.ok && JSON.stringify(re.state) === JSON.stringify(res.state);
+    // (e) Well-formed no-armour save: derived equals what the stored value already was.
+    var plain = { version: 4, player: { level: 5, hpUpgrades: 2, maxHp: 20 + 4*5 + 2*5, hp: 30,
+                  gear: { weapon: 'steel_sword', head: null, body: null, cape: null } } };
+    var pres = ingestSaveObject(plain);
+    out.reproduces = pres.ok && pres.state.player.maxHp === (20 + 4*5 + 2*5) && pres.state.player.hp === 30;
+    return out;
+  });
+  await browser.close();
+  check('T3: derived maxHp wins over disagreeing stored value', r.derivedWins);
+  check('T3: hp<=0 is never resurrected by recomputation', r.noResurrect);
+  check('T3: current hp clamps DOWN to derived max', r.clampDown);
+  check('T3: canonical round-trip is idempotent', r.idempotent);
+  check('T3: derivation reproduces a well-formed stored maxHp', r.reproduces);
+  check('T3: no console errors', errors.length === 0);
+}
+
 if (fails.length) { console.log('\n' + fails.length + ' FAILED'); process.exit(1); }
 console.log('\nAll armor-hearts tests passed.');
