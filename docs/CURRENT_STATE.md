@@ -195,10 +195,12 @@ Out of scope unless Leo explicitly expands it:
   because it removes the fallback renderer before iso combat is proven;
 - unapproved visual identities or silent North Star replacement;
 - **PixelLab generation — in scope for this exercise**, but still gated: the research
-  phase is documentation only, the vertical slice at sub-project 4 must be inspected on
-  the iPad first, and **every batch after it needs Leo's explicit per-batch
-  authorization**. The generation pause from the Momo probe overrun is lifted only by
-  that per-batch approval, never by a plan document; and
+  phase is documentation only, and **every generation batch — including the
+  composability-slice batch itself — requires Leo's explicit approval before
+  generation**. The slice's iPad inspection gates *acceptance* of its output and the
+  bulk spend that follows; inspection never grants spend authorization. The generation
+  pause from the Momo probe overrun is lifted only by that per-batch approval, never by
+  a plan document; and
 - framework, bundler, TypeScript, or real-time 3D migration.
 
 If required art cannot clear visual review, keep the validated placeholder for

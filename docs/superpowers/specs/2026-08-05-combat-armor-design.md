@@ -89,7 +89,8 @@ Constraints on the deletion PR:
 
 - **Pure deletion, no other changes.** It must be cleanly `git revert`-able, because it removes
   the fallback renderer before iso combat is proven. That revert is the mitigation.
-- Any save storing a cardinal facing migrates to the eight-way set.
+- The no-facing-saved assertion above is the save contract; the deletion adds no save field
+  and migrates nothing.
 
 ## 4. Armor as effective HP
 
@@ -189,8 +190,12 @@ Leo's preference is to try the **web Creator UI** after research. This is preced
 walk strips came from his manual web-Creator regeneration. Generation of any kind remains gated on
 explicit owner authorization per `docs/CURRENT_STATE.md`; this spec does not self-authorize spend.
 
-The custody standard from PR #48 applies to everything committed: crop/translate-only, no
-resampling, recolouring, or pixel alteration, enforced by `tools/npc-static-contract-test.py`.
+**Custody, scoped by asset kind.** Approved source images are normalized only through
+deterministic crop/translate operations where that operation applies — the PR #48 principle
+(no unreviewed pixel alteration) stands, and `tools/npc-static-contract-test.py` continues to
+enforce it for the static NPC frames it was built for. Generated equipment, masks, extracted
+layers, composites, and animation strips follow the **dedicated gear custody contract and
+validator defined by sub-project A** (above), not the static-NPC test.
 
 ## 7. Decomposition and sequencing
 
@@ -209,8 +214,10 @@ Each row is its own implementation plan and its own PR.
 PRs 1, 2, and A **may proceed in parallel under explicit file ownership and merge order** — they
 are not conflict-free by nature: deletion and armour both touch data/state, Character-screen
 assumptions, HUD, tests, and guidance docs. Their implementation plans declare file ownership
-before work starts. **The slice at step 4 gates the bulk spend** (OWNER decision 11): no batch is
-generated until the composability loadout has been proven end-to-end and inspected on the iPad.
+before work starts. **The slice at step 4 gates the bulk spend** (OWNER decision 11): the bulk
+batch is not generated until the composability loadout has been proven end-to-end and inspected
+on the iPad. The slice's own generation batch is spend too — **it, like every batch, needs Leo's
+explicit approval before generation**; inspection gates acceptance, not spend.
 
 **Before any batch:** build an item × hero × facing × state coverage matrix and put the real
 number in front of Leo — `16 × 2 × 8 = 256` counts *static overlays only* and excludes walk,
