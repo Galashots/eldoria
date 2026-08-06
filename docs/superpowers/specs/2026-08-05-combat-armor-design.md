@@ -181,6 +181,25 @@ single static NPC frame; it is **not** sufficient for generated equipment. The r
 includes a dedicated deterministic **gear custody contract and validator** — alpha, alignment,
 allowed masks, layer order, state coverage, and unchanged hero-identity pixels.
 
+**A method-elimination probe may precede the composability slice.** Before the full two-hero
+slice batch, sub-project A may propose a bounded probe — one hero, one body armour, one weapon,
+static only, smallest useful facing subset — comparing direct overlay generation against
+equipped-state generation plus deterministic difference extraction. This spends less before
+learning and keeps the slice from becoming an expensive method-discovery batch. It changes no
+gate: the probe is a generation batch like any other and **requires Leo's separate explicit
+approval**, and the full composability slice still gates bulk spend (OWNER decision 11).
+
+**Batch authorization contract.** Sub-project A defines the owner-facing request format every
+generation batch must use — purpose/hypothesis, tool and live-schema verification date,
+approved references, coverage, call count and quoted cost, a maximum authorized spend,
+raw-output location, acceptance criteria, and immediate stop conditions. Unexpected extra
+jobs, billing beyond the cap, schema mismatch, or off-mask identity changes **stop the batch**
+rather than trigger retries — this repo has already paid for both failure modes (the
+template-walk cost overrun and the Momo probe overrun). The supplemental research protocol on
+PR #53 (probe design, controlled variables, per-slot evidence record, deferred animation and
+prompt-enhancement experiments) is carried into sub-project A's implementation plan; claimed
+PixelLab capabilities in that research are hypotheses until verified against the live API.
+
 **Fallback if neither route is clean:** armour sets baked per tier rather than per item. This
 is recorded so the research has a defined exit rather than an open loop — but it reduces OWNER
 decision 4, so **it cannot self-authorize**: if research fails, return the measured evidence to
