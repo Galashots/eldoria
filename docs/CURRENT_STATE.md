@@ -154,13 +154,18 @@ and are not to be reopened by any agent.
 Its sub-projects, in order (each takes its own implementation plan and its own PR):
 
 1. **Retire top-down rendering** — pure deletion, cleanly revertable; Wilds/Deep Woods/
-   Mine default to iso; facing-save migration through `ingestSaveText`.
-2. **Armor as effective HP + hearts** — a `GEAR.hp` term in `computeMaxHp()`, discrete
-   hearts at 5 HP each, unequip clamp. No save-schema change. Parallel with 1.
-3. **World combat staging** — the same turn loop, played on the map with the questions
-   overlaid as HUD. Depends on 1.
-4. **Gear-art vertical slice** — one item end to end, iPad-inspected. Gates the bulk spend.
-5. **Bulk gear art + combat animations.** Depends on 4.
+   Mine default to iso; asserts no facing is saved (none is); the four cardinal equipment
+   overlays survive, scoped to the Character paper doll, until per-item art exists.
+2. **Armor hearts-only** — armor/head/cape items trade `damage` for `hp` (weapons keep
+   damage); `computeMaxHp()` derivation introduced (derived value wins over stored on
+   ingest, no version bump); equip grants the new HP immediately; discrete hearts (player
+   display only, floored half-hearts); compensating balance pass with pinned `sellValue`.
+   Parallel with 1.
+3. **World combat staging** — the same turn loop behind a controller/presentation seam,
+   played on the map with the questions overlaid as HUD. Depends on 1.
+4. **Gear-art composability slice** — a four-slot loadout plus one swap, both heroes,
+   combat-facing subset, iPad-inspected. Gates the bulk spend.
+5. **Bulk gear art + combat animations.** Depends on 4 and the coverage-matrix ceiling.
 
 Running alongside from day one, no code: **PixelLab research** (sub-project A) — durable
 documentation plus the overlay-vs-baked render-model verdict.
@@ -181,8 +186,10 @@ Out of scope unless Leo explicitly expands it:
 - map, collision, economy, or curriculum changes;
 - **combat changes — now authorized** for the combat/armor spec only, and only within
   it. Locked decision 2 holds the turn loop and the per-question damage budgets
-  unchanged, so the existing combat tests must pass untouched; any need to edit them is
-  a signal that the authorization has been exceeded;
+  unchanged, so the **mechanics assertions** (budgets, answer-to-slash loop,
+  duplicate-input, boss floor) must pass untouched; needing to edit *those* means the
+  authorization is exceeded. Modal-shell/DOM presentation tests are exempt — the modal
+  retires by design, and they are replaced by equivalent world-HUD coverage, not dropped;
 - **retirement of top-down rendering — now authorized** as sub-project 1, on the
   spec's terms: a pure-deletion PR that lands first and stays cleanly `git revert`-able,
   because it removes the fallback renderer before iso combat is proven;

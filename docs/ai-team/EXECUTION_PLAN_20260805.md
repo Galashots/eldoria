@@ -23,6 +23,12 @@ Every factual claim below was verified against the working tree on 2026-08-05 (f
 
 ## Lane A — gameplay (sequenced; one Codex slot at a time)
 
+> **SUPERSEDED (2026-08-06, sub-project 0 of the combat/armor plan).** This queue is
+> historical: A1 landed as PR #51 and A2 as PR #52. The active queue is
+> [`docs/superpowers/specs/2026-08-05-combat-armor-design.md`](../superpowers/specs/2026-08-05-combat-armor-design.md) §7,
+> as recorded in `docs/CURRENT_STATE.md`. **The standing rules above (1–6) remain in
+> force** — only this queue is superseded.
+
 ### A1. ELD-PT-011 + 011a — audio channels, say-it-again, TTS allow-list, bulk buy (candidate pending Leo's decision; owner-scoped 2026-07-29)
 Verified current state: no volume controls exist anywhere — one global mute (`eldoria_muted`, `js/02-data-state.js:430`), music hard-coded at 0.35 (`js/02:427`), procedural SFX with fixed gains (`js/07-hud-movement.js:60-90`), speech with no volume set (`js/07:110-133`). Shop buys exactly one seed per tap (`js/04-interaction.js:255-265`).
 Build to Leo's recorded scope: per-profile music/speech/effects levels; every spoken instruction also visible; "say it again" speaker button on the current instruction; **routine actions never spoken** (acceptance: zero speech from purchases/pickups at any tap rate, tested by mashing); bulk buy 1/5/10/15/20 where buying more than affordable buys what gold covers **and says so honestly** (shown count = bought count).
