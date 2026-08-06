@@ -38,25 +38,26 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- Iso-only speed: preserve top-down while making projected movement tunable ---
+// --- Iso speed: projected movement is tunable via the iso-only multiplier ---
+// (Top-down was retired in combat/armor spec sub-project 1; the movement path is iso-only,
+// so this measures the one remaining renderer against its ISO_SPEED_MULT knob.)
 {
   const { browser, page, errors } = await launch('?iso=1', { tolerateNavigationTimeout: true, navigationTimeout: 2000 });
   const r = await page.evaluate(() => {
     selectProfile('adventurer');
     function resetAt(x, y) { player.x = x; player.y = y; held.left = held.right = held.up = held.down = false; player.walking = false; }
-    function singleRightStep(iso) {
-      localStorage.setItem('eldoria_iso', iso ? '1' : '0'); activateArea('farm'); resetAt(10 * TILE, 10 * TILE);
+    function singleRightStep() {
+      activateArea('farm'); resetAt(10 * TILE, 10 * TILE);
       var before = { x: player.x, y: player.y }; held.right = true; update(); held.right = false;
       return Math.hypot(player.x - before.x, player.y - before.y);
     }
-    var topDown = singleRightStep(false), iso = singleRightStep(true);
-    activateArea('farm'); localStorage.setItem('eldoria_iso', '1'); resetAt(0, 10 * TILE); held.left = true;
+    var iso = singleRightStep();
+    activateArea('farm'); resetAt(0, 10 * TILE); held.left = true;
     for (var i = 0; i < 20; i++) update();
     held.left = false;
-    return { topDown, iso, multiplier: ISO_SPEED_MULT, playerSpeed: player.speed, boundaryX: player.x };
+    return { iso, multiplier: ISO_SPEED_MULT, playerSpeed: player.speed, boundaryX: player.x };
   });
-  check('movement: top-down step remains the base player speed', Math.abs(r.topDown - r.playerSpeed) < 1e-9);
-  check('movement: iso step is base speed times the iso-only multiplier', Math.abs(r.iso - r.topDown * r.multiplier) < 1e-9);
+  check('movement: iso step is base player speed times the iso multiplier', Math.abs(r.iso - r.playerSpeed * r.multiplier) < 1e-9);
   check('movement: iso speed knob starts at the approved 1.5x', r.multiplier === 1.5);
   check('movement: faster iso step cannot tunnel through a blocked map edge', r.boundaryX === 0);
   check('movement: no console errors', errors.length === 0);

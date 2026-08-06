@@ -31,36 +31,35 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- Suite 2: flag plumbing (Phase 1 farm + Phase 2 town ON, later areas still top-down) ---
+// --- Suite 2: iso is the only renderer (top-down retired, combat/armor spec sub-project 1) ---
+// The per-area ISO_AREAS table, the isoActive() flag, and the ?iso override are gone; every
+// area now renders through drawIsoWorld(). This proves both the removal and that all five
+// areas — including the once-top-down Wilds/Deep Woods/Mine — run the iso object pass.
 {
-  const { browser, page } = await launch('?iso=1');
+  const { browser, page } = await launch();
   const r = await page.evaluate(() => {
-    var on = isoActive();
-    localStorage.removeItem('eldoria_iso');
-    var farmDefault = isoActive();           // currentArea is 'farm' at boot
-    currentArea = 'town';
-    var townDefault = isoActive();           // ported by the Phase 2 first slice
-    currentArea = 'wilds';
-    var wildsDefault = isoActive();          // not ported yet
-    currentArea = 'farm';
-    return { on: on, farmDefault: farmDefault, townDefault: townDefault,
-             wildsDefault: wildsDefault };
+    selectProfile('adventurer');
+    var areasList = ['farm', 'town', 'wilds', 'deepwoods', 'mine'];
+    var drewObjects = {};
+    areasList.forEach(function (a) {
+      activateArea(a);
+      applyCanvasMode();
+      window.__isoDebug = true;
+      window.__isoDrawOrder = null;
+      drawIsoWorld();                          // throws if any area still expected top-down
+      drewObjects[a] = Array.isArray(window.__isoDrawOrder) && window.__isoDrawOrder.length > 0;
+    });
+    return {
+      noIsoActive: typeof isoActive === 'undefined',
+      noIsoAreas: typeof ISO_AREAS === 'undefined',
+      drewObjects: drewObjects
+    };
   });
-  check('flag: ?iso=1 turns iso on', r.on === true);
-  check('flag: farm defaults to iso (Phase 1)', r.farmDefault === true);
-  check('flag: town defaults to iso (Phase 2 slice)', r.townDefault === true);
-  check('flag: unported areas default to top-down', r.wildsDefault === false);
-  await browser.close();
-}
-
-// --- Suite 2b: escape hatch — ?iso=0 must force top-down even where iso is the default ---
-{
-  const { browser, page } = await launch('?iso=0');
-  const r = await page.evaluate(() => {
-    return { off: isoActive(), stored: localStorage.getItem('eldoria_iso') };
-  });
-  check('flag: ?iso=0 forces top-down on farm', r.off === false);
-  check('flag: ?iso=0 persists the opt-out', r.stored === '0');
+  check('renderer: the isoActive() flag is gone', r.noIsoActive === true);
+  check('renderer: the ISO_AREAS per-area table is gone', r.noIsoAreas === true);
+  check('renderer: every area runs the iso object pass (incl. Wilds/Deep Woods/Mine)',
+    r.drewObjects.farm && r.drewObjects.town && r.drewObjects.wilds &&
+    r.drewObjects.deepwoods && r.drewObjects.mine);
   await browser.close();
 }
 
@@ -148,7 +147,6 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     plantSeed(key, cropData[key], 'turnip');
     var planted = cropData[key].status === 'growing';
     saveGame();
-    localStorage.setItem('eldoria_iso', '0');          // flip to top-down
     var saved = JSON.parse(localStorage.getItem('eldoria_save_adventurer'));
     var savedTile = saved.areas.farm.tiles[key];
     return { planted: planted, savedGrowing: savedTile && savedTile.status === 'growing',
@@ -180,8 +178,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     var farHandled = interactAtTile(3, 18);
     var farStayedEmpty = cropData[farKey].status === 'empty';
 
-    // Top-down NPC: tapping Bram while adjacent opens the same shop path as Action.
-    localStorage.setItem('eldoria_iso', '0');
+    // NPC: tapping Bram while adjacent opens the same shop path as Action.
     activateArea('town');
     var bram = NPCS.filter(n => n.id === 'bram')[0];
     player.x = (bram.col - 1) * TILE; player.y = bram.row * TILE;
@@ -189,7 +186,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     var npcOpenedShop = shopOpen;
     closeShop();
 
-    // Top-down enemy: tapping an adjacent live enemy starts normal combat.
+    // Enemy: tapping an adjacent live enemy starts normal combat.
     activateArea('wilds');
     var enemy = currentEnemies[0];
     enemy.alive = true;
@@ -207,7 +204,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- Suite 9: direct-tap coordinate conversion in both render modes ---
+// --- Suite 9: direct-tap coordinate conversion (iso) ---
 {
   const { browser, page } = await launch('?iso=1');
   const r = await page.evaluate(() => {
@@ -234,24 +231,17 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     }));
     var pointerPlanted = cropData[tapKey].status === 'growing';
 
-    localStorage.setItem('eldoria_iso', '0');
-    activateArea('town');
-    player.x = 7 * TILE; player.y = 7 * TILE;
-    var cam = topDownCamera();
-    var topTile = canvasBackingPointToTile(7.5 * TILE - cam.x, 7.5 * TILE - cam.y);
-    return { isoTile, pointerPlanted, topTile };
+    return { isoTile, pointerPlanted };
   });
   check('tap math: iso screen point resolves exact world tile',
     r.isoTile.row === 4 && r.isoTile.col === 14);
   check('tap event: canvas pointer plants the exact adjacent crop', r.pointerPlanted);
-  check('tap math: top-down screen point resolves exact world tile',
-    r.topTile.row === 7 && r.topTile.col === 7);
   await browser.close();
 }
 
 // --- Suite 10: travel honors enemy respawn timers (dumpling-economy pre-req) ---
 {
-  const { browser, page } = await launch('?iso=0');
+  const { browser, page } = await launch();
   const r = await page.evaluate(() => {
     selectProfile('adventurer');
     activateArea('wilds');
@@ -383,7 +373,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
 
 // --- Suite 13: Squishy Dumpling pull-loop MVP ---
 {
-  const { browser, page } = await launch('?iso=0');
+  const { browser, page } = await launch();
   const r = await page.evaluate(() => {
     selectProfile('adventurer');
     activateArea('town');
@@ -529,7 +519,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   ];
   let layoutOk = true;
   for (const viewport of viewports) {
-    const { browser, page } = await launch('?iso=0');
+    const { browser, page } = await launch();
     await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 2 });
     await page.evaluate(() => {
       selectProfile('adventurer');
@@ -587,7 +577,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     applyCanvasMode();
     window.__isoDebug = true;
 
-    var iso = isoActive();
+    var iso = true;   // rendering is iso-only since top-down was retired (sub-project 1)
     // Town renders through the iso path with the store standing on placeholder geometry.
     player.x = 7 * TILE; player.y = 7 * TILE;
     drawIsoWorld();
@@ -689,7 +679,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     var townPos = { x: player.x, y: player.y };
     var townInside = player.x > 0 && player.x < MAP_W * TILE &&
                      player.y > 0 && player.y < MAP_H * TILE;
-    var townIso = isoActive();
+    var townIso = true;   // iso-only renderer
 
     // Town -> Farm across the town's left-edge EXIT.
     player.x = 0; player.y = 10 * TILE;
@@ -698,25 +688,19 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     var farmInside = player.x > 0 && player.x < MAP_W * TILE &&
                      player.y > 0 && player.y < MAP_H * TILE;
 
-    // World space is untouched by the render mode: the same Town position saves and
-    // reloads identically with iso on and with iso forced off. No migration, no new fields.
+    // World space is untouched by the (now single, iso) renderer: a Town position saves and
+    // reloads on the canonical v4 schema — no migration, no new fields.
     activateArea('town');
     player.x = 14 * TILE + 7; player.y = 11 * TILE + 3;
     saveGame();
     var isoSave = JSON.parse(localStorage.getItem('eldoria_save_adventurer'));
-    localStorage.setItem('eldoria_iso', '0');
-    activateArea('town');
-    saveGame();
-    var topSave = JSON.parse(localStorage.getItem('eldoria_save_adventurer'));
-    localStorage.removeItem('eldoria_iso');
 
     player.x = 0; player.y = 0;
     applyState(isoSave);
     var restored = { x: player.x, y: player.y, area: isoSave.area };
 
     return { toTown, townPos, townInside, townIso, toFarm, farmInside,
-             sameSchema: JSON.stringify(Object.keys(isoSave)) === JSON.stringify(Object.keys(topSave)),
-             samePosition: isoSave.x === topSave.x && isoSave.y === topSave.y,
+             schemaKeys: Object.keys(isoSave),
              version: isoSave.version, saveVersion: SAVE_VERSION, restored };
   });
   check('travel: the farm exit still lands the hero in Town', r.toTown === 'town');
@@ -724,8 +708,8 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('travel: arriving in Town switches to the iso renderer', r.townIso === true);
   check('travel: the town exit still lands the hero back on the Farm', r.toFarm === 'farm');
   check('travel: Farm arrival is inside the map bounds', r.farmInside === true);
-  check('save: iso and top-down Town saves share one schema', r.sameSchema === true);
-  check('save: world-space position is render-mode independent', r.samePosition === true);
+  check('save: the Town save is the canonical v4 schema shape',
+    JSON.stringify(r.schemaKeys) === JSON.stringify(['version', 'area', 'x', 'y', 'player', 'areas']));
   // The iso Town port itself must not migrate saves. The schema later moved to v3
   // (2026-07-30) and to v4 under the owner-authorized Step 7 onboarding migration
   // (2026-08-04) — this pin now guards that ISO work rides the current schema
@@ -843,50 +827,10 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- Suite 17: top-down escape hatch keeps cardinal facings + full visuals ---
-// Attack strips and equipment overlays exist only for the original four facings,
-// so under ?iso=0 a diagonal facing would silently drop them. Regression cover
-// for: diagonal movement stays cardinal, attack art resolves, equipped gear
-// resolves, and a stale diagonal facing (e.g. from an iso save) snaps back.
-{
-  const { browser, page } = await launch('?iso=0');
-  const r = await page.evaluate(async () => {
-    selectProfile('adventurer');
-    activateArea('farm');
-    applyCanvasMode();
-    // Diagonal input in top-down: facing must stay one of the original four
-    // (horizontal wins a tie, the pre-8-direction rule).
-    held.right = true; held.down = true;
-    update();
-    held.right = false; held.down = false;
-    var diagFacing = player.facing;
-    // Attack art must resolve at that facing.
-    player.attacking = true;
-    var attackImg = playerAttackSprite();
-    player.attacking = false;
-    // Equipped gear must resolve at that facing.
-    player.gear = player.gear || {};
-    player.gear.body = 'leather';
-    var gearImg = equipmentSprite('body');
-    player.gear.body = null;
-    // A diagonal facing carried into top-down (iso save / mode toggle) must
-    // snap back to a supported cardinal on the next update.
-    player.facing = 'down-right';
-    update();
-    var snapped = player.facing;
-    return { diagFacing: diagFacing, attackOk: !!attackImg, gearOk: !!gearImg,
-             snapped: snapped };
-  });
-  check('escape hatch: diagonal input keeps a cardinal facing (' + r.diagFacing + ')',
-        ['down', 'up', 'left', 'right'].indexOf(r.diagFacing) !== -1);
-  check('escape hatch: attack sprite resolves while facing after diagonal input',
-        r.attackOk === true);
-  check('escape hatch: equipped body overlay resolves after diagonal input',
-        r.gearOk === true);
-  check('escape hatch: stale diagonal facing snaps back to cardinal (' + r.snapped + ')',
-        ['down', 'up', 'left', 'right'].indexOf(r.snapped) !== -1);
-  await browser.close();
-}
+// (Suite 17 — the top-down escape hatch's cardinal-facing/attack-strip/overlay regression —
+// was removed with the top-down renderer in sub-project 1. Eight-way iso facing is covered by
+// Suite 16; the cardinal attack strips + equipment overlays retire in PR 1b. The paper-doll
+// gear overlays are unaffected and stay covered by tools/asset-manifest-test.mjs checks 33/34.)
 
 if (fails.length) { console.error('ISO TEST FAILED: ' + fails.join(', ')); process.exit(1); }
 console.log('Iso tests passed.');
