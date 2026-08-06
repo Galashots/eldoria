@@ -243,6 +243,58 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
     gap: 7px;
+    /* The 18-card shelf is the long part of this panel. Letting the GRID scroll
+       keeps the pull buttons and Leave reachable without scrolling past them on a
+       phone. The modal itself still bounds and scrolls as a fallback.
+       flex-shrink:0 is load-bearing: the modal is a flex column, and without it the
+       grid gets squeezed to ZERO height on a phone — the shelf silently disappears
+       and "tap the dumpling you want" becomes impossible to obey. */
+    flex: 0 0 auto;
+    min-height: 120px;
+    max-height: 42vh;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  /* Odds are stated plainly and permanently, not hidden behind an info tap. */
+  .dumpling-odds {
+    font-size: 0.86rem;
+    color: #ffe0a0;
+    margin: 0 0 2px;
+  }
+  /* Odds text and its read-aloud button share a row; the button wraps below on a
+     narrow phone rather than squeezing the odds into an unreadable column. */
+  .dumpling-odds-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .dumpling-read-odds {
+    /* 44px minimum so small fingers hit it on a tablet, matching the buy chips. */
+    min-height: 44px;
+    min-width: 44px;
+    padding: 4px 12px;
+    font-size: 0.86rem;
+    color: #ffe0a0;
+    background: #4a3a24;
+    border: 2px solid #8b755c;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .dumpling-dough-panel {
+    border-top: 1px solid rgba(255,214,102,0.18);
+    padding-top: 10px;
+    margin-top: 2px;
+  }
+  .dumpling-dough-panel .btn-buy {
+    width: 100%;
+    min-height: 44px;
+  }
+  .dumpling-dough-hint {
+    font-size: 0.85rem;
+    color: #c8b080;
+    margin: 6px 0 0;
   }
   .modal .dumpling-card {
     min-height: 76px;
@@ -253,6 +305,15 @@
     font-size: 0.72rem;
   }
   .modal .dumpling-card.locked { opacity: 0.48; filter: grayscale(1); }
+  /* Must come AFTER .locked: a card the child can claim with dough is locked but
+     live, and it has to look claimable rather than greyed out. */
+  .modal .dumpling-card.locked.pickable {
+    opacity: 1;
+    filter: none;
+    background: rgba(255,217,119,0.18);
+    border-color: #ffd977;
+    cursor: pointer;
+  }
   .modal .dumpling-card.selected { outline: 3px solid #ffd666; }
 
   /* ---- Shop crop rows (slice 10a) ---- */

@@ -1,7 +1,7 @@
 # Current Project State
 
 **Updated:** 2026-08-05  
-**Baseline:** `main` at `25ed940` (post PR #48)  
+**Baseline:** `main` at `94cc35f` (post PR #51)  
 **Purpose:** cold-start continuity for the next implementation lead. This file records status; it does not grant authority or supersede the AI Team Charter.
 
 ## Live architecture
@@ -106,7 +106,8 @@
 | [PR #45](https://github.com/Galashots/eldoria/pull/45), [#47](https://github.com/Galashots/eldoria/pull/47) | Step 8 Farm iso terrain: deterministic slicer + flatten transform, then the corner-mask semantics rebuild after the human-verified cell legend gate — merged 2026-08-05, owner iPad-checked. |
 | [PR #46](https://github.com/Galashots/eldoria/pull/46) | iPad input hotfix: double-tap zoom kill, `ISO_SPEED_MULT` knob, adaptive joystick with `?fixedJoystick` fallback — merged 2026-08-05. |
 | [PR #48](https://github.com/Galashots/eldoria/pull/48) | Town NPC idle sprites (Mira/Bram/Gunnar) with the lossless crop/translate-only custody standard and all 24 source rotations retained — merged 2026-08-05. |
-| [PR #50](https://github.com/Galashots/eldoria/pull/50) | Draft Momo integration, current head `5d4761307f43b78ac2fa83f64fb54f8324faebfa`; pending exact-head acceptance and visual review. Evidence: `docs/playtest/2026-08-05-momo-sprite-integration/`. |
+| [PR #49](https://github.com/Galashots/eldoria/pull/49), [#50](https://github.com/Galashots/eldoria/pull/50) | Docs reconciliation through PR #48, and the Auntie Momo isometric sprite integration (`dumpling_vendor` wired to a committed south frame, position and behavior unchanged) — merged 2026-08-05. |
+| [PR #51](https://github.com/Galashots/eldoria/pull/51) | ELD-PT-011/011a: per-profile music/reading-voice/effects levels, Say-it-again, the routine-action TTS boundary (`announceRoutine`), and bulk seed buying with honest partial-purchase counts — merged 2026-08-05 at `94cc35f`. Mute silences music and effects but **not** the reading voice; reading voice at 0% is the separate speech-off control. |
 
 ## Art and pipeline state
 
@@ -140,13 +141,10 @@ Seating (Leo, 2026-08-04/05): **Codex implements; Fable (Claude) directs and
 performs exact-head acceptance reviews; ChatGPT is the standing visual lead
 and non-author reviewer; Leo merges.** The agreed queue as of 2026-08-05:
 
-1. PR #50 Auntie Momo sprite integration is in flight
-   (`docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`);
-2. after PR #49 and PR #50, Leo chooses between the scoped gameplay item
-   ELD-PT-011/011a (per-profile music/speech/effects volume, "say it again"
-   button, no TTS on routine actions, bulk buy with honest partial-purchase
-   counts) and remaining-area terrain (Town first, one-primary-tileset-per-zone
-   rule). Neither lane is authorized until Leo chooses;
+1. PR #52 dumpling decision compliance is in flight — the last open PR;
+2. Leo chose ELD-PT-011/011a, delivered by PR #51. Remaining-area terrain
+   (Town first, one-primary-tileset-per-zone rule) is still unstarted and
+   unauthorized;
 3. actor contact shadows (tuned against the landed NPC cast);
 4. camera-feel reassessment from fresh iPad evidence;
 5. env art for buildings/props, then missing NPC/monster sprites;

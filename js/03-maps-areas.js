@@ -193,6 +193,12 @@ var FARM_COOKPOT = { row: 11, col: 5, name: 'Cooking Pot' };
 // the player deals 5+ damage per correct answer (see playerDamage), so ~3 right
 // answers beats a Slime. Enemy attacks never one-shot a level-1 hero.
 // Each enemy has a `loot` table of { item, chance } entries for gear drops.
+// How long a defeated spawn stays down. Ordinary enemies come back quickly so there is
+// always something to fight; bosses are a once-a-day event (owner ruling 2026-08-05),
+// which is what stops boss gold being farmed against the dumpling economy.
+var ENEMY_RESPAWN_MS = 30000;
+var BOSS_RESPAWN_MS = 24 * 60 * 60 * 1000;
+
 var ENEMIES = {
   // ---- Wilds (tier 1): tuned so a no-gear level-1 hero can win with perfect answers. ----
   slime:  { name: 'Slime',  hp: 15, attack: 2, xpReward: 20, color: '#5fa860',
@@ -271,7 +277,8 @@ var GEAR = {
 // ({ alive, respawnAt }) belongs to the selected PROFILE: it is rebuilt from the profile's
 // save on load (buildProfileEnemies) and persisted per profile under
 // areas.<area>.enemies.<spawnId> in save v3, so one kid's defeats never touch the other's
-// world. Dead enemies revive when their 30-second respawnAt expires; the timer is honored
+// world. Dead enemies revive when their respawnAt expires (ENEMY_RESPAWN_MS for ordinary
+// enemies, BOSS_RESPAWN_MS for bosses); the timer is honored
 // across travel, reload, and profile switches — leaving and returning does NOT revive
 // anything early.
 var ENEMY_SPAWNS = {

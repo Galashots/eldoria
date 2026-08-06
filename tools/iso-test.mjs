@@ -464,7 +464,8 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     return {
       catalogSize: DUMPLINGS.length,
       rarityCounts,
-      pricing: DUMPLING_BUNDLES,
+      pricing: { 1: dumplingPullCost(1), 3: dumplingPullCost(3), 10: dumplingPullCost(10) },
+      perPullCost: DUMPLING_PULL_COST,
       refund: DUMPLING_DUPLICATE_REFUND,
       vendorTapHandled,
       vendorOpened,
@@ -487,8 +488,13 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     r.catalogSize === 18 &&
     r.rarityCounts.common === 6 && r.rarityCounts.rare === 5 &&
     r.rarityCounts.epic === 4 && r.rarityCounts.legendary === 3);
-  check('dumplings: approved bundle prices and duplicate refund are locked',
-    r.pricing['1'] === 20 && r.pricing['3'] === 50 && r.pricing['10'] === 150 && r.refund === 4);
+  // Updated for the owner ruling on ELD-PT-013 (2026-07-29): the discounted bundle was
+  // ordered REMOVED, so this assertion now locks the opposite of what it used to —
+  // pulling more must never be cheaper per pull.
+  check('dumplings: pull pricing is flat, with no bulk discount (owner ruling)',
+    r.pricing['1'] === 20 && r.pricing['3'] === 60 && r.pricing['10'] === 200 &&
+    r.pricing['3'] === 3 * r.perPullCost && r.pricing['10'] === 10 * r.perPullCost &&
+    r.refund === 4);
   check('dumplings: direct vendor tap opens the collection modal',
     r.vendorTapHandled && r.vendorOpened);
   check('dumplings: insufficient gold cannot buy a pull', r.insufficientRejected);
@@ -503,7 +509,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     r.persisted.plain === 2 && r.persisted.golden === 1 &&
     r.persisted.dough === 1 && r.persisted.pity === 0);
   check('dumplings: pity resolves sequentially inside a three-pull bundle',
-    r.bundleBought && r.bundle.gold === 154 && r.bundle.plain === 2 &&
+    r.bundleBought && r.bundle.gold === 144 && r.bundle.plain === 2 &&
     r.bundle.golden === 1 && r.bundle.dough === 1 &&
     r.bundle.pity === 1 && r.bundle.owned === 2);
   check('economy UI: shop copy matches the approved crop values',

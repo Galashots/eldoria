@@ -336,9 +336,33 @@ var DUMPLINGS = [
 ];
 var DUMPLING_BY_ID = {};
 for (var di = 0; di < DUMPLINGS.length; di++) DUMPLING_BY_ID[DUMPLINGS[di].id] = DUMPLINGS[di];
-var DUMPLING_BUNDLES = { 1: 20, 3: 50, 10: 150 };
+// Pull pricing. OWNER RULING (ELD-PT-013, 2026-07-29): pressure mechanics are removed
+// — no discounted multi-pull bundle and no "save up for a better deal" nudge. Pulling
+// ten at once is a convenience for tired fingers, never a discount, so the price is
+// flat per pull and 10 pulls cost exactly ten times one pull. Do not reintroduce a
+// bulk discount: that is the pattern the owner removed.
+// NOTE: this supersedes the design spec's decision #7, which used bundle-price
+// comparison as the math hook. The math hook now has to live elsewhere.
+var DUMPLING_PULL_COST = 20;
+var DUMPLING_PULL_COUNTS = [1, 3, 10];
+function dumplingPullCost(count) { return count * DUMPLING_PULL_COST; }
+
+// ONE table drives both the roll and the odds shown to the child, so the displayed
+// odds cannot drift away from the real ones. Bands are checked in order.
+var DUMPLING_ODDS = [
+  { rarity: 'common',    chance: 0.55 },
+  { rarity: 'rare',      chance: 0.27 },
+  { rarity: 'epic',      chance: 0.12 },
+  { rarity: 'legendary', chance: 0.06 }
+];
 var DUMPLING_DUPLICATE_REFUND = 4;
 var DUMPLING_PITY_PULLS = 15;
+// Deterministic completion path (approved): dough is earned from duplicates and
+// SPENT to hand-pick a dumpling you don't own yet. Luck can stall; this cannot.
+var DUMPLING_DOUGH_PER_PICK = 10;
+// If every dumpling is already collected there is nothing to pick, so dough converts
+// to gold instead of becoming a dead currency.
+var DUMPLING_DOUGH_GOLD_VALUE = 5;
 
 // ---- Recipes (slice 13a: cooking) ----
 // Each recipe turns crops into a food item that heals HP when eaten. The hidden math
