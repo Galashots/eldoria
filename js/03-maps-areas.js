@@ -1,21 +1,7 @@
 // ---- Build a map ----
-// ---- Iso mode flag ----
-// Per-area rollout switch. An area flips true once its iso port passes the kid gate.
-// farm: true since Phase 1 (2026-07-27) — the boys playtest iso Farm by default.
-// town: true since the Phase 2 first slice (2026-07-28) — General Store + Mira on
-//       placeholder geometry. The Forge and the other villagers still render through the
-//       generic tile/NPC placeholders; they are not part of that validated slice.
-// Override: ?iso=1 forces iso everywhere, ?iso=0 forces top-down; both persist via localStorage.
-var ISO_AREAS = { farm: true, town: true, wilds: false, deepwoods: false, mine: false };
-if (location.search.indexOf('iso=1') !== -1) { try { localStorage.setItem('eldoria_iso', '1'); } catch (e) {} }
-if (location.search.indexOf('iso=0') !== -1) { try { localStorage.setItem('eldoria_iso', '0'); } catch (e) {} }
-function isoActive() {
-  var ov = null;
-  try { ov = localStorage.getItem('eldoria_iso'); } catch (e) {}
-  if (ov === '1') return true;
-  if (ov === '0') return false;
-  return !!ISO_AREAS[currentArea];
-}
+// Every area renders through the isometric renderer (js/08-iso-renderer.js). The
+// top-down renderer and its ?iso override were retired 2026-08-06 (combat/armor spec
+// sub-project 1); see docs/superpowers/plans/2026-08-06-retire-topdown.md.
 
 // Helper: a fresh MAP_W x MAP_H grid with a tree border all around.
 function blankMap() {

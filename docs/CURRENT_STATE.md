@@ -17,7 +17,7 @@
   (proven byte-identical by reconstruction, full suite green, and 16/16
   pixel-identical artifact captures vs the pre-split baseline).
 - World coordinates, collision, maps, saves, economy, quests, and combat remain orthogonal and shared by both render modes.
-- Farm and Town default to the isometric renderer. Wilds, Deep Woods, and Mine remain top-down by default; under the `?iso=1` development override they render in iso with real enemy sprites, but flipping their defaults waits on the iso spec's combat/quest parity gates. The combat/armor spec's sub-project 1 is that flip: world combat *is* the parity work, so the defaults move when top-down retires, not before.
+- Every area renders through the **isometric renderer**. The top-down renderer, its per-area `ISO_AREAS` table, and the `?iso=0/1` override were retired 2026-08-06 as a pure, single-revert deletion (combat/armor spec **sub-project 1**; see `docs/superpowers/plans/2026-08-06-retire-topdown.md`). Wilds, Deep Woods, and Mine now default to iso alongside Farm and Town. `player.facing` stays runtime-only (no save stores it; no migration). A one-revert rollback window (tag `pre-retire-topdown`) stays open through world-combat iPad acceptance (sub-project 3). The cardinal equipment overlays + `paperDollDirection: 'right'` survive for the Character paper doll; the cardinal attack strips + `OVERLAY_DIRECTIONS` + their manifest declarations retire in the immediate fast-follow PR (1b).
 - Town's isometric NPCs Mira, Bram, and Gunnar render from committed
   PixelLab idle sprites (PR #48, 2026-08-05): one lossless crop/translate-only
   south → `down-right` 64×64 frame each via the `spr()` path, with the

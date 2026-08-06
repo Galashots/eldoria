@@ -346,7 +346,7 @@ function drawIsoWorld() {
       var eimg = spr('enemy_' + o.enemy.type);
       if (eimg) {
         ctx.drawImage(eimg, ocx - 20, ocy - 38, 40, 40);
-        // Same "alive enemy" cue as top-down: a bobbing red dot above the sprite.
+        // Alive-enemy cue: a bobbing red dot above the sprite.
         ctx.fillStyle = '#ff5555';
         ctx.beginPath();
         ctx.arc(ocx, ocy - 42 + Math.sin(now / 250) * 3, 4, 0, Math.PI * 2);
@@ -503,8 +503,8 @@ function drawIsoNpc(cx, cy, npc, now) {
 }
 
 // Entry and travel cues, drawn after the object pass so a doorway or road exit is never
-// buried behind the wall it belongs to. Same cue language as top-down: pulse plus a
-// bobbing arrow that points at the tile you should step on.
+// buried behind the wall it belongs to. Pulse plus a bobbing arrow that points at the
+// tile you should step on.
 function drawIsoCues(now) {
   for (var r = 0; r < MAP_H; r++) {
     for (var c = 0; c < MAP_W; c++) {
@@ -555,61 +555,6 @@ function isoCollectObjects() {
   objs.push({ px: player.x + player.size / 2, py: player.y + player.size, kind: 'player' });
   objs.sort(function (a, b) { return isoDepthKey(a.px, a.py) - isoDepthKey(b.px, b.py); });
   return objs;
-}
-
-// ---- Cavern tile shapes (ELD-PT-003) ----
-// Drawn fallbacks for the Mine, in the same spirit as every other placeholder here: if the
-// real art lands in assets/ these never run. A cheap deterministic hash per tile keeps the
-// variation stable frame to frame (no flicker) without storing anything.
-function tileHash(r, c, salt) { return ((r * 73856093) ^ (c * 19349663) ^ (salt * 83492791)) >>> 0; }
-
-// A faceted rock mass: lit upper-left face, shadowed lower-right, occasional crystal glint.
-// The light direction matches the Visual North Star's warm upper-left key.
-function drawRockTile(sx, sy, r, c) {
-  var h = tileHash(r, c, 1);
-  ctx.fillStyle = 'rgba(255,255,255,0.10)';   // upper-left lit face
-  ctx.beginPath();
-  ctx.moveTo(sx, sy + TILE);
-  ctx.lineTo(sx, sy + 4 + (h % 5));
-  ctx.lineTo(sx + TILE / 2, sy);
-  ctx.lineTo(sx + TILE / 2, sy + TILE);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = 'rgba(0,0,0,0.22)';         // lower-right shadowed face
-  ctx.beginPath();
-  ctx.moveTo(sx + TILE, sy + TILE);
-  ctx.lineTo(sx + TILE, sy + 6 + (h >> 3) % 5);
-  ctx.lineTo(sx + TILE / 2, sy);
-  ctx.lineTo(sx + TILE / 2, sy + TILE);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.30)';       // seam between neighbouring rock masses
-  ctx.lineWidth = 1;
-  ctx.strokeRect(sx + 0.5, sy + 0.5, TILE - 1, TILE - 1);
-  if (h % 7 === 0) {                          // a seam of teal crystal, matching the Wyrm
-    ctx.fillStyle = 'rgba(120,230,220,0.75)';
-    var gx = sx + 8 + (h >> 6) % (TILE - 18), gy = sy + 8 + (h >> 11) % (TILE - 18);
-    ctx.beginPath();
-    ctx.moveTo(gx, gy - 4); ctx.lineTo(gx + 3, gy); ctx.lineTo(gx, gy + 5); ctx.lineTo(gx - 3, gy);
-    ctx.closePath();
-    ctx.fill();
-  }
-}
-
-// Cavern floor: dark packed ground with scattered grit and the odd mine-track sleeper.
-function drawCaveFloorTile(sx, sy, r, c) {
-  var h = tileHash(r, c, 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.03)';
-  ctx.fillRect(sx, sy, TILE, TILE / 2);       // faint bounce light off the ceiling
-  ctx.fillStyle = 'rgba(0,0,0,0.18)';
-  for (var g = 0; g < 3; g++) {
-    var gx = sx + ((h >> (g * 5)) % (TILE - 4)), gy = sy + ((h >> (g * 5 + 3)) % (TILE - 4));
-    ctx.fillRect(gx, gy, 2, 2);
-  }
-  if (h % 4 === 0) {                          // rail sleeper across the track
-    ctx.fillStyle = 'rgba(90,70,50,0.45)';
-    ctx.fillRect(sx + 2, sy + TILE / 2 - 1, TILE - 4, 3);
-  }
 }
 
 // The initial live pointer is established by js/03 before this renderer script

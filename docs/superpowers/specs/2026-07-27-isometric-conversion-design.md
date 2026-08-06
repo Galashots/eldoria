@@ -1,5 +1,14 @@
 # Isometric Conversion — Engine Design Spec
 
+> **PARTIALLY SUPERSEDED (2026-08-06) — top-down retired.** The combat/armor umbrella design
+> (`docs/superpowers/specs/2026-08-05-combat-armor-design.md`) retired the top-down renderer in
+> its **sub-project 1**. Every "parallel engine behind a flag", "port area-by-area while the
+> live game keeps working", top-down-coexistence, and top-down/DOM-combat parity-gate
+> assumption in this spec is now historical: the game renders **isometric-only** in all areas
+> (Farm, Town, Wilds, Deep Woods, Mine). The engine-side iso projection, input, and depth-sort
+> facts below remain the source of truth; only the coexistence / area-by-area-rollout / parity
+> framing is superseded. See `docs/superpowers/plans/2026-08-06-retire-topdown.md`.
+
 - **Date:** 2026-07-27
 - **Game:** Realm of Eldoria (original / `eldoria-public`, single-file `index.html`)
 - **Status:** Engine design approved; Phase 0/Farm and the first bounded Town slice are merged. Production-art generation is governed by `tools/pipeline/PIPELINE.md`.

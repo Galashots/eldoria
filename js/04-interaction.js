@@ -117,9 +117,8 @@ function faceWorldTile(row, col) {
   var dc = col - playerCol;
   var dr = row - playerRow;
   if (dc === 0 && dr === 0) return;
-  // Same split as movement: eight-way only in iso, cardinal in top-down.
-  player.facing = (typeof isoActive === 'function' && isoActive())
-    ? facingFromVector(dc, dr) : cardinalFromVector(dc, dr);
+  // Eight-way iso facing toward the tapped tile.
+  player.facing = facingFromVector(dc, dr);
 }
 
 function askToWalkCloser(label) {
