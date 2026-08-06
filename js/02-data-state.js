@@ -187,11 +187,14 @@ loadSprite('npc_mira', 'assets/npc_mira.png');
 // procedural fallback. The other seven supplied rotations remain source material
 // until NPC facing/state data exists; this avoids inventing movement behavior here.
 var ISO_NPC_IDLE_DIRECTION_KEY = 'down_right';
-var ISO_NPC_IDS = ['mira', 'bram', 'gunnar'];
+var ISO_NPC_IDS = ['mira', 'bram', 'gunnar', 'dumpling_vendor'];
+var ISO_NPC_ASSET_IDS = {
+  mira: 'mira', bram: 'bram', gunnar: 'gunnar', dumpling_vendor: 'momo'
+};
 for (var ini = 0; ini < ISO_NPC_IDS.length; ini++) {
   var isoNpcId = ISO_NPC_IDS[ini];
   loadSprite('iso_npc_' + isoNpcId + '_' + ISO_NPC_IDLE_DIRECTION_KEY,
-    'assets/iso/npc/' + isoNpcId + '-down-right.png');
+    'assets/iso/npc/' + ISO_NPC_ASSET_IDS[isoNpcId] + '-down-right.png');
 }
 loadSprite('cookpot', 'assets/cookpot.png');
 loadSprite('shop_building', 'assets/shop_building.png');

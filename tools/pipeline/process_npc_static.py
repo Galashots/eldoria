@@ -1,6 +1,6 @@
 """Process static NPC rotations without changing source pixels.
 
-The supplied PixelLab packs are 128x128 RGBA canvases whose character pixels
+The supplied PixelLab packs are square RGBA canvases whose character pixels
 already fit the Eldoria 64x64 frame. This tool removes only transparent outer
 margin, translates the exact RGBA crop onto a 64x64 transparent canvas, and
 never resamples, recolours, thresholds, sharpens, or redraws a pixel.
@@ -70,8 +70,8 @@ def parse_pack(spec):
 
 def process_frame(raw_png, label):
     image = Image.open(io.BytesIO(raw_png)).convert("RGBA")
-    if image.size != (128, 128):
-        raise SystemExit(f"{label}: expected 128x128, got {image.size}")
+    if image.width != image.height or image.width < FRAME:
+        raise SystemExit(f"{label}: expected a square canvas at least {FRAME}x{FRAME}, got {image.size}")
     alpha_values = set(image.getchannel("A").getdata())
     if not alpha_values.issubset({0, 255}):
         raise SystemExit(f"{label}: source alpha is not binary: {sorted(alpha_values)}")

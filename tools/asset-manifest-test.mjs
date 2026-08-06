@@ -524,6 +524,19 @@ function withRawManifestContent(rawContent, testFn) {
     bindingsByKey.has('cookpot') &&
     manifest.runtimeBindings.some(b => b.family === 'decoration-sprite'));
 
+  // Keep the shared NPC runtime classification generic: the asset note is
+  // reused for Mira, Bram, Gunnar, and Momo. The dumpling-vendor identity
+  // belongs in the binding's explicit use metadata, not in every NPC note.
+  const isoNpcAssets = ['mira', 'bram', 'gunnar', 'momo'].map(asset =>
+    manifest.assets.find(a => a.path === `assets/iso/npc/${asset}-down-right.png`));
+  const npcNotesAreGeneric = isoNpcAssets.every(a => a?.notes === isoNpcAssets[0]?.notes) &&
+    !/momo|dumpling_vendor/i.test(isoNpcAssets[0]?.notes ?? '');
+  const momoBinding = bindingsByKey.get('iso_npc_dumpling_vendor_down_right');
+  check('35a: NPC runtime notes stay generic and dumpling_vendor maps to momo',
+    npcNotesAreGeneric && momoBinding?.use?.npcId === 'dumpling_vendor' &&
+    momoBinding?.use?.assetId === 'momo' &&
+    momoBinding?.path === 'assets/iso/npc/momo-down-right.png');
+
   // 36: a live key whose binding was removed is now undeclared — --check
   // must actually FAIL, not just leave the removed key out of the mutated
   // JSON (that alone proves the mutation worked, not that the tool detects

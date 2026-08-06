@@ -1,0 +1,203 @@
+{
+  "frameSize": {
+    "width": 64,
+    "height": 64
+  },
+  "directionMap": {
+    "south": "down-right",
+    "south-east": "right",
+    "east": "up-right",
+    "north-east": "up",
+    "north": "up-left",
+    "north-west": "left",
+    "west": "down-left",
+    "south-west": "down"
+  },
+  "processing": "lossless crop of transparent outer margin, then integer translation onto a 64x64 transparent canvas; no resampling, recolouring, thresholding, sharpening, or redraw",
+  "packs": [
+    {
+      "npcId": "momo",
+      "characterId": "da8c93d3-17a9-4dae-8726-e29c6ac9bb39",
+      "sourceZip": "character.zip",
+      "sourceZipSha256": "71e9cc512b6a6ad2e83e56a037bf73aed6d887e02f90858652fb174441d87692",
+      "frames": [
+        {
+          "vendorDirection": "south",
+          "engineSlot": "down-right",
+          "sourceMember": "Idle/rotations/south.png",
+          "sourcePngSha256": "2000d458eb051c076927936a744828b0e92dd1d37cf4121df385e845887e40be",
+          "sourceOpaqueBbox": [
+            47,
+            31,
+            73,
+            88
+          ],
+          "sourceCropSize": [
+            26,
+            57
+          ],
+          "sourceCropRgbaSha256": "4b9a33d8adcff86ec4cc1307150110f8698f82549d8593f9f3889803d2b644fe",
+          "outputPath": "docs/visual/reviews/momo-sprite-integration-20260805/source-rotations/momo/south.png",
+          "outputSha256": "c59c2b5ff046999f188a87f07c9eac2050f3812a17b7441e209610c95a48ebd4",
+          "outputPixelCropSha256": "4b9a33d8adcff86ec4cc1307150110f8698f82549d8593f9f3889803d2b644fe",
+          "runtimePath": "assets/iso/npc/momo-down-right.png",
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "south-east",
+          "engineSlot": "right",
+          "sourceMember": "Idle/rotations/south-east.png",
+          "sourcePngSha256": "9842c78ba36a6a420a68210b80a34ca25683d4839d5382af717f78b8ec1f4617",
+          "sourceOpaqueBbox": [
+            48,
+            32,
+            71,
+            90
+          ],
+          "sourceCropSize": [
+            23,
+            58
+          ],
+          "sourceCropRgbaSha256": "e27449d9f5191a8b580938177e380eccafc2d6730f8d811a095a4d6a4ea02f76",
+          "outputPath": "docs/visual/reviews/momo-sprite-integration-20260805/source-rotations/momo/south-east.png",
+          "outputSha256": "90995cd75be11e37b8a9b6a56f8e7a9b67782a2145230d4e0ba78296ac75f90c",
+          "outputPixelCropSha256": "e27449d9f5191a8b580938177e380eccafc2d6730f8d811a095a4d6a4ea02f76",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "east",
+          "engineSlot": "up-right",
+          "sourceMember": "Idle/rotations/east.png",
+          "sourcePngSha256": "158c4a28298fce15e6218921bbd97ff2b2341faba4230f67c5cc6ff90b604bcd",
+          "sourceOpaqueBbox": [
+            50,
+            33,
+            69,
+            89
+          ],
+          "sourceCropSize": [
+            19,
+            56
+          ],
+          "sourceCropRgbaSha256": "8812ee8a2737b952beb30bb9a16050a5859bf0d853ec6f309ce08cdd1e7f7d1d",
+          "outputPath": "docs/visual/reviews/momo-sprite-integration-20260805/source-rotations/momo/east.png",
+          "outputSha256": "e31e3eea9143ead0d905849bf3cd3528c9aa962ba3c1899546c36984bcc38115",
+          "outputPixelCropSha256": "8812ee8a2737b952beb30bb9a16050a5859bf0d853ec6f309ce08cdd1e7f7d1d",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north-east",
+          "engineSlot": "up",
+          "sourceMember": "Idle/rotations/north-east.png",
+          "sourcePngSha256": "9dbd21cc565bbe94439a48ff139692032b2be361befc1c6456e3b7784c75ee2c",
+          "sourceOpaqueBbox": [
+            48,
+            33,
+            71,
+            89
+          ],
+          "sourceCropSize": [
+            23,
+            56
+          ],
+          "sourceCropRgbaSha256": "2195f4e2230d793d2353f13075678673723e2a8dca4471405f4832a0ec1da5fb",
+          "outputPath": "docs/visual/reviews/momo-sprite-integration-20260805/source-rotations/momo/north-east.png",
+          "outputSha256": "c97a1d1dc739057861897b919f4f67f954eeaa20f6ebc309c3c83f0f1e2cfe0c",
+          "outputPixelCropSha256": "2195f4e2230d793d2353f13075678673723e2a8dca4471405f4832a0ec1da5fb",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north",
+          "engineSlot": "up-left",
+          "sourceMember": "Idle/rotations/north.png",
+          "sourcePngSha256": "d74be5d5a9078feee3bc6cac5d1b372d9f85106a7c40d019e4234cadbee985c4",
+          "sourceOpaqueBbox": [
+            46,
+            32,
+            74,
+            88
+          ],
+          "sourceCropSize": [
+            28,
+            56
+          ],
+          "sourceCropRgbaSha256": "cfce7655972feeca11f1c5ad0b6049d028e3405a0f19efdd7b7878dc8ea2b3fe",
+          "outputPath": "docs/visual/reviews/momo-sprite-integration-20260805/source-rotations/momo/north.png",
+          "outputSha256": "3588a113425dbde322e5c5a2b78b46d60752b0b100dcea9ca14b0c8fefae23c3",
+          "outputPixelCropSha256": "cfce7655972feeca11f1c5ad0b6049d028e3405a0f19efdd7b7878dc8ea2b3fe",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "north-west",
+          "engineSlot": "left",
+          "sourceMember": "Idle/rotations/north-west.png",
+          "sourcePngSha256": "947840f00bc554bf1527f7fd7a5110aabebf649a46953ef004001e865735e723",
+          "sourceOpaqueBbox": [
+            49,
+            33,
+            71,
+            88
+          ],
+          "sourceCropSize": [
+            22,
+            55
+          ],
+          "sourceCropRgbaSha256": "3498ace50341748b413555fd07e9f806667c641a5b4b22718608088500b55bd6",
+          "outputPath": "docs/visual/reviews/momo-sprite-integration-20260805/source-rotations/momo/north-west.png",
+          "outputSha256": "e4fcf2c4fce299729b59c82e96719568d05e71233752d42d87b6290e81f05147",
+          "outputPixelCropSha256": "3498ace50341748b413555fd07e9f806667c641a5b4b22718608088500b55bd6",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "west",
+          "engineSlot": "down-left",
+          "sourceMember": "Idle/rotations/west.png",
+          "sourcePngSha256": "8297ec30d47d4d9414848bf9c9ef83ea4534c2b55d3b0a5e809bf72f360eba25",
+          "sourceOpaqueBbox": [
+            51,
+            33,
+            70,
+            88
+          ],
+          "sourceCropSize": [
+            19,
+            55
+          ],
+          "sourceCropRgbaSha256": "befb161ffec7465cd2b7ac15c65c48680f7b3249a92e6fc0340389e4f25471cf",
+          "outputPath": "docs/visual/reviews/momo-sprite-integration-20260805/source-rotations/momo/west.png",
+          "outputSha256": "5dba9e81ba87679ba4d07e45d7fd1a2be4657274c77c70186b41ec2176cc9ff2",
+          "outputPixelCropSha256": "befb161ffec7465cd2b7ac15c65c48680f7b3249a92e6fc0340389e4f25471cf",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        },
+        {
+          "vendorDirection": "south-west",
+          "engineSlot": "down",
+          "sourceMember": "Idle/rotations/south-west.png",
+          "sourcePngSha256": "12cb83626a726141dcb97f99427a76edbce7a330f81f67ea1789d77d2215ed67",
+          "sourceOpaqueBbox": [
+            48,
+            32,
+            72,
+            89
+          ],
+          "sourceCropSize": [
+            24,
+            57
+          ],
+          "sourceCropRgbaSha256": "289c527ea5cc0d54d831a3990cdd1b1e7a29fd6a1858d8a9bed06c415e661c7e",
+          "outputPath": "docs/visual/reviews/momo-sprite-integration-20260805/source-rotations/momo/south-west.png",
+          "outputSha256": "f09d693c5d5b2f9b411fccb9961868e8c60ee9d89f943ba1af9400d67f0f8947",
+          "outputPixelCropSha256": "289c527ea5cc0d54d831a3990cdd1b1e7a29fd6a1858d8a9bed06c415e661c7e",
+          "runtimePath": null,
+          "processing": "crop-transparent-bbox-and-translate-only"
+        }
+      ]
+    }
+  ]
+}

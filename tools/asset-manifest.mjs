@@ -509,10 +509,12 @@ const RULES = [
   },
   {
     name: 'iso-npc-source-idle',
-    test: p => /^docs\/visual\/reviews\/npc-sprite-integration-20260805\/source-rotations\/(?:mira|bram|gunnar)\/(?:south|south-east|east|north-east|north|north-west|west|south-west)\.png$/.test(p),
-    classify: () => ({
+    test: p => /^docs\/visual\/reviews\/(?:npc-sprite-integration-20260805\/source-rotations\/(?:mira|bram|gunnar)|momo-sprite-integration-20260805\/source-rotations\/momo)\/(?:south|south-east|east|north-east|north|north-west|west|south-west)\.png$/.test(p),
+    classify: p => ({
       domain: 'iso-npc-sprite-source', scope: 'source', status: 'provisional', visualReview: 'aligned',
-      governedBy: 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
+      governedBy: p.startsWith('docs/visual/reviews/momo-sprite-integration-20260805/')
+        ? 'docs/visual/reviews/momo-sprite-integration-20260805/README.md'
+        : 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
       notes: 'Canonical retained NPC idle direction source; exact 64x64 crop/translation output with no resampling. Source ZIP custody, character ID, direction mapping, and pixel hashes are recorded in npc-direction-map.json.',
     }),
   },
@@ -526,10 +528,12 @@ const RULES = [
   },
   {
     name: 'iso-npc-idle-sprite',
-    test: p => /^assets\/iso\/npc\/(?:mira|bram|gunnar)-down-right\.png$/.test(p),
-    classify: () => ({
+    test: p => /^assets\/iso\/npc\/(?:mira|bram|gunnar|momo)-down-right\.png$/.test(p),
+    classify: p => ({
       domain: 'iso-npc-sprite', scope: 'runtime', status: 'provisional', visualReview: 'intentional-interim-gap',
-      governedBy: 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
+      governedBy: p.endsWith('/momo-down-right.png')
+        ? 'docs/visual/reviews/momo-sprite-integration-20260805/README.md'
+        : 'docs/visual/reviews/npc-sprite-integration-20260805/README.md',
       notes: 'Lossless crop/translate-only south-facing/down-right idle frame for the stationary Town NPC renderer. The other seven canonical directions are retained as source assets; no facing/state runtime path exists yet. Falls back to the existing procedural NPC shape.',
     }),
   },
@@ -892,11 +896,14 @@ function buildRuntimeBindings() {
       owner: 'js/02-data-state.js + js/09-main.js drawEnemyShape()', required: false,
       fallback: 'procedurally drawn per-type enemy shape', fallbackKind: 'engine-drawn', use: { enemyType: type } });
   }
-  for (const id of ['mira', 'bram', 'gunnar']) {
-    push({ key: `iso_npc_${id}_down_right`, family: 'iso-npc-sprite', path: `assets/iso/npc/${id}-down-right.png`,
+  for (const entry of [
+    { id: 'mira', asset: 'mira' }, { id: 'bram', asset: 'bram' },
+    { id: 'gunnar', asset: 'gunnar' }, { id: 'dumpling_vendor', asset: 'momo' }
+  ]) {
+    push({ key: `iso_npc_${entry.id}_down_right`, family: 'iso-npc-sprite', path: `assets/iso/npc/${entry.asset}-down-right.png`,
       owner: 'js/02-data-state.js + js/08-iso-renderer.js drawIsoNpc()', required: false,
       fallback: 'existing procedural drawIsoNpc body/head shape', fallbackKind: 'engine-drawn',
-      use: { npcId: id, direction: 'down-right', state: 'idle', renderMode: 'iso' } });
+      use: { npcId: entry.id, assetId: entry.asset, direction: 'down-right', state: 'idle', renderMode: 'iso' } });
   }
   // Verified against js/02-data-state.js: only 'npc_mira' has an actual
   // loadSprite() registration. bram/gunnar/dumpling_vendor have NO
