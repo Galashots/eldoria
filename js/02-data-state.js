@@ -275,20 +275,6 @@ function facingFromVector(dx, dy) {
   return FACING_OCTANTS[((oct % 8) + 8) % 8];
 }
 
-// Top-down keeps the original four facings: attack strips and equipment
-// overlays only exist for those, so a diagonal facing under ?iso=0 would make
-// the attack animation and equipped gear vanish. Diagonal input prefers the
-// stronger axis; tied diagonals keep the horizontal direction (pre-8-direction
-// behavior, unchanged).
-function cardinalFromVector(dx, dy) {
-  if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) return dx < 0 ? 'left' : 'right';
-  return dy < 0 ? 'up' : 'down';
-}
-// Snap map for a diagonal facing carried into top-down mode (iso save, mode
-// toggle): same horizontal-wins rule as cardinalFromVector.
-var FACING_TO_CARDINAL = { 'down-right': 'right', 'up-right': 'right',
-                           'down-left': 'left', 'up-left': 'left' };
-
 // Prefer the selected child's directional art. Missing new art falls back to the
 // original single player.png, then the existing yellow-box placeholder.
 function playerSprite() {

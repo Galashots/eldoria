@@ -3,28 +3,21 @@ var ctx = canvas.getContext('2d');
 
 // ---- Responsive canvas (iso only; spec section 5b) ----
 // Same vertical field of view on every device: TARGET_VIEW_ROWS world rows always fit
-// vertically, so a phone simply sees fewer columns than the iPad. Legacy top-down mode
-// keeps its original fixed 640x480 store untouched.
+// vertically, so a phone simply sees fewer columns than the iPad.
 var isoScale = 1, isoCamW = 0, isoCamH = 0;
 function applyCanvasMode() {
-  if (typeof isoActive === 'function' && isoActive()) {
-    canvas.classList.add('iso-mode');
-    var rect = canvas.getBoundingClientRect();
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var cssW = rect.width || 640, cssH = rect.height || 480;
-    canvas.width = Math.round(cssW * dpr);
-    canvas.height = Math.round(cssH * dpr);
-    // Projected px per world row is TILE/2; fit TARGET_VIEW_ROWS of them into the css height.
-    isoScale = (cssH / (TARGET_VIEW_ROWS * TILE / 2)) * dpr;
-    isoCamW = canvas.width / isoScale;
-    isoCamH = canvas.height / isoScale;
-    // Resizing the backing store resets context state — keep pixel art crisp.
-    ctx.imageSmoothingEnabled = false;
-  } else {
-    canvas.classList.remove('iso-mode');
-    if (canvas.width !== 640) canvas.width = 640;
-    if (canvas.height !== 480) canvas.height = 480;
-  }
+  canvas.classList.add('iso-mode');
+  var rect = canvas.getBoundingClientRect();
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var cssW = rect.width || 640, cssH = rect.height || 480;
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  // Projected px per world row is TILE/2; fit TARGET_VIEW_ROWS of them into the css height.
+  isoScale = (cssH / (TARGET_VIEW_ROWS * TILE / 2)) * dpr;
+  isoCamW = canvas.width / isoScale;
+  isoCamH = canvas.height / isoScale;
+  // Resizing the backing store resets context state — keep pixel art crisp.
+  ctx.imageSmoothingEnabled = false;
 }
 window.addEventListener('resize', applyCanvasMode);
 window.addEventListener('orientationchange', applyCanvasMode);
@@ -159,8 +152,8 @@ var ISO_TW = 64, ISO_TH = 32;            // ground diamond size in projected px
 var ISO_X_OFF = MAP_H * TILE;            // shifts projected x non-negative (704)
 var TARGET_VIEW_ROWS = 18;               // vertical FOV in world rows — the ONE zoom knob
                                          // (14 felt zoomed-in on Leo's phone, 2026-07-27)
-// iPad tuning knob: iso projection feels slower on screen, while top-down keeps the
-// established player.speed. Leo may tune this without changing the shared base speed.
+// iPad tuning knob: iso projection feels slower on screen, so projected movement gets
+// its own multiplier. Leo may tune this without changing the shared base player.speed.
 var ISO_SPEED_MULT = 1.5;
 
 function isoPX(px, py) { return (px - py) + ISO_X_OFF; }
@@ -179,7 +172,7 @@ function isoDepthKey(px, py) { return px + py; }
 function __isoTestMove(jx, jy, frames) {
   for (var i = 0; i < frames; i++) {
     var dx = jx, dy = jy;
-    if (isoActive() && (dx !== 0 || dy !== 0)) {
+    if (dx !== 0 || dy !== 0) {
       var wx = isoInputX(dx, dy), wy = isoInputY(dx, dy);
       var wl = Math.sqrt(wx * wx + wy * wy);
       dx = wx / wl; dy = wy / wl;

@@ -280,8 +280,8 @@ function onboardingSkipPressed(event) {
 
 // ---- Mira's Guide world highlights ----
 // This is deliberately a draw-only overlay. It never changes collision, reach,
-// interaction dispatch, or travel rules. The existing top-down and iso renderers
-// call it once after their world pass, using their established pulse/arrow language.
+// interaction dispatch, or travel rules. The iso renderer calls it once after its
+// world pass, using the established pulse/arrow language.
 function onboardingHighlightTargets() {
   var next = onboardingNextMilestone();
   if (combatOpen || !next || !player.onboarding || player.onboarding.status !== 'active') return [];
@@ -353,28 +353,19 @@ function drawOnboardingWorldHighlight(now) {
   var targets = onboardingHighlightTargets();
   if (!targets.length) return;
   var pulse = 0.45 + 0.55 * Math.abs(Math.sin(now / 260));
-  var isIso = typeof isoActive === 'function' && isoActive();
   ctx.save();
   ctx.strokeStyle = 'rgba(255, 232, 146,' + pulse + ')';
   ctx.fillStyle = 'rgba(255, 232, 146,' + (0.12 + pulse * 0.12) + ')';
-  ctx.lineWidth = isIso ? 2.5 : 3;
+  ctx.lineWidth = 2.5;
   for (var i = 0; i < targets.length; i++) {
     var t = targets[i];
     var wx = (t.col + 0.5) * TILE, wy = (t.row + 0.5) * TILE;
-    if (isIso) {
-      var cx = isoPX(wx, wy), cy = isoPY(wx, wy);
-      drawIsoDiamondAt(cx, cy, ISO_TW / 2 + 4, ISO_TH / 2 + 4, 'rgba(255,232,146,' + (0.08 + pulse * 0.08) + ')');
-      ctx.strokeStyle = 'rgba(255,232,146,' + pulse + ')';
-      ctx.beginPath(); ctx.moveTo(cx, cy - ISO_TH / 2 - 4); ctx.lineTo(cx + ISO_TW / 2 + 4, cy);
-      ctx.lineTo(cx, cy + ISO_TH / 2 + 4); ctx.lineTo(cx - ISO_TW / 2 - 4, cy); ctx.closePath(); ctx.stroke();
-      drawArrow(cx, cy - ISO_TH / 2 - 16 - Math.sin(now / 220) * 3, 7, 'down', '#fff2b0');
-    } else {
-      var camera = topDownCamera();
-      var sx = t.col * TILE - camera.x, sy = t.row * TILE - camera.y;
-      ctx.fillRect(sx + 2, sy + 2, TILE - 4, TILE - 4);
-      ctx.strokeRect(sx + 1.5, sy + 1.5, TILE - 3, TILE - 3);
-      drawArrow(sx + TILE / 2, sy - 5 - Math.sin(now / 220) * 3, 7, 'down', '#fff2b0');
-    }
+    var cx = isoPX(wx, wy), cy = isoPY(wx, wy);
+    drawIsoDiamondAt(cx, cy, ISO_TW / 2 + 4, ISO_TH / 2 + 4, 'rgba(255,232,146,' + (0.08 + pulse * 0.08) + ')');
+    ctx.strokeStyle = 'rgba(255,232,146,' + pulse + ')';
+    ctx.beginPath(); ctx.moveTo(cx, cy - ISO_TH / 2 - 4); ctx.lineTo(cx + ISO_TW / 2 + 4, cy);
+    ctx.lineTo(cx, cy + ISO_TH / 2 + 4); ctx.lineTo(cx - ISO_TW / 2 - 4, cy); ctx.closePath(); ctx.stroke();
+    drawArrow(cx, cy - ISO_TH / 2 - 16 - Math.sin(now / 220) * 3, 7, 'down', '#fff2b0');
   }
   ctx.restore();
 }
