@@ -120,6 +120,31 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Owner ruling (2026-08-05): mute silences music/effects but NOT the reading
+// voice. Pinned as a test so it cannot be "tidied up" by a later change. ---
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    selectProfile('mage');
+    const spoken = [];
+    window.speechSynthesis.speak = u => spoken.push(u.text);
+    if (!gameMuted) toggleMute();
+    speak('Read this even though the game is muted.');
+    const speechWhileMuted = spoken.length;
+    const musicPaused = bgMusic.paused;
+    // Turning speech off stays a separate, deliberate act.
+    setAudioLevel('speech', 0);
+    speak('This must not be spoken.');
+    return { speechWhileMuted, musicPaused, afterSpeechZero: spoken.length };
+  });
+
+  check('011: mute does NOT silence the reading voice (owner ruling)', r.speechWhileMuted === 1);
+  check('011: mute still stops the music', r.musicPaused === true);
+  check('011: reading voice at 0% is how speech is turned off', r.afterSpeechZero === 1);
+  check('011: no console errors', errors.length === 0);
+  await browser.close();
+}
+
 // --- ELD-PT-011a: bulk buy, and the honest partial purchase ---
 {
   const { browser, page, errors } = await launch();

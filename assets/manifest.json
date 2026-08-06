@@ -3925,7 +3925,7 @@
       "width": 900
     },
     {
-      "bytes": 617247,
+      "bytes": 617347,
       "domain": "playtest-evidence",
       "ext": ".png",
       "governedBy": "",
@@ -3937,7 +3937,7 @@
       "provenance": "unknown",
       "provenanceNote": "No repository record establishes the origin of this file; resolving it would require author/tool history from outside this repo.",
       "scope": "evidence",
-      "sha256": "b44c426ea2d9c7e1facda5b3cf1094f68c37d375ac823935c3689724f60b7fb6",
+      "sha256": "666243f7dba8c91dc2bf9bcad41687f0219f233cba8601e000a26a671bc3f40a",
       "status": "historical",
       "visualReview": "not-applicable",
       "width": 2726
@@ -3955,7 +3955,7 @@
       "provenance": "unknown",
       "provenanceNote": "No repository record establishes the origin of this file; resolving it would require author/tool history from outside this repo.",
       "scope": "evidence",
-      "sha256": "8e80604ddd4f7657df7e80ca3a885b2dce54a9556453091d0d69a07c5fd260b3",
+      "sha256": "94e578c400e7ef9d2d62e5c036b29b37eb0736f85327c328adfd7721d0341243",
       "status": "historical",
       "visualReview": "not-applicable",
       "width": 2360
@@ -3997,7 +3997,7 @@
       "width": 780
     },
     {
-      "bytes": 462530,
+      "bytes": 504409,
       "domain": "playtest-evidence",
       "ext": ".png",
       "governedBy": "",
@@ -4009,13 +4009,13 @@
       "provenance": "unknown",
       "provenanceNote": "No repository record establishes the origin of this file; resolving it would require author/tool history from outside this repo.",
       "scope": "evidence",
-      "sha256": "1736c79948ab02c3e7de3227c9d56b9c9e1527d081ea5c9c5dd5d5839815014e",
+      "sha256": "c29bc6b8831638ec47eb040dee8de4c7aff5e8fd8db51529de48ab4c51507cc9",
       "status": "historical",
       "visualReview": "not-applicable",
       "width": 2726
     },
     {
-      "bytes": 453549,
+      "bytes": 494167,
       "domain": "playtest-evidence",
       "ext": ".png",
       "governedBy": "",
@@ -4027,13 +4027,13 @@
       "provenance": "unknown",
       "provenanceNote": "No repository record establishes the origin of this file; resolving it would require author/tool history from outside this repo.",
       "scope": "evidence",
-      "sha256": "c1f38823db0697b884f355b79e5ceb69573b6b5aaf485219d547288f22a21ee6",
+      "sha256": "21b7910f76842aa7ead9f82ec9eaeef21c4f18d9602f0055df540417286623d5",
       "status": "historical",
       "visualReview": "not-applicable",
       "width": 2360
     },
     {
-      "bytes": 290973,
+      "bytes": 314225,
       "domain": "playtest-evidence",
       "ext": ".png",
       "governedBy": "",
@@ -4045,7 +4045,7 @@
       "provenance": "unknown",
       "provenanceNote": "No repository record establishes the origin of this file; resolving it would require author/tool history from outside this repo.",
       "scope": "evidence",
-      "sha256": "fcab248fb5820ece1dedf298423ef23cd7ea600514ca9a7d27b335d71c934938",
+      "sha256": "a8e372490a95b36cf0b627e467992dfa0be05513a0fe9396756ba6369ad71a45",
       "status": "historical",
       "visualReview": "not-applicable",
       "width": 780

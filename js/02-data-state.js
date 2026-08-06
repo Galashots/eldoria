@@ -440,8 +440,12 @@ if (gameMuted) document.getElementById('muteBtn').innerHTML = '&#x1f507;';
 // ---- Per-profile audio levels (ELD-PT-011) ----
 // Three independent channels, because "turn the music down" and "stop reading to me"
 // are different requests. A child who wants every instruction read aloud can still
-// play with the music off. Levels are 0..1 and persist per profile; the global mute
-// button remains the one-tap "silence everything" control and overrides all three.
+// play with the music off. Levels are 0..1 and persist per profile.
+//
+// OWNER RULING (2026-08-05): the global mute button silences music and effects but
+// NOT the reading voice — a child who mutes the game may still need it read to them.
+// Turning speech off is therefore a deliberate, separate act: set the reading-voice
+// level to 0. Do not "fix" mute to cover speech without asking Leo first.
 var AUDIO_CHANNELS = ['music', 'speech', 'effects'];
 var AUDIO_LEVEL_DEFAULTS = { music: 0.35, speech: 1, effects: 0.8 };
 var audioLevels = { music: 0.35, speech: 1, effects: 0.8 };
