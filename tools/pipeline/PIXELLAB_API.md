@@ -140,6 +140,8 @@ above.
 | Stock motion | `animate-character` + `template_animation_id` | 1 gen/direction |
 | Custom motion | `animate-character` + `action_description` | v3; see §5 |
 | Fill in directions a partial animation missed | MCP `animate_character(animation_group_id=...)` or the web UI's per-slot rocket icon | Appends to the existing group instead of regenerating the set. **Not available on the REST character route** ([REST-VERIFIED 2026-07-30]: `CreateCharacterAnimationRequest` has no append field; REST's `animation_group_id` exists only on the *object*-animation endpoint) |
+| Reskin frames with an outfit/weapon (candidate gear route) | `transfer-outfit-v2` | **[LIVE-VERIFIED 2026-08-06, UNEXERCISED]** Takes an outfit reference + 2–16 supplied frames; returns **composited frames, not a layer** (`no_background` available). Vendor use cases include "apply armour to a walking animation" and "transfer weapon to an action sequence." Candidate third gear method — see §8 and `GEAR_CUSTODY_CONTRACT.md` |
+| Strip a background to transparent PNG | `remove-background` | **[LIVE-VERIFIED 2026-08-06]** Model call, max 400×400. **Banned from the gear custody path** (extraction must be deterministic — `GEAR_CUSTODY_CONTRACT.md` GC8); repair/prep only |
 | Download everything | `GET /characters/{id}/zip` | Rotations, animation frames, `metadata.json`, and per-frame keypoints |
 
 **[VENDOR-DOCUMENTED] Downloads need no authentication — the UUID is the access
@@ -296,9 +298,14 @@ hard-code an unreviewed 8→4 selection.
 - **`frame_count`** 4–16, even, **v3 only.** Pro ignores it: frame count is fixed
   by size (≤64 px → 16 frames, >64 px → 4).
 - **`ai_freedom`** (0–900) is **template mode only**; 0 follows the template rigidly.
-- **`custom_start_frame_url` / `end_frame_url`** enable interpolation between two
-  poses — **v3 only, one direction per call.** Prefer the URL forms; inline
-  base64 is routinely truncated by MCP clients, which silently corrupts the image.
+- **Interpolation between two poses** — the REST fields are
+  **`custom_start_frame` / `end_frame`** (base64 `Base64Image`) on the character
+  animation endpoint, **v3 only, exactly one direction per call**, and the end
+  frame's dimensions must match the start [REST-VERIFIED 2026-08-06]. The earlier
+  `*_url` names here were MCP aliases, not REST fields — the MCP tool exposes
+  `start_frame_url` / `end_frame_url`, and via MCP prefer the URL form because
+  inline base64 is routinely truncated by MCP clients, which silently corrupts the
+  image.
 - **Seeds are not stored server-side.** `character.json` records id, prompt, view,
   directions and status — no seed. The command is the only durable record.
 - **Template motions available** include `walk`, `walking`, `walking-2..10`,
@@ -398,3 +405,66 @@ failure modes is the point of this file.
 
 **North Star alignment:** process and cost documentation only. No art, no visual
 change, no alteration to the approved direction.
+
+---
+
+## 8. Live-schema re-verification (2026-08-06) — Sub-project A gear research
+
+Re-verified read-only against `api.pixellab.ai/v2/openapi.json` and
+`api.pixellab.ai/mcp/docs` (`curl` + script parse; **no summarizing fetch**; no
+generation, no token used). The Gemini/ChatGPT research inputs on PR #53 were treated
+as **hypotheses**; this section records only what the live schema actually exposes.
+Full research artifacts: `GEAR_CUSTODY_CONTRACT.md`,
+`GEAR_EVIDENCE_RECORD_TEMPLATE.md`, and
+`docs/ai-team/PIXELLAB_METHOD_PROBE_AUTH_20260806.md`.
+
+### Confirmed real (safe to rely on)
+
+- **`create-character-state`** — real. `character_id` + `edit_description` required;
+  applies one edit across all 4/8 rotations; `use_color_palette_from_reference`
+  snaps to the source palette. Returns a **complete edited character, not an
+  engine-ready layer** — matches spec §6. Per-call **generation count is not
+  published** in the schema; measure the balance before/after.
+- **Pose interpolation** — real, via `custom_start_frame` / `end_frame` (base64),
+  v3 only, one direction, matching dims (corrected in §5).
+- **`enhance_prompt`** — real on `create-character-v3` (from-scratch only; 422 with a
+  reference) and on the character animation endpoint (v3 only; 422 with
+  template/pro); +0.05 gen each. Standalone endpoints exist too
+  (`/enhance-character-v3-prompt`, `/enhance-animation-v3-prompt`,
+  `/enhance-pixen-prompt`). The prior "[UNTESTED]" note on the animation route is now
+  schema-confirmed to exist (behaviour still unexercised here).
+- **Cost model unchanged** — the schema restates it: v3 ref-mode
+  `ceil(w·h·8/65536)`; `pro` 20–40 gen/dir; `enhance` +0.05. (There is **no
+  `confirm_cost` field** in the REST schema — it is a client/MCP-side guard, not a
+  request parameter.)
+
+### Corrections to prior research/doc claims (the mismatch report)
+
+- **Style-reference anchoring across a gear family is NOT available on the character
+  route.** `style_images` / `StyleImage` / `StyleOptions` exist only on
+  `generate-with-style-v2` and the `create-image-*` / tileset endpoints — flat
+  images with **no 8-direction rotation**. On the identity/state route the only
+  anchor is `create-character-state`'s `use_color_palette_from_reference`, which is
+  **palette only** (not outline/detail/shading). Treat "style-anchor a gear family
+  through the hero route" as unsupported; palette-snap is the ceiling.
+- **"Clothing-only / no-mannequin / no-ghost-body" cannot be a negative prompt on
+  these routes.** There is **no `negative_description`** on `create-character-v3`,
+  `create-character-state`, or the character animation endpoint (confirms §5). It
+  exists only on `animate-with-text`, the create-image endpoints, and `inpaint`. On
+  the gear routes the positive edit/action text is the only lever.
+
+### New capabilities the research didn't list
+
+- **`transfer-outfit-v2`** — outfit/weapon reskin of 2–16 supplied frames; returns
+  **composited frames, not a layer**; `no_background`, `additional_instructions`;
+  sizes 32–256 (frame count drops as size grows because the reference + frames pack
+  into one grid). A genuine **third candidate gear method** (alongside H1 direct
+  overlay and H2 equipped-state). Recorded as a **flagged, owner-gated extension** to
+  the two-arm probe — not folded into it. See the probe auth doc.
+- **`remove-background`** — model background stripper, max 400×400. Useful for
+  repair/prep, **banned from the custody path** because layer extraction must be
+  deterministic (`GEAR_CUSTODY_CONTRACT.md` GC8).
+
+**North Star alignment:** documentation and schema verification only. No art, no
+visual change. No spend occurred; every generation batch — probe included — still
+needs Leo's explicit per-batch authorization.
