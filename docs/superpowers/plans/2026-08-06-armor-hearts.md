@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **Base source:** branch `agent/armor-hearts-20260806` off `main` @ `cc5df6d`. **Merge order: rebase onto `main` AFTER sub-project 1 (retire-top-down) lands, then rerun all gates.**
+- **Base source:** branch `agent/armor-hearts-20260806`, rebased onto `origin/main` @ `836637f` (PR #53, sub-project 0 doc realignment — landed 2026-08-06; `CURRENT_STATE.md` now authorizes combat/armor scope). **Merge order: rebase onto `main` again AFTER sub-project 1 (retire-top-down) lands, then rerun all gates before merge.**
 - **No save-version bump.** `SAVE_VERSION` stays 4. No new save field. Derivation reproduces every well-formed *post-change* save exactly; old saves are reconciled by derived-wins on ingest.
 - **No resurrection.** Ingest recomputation clamps `hp` DOWN only (`min`); a defeated hero (`hp <= 0`) is never raised.
 - **Weapons keep `damage`; `armour`/`head`/`cape` lose `damage` and carry exactly one stat: `hp` (a multiple of `HEART_HP` = 5).**
@@ -35,13 +35,11 @@ Sub-project 2 **owns and edits**:
 
 Sub-project 2 **must NOT touch** (owned by lane 1): `js/07/08/09`, `OVERLAY_DIRECTIONS`, `cardinalFromVector`, `FACING_TO_CARDINAL`, `?iso=` machinery, `paperDollDirection` (stays `'right'`). **Shared-file coordination:** `index.html` and the `tools/` test list are edited by both lanes — lane 2 edits only the `#youHp*` player row and appends its own test. Any overlapping hunk = STOP and report to Fable.
 
-## Open decisions for Fable's direction (balance values — Leo locks per Charter)
+## Locked decisions (Fable directed, Leo approved — 2026-08-06)
 
-These are *derived* proposals, not settled. The plan codes the recommended default so it is testable end-to-end; **Fable directs and Leo locks the magnitudes before merge.**
-
-1. **Per-item `hp` magnitudes (Task 1).** Recommended **Option A: `hp = old_damage * 5`** (1 old damage point → 1 heart). It preserves the exact tier ordering, and makes each piece's hearts legible. Consequence: a full tier-3 armour set (Titan Helm 25 + Dragon Cape 25 + Wyrm Scale 45 = 95 HP = 19 hearts) roughly doubles a mid-game hero's HP. **Option B (gentler):** 5/5/5 (tier1), 10/10/10 (tier2), 15/15/15 + Wyrm 20 (tier3) → full tier-3 set = 50 HP = 10 hearts. Task 1 codes Option A; switching to B is a table edit + re-running Task 7.
-2. **Compensating-pass shape (Task 7).** Recommended: **no offense buff.** Regular kills are unchanged (a correct zero-tap = `2*base` still one-shots small enemies), and boss per-question damage is already bounded by `phaseCap = ceil(maxHp/3)` regardless of loadout, so removing armour-damage only lengthens boss fights from ~3 to a bounded ~4–6 questions while the HP gain is the intended trade. Task 7 measures the envelope and asserts it stays bounded. If Fable wants fights shorter, the alternative is a flat weapon/base buff — same tests re-run.
-3. **Phone-portrait heart cap (Task 6).** Recommended: 10 hearts/row, wrap; display cap **30 hearts (150 HP) = 3 rows**, then a compact `＋N` overflow chip with the exact `hp/maxHp` text authoritative. Concrete and testable; Fable may set a different cap.
+1. **OWNER 14 — per-item `hp` magnitudes: Option B (gentler scale), locked.** `5/5/5` (tier 1: Leather Cap, Hero's Cape, Iron Armor), `10/10/10` (tier 2: Crystal Crown, Guardian Armor, Shadow Cape), `15/15/15` (tier 3: Titan Helm, Dragon Cape, Mithril Armor) `+ 20` for the Wyrm Scale trophy (best-in-slot). Every value is a multiple of `HEART_HP` (5). A full tier-3 set (Titan Helm 15 + Dragon Cape 15 + Wyrm Scale 20) = 50 HP = 10 hearts. Task 1 codes these exact numbers.
+2. **Compensating-pass shape — locked: no offense buff.** Regular kills are unchanged (a correct zero-tap = `2*base` still one-shots small enemies); boss per-question damage stays bounded by `phaseCap = ceil(maxHp/3)` regardless of loadout, so removing armour-damage only lengthens boss fights within a bounded envelope while the HP gain is the intended trade. Task 7 measures and asserts that envelope. Any future buff is a separate owner decision made from that measured data, not bundled here.
+3. **Phone-portrait heart cap — locked: 10 hearts/row, cap 30 hearts (150 HP) = 3 rows,** then an overflow chip. **Exact chip text is authoritative:** ASCII `"+" + N` where `N = totalHearts − 30` (e.g. `+10`, `+20`) — no fullwidth glyph, no space, no suffix word. The exact `hp/maxHp` text beside the hearts remains the ground truth regardless of the cap. Both rounding guards (Guard A: living ⇒ ≥ half a heart; Guard B: hurt ⇒ never a full row) are computed against the TRUE `hp`/`maxHp`, not the capped display, so they hold identically whether or not an overflow chip is showing — Task 6 adds explicit chip-territory assertions for both.
 
 ---
 
@@ -113,31 +111,35 @@ console.log('\nAll armor-hearts tests passed.');
 Run: `node tools/armor-hearts-test.mjs`
 Expected: FAIL on `T1: armour has hp...` and `T1: sellValue pinned...` (fields don't exist yet).
 
-- [ ] **Step 3: Replace the `GEAR` table** (`js/03-maps-areas.js:239-263`) with (Option A magnitudes; keep the surrounding comment block):
+- [ ] **Step 3: Replace the `GEAR` table** (`js/03-maps-areas.js:239-263`) with (OWNER 14 / Option B magnitudes, locked 2026-08-06; keep the surrounding comment block, and note the `hp` provenance inline):
 
 ```js
+// hp values on armour/head/cape are OWNER 14 (2026-08-06): the gentler scale — 5/5/5
+// (tier 1), 10/10/10 (tier 2), 15/15/15 (tier 3) + 20 for the Wyrm Scale trophy. Every
+// value is a multiple of HEART_HP (5). sellValue stays pinned to the OLD damage*5 price
+// so removing `damage` from armour moves no economy number (combat-armor spec §4).
 var GEAR = {
   // Tier 1 (Wilds drops)
   wooden_sword:  { name: 'Wooden Sword',  slot: 'weapon', damage: 2, sellValue: 10, tier: 1, source: 'Wilds' },
   leather_cap:   { name: 'Leather Cap',   slot: 'head',   hp: 5,     sellValue: 5,  tier: 1, source: 'Wilds' },
   hero_cape:     { name: "Hero's Cape",   slot: 'cape',   hp: 5,     sellValue: 5,  tier: 1, source: 'Wilds' },
-  iron_armor:    { name: 'Iron Armor',    slot: 'body',   hp: 10,    sellValue: 10, tier: 1, source: 'Wilds' },
+  iron_armor:    { name: 'Iron Armor',    slot: 'body',   hp: 5,     sellValue: 10, tier: 1, source: 'Wilds' },
   crystal_blade: { name: 'Crystal Blade', slot: 'weapon', damage: 5, sellValue: 25, tier: 1, source: 'Wilds' },
   // Tier 2 (Deep Woods drops) — all stronger than their tier-1 slot-mates.
   steel_sword:    { name: 'Steel Sword',    slot: 'weapon', damage: 6,  sellValue: 30, tier: 2, source: 'Deep Woods' },
   crystal_staff:  { name: 'Crystal Staff',  slot: 'weapon', damage: 8,  sellValue: 40, tier: 2, source: 'Deep Woods' },
-  crystal_crown:  { name: 'Crystal Crown',  slot: 'head',   hp: 15,     sellValue: 15, tier: 2, source: 'Deep Woods' },
-  guardian_armor: { name: 'Guardian Armor', slot: 'body',   hp: 20,     sellValue: 20, tier: 2, source: 'Deep Woods' },
-  shadow_cape:    { name: 'Shadow Cape',    slot: 'cape',   hp: 15,     sellValue: 15, tier: 2, source: 'Deep Woods' },
+  crystal_crown:  { name: 'Crystal Crown',  slot: 'head',   hp: 10,     sellValue: 15, tier: 2, source: 'Deep Woods' },
+  guardian_armor: { name: 'Guardian Armor', slot: 'body',   hp: 10,     sellValue: 20, tier: 2, source: 'Deep Woods' },
+  shadow_cape:    { name: 'Shadow Cape',    slot: 'cape',   hp: 10,     sellValue: 15, tier: 2, source: 'Deep Woods' },
   // Boss reward (Shadow Warden) — the best weapon in the game, a guaranteed boss/trophy drop.
   eldoria_blade:  { name: 'Eldoria Blade',  slot: 'weapon', damage: 12, sellValue: 60, tier: 2, source: 'Shadow Warden', trophy: 'Shadow Warden' },
   // Tier 3 (Mine drops) — weapons stay BELOW the Eldoria Blade (12) so "best weapon" holds.
   obsidian_blade: { name: 'Obsidian Blade', slot: 'weapon', damage: 10, sellValue: 50, tier: 3, source: 'Mine' },
-  titan_helm:     { name: 'Titan Helm',     slot: 'head',   hp: 25,     sellValue: 25, tier: 3, source: 'Mine' },
-  dragon_cape:    { name: 'Dragon Cape',    slot: 'cape',   hp: 25,     sellValue: 25, tier: 3, source: 'Mine' },
-  mithril_armor:  { name: 'Mithril Armor',  slot: 'body',   hp: 30,     sellValue: 30, tier: 3, source: 'Mine' },
+  titan_helm:     { name: 'Titan Helm',     slot: 'head',   hp: 15,     sellValue: 25, tier: 3, source: 'Mine' },
+  dragon_cape:    { name: 'Dragon Cape',    slot: 'cape',   hp: 15,     sellValue: 25, tier: 3, source: 'Mine' },
+  mithril_armor:  { name: 'Mithril Armor',  slot: 'body',   hp: 15,     sellValue: 30, tier: 3, source: 'Mine' },
   // Crystal Wyrm boss reward — best armour in the game, guaranteed every win.
-  wyrm_scale:     { name: 'Wyrm Scale Armor', slot: 'body', hp: 45,     sellValue: 45, tier: 3, source: 'Crystal Wyrm', trophy: 'Crystal Wyrm' }
+  wyrm_scale:     { name: 'Wyrm Scale Armor', slot: 'body', hp: 20,     sellValue: 45, tier: 3, source: 'Crystal Wyrm', trophy: 'Crystal Wyrm' }
 };
 ```
 
@@ -201,9 +203,9 @@ git commit -m "feat(armor): pin gear sellValue; armour/head/cape carry hp not da
     // A weapon adds NO hp.
     player.gear.weapon = 'eldoria_blade';
     out.weaponNoHp = computeMaxHp() === 65;
-    // Armour adds its hearts; multiple pieces sum.
+    // Armour adds its hearts; multiple pieces sum (OWNER 14: wyrm_scale=20, titan_helm=15).
     player.gear.body = 'wyrm_scale'; player.gear.head = 'titan_helm';
-    out.armourSums = computeMaxHp() === 65 + 45 + 25; // 135
+    out.armourSums = computeMaxHp() === 65 + 20 + 15; // 100
     // Pure helper matches the live reader.
     out.pureMatches = maxHpFor(7, 3, player.gear) === computeMaxHp();
     return out;
@@ -291,13 +293,13 @@ git commit -m "feat(armor): add computeMaxHp/maxHpFor single source of truth"
       player: { level: 7, hpUpgrades: 0, maxHp: 20, hp: 20,
                 gear: { weapon: null, head: null, body: 'wyrm_scale', cape: null } } };
     var res = ingestSaveObject(s);
-    // derived = 20 + 6*5 + 45 = 95; hp clamps DOWN to min(20, 95) = 20 (not resurrected up).
-    out.derivedWins = res.ok && res.state.player.maxHp === 95 && res.state.player.hp === 20;
+    // derived = 20 + 6*5 + 20 (wyrm_scale, OWNER 14) = 70; hp clamps DOWN to min(20, 70) = 20 (not resurrected up).
+    out.derivedWins = res.ok && res.state.player.maxHp === 70 && res.state.player.hp === 20;
     // (b) No resurrection: stored hp 0 stays 0 even though maxHp derives higher.
     var dead = { version: 4, player: { level: 3, hpUpgrades: 0, maxHp: 30, hp: 0,
                  gear: { weapon: null, head: null, body: 'iron_armor', cape: null } } };
     var dres = ingestSaveObject(dead);
-    out.noResurrect = dres.ok && dres.state.player.maxHp === (20 + 2*5 + 10) && dres.state.player.hp === 0;
+    out.noResurrect = dres.ok && dres.state.player.maxHp === (20 + 2*5 + 5) && dres.state.player.hp === 0;
     // (c) Clamp DOWN when stored hp exceeds derived max (e.g. armour removed off-line).
     var over = { version: 4, player: { level: 1, hpUpgrades: 0, maxHp: 999, hp: 999,
                  gear: { weapon: null, head: null, body: null, cape: null } } };
@@ -393,17 +395,17 @@ git commit -m "feat(armor): derived-wins maxHp custody on save ingest (no versio
     player.maxHp = computeMaxHp(); player.hp = player.maxHp;   // 20/20
     player.hp = 18;                                            // 18/20
 
-    // (a) Equipping armour grants the new HP immediately: 18/20 + iron_armor(10) -> 28/30.
+    // (a) Equipping armour grants the new HP immediately: 18/20 + iron_armor(5, OWNER 14) -> 23/25.
     player.inventory = ['iron_armor'];
     equipFromBag(0);
-    out.grantOnEquip = player.maxHp === 30 && player.hp === 28;
+    out.grantOnEquip = player.maxHp === 25 && player.hp === 23;
 
-    // (b) Unequip clamps hp to the new max: 28/30 -> remove -> 18/20 (min(28,20)=20? no: hp>max -> 20).
+    // (b) Unequip clamps hp to the new max: 23/25 -> remove -> 20/20 (min(23,20)=20; max shrank, no grant).
     unequipSlot('body');
     out.clampOnUnequip = player.maxHp === 20 && player.hp === 20;
 
     // (c) Unequip floors a living hero at >=1 and never at 0.
-    player.gear.body = 'wyrm_scale'; player.maxHp = computeMaxHp(); player.hp = 1; // 1/65
+    player.gear.body = 'wyrm_scale'; player.maxHp = computeMaxHp(); player.hp = 1; // 1/40 (20 base + 20 wyrm_scale)
     unequipSlot('body');
     out.floorLiving = player.maxHp === 20 && player.hp >= 1;
 
@@ -411,9 +413,9 @@ git commit -m "feat(armor): derived-wins maxHp custody on save ingest (no versio
     player.gear = { weapon: null, head: null, body: 'iron_armor', cape: null };
     player.inventory = [];
     player.maxHp = computeMaxHp(); player.hp = player.maxHp;
-    equipGear('mithril_armor');                        // 30 hp > iron 10 -> upgrade
+    equipGear('mithril_armor');                        // 15 hp > iron 5 -> upgrade
     out.autoUpgradeArmour = player.gear.body === 'mithril_armor' && player.inventory.indexOf('iron_armor') !== -1;
-    equipGear('iron_armor');                           // 10 hp < 30 -> stays in bag
+    equipGear('iron_armor');                           // 5 hp < 15 -> stays in bag
     out.autoKeepWeaker = player.gear.body === 'mithril_armor' &&
       player.inventory.filter(function (x){return x==='iron_armor';}).length === 2;
 
@@ -432,7 +434,7 @@ git commit -m "feat(armor): derived-wins maxHp custody on save ingest (no versio
     return out;
   });
   await browser.close();
-  check('T4: equip grants the new HP immediately (18/20 -> 28/30)', r.grantOnEquip);
+  check('T4: equip grants the new HP immediately (18/20 -> 23/25)', r.grantOnEquip);
   check('T4: unequip clamps hp to the new max', r.clampOnUnequip);
   check('T4: unequip floors a living hero at >=1', r.floorLiving);
   check('T4: auto-equip upgrades armour by hp', r.autoUpgradeArmour);
@@ -705,7 +707,7 @@ git commit -m "feat(armor): slot-aware gear comparisons and hearts display strin
 - Consumes: `player.hp`, `player.maxHp`, `HEART_HP`.
 - Produces: `heartHalfUnits(hp, maxHp) -> integer half-heart count` (floored, both guards); `renderHearts(el, hp, maxHp)` writing full/half/empty heart glyphs + an accessible exact label. Enemy row (`#enemyHp*`) is NOT changed.
 
-**Phone-portrait contract (concrete):** 1 heart = 5 HP; 1 half-heart = 2.5 HP; floored (never rounds up). Guard A: a living hero (`hp > 0`) shows **≥ half a heart**. Guard B: a hurt hero (`hp < maxHp`) **never shows a full row**. Layout: `.hearts` is `display:flex; flex-wrap:wrap;` capped at **10 hearts per row**; displayed hearts cap at **30 (150 HP = 3 rows)**; beyond that a `＋N` overflow chip is appended and the exact `hp/maxHp` text (always present, `aria-live`) is authoritative. Stress cases rendered + asserted: 20 HP (4 hearts), 40 HP (8), 80 HP (16, 2 rows), 150 HP (30, at cap), 200 HP (30 + `＋10`).
+**Phone-portrait contract (concrete, locked by Fable/Leo 2026-08-06):** 1 heart = 5 HP; 1 half-heart = 2.5 HP; floored (never rounds up). Guard A: a living hero (`hp > 0`) shows **≥ half a heart**. Guard B: a hurt hero (`hp < maxHp`) **never shows a full row**. Both guards are computed against the TRUE `hp`/`maxHp` inside `heartHalfUnits`, not the capped display, so they hold identically whether or not an overflow chip is showing. Layout: `.hearts` is `display:flex; flex-wrap:wrap;` capped at **10 hearts per row**; displayed hearts cap at **30 (150 HP) = 3 rows**; beyond that an overflow chip is appended. **The chip's exact text is authoritative:** ASCII `"+" + N` where `N = totalHearts − 30` — e.g. `+10` at 200 HP, `+20` at 250 HP — no fullwidth glyph, no space, no suffix word. The exact `hp/maxHp` text (always present, `aria-live`) stays the ground truth beside the hearts at every scale. Stress cases rendered + asserted: 20 HP (4 hearts), 40 HP (8), 80 HP (16, 2 rows), 150 HP (30, at cap, no chip), 200 HP (30 + chip `+10`), plus two chip-territory guard cases at 250 HP (Guard A at 1 HP, Guard B at 245 HP).
 
 - [ ] **Step 1: Write the failing test.** Append to `tools/armor-hearts-test.mjs`:
 
@@ -722,6 +724,10 @@ git commit -m "feat(armor): slot-aware gear comparisons and hearts display strin
     out.guardAliveMin = heartHalfUnits(1, 20) === 1;  // Guard A: alive -> at least half a heart
     out.guardDead = heartHalfUnits(0, 20) === 0;      // dead -> zero
     out.guardHurtNeverFull = heartHalfUnits(19, 20) === 7 && heartHalfUnits(19, 20) < 8; // Guard B
+    // Both guards hold far into chip/overflow territory (250 maxHp = 50 hearts, cap 30):
+    // heartHalfUnits always works off the TRUE hp/maxHp, never the capped display total.
+    out.guardAChip = heartHalfUnits(1, 250) === 1;                       // Guard A, chip territory
+    out.guardBChip = heartHalfUnits(245, 250) < Math.round(250 / 2.5);   // Guard B, chip territory
     // Rendering + stress cases (max HP always a multiple of 5 -> whole-heart rows).
     selectProfile('adventurer');
     activateArea('wilds'); var slime = currentEnemies[0]; slime.alive = true;
@@ -732,18 +738,29 @@ git commit -m "feat(armor): slot-aware gear comparisons and hearts display strin
       var el = document.getElementById('youHearts');
       var full = el.querySelectorAll('.heart-full').length;
       var half = el.querySelectorAll('.heart-half').length;
+      var overflowEl = el.querySelector('.heart-overflow');
       var overflow = el.querySelectorAll('.heart-overflow').length;
+      var chipText = overflowEl ? overflowEl.textContent : null;
       var num = document.getElementById('youHpNum').textContent;
       endSlashPhase(); closeCombat();
-      return { full: full, half: half, overflow: overflow, num: num };
+      return { full: full, half: half, overflow: overflow, chipText: chipText, num: num };
     }
     var s20 = heartsFor(20, 20), s40 = heartsFor(40, 40), s80 = heartsFor(80, 80),
         s150 = heartsFor(150, 150), s200 = heartsFor(200, 200);
     out.s20 = s20.full === 4 && s20.half === 0 && s20.num === '20/20';
     out.s40 = s40.full === 8 && s40.num === '40/40';
     out.s80 = s80.full === 16 && s80.num === '80/80';
-    out.s150 = s150.full === 30 && s150.overflow === 0 && s150.num === '150/150';
-    out.s200 = s200.full === 30 && s200.overflow === 1 && s200.num === '200/200'; // capped + chip
+    out.s150 = s150.full === 30 && s150.overflow === 0 && s150.chipText === null && s150.num === '150/150';
+    out.s200 = s200.full === 30 && s200.overflow === 1 && s200.chipText === '+10' && s200.num === '200/200';
+    // Chip-territory RENDER checks (250 maxHp = 50 hearts, cap 30, chip covers 20 hidden hearts):
+    // Guard A — 1 HP still shows a living half-heart, not zero, even under a cap-exceeding max.
+    var chipGuardA = heartsFor(250, 1);
+    out.chipGuardARender = chipGuardA.full === 0 && chipGuardA.half === 1 &&
+      chipGuardA.chipText === '+20' && chipGuardA.num === '1/250';
+    // Guard B — a hero hurt by 5 HP out of 250 still reads correctly: the exact text is the
+    // truth (245/250), and the chip text is exact regardless of how many shown hearts are full.
+    var chipGuardB = heartsFor(250, 245);
+    out.chipGuardBRender = chipGuardB.chipText === '+20' && chipGuardB.num === '245/250';
     // The player HP row shows hearts, not a proportional fill bar.
     out.noPlayerBar = document.getElementById('youHpFill') === null;
     // The enemy row keeps its bar + exact readout untouched.
@@ -758,11 +775,15 @@ git commit -m "feat(armor): slot-aware gear comparisons and hearts display strin
   check('T6: Guard A — living hero shows >= half heart', r.guardAliveMin);
   check('T6: dead hero shows zero hearts', r.guardDead);
   check('T6: Guard B — hurt hero never shows a full row', r.guardHurtNeverFull);
+  check('T6: Guard A holds in chip territory (pure fn)', r.guardAChip);
+  check('T6: Guard B holds in chip territory (pure fn)', r.guardBChip);
   check('T6: stress 20 HP = 4 hearts', r.s20);
   check('T6: stress 40 HP = 8 hearts', r.s40);
   check('T6: stress 80 HP = 16 hearts', r.s80);
-  check('T6: stress 150 HP = 30 hearts (at cap)', r.s150);
-  check('T6: stress 200 HP = 30 hearts + overflow chip', r.s200);
+  check('T6: stress 150 HP = 30 hearts (at cap, no chip)', r.s150);
+  check('T6: stress 200 HP = 30 hearts + chip "+10"', r.s200);
+  check('T6: chip territory Guard A render (1/250 -> half heart + "+20")', r.chipGuardARender);
+  check('T6: chip territory Guard B render (245/250 -> "+20", exact text is truth)', r.chipGuardBRender);
   check('T6: player HP fill bar is gone', r.noPlayerBar);
   check('T6: enemy bar + exact readout kept', r.enemyBarKept);
   check('T6: no console errors', errors.length === 0);
@@ -818,7 +839,9 @@ function renderHearts(el, hp, maxHp) {
     html += '<span class="' + cls + '" aria-hidden="true">♥</span>';
   }
   if (totalHearts > HEART_DISPLAY_CAP) {
-    html += '<span class="heart-overflow" aria-hidden="true">＋' + (totalHearts - HEART_DISPLAY_CAP) + '</span>';
+    // Exact chip text is authoritative (combat-armor spec §5, locked 2026-08-06):
+    // ASCII "+" + N, no fullwidth glyph, no space, no suffix word.
+    html += '<span class="heart-overflow" aria-hidden="true">+' + (totalHearts - HEART_DISPLAY_CAP) + '</span>';
   }
   el.innerHTML = html;
   el.setAttribute('aria-label', 'Your health: ' + Math.max(0, hp) + ' of ' + maxHp);
@@ -983,6 +1006,7 @@ git commit -m "chore(armor): wire armor-hearts test into npm test; reconcile CHA
 - **§4 armour hp = multiples of 5; weapons unchanged:** Task 1. ✓
 - **§5 hearts player-only, floored half-hearts, both guards, exact text, concrete phone-portrait contract, enemy exact readout kept:** Task 6. ✓
 - **§5 replaces the fixed-width normalized player bar** (`#youHpFill`): Task 6. ✓
+- **Fable-locked (2026-08-06): OWNER 14 Option B magnitudes, no offense buff, 10/row + 30-cap + authoritative ASCII chip text, both guards proven in chip territory:** Locked-decisions section + Tasks 1, 6 (chip-territory render/pure-fn assertions), 7. ✓
 - **§9 tests:** unequip floor-1 (T4), no-resurrection (T3), derived-wins custody (T3), immediate grant (T4), pinned sellValue (T1), heart floor + both guards (T6), mechanics tests pass untouched (T1/T3/T4/T5/T8 regressions). ✓
 - **§7 file ownership + rebase-after-lane-1 merge order:** declared above. ✓
 
