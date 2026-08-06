@@ -19,7 +19,9 @@
     <span class="hud-level">&#x2B50; Lv <span id="level">1</span></span>
     <button class="hud-hero" id="heroBtn" onclick="openCharacter()" aria-label="Open character and equipment" disabled>Hero</button>
     <button class="hud-switch" id="switchBtn" aria-label="Hold to switch hero profile">Switch</button>
+    <button class="hud-mute" id="sayAgainBtn" aria-label="Say that again" onclick="sayItAgain(event)" hidden>&#x1f5e3;</button>
     <button class="hud-mute" id="muteBtn" aria-label="Toggle sound" onclick="toggleMute()">&#x1f50a;</button>
+    <button class="hud-mute" id="soundSettingsBtn" aria-label="Sound settings" onclick="openSoundSettings()">&#x2699;</button>
   </div>
   <div id="questTracker" class="quest-tracker"></div>
   <div id="onboardingGuide" class="onboarding-guide" hidden>
@@ -76,6 +78,15 @@
   <div class="modal">
     <h2 class="modal-title" id="shopTitle">General Store</h2>
     <p class="shop-hint" id="shopHint">Which seed earns the most gold profit per harvest? (sell price &minus; seed cost)</p>
+    <!-- Bulk buy (ELD-PT-011a): pick how many, then Buy. Buying 20 used to be 20 taps. -->
+    <div class="buy-qty" role="group" aria-label="How many seeds to buy">
+      <span class="buy-qty-label">Buy how many?</span>
+      <button type="button" class="buy-qty-btn" id="qty_1" onclick="setSeedBuyQuantity(1)" aria-label="Buy 1 at a time">1</button>
+      <button type="button" class="buy-qty-btn" id="qty_5" onclick="setSeedBuyQuantity(5)" aria-label="Buy 5 at a time">5</button>
+      <button type="button" class="buy-qty-btn" id="qty_10" onclick="setSeedBuyQuantity(10)" aria-label="Buy 10 at a time">10</button>
+      <button type="button" class="buy-qty-btn" id="qty_15" onclick="setSeedBuyQuantity(15)" aria-label="Buy 15 at a time">15</button>
+      <button type="button" class="buy-qty-btn" id="qty_20" onclick="setSeedBuyQuantity(20)" aria-label="Buy 20 at a time">20</button>
+    </div>
     <div class="shop-row">
       <span class="crop-dot" style="background:#66aa33"></span>
       <div class="shop-info"><b>Turnip</b> — 2g<small>8s grow · sells 3g</small></div>
@@ -161,6 +172,38 @@
 <!-- Save tools (slice 14): back up / restore / reset a profile's save. Opened from the
      title screen. "Export" dumps the save text to the box; "Import" writes pasted text
      back; resets are confirmed first so a stray tap can't wipe progress. -->
+<!-- Sound settings (ELD-PT-011): three independent levels, saved per profile, so
+     "turn the music down" and "stop reading to me" are separate choices. -->
+<div class="modal-overlay" id="soundModal" role="dialog" aria-modal="true" aria-labelledby="soundTitle">
+  <div class="modal">
+    <div class="character-heading">
+      <h2 class="modal-title" id="soundTitle">Sound</h2>
+      <button class="dumpling-close-x" onclick="closeSoundSettings()" aria-label="Close sound settings">×</button>
+    </div>
+    <div class="sound-row">
+      <label class="sound-label" for="musicLevel">&#x1F3B5; Music</label>
+      <input class="sound-slider" id="musicLevel" type="range" min="0" max="100" step="5"
+             oninput="onAudioSliderInput('music', this.value)" onchange="onAudioSliderCommit('music')" aria-label="Music volume">
+      <span class="sound-value" id="musicLevelValue">35%</span>
+    </div>
+    <div class="sound-row">
+      <label class="sound-label" for="speechLevel">&#x1F5E3; Reading voice</label>
+      <input class="sound-slider" id="speechLevel" type="range" min="0" max="100" step="5"
+             oninput="onAudioSliderInput('speech', this.value)" onchange="onAudioSliderCommit('speech')" aria-label="Reading voice volume">
+      <span class="sound-value" id="speechLevelValue">100%</span>
+    </div>
+    <div class="sound-row">
+      <label class="sound-label" for="effectsLevel">&#x1F514; Sound effects</label>
+      <input class="sound-slider" id="effectsLevel" type="range" min="0" max="100" step="5"
+             oninput="onAudioSliderInput('effects', this.value)" onchange="onAudioSliderCommit('effects')" aria-label="Sound effects volume">
+      <span class="sound-value" id="effectsLevelValue">80%</span>
+    </div>
+    <p class="sound-note">Every instruction is always written on screen too. Tap &#x1F5E3; on the top bar to hear the last one again.
+      The &#x1f50a; button silences music and sounds — reading stays on, so set <b>Reading voice</b> to 0% to turn it off.</p>
+    <button class="btn-sell" onclick="closeSoundSettings()">Done</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="saveToolsModal" role="dialog" aria-modal="true" aria-labelledby="saveToolsTitle">
   <div class="modal">
     <h2 class="modal-title" id="saveToolsTitle">Save Tools</h2>

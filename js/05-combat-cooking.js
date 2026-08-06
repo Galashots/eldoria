@@ -44,6 +44,8 @@ function equipGear(itemId) {
   if (current && GEAR[current] && GEAR[current].damage >= item.damage) {
     // Not an upgrade — keep it in the bag to sell for gold.
     player.inventory.push(itemId);
+    // An automatic drop is a rare progression event, not a menu action: it is worth
+    // one spoken line, because a 1.2s toast is easy for an early reader to miss.
     showToast('Found ' + item.name + ' — in your bag to sell (' + gearSellPrice(itemId) + 'g).');
     speak('You found a ' + item.name + '. It is in your bag to sell.');
     return;
@@ -51,6 +53,7 @@ function equipGear(itemId) {
   // It's an upgrade: the old item (if any) drops into the bag so it's not lost.
   if (current) player.inventory.push(current);
   player.gear[item.slot] = itemId;
+  // Same here: this equip is automatic on a drop, not a tap in the Character screen.
   showToast('Equipped ' + item.name + '! +' + item.damage + ' damage');
   speak('You found a ' + item.name + '! Plus ' + item.damage + ' damage!');
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
@@ -71,8 +74,7 @@ function sellGear(index) {
   player.inventory.splice(index, 1);
   player.gold += price;
   soundCoin();
-  showToast('Sold ' + GEAR[itemId].name + ' for ' + price + 'g!');
-  speak('You sold the ' + GEAR[itemId].name + ' for ' + price + ' gold.');
+  announceRoutine('Sold ' + GEAR[itemId].name + ' for ' + price + 'g!');
   updateHUD();
   saveGame();
 }
@@ -121,8 +123,7 @@ function equipFromBag(index) {
   var current = player.gear[item.slot];
   if (current) player.inventory.push(current);  // the old item goes into the bag
   player.gear[item.slot] = itemId;
-  showToast('Equipped ' + item.name + '! (+' + item.damage + ' dmg)');
-  speak('You equipped the ' + item.name + '.');
+  announceRoutine('Equipped ' + item.name + '! (+' + item.damage + ' dmg)');
   updateHUD();
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
   saveGame();
@@ -136,8 +137,7 @@ function unequipSlot(slot) {
   if (!itemId || !GEAR[itemId]) return false;
   player.inventory.push(itemId);
   player.gear[slot] = null;
-  showToast('Put ' + GEAR[itemId].name + ' in your bag.');
-  speak('You put the ' + GEAR[itemId].name + ' in your bag.');
+  announceRoutine('Put ' + GEAR[itemId].name + ' in your bag.');
   updateHUD();
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
   saveGame();

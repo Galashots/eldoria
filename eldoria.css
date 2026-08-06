@@ -293,6 +293,77 @@
     font-size: 0.95rem;
     min-width: 50px;
   }
+  /* ---- Bulk buy quantity chips (ELD-PT-011a) ---- */
+  .buy-qty {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 10px;
+  }
+  .buy-qty-label {
+    /* Own line so the five chips wrap as one even row rather than 3 + 2. */
+    flex: 1 0 100%;
+    font-size: 0.9rem;
+    color: #ffe0a0;
+    margin-bottom: 2px;
+  }
+  .buy-qty-btn { flex: 1 1 auto; }
+  .buy-qty-btn {
+    /* 44px minimum so small fingers hit the right number on a tablet. */
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #ffe9b8;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,214,102,0.25);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .buy-qty-btn.selected {
+    background: linear-gradient(180deg, #99dd66 0%, #6aaa33 100%);
+    color: #1a3300;
+    border-color: #4a7722;
+  }
+  /* Buying fewer than asked is legitimate, but it should look different first. */
+  .btn-buy-partial {
+    background: linear-gradient(180deg, #ffd977 0%, #e0a733 100%);
+    border-color: #a87a1e;
+  }
+  /* ---- Sound settings ---- */
+  .sound-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .sound-label {
+    flex: 0 0 40%;
+    font-size: 1rem;
+    color: #ffe9b8;
+  }
+  .sound-slider {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 44px;
+    /* Match the warm UI instead of the browser's default blue. Full slider theming
+       belongs with the later UI-theming pass; this is the one-line version. */
+    accent-color: #e0a733;
+  }
+  .sound-value {
+    flex: 0 0 3.6em;
+    text-align: right;
+    font-size: 0.95rem;
+    color: #c8b080;
+  }
+  .sound-note {
+    font-size: 0.9rem;
+    color: #c8b080;
+    font-style: italic;
+    margin: 4px 0 10px;
+  }
   /* ---- Seed picker overlay (tap to choose which seed to plant) ---- */
   .btn-seed {
     display: block;
@@ -531,7 +602,8 @@
   .hud-mute {
     background: #b0683a; color: #fff; border: 2px solid #ffd666;
     border-radius: 6px; padding: 2px 10px; font-size: 1.1rem; cursor: pointer;
-    min-width: 38px; min-height: 34px; line-height: 1;
+    /* 44px minimum: these are child-facing HUD controls on a tablet (review #5199507568). */
+    min-width: 44px; min-height: 44px; line-height: 1;
   }
   /* Mira's Guide surface (Step 7): compact, non-modal guidance opposite the
      kill-quest tracker. All controls keep a child-friendly 44px touch target. */

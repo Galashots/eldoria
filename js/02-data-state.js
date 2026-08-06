@@ -436,5 +436,70 @@ function toggleMute() {
 }
 // Sync button label on load
 if (gameMuted) document.getElementById('muteBtn').innerHTML = '&#x1f507;';
-bgMusic.volume = 0.35;
+
+// ---- Per-profile audio levels (ELD-PT-011) ----
+// Three independent channels, because "turn the music down" and "stop reading to me"
+// are different requests. A child who wants every instruction read aloud can still
+// play with the music off. Levels are 0..1 and persist per profile.
+//
+// OWNER RULING (2026-08-05): the global mute button silences music and effects but
+// NOT the reading voice — a child who mutes the game may still need it read to them.
+// Turning speech off is therefore a deliberate, separate act: set the reading-voice
+// level to 0. Do not "fix" mute to cover speech without asking Leo first.
+var AUDIO_CHANNELS = ['music', 'speech', 'effects'];
+var AUDIO_LEVEL_DEFAULTS = { music: 0.35, speech: 1, effects: 1 };
+var audioLevels = { music: 0.35, speech: 1, effects: 1 };
+
+function audioLevelsKey(profile) {
+  return 'eldoria_audio_' + (profile || 'default');
+}
+
+// Clamp to 0..1 and fall back to the default, so a hand-edited or corrupt value
+// can never leave a child with silent speech and no obvious reason why.
+function normalizeAudioLevel(value, channel) {
+  var n = Number(value);
+  if (!isFinite(n)) return AUDIO_LEVEL_DEFAULTS[channel];
+  return Math.max(0, Math.min(1, n));
+}
+
+function loadAudioLevels(profile) {
+  var next = {
+    music: AUDIO_LEVEL_DEFAULTS.music,
+    speech: AUDIO_LEVEL_DEFAULTS.speech,
+    effects: AUDIO_LEVEL_DEFAULTS.effects
+  };
+  try {
+    var raw = localStorage.getItem(audioLevelsKey(profile));
+    if (raw) {
+      var saved = JSON.parse(raw);
+      for (var i = 0; i < AUDIO_CHANNELS.length; i++) {
+        var ch = AUDIO_CHANNELS[i];
+        if (saved && saved[ch] !== undefined) next[ch] = normalizeAudioLevel(saved[ch], ch);
+      }
+    }
+  } catch (e) { /* unreadable settings fall back to defaults */ }
+  audioLevels = next;
+  applyAudioLevels();
+}
+
+function saveAudioLevels(profile) {
+  try {
+    localStorage.setItem(audioLevelsKey(profile || currentProfile), JSON.stringify(audioLevels));
+  } catch (e) { /* storage full or blocked: keep the in-memory levels */ }
+}
+
+// Music is the only channel with live state to push; speech and effects read
+// audioLevels at play time.
+function applyAudioLevels() {
+  bgMusic.volume = audioLevels.music;
+}
+
+function setAudioLevel(channel, value) {
+  if (AUDIO_CHANNELS.indexOf(channel) === -1) return;
+  audioLevels[channel] = normalizeAudioLevel(value, channel);
+  applyAudioLevels();
+  saveAudioLevels();
+}
+
+loadAudioLevels(null);
 
