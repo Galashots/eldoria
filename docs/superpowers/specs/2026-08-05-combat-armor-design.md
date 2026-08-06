@@ -31,16 +31,24 @@ memory:
 
 ## 2. Locked decisions
 
-| # | Decision | Rationale |
-| --- | --- | --- |
-| 1 | **Combat moves into the world.** Fights play out on the iso map where the enemy stands; questions overlay as HUD. | Owner call. The modal is retired for iso. |
-| 2 | **The turn loop is unchanged.** answer → per-question damage budget → tap-to-slash window, verbatim. | Preserves ELD-PLAY-001 and the ≥3-answered-questions boss floor. Makes world combat a *presentation* change with no balance risk. |
-| 3 | **Armor grants effective HP**, not damage reduction. | Simplest to tune and to explain; reuses the HP display; no new damage formula. |
-| 4 | **Gear art is per-item** — all 16 `GEAR` items visually distinct. | Owner call. Gear is a visible reward, not just a number. |
-| 5 | **Facing coverage starts as a combat-facing subset**, expanding on evidence. | Avoids committing ~256 overlays before a single item is proven. |
-| 6 | **Top-down rendering is retired**, in its own pure-deletion PR, first. | Owner call. One-way door; see §3. |
-| 7 | **HP displays as discrete hearts**, 1 heart = 5 HP. | Countable units are child-legible and quietly arithmetic-friendly; makes armour visible. |
-| 8 | **Render model (overlay vs baked) is deferred** to the PixelLab research gate. | Decided by evidence, not guesswork; see §6. |
+**Decision provenance is explicit.** Rows marked **OWNER** are Leo's decisions, selected by him
+during the 2026-08-05 brainstorming session. They are settled inputs, not open questions, and are
+**not** up for reconsideration in review. Rows marked *derived* are design consequences proposed by
+the director seat; those are legitimately open to challenge.
+
+| # | Decided by | Decision | Rationale |
+| --- | --- | --- | --- |
+| 1 | **OWNER** | **Combat moves into the world.** Fights play out on the iso map where the enemy stands; questions overlay as HUD. | Leo's call, selected over keeping the modal, a hybrid, or deferring. The modal is retired for iso. |
+| 2 | **OWNER** | **The turn loop is unchanged.** answer → per-question damage budget → tap-to-slash window, verbatim. | Leo's call, selected over real-time and over positional turns. Preserves ELD-PLAY-001 and the ≥3-answered-questions boss floor; makes world combat a *presentation* change with no balance risk. |
+| 3 | **OWNER** | **Armor grants effective HP**, not damage reduction. | Leo's call, selected over damage reduction, over math-visible defense, and over leaving armour as +damage. Simplest to tune and explain; no new damage formula. |
+| 4 | **OWNER** | **Gear art is per-item** — all 16 `GEAR` items visually distinct. | Leo's call, selected over per-tier, per-tier-plus-trophies, and generic. Gear is a visible reward, not just a number. |
+| 5 | **OWNER** | **Facing coverage starts as a combat-facing subset**, expanding on evidence. | Leo's call, selected over full 8-facing coverage and over staying at 4. Avoids committing ~256 overlays before a single item is proven. |
+| 6 | **OWNER** | **Top-down rendering is retired**, in its own pure-deletion PR, placed first. | Leo's call, twice: to retire it at all, and then to front-load the deletion rather than gate it on iPad evidence at the end of sub-project 3. One-way door; see §3. |
+| 7 | **OWNER** | **HP displays as discrete hearts.** | Leo's call, selected over an expanding bar, a hybrid, and a ticked bar. Countable units are child-legible and quietly arithmetic-friendly; makes armour visible. |
+| 8 | **OWNER** | **Render model (overlay vs baked) is deferred** to the PixelLab research gate. | Leo's call — decide on evidence, not guesswork; see §6. |
+| 9 | *derived* | 1 heart = 5 HP. | Base 20 HP is exactly 4 hearts and each Heart Crystal (+5) is exactly +1 heart. Falls out of decision 7 and the existing numbers. |
+| 10 | *derived* | The guidance-doc realignment lands **before** the deletion PR. | `CURRENT_STATE.md` currently forbids retiring top-down; a reviewer reading it would correctly reject PR 1. See §8. |
+| 11 | *derived* | A vertical slice of one gear item gates the bulk art spend. | Proves the chain against real pixels before the largest asset commitment in the project. |
 
 ## 3. Retiring top-down
 
@@ -132,7 +140,8 @@ Each row is its own implementation plan and its own PR.
 
 | Order | Sub-project | Art | Depends on |
 | --- | --- | --- | --- |
-| 1 | **Retire top-down** — pure deletion; areas default to iso; facing-save migration | none | — |
+| 0 | **Guidance-doc realignment** — authorize this scope, rank the plans, retire stale ones (§8) | none | — |
+| 1 | **Retire top-down** — pure deletion; areas default to iso; facing-save migration | none | 0 |
 | 2 | **Armor as effective HP + hearts** — `computeMaxHp` term, `GEAR.hp`, heart display, Character-screen comparisons | none | none (parallel with 1) |
 | A | **PixelLab research** — runs from day one, no code; outputs docs + render-model verdict | none | — |
 | 3 | **World combat staging** — same loop, sprites on the map, HUD-overlaid questions | none new | 1 |
@@ -142,7 +151,30 @@ Each row is its own implementation plan and its own PR.
 PRs 1, 2, and A start immediately and cannot conflict. **The slice at step 4 gates the bulk spend:
 no batch is generated until one item has been proven end-to-end and inspected on the iPad.**
 
-## 8. `CURRENT_STATE.md` corrections required
+## 8. Guidance-doc realignment (sub-project 0)
+
+**This lands before the deletion PR, not after.** `CURRENT_STATE.md` currently lists retiring
+top-down as out of scope, so a reviewer reading it would *correctly* reject PR 1. The
+authorization has to exist in the repo before the work it authorizes.
+
+### Plan precedence, newest as top priority
+
+Agents must resolve conflicts in this order. Anything lower that contradicts something higher is
+stale and must be banner-marked, using the existing pattern from
+`STEP8_ENVART_CONTRACT_20260804.md`.
+
+| Rank | Document | Standing |
+| --- | --- | --- |
+| 1 | `AGENTS.md`, `docs/ai-team/AI_TEAM_CHARTER.md` | Standing authority. Not superseded by this plan. |
+| 2 | `docs/VISUAL_NORTH_STAR.md` + current image | Visual authority. Not superseded. |
+| 3 | `docs/CURRENT_STATE.md` | Status of record. Updated by sub-project 0. |
+| 4 | **This design** | **Top-priority active plan.** |
+| 5 | `docs/ai-team/EXECUTION_PLAN_20260805.md` | Standing rules 1–6 remain in force. Its **Lane A queue is superseded** by §7 here. Banner-mark the queue only. |
+| 6 | `docs/superpowers/specs/2026-07-27-isometric-conversion-design.md` | Partially superseded: its top-down parity gates are moot once top-down retires. Banner-mark those sections. |
+| 7 | `docs/superpowers/specs/2026-07-27-dumpling-collection-design.md` | §4 pricing + decision #7 historical — already queued in PR #52. |
+| 8 | `STEP7_*`, `STEP8_*`, `HOTFIX_*`, `MOMO_*`, `TERRAIN_FIX_*` briefs | Historical execution records. Already banner-marked or inherently dated. |
+
+### `CURRENT_STATE.md` corrections required
 
 `docs/CURRENT_STATE.md` currently lists all three of the following as out of scope. The owner
 expanded scope on 2026-08-05 and the file must be updated in the first PR that touches it:
