@@ -1,7 +1,7 @@
 # Current Project State
 
-**Updated:** 2026-08-05  
-**Baseline:** `main` at `94cc35f` (post PR #51)  
+**Updated:** 2026-08-06  
+**Baseline:** `main` at `cc5df6d` (post PR #52)  
 **Purpose:** cold-start continuity for the next implementation lead. This file records status; it does not grant authority or supersede the AI Team Charter.
 
 ## Live architecture
@@ -17,7 +17,7 @@
   (proven byte-identical by reconstruction, full suite green, and 16/16
   pixel-identical artifact captures vs the pre-split baseline).
 - World coordinates, collision, maps, saves, economy, quests, and combat remain orthogonal and shared by both render modes.
-- Farm and Town default to the isometric renderer. Wilds, Deep Woods, and Mine remain top-down by default; under the `?iso=1` development override they render in iso with real enemy sprites, but flipping their defaults stays out of scope until the iso spec's combat/quest parity gates are met.
+- Farm and Town default to the isometric renderer. Wilds, Deep Woods, and Mine remain top-down by default; under the `?iso=1` development override they render in iso with real enemy sprites, but flipping their defaults waits on the iso spec's combat/quest parity gates. The combat/armor spec's sub-project 1 is that flip: world combat *is* the parity work, so the defaults move when top-down retires, not before.
 - Town's isometric NPCs Mira, Bram, and Gunnar render from committed
   PixelLab idle sprites (PR #48, 2026-08-05): one lossless crop/translate-only
   south → `down-right` 64×64 frame each via the `spr()` path, with the
@@ -108,6 +108,7 @@
 | [PR #48](https://github.com/Galashots/eldoria/pull/48) | Town NPC idle sprites (Mira/Bram/Gunnar) with the lossless crop/translate-only custody standard and all 24 source rotations retained — merged 2026-08-05. |
 | [PR #49](https://github.com/Galashots/eldoria/pull/49), [#50](https://github.com/Galashots/eldoria/pull/50) | Docs reconciliation through PR #48, and the Auntie Momo isometric sprite integration (`dumpling_vendor` wired to a committed south frame, position and behavior unchanged) — merged 2026-08-05. |
 | [PR #51](https://github.com/Galashots/eldoria/pull/51) | ELD-PT-011/011a: per-profile music/reading-voice/effects levels, Say-it-again, the routine-action TTS boundary (`announceRoutine`), and bulk seed buying with honest partial-purchase counts — merged 2026-08-05 at `94cc35f`. Mute silences music and effects but **not** the reading voice; reading voice at 0% is the separate speech-off control. |
+| [PR #52](https://github.com/Galashots/eldoria/pull/52) | ELD-PT-013 dumpling decision compliance: flat 20g pulls (no bundle discount, no saving-up nudge), one `DUMPLING_ODDS` table driving both the roll and the visible "Base odds" line, a tapped Read Odds control that speaks plain-language rarity rather than percentages, dough as a deterministic hand-pick with its exit above the shelf, and boss respawn moved to 24h — merged 2026-08-06 at `cc5df6d`. |
 
 ## Art and pipeline state
 
@@ -131,34 +132,77 @@
   generations; the overrun was recorded. Leo subsequently selected the
   `reference-v3` candidate, the only one whose 56–57px figure fits the 64×64
   frame crop/translate-only. Integration work order:
-  `docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`. PixelLab generation is
-  paused again.
+  `docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`. PixelLab generation was
+  paused again after that overrun; the combat/armor spec re-opens it *as an
+  exercise* but does not lift the pause — see the scope list below. Research is
+  documentation-led (its one permitted generation is the separately Leo-approved
+  method-elimination probe), and generation of any kind still needs Leo's explicit
+  per-batch authorization.
 - [`tools/3D_ISO_SPRITE_PIPELINE.md`](../tools/3D_ISO_SPRITE_PIPELINE.md) is historical. Do not restart its generation route; only the retained engine-contract facts explicitly referenced by the v2 pipeline remain applicable.
 
 ## Recommended next outcome
 
 Seating (Leo, 2026-08-04/05): **Codex implements; Fable (Claude) directs and
 performs exact-head acceptance reviews; ChatGPT is the standing visual lead
-and non-author reviewer; Leo merges.** The agreed queue as of 2026-08-05:
+and non-author reviewer; Leo merges.** The agreed queue as of 2026-08-06:
 
-1. PR #52 dumpling decision compliance is in flight — the last open PR;
-2. Leo chose ELD-PT-011/011a, delivered by PR #51. Remaining-area terrain
+**The active plan is [`docs/superpowers/specs/2026-08-05-combat-armor-design.md`](superpowers/specs/2026-08-05-combat-armor-design.md).**
+Leo expanded scope on 2026-08-05 to cover combat and armor together. That spec is
+owner-approved design and it takes precedence over the queue below for anything it
+covers; the queue governs everything it does not. Its §2 decisions are marked OWNER
+and are not to be reopened by any agent.
+
+Its sub-projects, in order (each takes its own implementation plan and its own PR):
+
+1. **Retire top-down rendering** — pure deletion, cleanly revertable; Wilds/Deep Woods/
+   Mine default to iso; asserts no facing is saved (none is); the four cardinal equipment
+   overlays survive, scoped to the Character paper doll, until per-item art exists.
+2. **Armor hearts-only** — armor/head/cape items trade `damage` for `hp` (weapons keep
+   damage); `computeMaxHp()` derivation introduced (derived value wins over stored on
+   ingest, no version bump); equip grants the new HP immediately; discrete hearts (player
+   display only, floored half-hearts); compensating balance pass with pinned `sellValue`.
+   Parallel with 1.
+3. **World combat staging** — the same turn loop behind a controller/presentation seam,
+   played on the map with the questions overlaid as HUD. Depends on 1.
+4. **Gear-art composability slice** — a four-slot loadout plus one swap, both heroes,
+   combat-facing subset, iPad-inspected. Gates the bulk spend.
+5. **Bulk gear art + combat animations.** Depends on 4 and the coverage-matrix ceiling.
+
+Running alongside from day one, no code: **PixelLab research** (sub-project A) — durable
+documentation plus the overlay-vs-baked render-model verdict.
+
+The rest of the queue, unchanged and still live where the spec is silent:
+
+1. Leo chose ELD-PT-011/011a, delivered by PR #51. Remaining-area terrain
    (Town first, one-primary-tileset-per-zone rule) is still unstarted and
    unauthorized;
-3. actor contact shadows (tuned against the landed NPC cast);
-4. camera-feel reassessment from fresh iPad evidence;
-5. env art for buildings/props, then missing NPC/monster sprites;
-6. UI theming LAST, so it is not themed against a temporary baseline;
-7. later: occlusion fading, cross-set grass harmonization, water/weather.
+2. actor contact shadows (tuned against the landed NPC cast);
+3. camera-feel reassessment from fresh iPad evidence;
+4. env art for buildings/props, then missing NPC/monster sprites;
+5. UI theming LAST, so it is not themed against a temporary baseline;
+6. later: occlusion fading, cross-set grass harmonization, water/weather.
 
 Out of scope unless Leo explicitly expands it:
 
-- map, collision, economy, curriculum, or combat-budget changes;
-- retirement of top-down rendering;
+- map, collision, economy, or curriculum changes;
+- **combat changes — now authorized** for the combat/armor spec only, and only within
+  it. Locked decision 2 holds the turn loop and the per-question damage budgets
+  unchanged, so the **mechanics assertions** (budgets, answer-to-slash loop,
+  duplicate-input, boss floor) must pass untouched; needing to edit *those* means the
+  authorization is exceeded. Modal-shell/DOM presentation tests are exempt — the modal
+  retires by design, and they are replaced by equivalent world-HUD coverage, not dropped;
+- **retirement of top-down rendering — now authorized** as sub-project 1, on the
+  spec's terms: a pure-deletion PR that lands first and stays cleanly `git revert`-able,
+  because it removes the fallback renderer before iso combat is proven;
 - unapproved visual identities or silent North Star replacement;
-- PixelLab generation of any kind (paused again after the one-authorized,
-  three-produced Momo probe overrun; the ~100-generation calibration batch
-  still requires Leo's explicit re-open); and
+- **PixelLab generation — in scope for this exercise**, but still gated: the research
+  phase is documentation-led, its only permitted generation being the bounded
+  method-elimination probe, and **every generation batch — the probe and the
+  composability-slice batch included — requires Leo's explicit approval before
+  generation**. The slice's iPad inspection gates *acceptance* of its output and the
+  bulk spend that follows; inspection never grants spend authorization. The generation
+  pause from the Momo probe overrun is lifted only by that per-batch approval, never by
+  a plan document; and
 - framework, bundler, TypeScript, or real-time 3D migration.
 
 If required art cannot clear visual review, keep the validated placeholder for
