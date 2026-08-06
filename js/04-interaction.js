@@ -252,16 +252,72 @@ function doAction() {
 }
 
 // ---- Shop ----
-function buySeeds(type) {
-  var info = CROPS[type];
-  if (player.gold >= info.cost) {
-    player.gold -= info.cost;
-    player.seeds[type]++;
-    showToast('Bought 1 ' + info.name + ' seed for ' + info.cost + 'g');
-    speak('You bought a ' + info.name + ' seed for ' + info.cost + ' gold.');
-    updateHUD();
-    saveGame();
+// Keep the quantity chips and the Buy labels honest about what a tap will do.
+function updateSeedBuyUI() {
+  for (var i = 0; i < SEED_BUY_QUANTITIES.length; i++) {
+    var qty = SEED_BUY_QUANTITIES[i];
+    var chip = document.getElementById('qty_' + qty);
+    if (chip) {
+      var on = qty === seedBuyQuantity;
+      chip.classList.toggle('selected', on);
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
   }
+  for (var t = 0; t < CROP_TYPES.length; t++) {
+    var type = CROP_TYPES[t];
+    var btn = document.getElementById('btnBuy_' + type);
+    if (!btn) continue;
+    var info = CROPS[type];
+    var can = affordableSeedCount(type, seedBuyQuantity);
+    // Show the real outcome up front rather than after the tap.
+    btn.textContent = seedBuyQuantity === 1 ? 'Buy' : ('Buy ' + seedBuyQuantity);
+    btn.setAttribute('aria-label', 'Buy ' + seedBuyQuantity + ' ' + info.name +
+      ' seed' + (seedBuyQuantity === 1 ? '' : 's') + ' for ' +
+      (seedBuyQuantity * info.cost) + ' gold');
+    btn.classList.toggle('btn-buy-partial', can > 0 && can < seedBuyQuantity);
+  }
+}
+
+// Bulk buy (ELD-PT-011a). Buying 20 seeds used to mean twenty taps.
+var SEED_BUY_QUANTITIES = [1, 5, 10, 15, 20];
+var seedBuyQuantity = 1;
+
+function setSeedBuyQuantity(qty) {
+  if (SEED_BUY_QUANTITIES.indexOf(qty) === -1) return;
+  seedBuyQuantity = qty;
+  updateSeedBuyUI();
+}
+
+// How many the child can actually afford, capped at what they asked for.
+function affordableSeedCount(type, wanted) {
+  var cost = CROPS[type].cost;
+  if (cost <= 0) return wanted;
+  return Math.max(0, Math.min(wanted, Math.floor(player.gold / cost)));
+}
+
+function buySeeds(type, requested) {
+  var info = CROPS[type];
+  var wanted = requested || seedBuyQuantity;
+  var bought = affordableSeedCount(type, wanted);
+  if (bought === 0) {
+    // Never silently do nothing: say what it costs and what they have.
+    announceRoutine('You need ' + info.cost + 'g for a ' + info.name +
+      ' seed. You have ' + player.gold + 'g.');
+    return;
+  }
+  var spent = bought * info.cost;
+  player.gold -= spent;
+  player.seeds[type] += bought;
+  // The count shown is always the count actually bought. If they asked for more
+  // than their gold covers we buy what it covers and SAY SO, rather than quietly
+  // charging for fewer seeds than the button promised.
+  var line = 'Bought ' + bought + ' ' + info.name + ' seed' + (bought === 1 ? '' : 's') +
+    ' for ' + spent + 'g';
+  if (bought < wanted) line += ' — that is all your gold could buy';
+  announceRoutine(line + '.');
+  updateHUD();
+  updateSeedBuyUI();
+  saveGame();
 }
 
 // ---- Heart Crystal upgrade (slice 19): a gold SINK that grants permanent +5 Max HP.
@@ -308,8 +364,7 @@ function buyTraining() {
 function sellCrops() {
   if (totalCrops() === 0) return;
   var earned = sellTotal();
-  showToast('Sold crops for ' + earned + 'g!');
-  speak('You sold your crops for ' + earned + ' gold!');
+  announceRoutine('Sold crops for ' + earned + 'g!');
   soundCoin();
   player.gold += earned;
   for (var i = 0; i < CROP_TYPES.length; i++) player.crops[CROP_TYPES[i]] = 0;
@@ -493,7 +548,10 @@ function openDumplingVendor() {
   }
   renderDumplingModal();
   modalShellOpen('dumplingModal');
-  speak('Welcome to the Squishy Dumpling stall. Save gold for a better bundle deal!');
+  // No spoken welcome here. The stall is a routine shop screen, and the previous
+  // line also urged saving up for a bigger bundle, which owner decision #1 forbids.
+  // The bundle wording and odds display are fixed separately (A2); this change only
+  // takes the stall out of the speech queue.
 }
 
 function closeDumplingVendor() {

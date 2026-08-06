@@ -569,6 +569,8 @@ function selectProfile(id) {
     return;
   }
   currentProfile = id;
+  loadAudioLevels(id);            // each child keeps their own sound levels
+  if (typeof syncSoundSettingsUI === 'function') syncSoundSettingsUI();
   applyState(loaded || defaultState());
   document.getElementById('profileName').textContent = profileDisplayName(id);
   document.getElementById('titleScreen').classList.add('hide');

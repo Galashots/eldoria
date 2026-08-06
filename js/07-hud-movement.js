@@ -12,6 +12,8 @@ function updateHUD() {
     var btn = document.getElementById('btnBuy_' + CROP_TYPES[i]);
     if (btn) btn.disabled = player.gold < CROPS[CROP_TYPES[i]].cost;
   }
+  // Labels/chips follow the chosen bulk quantity and current gold.
+  if (typeof updateSeedBuyUI === 'function') updateSeedBuyUI();
   var btnSell = document.getElementById('btnSell');
   var tc = totalCrops();
   btnSell.disabled = tc === 0;
@@ -73,7 +75,7 @@ function playTone(freq, dur, type, delay) {
   osc.type = type || 'sine';
   osc.frequency.value = freq;
   osc.connect(gain); gain.connect(audioCtx.destination);
-  gain.gain.setValueAtTime(0.18, t);
+  gain.gain.setValueAtTime(0.18 * audioLevels.effects, t);
   gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
   osc.start(t); osc.stop(t + dur);
 }
@@ -100,39 +102,109 @@ var shakeUntil = 0;
 var SHAKE_DURATION = 120;
 function triggerShake() { shakeUntil = Date.now() + SHAKE_DURATION; }
 
+// The last instruction that was read aloud, so a child who missed it can ask for it
+// again (ELD-PT-011). Routine chatter never lands here — only things worth repeating.
+var lastSpokenInstruction = '';
+
+function rememberInstruction(text) {
+  if (!text) return;
+  lastSpokenInstruction = text;
+  updateSayAgainButton();
+}
+
+// Repeat the last instruction on demand. Works even with the speech level at zero:
+// the child still gets the text on screen, which is the point of the button.
+function sayItAgain(event) {
+  if (event) event.stopPropagation();
+  if (!lastSpokenInstruction) return;
+  showToast(lastSpokenInstruction);
+  speakAloud(lastSpokenInstruction, true);
+}
+
+function updateSayAgainButton() {
+  var btn = document.getElementById('sayAgainBtn');
+  if (btn) btn.hidden = !lastSpokenInstruction;
+}
+
+// Single place where speech actually reaches the browser, so the speech level and
+// mute rule are applied once rather than at every call site.
+function speakAloud(text, cancelFirst) {
+  if (!('speechSynthesis' in window)) return;
+  if (audioLevels.speech <= 0) return;
+  try {
+    if (cancelFirst) window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    u.volume = audioLevels.speech;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
 // Voiced text — early-reader slot only. No-op for the older reader / unsupported browsers.
 function speak(text) {
   if (currentProfile !== 'mage') return;
-  if (!('speechSynthesis' in window)) return;
-  try {
-    window.speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.95;
-    window.speechSynthesis.speak(u);
-  } catch (e) {}
+  rememberInstruction(text);
+  speakAloud(text, true);
 }
 
 // Queue a follow-up line without cancelling speech that just finished. Used when
 // feedback must be heard first (for example, the answer -> Mira guide sequence).
 function speakQueued(text) {
   if (currentProfile !== 'mage') return;
-  if (!('speechSynthesis' in window)) return;
-  try {
-    var u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.95;
-    window.speechSynthesis.speak(u);
-  } catch (e) {}
+  rememberInstruction(text);
+  speakAloud(text, false);
 }
 
-// Read aloud to BOTH boys (used for the shop hint nudge).
+// Read aloud on both profiles (used for the shop hint nudge and Mira's Guide).
 function speakToAll(text) {
-  if (!('speechSynthesis' in window)) return;
-  try {
-    window.speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.95;
-    window.speechSynthesis.speak(u);
-  } catch (e) {}
+  rememberInstruction(text);
+  speakAloud(text, true);
+}
+
+// ---- Sound settings panel ----
+var soundSettingsOpen = false;
+
+function openSoundSettings() {
+  soundSettingsOpen = true;
+  syncSoundSettingsUI();
+  modalShellOpen('soundModal');
+}
+
+function closeSoundSettings() {
+  soundSettingsOpen = false;
+  modalShellClose('soundModal');
+}
+
+// Push the current levels into the sliders. Called on open and on profile load so a
+// child never sees another child's settings.
+function syncSoundSettingsUI() {
+  for (var i = 0; i < AUDIO_CHANNELS.length; i++) {
+    var ch = AUDIO_CHANNELS[i];
+    var pct = Math.round(audioLevels[ch] * 100);
+    var slider = document.getElementById(ch + 'Level');
+    var label = document.getElementById(ch + 'LevelValue');
+    if (slider) slider.value = String(pct);
+    if (label) label.textContent = pct + '%';
+  }
+}
+
+function onAudioSliderInput(channel, value) {
+  setAudioLevel(channel, Number(value) / 100);
+  var label = document.getElementById(channel + 'LevelValue');
+  if (label) label.textContent = Math.round(audioLevels[channel] * 100) + '%';
+  // Preview the channel you just moved, so the level means something to a child who
+  // cannot yet read the percentage.
+  if (channel === 'effects') soundCoin();
+  if (channel === 'speech' && audioLevels.speech > 0) speakAloud('Like this.', true);
+}
+
+if (typeof registerModal === 'function') registerModal('soundModal', closeSoundSettings);
+
+// Routine confirmations — a purchase, a pickup, an equip. These are SHOWN, never
+// spoken, no matter how fast the child taps (ELD-PT-011). Keeping them out of the
+// speech queue is what stops rapid tapping turning into a wall of talking.
+function announceRoutine(text) {
+  showToast(text);
 }
 
 // ---- Update action button label based on what you're near ----
