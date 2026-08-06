@@ -252,16 +252,78 @@ function doAction() {
 }
 
 // ---- Shop ----
-function buySeeds(type) {
-  var info = CROPS[type];
-  if (player.gold >= info.cost) {
-    player.gold -= info.cost;
-    player.seeds[type]++;
-    showToast('Bought 1 ' + info.name + ' seed for ' + info.cost + 'g');
-    speak('You bought a ' + info.name + ' seed for ' + info.cost + ' gold.');
-    updateHUD();
-    saveGame();
+// Keep the quantity chips and the Buy labels honest about what a tap will do.
+function updateSeedBuyUI() {
+  for (var i = 0; i < SEED_BUY_QUANTITIES.length; i++) {
+    var qty = SEED_BUY_QUANTITIES[i];
+    var chip = document.getElementById('qty_' + qty);
+    if (chip) {
+      var on = qty === seedBuyQuantity;
+      chip.classList.toggle('selected', on);
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
   }
+  for (var t = 0; t < CROP_TYPES.length; t++) {
+    var type = CROP_TYPES[t];
+    var btn = document.getElementById('btnBuy_' + type);
+    if (!btn) continue;
+    var info = CROPS[type];
+    var can = affordableSeedCount(type, seedBuyQuantity);
+    var partial = can > 0 && can < seedBuyQuantity;
+    // Say what the tap will ACTUALLY do. "Buy 20" on a button that can only buy 3 is
+    // the same broken promise the honest-partial rule exists to prevent, so a partial
+    // button names the real count (review catch), and colour is never the only signal.
+    if (seedBuyQuantity === 1) btn.textContent = 'Buy';
+    else if (partial) btn.textContent = 'Buy ' + can + ' of ' + seedBuyQuantity;
+    else btn.textContent = 'Buy ' + seedBuyQuantity;
+    var willBuy = partial ? can : seedBuyQuantity;
+    btn.setAttribute('aria-label', 'Buy ' + willBuy + ' ' + info.name +
+      ' seed' + (willBuy === 1 ? '' : 's') + ' for ' + (willBuy * info.cost) + ' gold' +
+      (partial ? ', all your gold can buy of ' + seedBuyQuantity : ''));
+    btn.classList.toggle('btn-buy-partial', partial);
+  }
+}
+
+// Bulk buy (ELD-PT-011a). Buying 20 seeds used to mean twenty taps.
+var SEED_BUY_QUANTITIES = [1, 5, 10, 15, 20];
+var seedBuyQuantity = 1;
+
+function setSeedBuyQuantity(qty) {
+  if (SEED_BUY_QUANTITIES.indexOf(qty) === -1) return;
+  seedBuyQuantity = qty;
+  updateSeedBuyUI();
+}
+
+// How many the child can actually afford, capped at what they asked for.
+function affordableSeedCount(type, wanted) {
+  var cost = CROPS[type].cost;
+  if (cost <= 0) return wanted;
+  return Math.max(0, Math.min(wanted, Math.floor(player.gold / cost)));
+}
+
+function buySeeds(type, requested) {
+  var info = CROPS[type];
+  var wanted = requested || seedBuyQuantity;
+  var bought = affordableSeedCount(type, wanted);
+  if (bought === 0) {
+    // Never silently do nothing: say what it costs and what they have.
+    announceRoutine('You need ' + info.cost + 'g for a ' + info.name +
+      ' seed. You have ' + player.gold + 'g.');
+    return;
+  }
+  var spent = bought * info.cost;
+  player.gold -= spent;
+  player.seeds[type] += bought;
+  // The count shown is always the count actually bought. If they asked for more
+  // than their gold covers we buy what it covers and SAY SO, rather than quietly
+  // charging for fewer seeds than the button promised.
+  var line = 'Bought ' + bought + ' ' + info.name + ' seed' + (bought === 1 ? '' : 's') +
+    ' for ' + spent + 'g';
+  if (bought < wanted) line += ' — that is all your gold could buy';
+  announceRoutine(line + '.');
+  updateHUD();
+  updateSeedBuyUI();
+  saveGame();
 }
 
 // ---- Heart Crystal upgrade (slice 19): a gold SINK that grants permanent +5 Max HP.
@@ -308,8 +370,7 @@ function buyTraining() {
 function sellCrops() {
   if (totalCrops() === 0) return;
   var earned = sellTotal();
-  showToast('Sold crops for ' + earned + 'g!');
-  speak('You sold your crops for ' + earned + ' gold!');
+  announceRoutine('Sold crops for ' + earned + 'g!');
   soundCoin();
   player.gold += earned;
   for (var i = 0; i < CROP_TYPES.length; i++) player.crops[CROP_TYPES[i]] = 0;
@@ -622,20 +683,26 @@ function openDumplingVendor() {
   if (!gameActive || shopOpen || mathOpen || seedPickerOpen || questOpen ||
       combatOpen || cookingOpen || dumplingOpen || characterOpen) return;
   dumplingOpen = true;
+  // Dough-pick mode is a per-visit interaction, not a saved preference: a stall that
+  // reopens already in "choose a dumpling" mode gives a child no visible cause for it.
+  dumplingPickMode = false;
   if (dumplingCollectionCount() === 0) {
     document.getElementById('dumplingStatus').textContent =
       'Choose a pull to meet your first dumpling!';
   }
   renderDumplingModal();
   modalShellOpen('dumplingModal');
-  // No "save up for a better deal" line: that nudge is exactly what the owner ruling
-  // removed. The welcome states the price plainly and stops there.
-  speak('Welcome to the Squishy Dumpling stall. Every pull costs ' +
-    DUMPLING_PULL_COST + ' gold.');
+  // No spoken welcome here. The stall is a routine shop screen, and the previous
+  // line also urged saving up for a bigger bundle, which owner decision #1 forbids.
+  // Price and odds stay visible; the Read Odds button is the deliberate, tapped
+  // path to hearing them (A1 routine-action TTS boundary).
 }
 
 function closeDumplingVendor() {
   dumplingOpen = false;
+  // Clear selection mode on the way out too, so Escape and the close button leave
+  // the stall in the same neutral state the next visit expects.
+  dumplingPickMode = false;
   modalShellClose('dumplingModal');
 }
 registerModal('dumplingModal', closeDumplingVendor);   // Escape = leave the stall
