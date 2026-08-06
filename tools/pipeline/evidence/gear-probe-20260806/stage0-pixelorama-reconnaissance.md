@@ -171,3 +171,63 @@ Stage 1, and do not spend any generations until:
 3. the disposable `.pxo` save and 1× PNG export round-trip is byte-identical;
 4. the actual selected-route price is visible and within the staged cap; and
 5. the draft masks receive the required visual review/approval.
+
+## Additional Stage 0 reconnaissance: combat animation and armor workflows
+
+This section extends the same no-generation reconnaissance record. The live
+Pixelorama panel was inspected without importing a file and without clicking
+`Generate`. The blank project remained 64×64.
+
+### Live animation menu
+
+The `Animate` workspace currently exposes these routes:
+
+| Route | Observed inputs and output | Live cost signal | Eldoria disposition |
+|---|---|---|---|
+| `Edit Animation (pro)` | `Animation Frames (0/16)`, required description, `New frames` output, optional advanced seed, remove-background toggle | **20 generations** | Best later frame-edit candidate, but not authorized; exact source frames and approved masks remain prerequisites |
+| `Interpolate (New)` | First-frame and last-frame references, action description, configurable new-frame count (default 3), `New frames` output, optional seed | **1–9**, depending on image size and frame count | Potential in-between-frame experiment; not a substitute for exact gear overlays |
+| `Animate with Text (v3)` | First-frame reference, action description, frame count (default 4), `New frames` output, optional seed | Depends on image size and frame count | Full animation generation; not authorized |
+| `Animate with Text (v2/pro)` | Reference image, action description, camera view, direction, `New frames` output | **20–40 generations per call**, depending on reference-image size | Full animation generation; not authorized |
+| `Transfer Outfit to Animation (pro)` | Required outfit image, `Images to edit (0/15)`, optional directional/outfit instructions, `New frames` output | **20 generations** in the live 64×64 blank-project panel | Armor-to-animation route, but creates complete frames and remains owner-gated |
+| `Create animated object/character (pro)` | Description, animation action, remove-background toggle, `New frames` output | **20 generations per call** | Creates a subject from scratch; unsuitable for direct overlay |
+| `Animate with skeleton` | Reference image; estimate/edit skeleton or template/animation-to-animation; bipedal-realistic templates such as `walk, 4 frames`; camera, direction, transform and 3D controls; second step offers freeze/generate frame plans and optional inpainting | No price was visible in the inspected blank-project state | A pose/animation experiment, not a custody-safe armor-layer method |
+| `Animation to animation` | New canvas or animation reference, frame count, description/action, camera/direction, outline/shading/details, init image, output frame, advanced AI freedom/guidance/seed | No price was visible in the inspected blank-project state | Restyling/reconstruction route; not authorized |
+
+The live `Edit Animation` panel showed a maximum of 16 input frames and a
+20-generation quote. This is the live UI observation for this session; the
+written live documentation's frame-limit table differs in places from the
+older addendum planning table, so the exact frame/cost contract must be captured
+again before any future owner-gated experiment.
+
+### Armor-specific findings
+
+`Transfer Outfit to Animation` is the clearest direct armor workflow in the
+animation menu: it takes one required outfit image and up to 15 animation images
+to edit, with optional instructions describing how the character faces and how
+the outfit should appear from that angle. Its output is `New frames`, not an
+isolated armor layer. It therefore does not replace the Phase 1 custody method.
+
+For Eldoria's controlled combat-gear test, the safer division remains:
+
+1. Use standard PixelLab Inpaint in Pixelorama on the exact committed 64×64
+   Ranger frame with one approved binary mask for the body or weapon slot.
+2. Keep the hand, sword orientation, fixed seed, output layer, and live price
+   as evidence fields.
+3. Consider `Edit Animation` only after one facing passes visual and machine
+   review, using the exact directional frames as inputs and treating the result
+   as a new full-frame animation that must pass per-frame custody checks.
+
+The animation menu's full-frame routes can help explore combat motion, but they
+do not establish byte-safe equipment overlays. Any generated frame would still
+need same-resolution comparison, approved-mask containment, deterministic layer
+extraction, recomposition, and human semantic review.
+
+### “InStudio” terminology check
+
+No distinct official PixelLab product or route named `InStudio` was exposed by
+the live editor or the focused official-site search. The authenticated web
+surface is titled `PixelLab Pixelorama`, and the editor identifies itself as
+Pixelorama v1.1.9-stable. PixelLab's current linked tutorial was titled
+`Pixelorama + PixelLab: Create, Edit, Rotate, and Animate Pixel Art` and showed
+an 11:38 runtime. This report treats “InStudio” as a possible name for the
+in-browser integrated studio/editor, not as a separately verified method.
