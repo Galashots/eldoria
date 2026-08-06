@@ -166,5 +166,128 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- A1 TTS boundary: opening the stall must be SILENT, and Read Odds is the only
+//     speech it can produce. Without this assertion a future "friendly welcome" line
+//     silently reintroduces routine-action speech that the owner ruling forbids. ---
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    selectProfile('mage');            // early reader: the profile that speaks the most
+    const spoken = [];
+    window.speechSynthesis.speak = u => spoken.push(u.text);
+    player.gold = 500;
+    openDumplingVendor();
+    const onOpen = spoken.length;
+    closeDumplingVendor();
+    openDumplingVendor();
+    const onReopen = spoken.length;   // still zero: reopening is not a new event
+    readDumplingOdds();
+    const afterTap = spoken.length;
+    return { onOpen, onReopen, afterTap, tapped: spoken[spoken.length - 1] || '' };
+  });
+
+  check('A1: opening the stall speaks nothing', r.onOpen === 0);
+  check('A1: closing and reopening speaks nothing', r.onReopen === 0);
+  check('A1: Read Odds speaks only when tapped', r.afterTap === 1);
+  check('A1: the spoken odds state the price', /20 gold/.test(r.tapped));
+  check('A1: the spoken odds are labelled base odds', /Base odds/i.test(r.tapped));
+  check('A1: no console errors', errors.length === 0);
+  await browser.close();
+}
+
+// --- Odds wording: the pity counter forces a Legendary, so a flat "every pull"
+//     percentage would be untrue on exactly the pull the child is watching. ---
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    openDumplingVendor();
+    return {
+      odds: document.getElementById('dumplingOdds').textContent,
+      pity: document.getElementById('dumplingPity').textContent
+    };
+  });
+
+  check('odds: labelled as base odds, not every pull', /^Base odds:/.test(r.odds));
+  check('odds: does not claim "every pull"', !/every pull/i.test(r.odds));
+  check('odds: the pity guarantee is still shown beside it', /legendary/i.test(r.pity));
+  check('odds: no console errors', errors.length === 0);
+  await browser.close();
+}
+
+// --- Dough-pick lifecycle: selection mode is per-visit. A stall that reopens already
+//     in "choose a dumpling" mode gives a child no visible cause for it. ---
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    player.dumplingDough = DUMPLING_DOUGH_PER_PICK * 2;
+    player.gold = 500;
+    openDumplingVendor();
+    openDoughPicker();
+    const active = dumplingPickMode;
+    const btn = document.getElementById('dumplingDoughAction');
+    const cancelLabel = btn.textContent;
+    closeDumplingVendor();
+    const afterClose = dumplingPickMode;
+    openDumplingVendor();
+    const afterReopen = dumplingPickMode;
+    const reopenLabel = document.getElementById('dumplingDoughAction').textContent;
+    return { active, cancelLabel, afterClose, afterReopen, reopenLabel };
+  });
+
+  check('dough: picking mode activates', r.active === true);
+  check('dough: the button becomes Cancel choosing while active',
+    /cancel choosing/i.test(r.cancelLabel));
+  check('dough: closing the stall clears picking mode', r.afterClose === false);
+  check('dough: reopening does not resume picking mode', r.afterReopen === false);
+  check('dough: the reopened button offers choosing again',
+    /choose a dumpling/i.test(r.reopenLabel));
+  check('dough: no console errors', errors.length === 0);
+  await browser.close();
+}
+
+// --- The two real phone defects. Computed style, not source strings: a grid that
+//     collapses to zero height and a card that LOOKS tappable but is disabled are
+//     both invisible to a source-text assertion. ---
+{
+  const { browser, page, errors } = await launch();
+  await page.setViewport({ width: 390, height: 844, isMobile: true });
+  const r = await page.evaluate(() => {
+    selectProfile('adventurer');
+    player.dumplingDough = DUMPLING_DOUGH_PER_PICK * 2;
+    player.gold = 500;
+    openDumplingVendor();
+    const grid = document.getElementById('dumplingGrid');
+    const gridHeight = grid.getBoundingClientRect().height;
+    openDoughPicker();
+    const cards = Array.from(grid.querySelectorAll('.dumpling-card'));
+    const pickable = cards.filter(c => c.classList.contains('pickable'));
+    const locked = cards.filter(c => !c.classList.contains('pickable') &&
+                                     !c.classList.contains('owned'));
+    const readBtn = document.getElementById('dumplingReadOdds');
+    const readRect = readBtn.getBoundingClientRect();
+    return {
+      gridHeight,
+      cardCount: cards.length,
+      pickableCount: pickable.length,
+      pickableDisabled: pickable.some(c => c.disabled === true ||
+                                           getComputedStyle(c).pointerEvents === 'none'),
+      lockedStillDim: locked.every(c => parseFloat(getComputedStyle(c).opacity) < 1),
+      readW: readRect.width, readH: readRect.height
+    };
+  });
+
+  check('phone: the shelf has usable rendered height', r.gridHeight > 40);
+  check('phone: the shelf actually renders its cards', r.cardCount === 18);
+  check('phone: pickable cards exist while choosing', r.pickableCount > 0);
+  check('phone: pickable cards are not disabled', r.pickableDisabled === false);
+  check('phone: ordinary locked cards stay visibly dimmed', r.lockedStillDim === true);
+  check('phone: Read Odds meets the 44px touch minimum',
+    r.readW >= 44 && r.readH >= 44);
+  check('phone: no console errors', errors.length === 0);
+  await browser.close();
+}
+
 console.log(fails.length ? `\n${fails.length} FAILED:\n  ` + fails.join('\n  ') : '\nAll dumpling compliance tests passed.');
 process.exit(fails.length ? 1 : 0);

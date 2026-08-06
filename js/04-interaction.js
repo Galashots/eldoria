@@ -568,7 +568,22 @@ function dumplingOddsText() {
   for (var i = 0; i < DUMPLING_ODDS.length; i++) {
     parts.push(Math.round(DUMPLING_ODDS[i].chance * 100) + '% ' + DUMPLING_ODDS[i].rarity);
   }
-  return 'Every pull: ' + parts.join(' · ');
+  // "Base odds", not "Every pull": the pity counter forces a Legendary on the 15th
+  // pull without one, so a flat "6% legendary" would be untrue on exactly the pull a
+  // child is most likely to be watching. The pity line beside this one states the rest.
+  return 'Base odds: ' + parts.join(' · ');
+}
+
+// Read Odds: the ONLY speech this stall produces, and only when a child taps it.
+// Opening the stall stays silent (A1 routine-action TTS boundary), so the early
+// reader still needs a deliberate way to HEAR the price and odds that the older
+// reader simply reads. Tapped, never automatic.
+function readDumplingOdds() {
+  if (!dumplingOpen) return;
+  var pity = document.getElementById('dumplingPity');
+  speakAloud('Every pull costs ' + DUMPLING_PULL_COST + ' gold. ' +
+    dumplingOddsText().replace(/·/g, ',') + '. ' +
+    (pity ? pity.textContent : ''), true);
 }
 
 function selectDumpling(id) {
@@ -614,6 +629,13 @@ function renderDumplingModal() {
       doughBtn.disabled = player.dumplingDough < DUMPLING_DOUGH_PER_PICK;
       doughBtn.onclick = function() { exchangeDoughForGold(); };
       doughHint.textContent = 'Shelf complete! Spare dough becomes gold.';
+    } else if (dumplingPickMode) {
+      // While choosing, the same button is the way back out. A child who taps
+      // "choose" and changes their mind needs a visible exit, not a trapped screen.
+      doughBtn.textContent = 'Cancel choosing';
+      doughBtn.disabled = false;
+      doughBtn.onclick = function() { cancelDoughPicker(); };
+      doughHint.textContent = 'Tap the dumpling you want, or cancel.';
     } else {
       doughBtn.textContent = 'Choose a dumpling (' + DUMPLING_DOUGH_PER_PICK + ' dough)';
       doughBtn.disabled = !canPickWithDough();

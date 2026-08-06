@@ -261,6 +261,27 @@
     color: #ffe0a0;
     margin: 0 0 2px;
   }
+  /* Odds text and its read-aloud button share a row; the button wraps below on a
+     narrow phone rather than squeezing the odds into an unreadable column. */
+  .dumpling-odds-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .dumpling-read-odds {
+    /* 44px minimum so small fingers hit it on a tablet, matching the buy chips. */
+    min-height: 44px;
+    min-width: 44px;
+    padding: 4px 12px;
+    font-size: 0.86rem;
+    color: #ffe0a0;
+    background: #4a3a24;
+    border: 2px solid #8b755c;
+    border-radius: 8px;
+    cursor: pointer;
+  }
   .dumpling-dough-panel {
     border-top: 1px solid rgba(255,214,102,0.18);
     padding-top: 10px;

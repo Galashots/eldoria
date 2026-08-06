@@ -29,7 +29,7 @@ projection, world spacing, environment and character art, farming presentation, 
 touch-first HUD. Agents must inspect it for visually relevant reviews and follow its
 versioned supersession protocol when the game's evolving direction needs a new reference.
 
-[![Current Eldoria Visual North Star](docs/visual/eldoria-visual-north-star-v1.png)](docs/VISUAL_NORTH_STAR.md)
+[![Current Eldoria Visual North Star](docs/visual/eldoria-visual-north-star-v2.png)](docs/VISUAL_NORTH_STAR.md)
 
 ## Two profiles, one engine
 

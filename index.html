@@ -150,7 +150,13 @@
     <!-- Every pull is the same price. Pulling several at once saves taps, never gold,
          so there is nothing to hold out for (owner ruling, ELD-PT-013). -->
     <p class="shop-hint">Every pull uses gold you earned. Every pull costs the same.</p>
-    <p class="dumpling-odds" id="dumplingOdds">Every pull: 55% common · 27% rare · 12% epic · 6% legendary</p>
+    <!-- Odds stay visible for the older reader and the parent. The Read Odds button is
+         the early reader's path to the same information: tapped, never automatic. -->
+    <div class="dumpling-odds-row">
+      <p class="dumpling-odds" id="dumplingOdds">Base odds: 55% common · 27% rare · 12% epic · 6% legendary</p>
+      <button class="dumpling-read-odds" id="dumplingReadOdds" onclick="readDumplingOdds()"
+              aria-label="Read the price and odds out loud">🔊 Read odds</button>
+    </div>
     <div class="dumpling-pulls">
       <button id="dumplingPull1" onclick="buyDumplingBundle(1)" aria-label="Pull once for 20 gold">1 pull · 20g</button>
       <button id="dumplingPull3" onclick="buyDumplingBundle(3)" aria-label="Pull three times for 60 gold">3 pulls · 60g</button>

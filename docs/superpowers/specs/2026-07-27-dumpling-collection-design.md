@@ -5,6 +5,25 @@
 - **Status:** Design approved in brainstorming; ready for implementation planning
 - **Author:** Leo + Claude (brainstorming session)
 
+> **PARTIALLY SUPERSEDED — DISCOUNTED BUNDLE PRICING IS NO LONGER THE DESIGN**
+>
+> Leo's anti-pressure ruling (ELD-PT-013, 2026-08-05) removed discounted bundles.
+> **Current production pricing is FLAT: 20g per pull — 1 = 20g, 3 = 60g, 10 = 200g.**
+> Pulling several at once saves taps, never gold, so there is nothing to hold out for.
+>
+> Two sections below are historical and must NOT be implemented as written:
+>
+> - **locked decision #7** ("Math hook — bundle pricing (compare cost-per-pull)"); and
+> - **§4 "Pricing (bundles — the math hook)"**, including its `20g / 50g / 150g` numbers
+>   and the "compares cost-per-pull" rationale.
+>
+> The removed educational math hook moved elsewhere by owner ruling: **ELD-PT-014a** owns
+> the store/economy comparison surface, and **ELD-PT-010** owns the scaffolded teaching and
+> feedback architecture. Do not invent a replacement math beat inside the dumpling stall.
+>
+> Future agents must not restore the discount from this historical text.
+> `tools/iso-test.mjs` locks flat pricing and will fail if it is reintroduced.
+
 ## 1. Summary & goal
 
 Add a **collectible squishy-dumpling gacha** to the original Realm of Eldoria, inspired by the
@@ -27,7 +46,9 @@ there" collection.
 5. **Pity guarantee** — a Legendary by ~15 pulls if none hit yet.
 6. **Showcase view** — selected dumpling shown big on a rarity-themed backdrop; a **Spin button**
    (phase 2) rotates it.
-7. **Math hook** — bundle pricing (compare cost-per-pull); optional active answer-for-discount beat is phase 2.
+7. ~~**Math hook** — bundle pricing (compare cost-per-pull); optional active answer-for-discount beat is phase 2.~~
+   **HISTORICAL — SUPERSEDED by ELD-PT-013 (flat 20g per pull).** The math hook moved to
+   ELD-PT-014a and ELD-PT-010. Do not implement.
 8. **Duplicates → "dumpling dough"** — small gold refund + dough; enough dough lets you hand-pick a
    missing dumpling (guaranteed completion).
 9. **Everything gets balance-tested once running** — no numbers ship tuned by guesswork.
@@ -85,19 +106,21 @@ could over-power; if the combat fix is greenlit separately, these numbers stay s
 ## 4. Pull mechanic
 
 - **Where:** a new **dumpling stall / vendor NPC in Town** (see §7).
-- **Pricing (bundles — the math hook):**
-  - 1 pull = **20g**
-  - 3 pulls = **50g** (~16.7g each)
-  - 10 pulls = **150g** (15g each)
-  - The kid compares cost-per-pull — the same "which is the best deal?" lesson the crop shop
-    already teaches. Passive; never a gate.
+- **Pricing — HISTORICAL, SUPERSEDED.** The discounted bundles below were removed by
+  ELD-PT-013. **Production pricing is flat 20g per pull: 1 = 20g, 3 = 60g, 10 = 200g.**
+  Do not implement the numbers in this block:
+  - ~~1 pull = **20g**~~
+  - ~~3 pulls = **50g** (~16.7g each)~~
+  - ~~10 pulls = **150g** (15g each)~~
+  - ~~The kid compares cost-per-pull — the same "which is the best deal?" lesson the crop shop
+    already teaches. Passive; never a gate.~~
 - **Farm linkage (owner-approved 2026-07-28):**
   - Keep seed costs and growth times unchanged so cooking and the familiar farming rhythm are not
     made more expensive.
   - Sale values are turnip 3g, carrot 5g, corn 7g, pumpkin 9g, and starfruit 17g.
   - After replacing seeds, a full 25-plot ordinary harvest nets 25g; starfruit nets 50g.
-    This makes an ordinary full harvest fund one single pull and a premium full harvest fund the
-    discounted three-pull bundle.
+    This makes an ordinary full harvest fund one single pull. (The "discounted three-pull
+    bundle" this line originally referenced no longer exists — pricing is flat.)
 - **Roll:** pick a rarity band by weighted roll (reuse the existing weighted-chance pattern from
   `rollLoot`, index.html ~line 1899), then pick a dumpling uniformly within that band.
 - **Pity:** track `pullsSinceLegendary`. If a pull would be the 15th since the last Legendary and
