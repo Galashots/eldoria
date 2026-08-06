@@ -263,15 +263,57 @@ function spokenQuestion(text) {
              .replace(' = ?', '').replace('?', '');
 }
 
-// Repaint both HP bars (width + number) from the live combat state.
+var HEART_HP_HALF = 2.5;        // 1 heart = 5 HP = 2 half-heart units
+var HEARTS_PER_ROW = 10;        // phone-portrait wrap width (styling reflects this)
+var HEART_DISPLAY_CAP = 30;     // hearts drawn before the +N overflow chip (150 HP)
+
+// Half-heart units (integer), FLOORED, with both rounding guards (combat-armor spec §5):
+//   Guard A: a living hero (hp>0) shows at least half a heart.
+//   Guard B: a hurt hero (hp<maxHp) never shows a full row.
+// Both guards are computed against the TRUE hp/maxHp, so they hold identically whether
+// or not the capped display (renderHearts) is showing an overflow chip.
+function heartHalfUnits(hp, maxHp) {
+  var maxHalves = Math.round(maxHp / HEART_HP_HALF);   // maxHp is a multiple of 5 -> even
+  var halves = Math.floor(hp / HEART_HP_HALF);         // floor: never rounds up
+  if (halves < 0) halves = 0;
+  if (halves > maxHalves) halves = maxHalves;
+  if (hp > 0 && halves < 1) halves = 1;                // Guard A
+  if (hp < maxHp && halves >= maxHalves) halves = maxHalves - 1;  // Guard B
+  return halves;
+}
+
+// Draw hearts into `el` for hp/maxHp: full (♥), half, empty, capped with a +N chip.
+function renderHearts(el, hp, maxHp) {
+  if (!el) return;
+  var maxHalves = Math.round(maxHp / HEART_HP_HALF);
+  var filledHalves = heartHalfUnits(hp, maxHp);
+  var totalHearts = maxHalves / 2;
+  var shown = Math.min(totalHearts, HEART_DISPLAY_CAP);
+  var html = '';
+  for (var i = 0; i < shown; i++) {
+    var remainingHalves = filledHalves - i * 2;         // half-units remaining for THIS heart
+    var cls = remainingHalves >= 2 ? 'heart-full' : (remainingHalves === 1 ? 'heart-half' : 'heart-empty');
+    html += '<span class="' + cls + '" aria-hidden="true">♥</span>';
+  }
+  if (totalHearts > HEART_DISPLAY_CAP) {
+    // Exact chip text is authoritative (combat-armor spec §5, locked 2026-08-06):
+    // ASCII "+" + N, no fullwidth glyph, no space, no suffix word.
+    html += '<span class="heart-overflow" aria-hidden="true">+' + (totalHearts - HEART_DISPLAY_CAP) + '</span>';
+  }
+  el.innerHTML = html;
+  el.setAttribute('aria-label', 'Your health: ' + Math.max(0, hp) + ' of ' + maxHp);
+}
+
+// Repaint both HP displays from the live combat state: the enemy keeps its proportional
+// bar + exact readout; the player shows floored half-hearts (combat-armor spec §5) —
+// hearts are the player's display only.
 function updateCombatBars() {
   if (!combatEnemy) return;
   var ePct = Math.max(0, combatEnemy.hp) / combatEnemy.maxHp * 100;
   document.getElementById('enemyName').textContent = combatEnemy.name;
   document.getElementById('enemyHpFill').style.width = ePct + '%';
   document.getElementById('enemyHpNum').textContent = Math.max(0, combatEnemy.hp) + '/' + combatEnemy.maxHp;
-  var yPct = Math.max(0, player.hp) / player.maxHp * 100;
-  document.getElementById('youHpFill').style.width = yPct + '%';
+  renderHearts(document.getElementById('youHearts'), player.hp, player.maxHp);
   document.getElementById('youHpNum').textContent = Math.max(0, player.hp) + '/' + player.maxHp;
 }
 
