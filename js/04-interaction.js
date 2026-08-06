@@ -513,6 +513,10 @@ function openDoughPicker() {
 
 function cancelDoughPicker() {
   setDumplingPickMode(false);
+  // Clear the "tap the dumpling you want" instruction too. Leaving it up after the
+  // cards go back to disabled tells a child to do something the stall now refuses.
+  document.getElementById('dumplingStatus').textContent =
+    'Choosing cancelled. Pull a dumpling or choose again when you are ready.';
   renderDumplingModal();
 }
 
@@ -588,12 +592,17 @@ function dumplingOddsText() {
 // Opening the stall stays silent (A1 routine-action TTS boundary), so the early
 // reader still needs a deliberate way to HEAR the price and odds that the older
 // reader simply reads. Tapped, never automatic.
+// The two paths are deliberately different, not duplicates: the percentages stay
+// VISIBLE for the older child and the parent, while what is SPOKEN is the ranking in
+// plain words. A child who cannot read percentages cannot hear them either — "6%"
+// read aloud is not more understandable than "6%" on screen. The guarantee is spoken
+// last because it is the part that makes the rarest tier feel reachable.
 function readDumplingOdds() {
   if (!dumplingOpen) return;
-  var pity = document.getElementById('dumplingPity');
   speakAloud('Every pull costs ' + DUMPLING_PULL_COST + ' gold. ' +
-    dumplingOddsText().replace(/·/g, ',') + '. ' +
-    (pity ? pity.textContent : ''), true);
+    'Common is most likely. Rare is less likely. Epic is hard to find. ' +
+    'Legendary is very rare, and you will get one within ' +
+    DUMPLING_PITY_PULLS + ' pulls.', true);
 }
 
 function selectDumpling(id) {

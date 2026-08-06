@@ -190,7 +190,13 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('A1: closing and reopening speaks nothing', r.onReopen === 0);
   check('A1: Read Odds speaks only when tapped', r.afterTap === 1);
   check('A1: the spoken odds state the price', /20 gold/.test(r.tapped));
-  check('A1: the spoken odds are labelled base odds', /Base odds/i.test(r.tapped));
+  // Spoken text is deliberately NOT the visible percentage string: reading "6%"
+  // aloud does not help the reader who could not read it in the first place.
+  check('A1: the spoken odds rank the rarities in plain words',
+    /common is most likely/i.test(r.tapped) && /rare is less likely/i.test(r.tapped) &&
+    /epic is hard to find/i.test(r.tapped) && /legendary is very rare/i.test(r.tapped));
+  check('A1: the spoken odds state the pity guarantee', /within 15 pulls/i.test(r.tapped));
+  check('A1: the spoken odds do not read percentages aloud', !/%/.test(r.tapped));
   check('A1: no console errors', errors.length === 0);
   await browser.close();
 }
@@ -233,7 +239,19 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     openDumplingVendor();
     const afterReopen = dumplingPickMode;
     const reopenLabel = document.getElementById('dumplingDoughAction').textContent;
-    return { active, cancelLabel, afterClose, afterReopen, reopenLabel };
+
+    // Cancel path: the screen must stop asking for a tap it will no longer accept.
+    openDoughPicker();
+    cancelDoughPicker();
+    const afterCancel = dumplingPickMode;
+    const cancelStatus = document.getElementById('dumplingStatus').textContent;
+    const cancelBtnLabel = document.getElementById('dumplingDoughAction').textContent;
+    const stillPickable = document.querySelectorAll('#dumplingGrid .pickable').length;
+    const enabledCards = Array.from(document.querySelectorAll('#dumplingGrid button'))
+      .filter(b => !b.disabled && !(player.dumplings[b.dataset.id] > 0)).length;
+
+    return { active, cancelLabel, afterClose, afterReopen, reopenLabel,
+             afterCancel, cancelStatus, cancelBtnLabel, stillPickable, enabledCards };
   });
 
   check('dough: picking mode activates', r.active === true);
@@ -243,6 +261,14 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('dough: reopening does not resume picking mode', r.afterReopen === false);
   check('dough: the reopened button offers choosing again',
     /choose a dumpling/i.test(r.reopenLabel));
+  check('dough: cancelling clears picking mode', r.afterCancel === false);
+  check('dough: cancelling leaves no pickable card', r.stillPickable === 0);
+  check('dough: cancelling re-disables every unowned card', r.enabledCards === 0);
+  check('dough: cancelling stops telling the child to tap a dumpling',
+    !/tap the dumpling/i.test(r.cancelStatus));
+  check('dough: cancelling says what happened', /cancelled/i.test(r.cancelStatus));
+  check('dough: cancelling restores the choose action',
+    /choose a dumpling/i.test(r.cancelBtnLabel));
   check('dough: no console errors', errors.length === 0);
   await browser.close();
 }
