@@ -28,6 +28,14 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     out.sellValuePinned = Object.keys(pinned).every(function (id) {
       return GEAR[id].sellValue === pinned[id] && gearSellPrice(id) === pinned[id];
     });
+    // Attack comes only from the equipped weapon slot, even if malformed state places a
+    // weapon item in an armour slot. This prevents armour removal from reopening NaN paths
+    // while keeping the OWNER 12 slot contract explicit.
+    player.gear = { weapon: null, head: 'eldoria_blade', body: null, cape: null };
+    var misplacedWeaponDamage = gearDamageBonus();
+    player.gear.weapon = 'eldoria_blade';
+    var weaponDamage = gearDamageBonus();
+    out.weaponSlotOnly = misplacedWeaponDamage === 0 && weaponDamage === GEAR.eldoria_blade.damage;
     // Tier ordering preserved within each armour slot.
     out.ordering = GEAR.iron_armor.hp < GEAR.guardian_armor.hp &&
       GEAR.guardian_armor.hp < GEAR.mithril_armor.hp && GEAR.mithril_armor.hp < GEAR.wyrm_scale.hp &&
@@ -39,6 +47,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T1: weapons keep damage, no hp', r.weaponsHaveDamageNotHp);
   check('T1: armour has hp (multiple of 5), no damage', r.armourHasHpNotDamage);
   check('T1: sellValue pinned to old price on all 16 items', r.sellValuePinned);
+  check('T1: gear damage reads only the weapon slot', r.weaponSlotOnly);
   check('T1: tier ordering preserved per armour slot', r.ordering);
   check('T1: no console errors', errors.length === 0);
 }
@@ -246,11 +255,12 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
       return { full: full, half: half, overflow: overflow, chipText: chipText, num: num };
     }
     var s20 = heartsFor(20, 20), s40 = heartsFor(40, 40), s80 = heartsFor(80, 80),
-        s150 = heartsFor(150, 150), s200 = heartsFor(200, 200);
+        s150 = heartsFor(150, 150), s190 = heartsFor(190, 190), s200 = heartsFor(200, 200);
     out.s20 = s20.full === 4 && s20.half === 0 && s20.num === '20/20';
     out.s40 = s40.full === 8 && s40.num === '40/40';
     out.s80 = s80.full === 16 && s80.num === '80/80';
     out.s150 = s150.full === 30 && s150.overflow === 0 && s150.chipText === null && s150.num === '150/150';
+    out.s190 = s190.full === 30 && s190.overflow === 1 && s190.chipText === '+8' && s190.num === '190/190';
     out.s200 = s200.full === 30 && s200.overflow === 1 && s200.chipText === '+10' && s200.num === '200/200';
     // Chip-territory RENDER checks (250 maxHp = 50 hearts, cap 30, chip covers 20 hidden hearts):
     // Guard A — 1 HP still shows a living half-heart, not zero, even under a cap-exceeding max.
@@ -281,6 +291,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T6: stress 40 HP = 8 hearts', r.s40);
   check('T6: stress 80 HP = 16 hearts', r.s80);
   check('T6: stress 150 HP = 30 hearts (at cap, no chip)', r.s150);
+  check('T6: stress 190 HP = 30 hearts + chip "+8"', r.s190);
   check('T6: stress 200 HP = 30 hearts + chip "+10"', r.s200);
   check('T6: chip territory Guard A render (1/250 -> half heart + "+20")', r.chipGuardARender);
   check('T6: chip territory Guard B render (245/250 -> "+20", exact text is truth)', r.chipGuardBRender);

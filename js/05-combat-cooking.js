@@ -10,16 +10,11 @@ var combatAnswer = 0;       // correct answer to the current question
 var combatEnemy = null;     // a fresh, fightable COPY of the enemy template for this fight
 var combatSource = null;    // the profile-owned AREA_ENEMIES entry this fight is against
 
-// Sum of +damage from equipped gear. Combat-armor spec §4 (OWNER 12): only the weapon
-// slot carries `damage` now — armour/head/cape carry `hp` instead — so this naturally
-// reduces to "the weapon's damage" without a separate armour-vs-weapon branch.
+// Sum of +damage from the equipped weapon. Combat-armor spec §4 (OWNER 12): only the
+// weapon slot is an attack source; armour/head/cape carry `hp` instead.
 function gearDamageBonus() {
-  var bonus = 0;
-  for (var slot in player.gear) {
-    var id = player.gear[slot];
-    if (id && GEAR[id] && typeof GEAR[id].damage === 'number') bonus += GEAR[id].damage;
-  }
-  return bonus;
+  var id = player.gear && player.gear.weapon;
+  return id && GEAR[id] && typeof GEAR[id].damage === 'number' ? GEAR[id].damage : 0;
 }
 
 // How much damage the player deals on a correct answer. Grows with level + gear.
