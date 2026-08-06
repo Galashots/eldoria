@@ -47,12 +47,14 @@ Sub-project 2 **must NOT touch** (owned by lane 1): `js/07/08/09`, `OVERLAY_DIRE
 
 **Files:**
 - Modify: `js/03-maps-areas.js:239-263` (the `GEAR` table)
-- Modify: `js/05-combat-cooking.js:59-64` (`gearSellPrice`)
+- Modify: `js/05-combat-cooking.js:59-64` (`gearSellPrice`), `:13-20` (`gearDamageBonus` — see Step 4b)
 - Test: `tools/armor-hearts-test.mjs` (new)
 
 **Interfaces:**
-- Produces: `GEAR[id].sellValue:number` on all 16 items; `GEAR[id].hp:number` on every `head`/`body`/`cape` item; `damage` remains only on `weapon` items. `gearSellPrice(id) === GEAR[id].sellValue`.
+- Produces: `GEAR[id].sellValue:number` on all 16 items; `GEAR[id].hp:number` on every `head`/`body`/`cape` item; `damage` remains only on `weapon` items. `gearSellPrice(id) === GEAR[id].sellValue`. `gearDamageBonus()` sums only the weapon slot's `damage` (armour no longer has one).
 - Consumes: nothing new.
+
+**Note (discovered during Step 6 of execution):** `gearDamageBonus()` (`js/05-combat-cooking.js:13-20`, pre-existing) sums `.damage` across ALL FOUR equipped slots, not just weapon. It was not on the original touch-list, but the moment armour's `.damage` becomes `undefined` (this task), `bonus += undefined` makes it return `NaN` for any player with armour equipped, which cascades into `playerDamage() === NaN` — a real regression, not a balance change: it is the direct mechanical consequence of OWNER 12 (only the weapon slot carries `damage`), already anticipated and measured by Task 7. Step 4b below fixes it as part of this task, since Task 1 is what breaks it and it must not be left broken between tasks.
 
 - [ ] **Step 1: Write the failing test.** Create `tools/armor-hearts-test.mjs`:
 
@@ -155,6 +157,35 @@ function gearSellPrice(itemId) {
 }
 ```
 
+- [ ] **Step 4b: Fix `gearDamageBonus()` to sum only the weapon slot's `damage`.** In `js/05-combat-cooking.js`, replace:
+
+```js
+// Sum of +damage from all equipped gear.
+function gearDamageBonus() {
+  var bonus = 0;
+  for (var slot in player.gear) {
+    if (player.gear[slot] && GEAR[player.gear[slot]]) bonus += GEAR[player.gear[slot]].damage;
+  }
+  return bonus;
+}
+```
+
+with:
+
+```js
+// Sum of +damage from equipped gear. Combat-armor spec §4 (OWNER 12): only the weapon
+// slot carries `damage` now — armour/head/cape carry `hp` instead — so this naturally
+// reduces to "the weapon's damage" without a separate armour-vs-weapon branch.
+function gearDamageBonus() {
+  var bonus = 0;
+  for (var slot in player.gear) {
+    var id = player.gear[slot];
+    if (id && GEAR[id] && typeof GEAR[id].damage === 'number') bonus += GEAR[id].damage;
+  }
+  return bonus;
+}
+```
+
 - [ ] **Step 5: Run the test to verify Task-1 checks pass.**
 
 Run: `node tools/armor-hearts-test.mjs`
@@ -163,7 +194,7 @@ Expected: the four `T1:` checks PASS. (Later tasks' checks may not exist yet.)
 - [ ] **Step 6: Run the existing sell-price regression to prove no economy drift.**
 
 Run: `node tools/identity-progression-test.mjs`
-Expected: PASS, including `gearSellPrice('eldoria_blade') === 60 && gearSellPrice('wooden_sword') === 10`. **If it fails, STOP and report to Fable.**
+Expected: PASS, including `gearSellPrice('eldoria_blade') === 60 && gearSellPrice('wooden_sword') === 10`, and `VISUAL-42` (which equips a full armour set and reads `playerDamage()`-derived aria-label text — this is exactly what Step 4b keeps finite). **If it fails, STOP and report to Fable.**
 
 - [ ] **Step 7: Commit.**
 

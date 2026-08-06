@@ -10,11 +10,14 @@ var combatAnswer = 0;       // correct answer to the current question
 var combatEnemy = null;     // a fresh, fightable COPY of the enemy template for this fight
 var combatSource = null;    // the profile-owned AREA_ENEMIES entry this fight is against
 
-// Sum of +damage from all equipped gear.
+// Sum of +damage from equipped gear. Combat-armor spec §4 (OWNER 12): only the weapon
+// slot carries `damage` now — armour/head/cape carry `hp` instead — so this naturally
+// reduces to "the weapon's damage" without a separate armour-vs-weapon branch.
 function gearDamageBonus() {
   var bonus = 0;
   for (var slot in player.gear) {
-    if (player.gear[slot] && GEAR[player.gear[slot]]) bonus += GEAR[player.gear[slot]].damage;
+    var id = player.gear[slot];
+    if (id && GEAR[id] && typeof GEAR[id].damage === 'number') bonus += GEAR[id].damage;
   }
   return bonus;
 }
@@ -59,11 +62,12 @@ function equipGear(itemId) {
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
 }
 
-// What a spare gear item sells for: 5 gold per damage point (the price IS a multiply —
-// hidden curriculum). Equipped gear isn't sellable, so this only ever runs on bag items.
+// What a spare gear item sells for. Pinned per item as `sellValue` (combat-armor spec §4)
+// so removing `damage` from armour moves no economy number. Equipped gear isn't sellable,
+// so this only ever runs on bag items.
 function gearSellPrice(itemId) {
   var item = GEAR[itemId];
-  return item ? item.damage * 5 : 0;
+  return item ? item.sellValue : 0;
 }
 
 // Sell one spare gear item from the bag (by its index in player.inventory).
