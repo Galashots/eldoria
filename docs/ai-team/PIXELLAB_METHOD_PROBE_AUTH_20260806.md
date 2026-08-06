@@ -22,20 +22,22 @@ order arrived mid-batch:**
 
 | Call | Endpoint | Result | Cost |
 |---|---|---|---|
-| H1a — Iron Armor, direct-overlay | `POST /create-character-v3` (from-scratch) | `character_id 6de87792-b910-4357-800f-a46763b5ff65`, `status: completed`, 8 rotations returned | **2 generations** (balance 1502.0 → 1500.0, confirmed via `/balance` before and after) |
+| H1a — Iron Armor, direct-overlay | `POST /create-character-v3` (from-scratch) | `[REDACTED — unapproved output]`, `status: completed`, 8 rotations returned | **2 generations** (balance 1502.0 → 1500.0, confirmed via `/balance` before and after) |
 
 - **H1b (Steel Sword) and both H2 calls were never sent.** No other job or
   character was created in this batch.
 - Cost matched the quote exactly (≈2 gen/item) — no overrun, no unexpected
   extra job, no stop condition tripped.
-- Raw outputs (request/response, job record, character detail, all 8
-  rotation PNGs) are archived under
-  `docs/playtest/2026-08-06-pixellab-gear-probe/h1-direct-overlay/`.
-- **This artifact cannot be GC-scored yet.** No approved `(slot, facing)` mask
-  exists for Iron Armor. Under the now-mandatory fail-closed mask rule (see
-  the mask-provenance plan below), GC4/GC5 record **FAIL — unscored**, not a
-  pass, until a mask is authored and applied. It is evidence of cost and
-  completion, not yet of quality.
+- The raw outputs (request/response, job record, character detail, all 8 rotation
+  PNGs) remain in a local/private archive and are **not committed**. A sanitized
+  private-review bundle was supplied directly to ChatGPT and visually reviewed;
+  it is also not committed. The repository records the verdict and custody rules,
+  not the raw archive or live download URLs.
+- **H1 / body / direct-overlay: LOSE before GC scoring.** Every rotation is a
+  headless, substantially complete mannequin/outfit with arms, gloves, belt/lower-
+  body clothing, legs and boots. Metadata reports `template_id=mannequin`.
+  The human semantic-drift gate independently eliminates this artifact; GC4/GC5
+  remain unscored because the masks are draft/pending, never PASS.
 - **Running spend against the cap: 2 of 12 generations.** The quote below is
   revised to account for this.
 
@@ -105,26 +107,33 @@ Full precheck record: `docs/playtest/2026-08-06-pixellab-gear-probe/00-precheck-
 - **Items:** one body armour (`iron_armor`, "Iron Armor", tier 1) + one weapon
   (`steel_sword`, "Steel Sword", tier 2) (`js/03-maps-areas.js:250,253`).
 
-### Mask provenance plan (new — masks are now mandatory for every route)
+### Draft mask evidence (not owner/review approved)
 
-No `(slot, facing)` mask yet exists for `iron_armor` or `steel_sword` on any of
-the three evaluated facings. Per `GEAR_CUSTODY_CONTRACT.md` §2/§3 (fail closed,
-no route exempt — including direct-overlay), **no generated artifact in this
-probe can be scored PASS on GC4/GC5 until a mask is authored and applied.**
-Proposed plan, for Fable/ChatGPT to confirm before generation resumes:
+Six deterministic binary 64×64 masks now exist under
+`tools/pipeline/masks/gear-probe-20260806/`, using the committed Ranger base
+frames as the visual source. The body masks exclude face, hair, hands, legs and
+boots and cover only a conservative torso/shoulder envelope. The weapon masks
+cover only a conservative hand/forearm plus plausible weapon extension envelope.
+The reviewer sheet is
+`tools/pipeline/masks/gear-probe-20260806/contact-sheet.png`.
 
-1. For each evaluated facing, a human (Claude drafts, ChatGPT/Leo confirms)
-   marks the approved equipment region directly on the **committed base frame**
-   — e.g. the torso silhouette for `body`, the hand/forearm reach envelope for
-   `weapon` — as a binary PNG at the same canvas size as the artifact it gates.
-2. Masks are committed under `docs/playtest/2026-08-06-pixellab-gear-probe/masks/`
-   pending promotion to a permanent `tools/pipeline/masks/` home if the method
-   they gate wins.
-3. Masks are drawn conservatively (smaller, not larger, than the expected item
-   footprint) so containment is a real test, not a rubber stamp.
-4. Until a mask for a given `(slot, facing)` exists, its GC4/GC5 result is
-   recorded **FAIL — unscored**, exactly as done for the already-executed H1a
-   Iron Armor artifact above.
+Every mask and the sheet are explicitly marked **DRAFT — NOT OWNER/REVIEW
+APPROVED**. These are review artifacts, not approval. Per
+`GEAR_CUSTODY_CONTRACT.md` §2/§3 (fail closed, no route exempt — including
+direct-overlay), no generated artifact in this probe can be scored PASS on GC4/GC5
+until the relevant mask is reviewed, approved, and applied.
+
+| Slot | Facing | Path | SHA-256 | Status |
+|---|---|---|---|---|
+| body | down-right | `tools/pipeline/masks/gear-probe-20260806/body-down-right.png` | `a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5` | DRAFT — NOT OWNER/REVIEW APPROVED |
+| body | right | `tools/pipeline/masks/gear-probe-20260806/body-right.png` | `70a4c8bbb6b32984ffcafad2a081825e390b932d503fe0da0dc1cb550d527847` | DRAFT — NOT OWNER/REVIEW APPROVED |
+| body | up-left | `tools/pipeline/masks/gear-probe-20260806/body-up-left.png` | `2ce7543b0dec1ec3e2fd92599e77f7b61f43a18f6c87c004dbac011cc004c547` | DRAFT — NOT OWNER/REVIEW APPROVED |
+| weapon | down-right | `tools/pipeline/masks/gear-probe-20260806/weapon-down-right.png` | `49545f2722cc242b6e827be2e6757a670b90106ebb54e98f130b925a3b99359a` | DRAFT — NOT OWNER/REVIEW APPROVED |
+| weapon | right | `tools/pipeline/masks/gear-probe-20260806/weapon-right.png` | `e9910c03ffa3e0712df07229a78ce8aca545690f5a57efd416e629e4705f3a8f` | DRAFT — NOT OWNER/REVIEW APPROVED |
+| weapon | up-left | `tools/pipeline/masks/gear-probe-20260806/weapon-up-left.png` | `d94f7a19eda80b838ef4a28fcd3af85064477dd4209e8800bfd00b0c7afc6d6d` | DRAFT — NOT OWNER/REVIEW APPROVED |
+
+The draft masks do not authorize H1b or either H2 call. They only make the
+pending review concrete and hash-pinned.
 
 ## Coverage
 
@@ -145,10 +154,15 @@ each arm is pinned to the one exact call it will make.**
 
 | Call | Exact endpoint & parameters | Status | Generations |
 |---|---|---|---|
-| **H1a — Iron Armor** | `POST /create-character-v3`, from-scratch (no `reference_image`), `view="high top-down"`, `no_background=true`, `seed=20260806`, no `image_size` (defaults 64×64), description: *"A single RPG game equipment item, an Iron Armor breastplate: plain brushed steel-grey chest armor plate with simple leather straps, no shoulder pauldrons, no arms, no legs, no head, no character, no body, no mannequin, no hands, isolated object floating alone on transparent background, flat pixel art icon style, single-color black outline, medium detail, child-friendly, high top-down 35 degree camera angle to match the game's hero sprites."* | ✅ **EXECUTED** | **2 (spent)** |
+| **H1a — Iron Armor** | `POST /create-character-v3`, from-scratch (no `reference_image`), `view="high top-down"`, `no_background=true`, `seed=20260806`, no `image_size` (prior assumed/default 64×64; actual exported canvas 120×120), description: *"A single RPG game equipment item, an Iron Armor breastplate: plain brushed steel-grey chest armor plate with simple leather straps, no shoulder pauldrons, no arms, no legs, no head, no character, no body, no mannequin, no hands, isolated object floating alone on transparent background, flat pixel art icon style, single-color black outline, medium detail, child-friendly, high top-down 35 degree camera angle to match the game's hero sprites."* | ✅ **EXECUTED** | **2 (spent)** |
 | **H1b — Steel Sword** | Same endpoint/mode/view/`no_background`, `seed=20260807`, description: *"A single RPG game equipment item, a Steel Sword: plain straight steel blade with a simple crossguard and brown leather-wrapped hilt, no character, no body, no hand, no arm, no mannequin, isolated object floating alone on transparent background, flat pixel art icon style, single-color black outline, medium detail, child-friendly, high top-down 35 degree camera angle to match the game's hero sprites."* | Not yet sent | **≈2 (quoted)** |
 | **H2a — Ranger + Iron Armor only** | `POST /create-character-state`, `character_id="add36c36-295d-4626-94fd-179a4102d1ea"`, `edit_description="wearing a plain iron chestplate armor over the existing outfit; no other changes"`, `use_color_palette_from_reference=true`, `seed=20260808` | Not yet sent | **unpublished — measured live** |
 | **H2b — Ranger + Steel Sword only** | `POST /create-character-state`, same `character_id`, `edit_description="holding a plain steel longsword in one hand; no other changes"`, `use_color_palette_from_reference=true`, `seed=20260809` | Not yet sent | **unpublished — measured live** |
+
+The executed H1a export was eight 120×120 RGBA rotations with binary alpha. Its
+metadata reported `template_id=mannequin`; the human review found a headless,
+substantially complete mannequin/outfit in every rotation. This observed result
+is not a schema inference and must not be generalized beyond this one H1a output.
 
 **Fix from ChatGPT's review, adopted:** H2 is now **two independent calls**, one
 per item, so body and weapon evidence never share a confounded artifact — the
@@ -193,11 +207,33 @@ allowed result, not a failure.
   until authorization resumes.
 - Any `422`/error that would normally invite a retry.
 
+## H1b disposition — OWNER decision pending
+
+H1b (Steel Sword) is neither authorized nor executed. Leo must choose one of the
+following before any further generation:
+
+- **Option A:** stop H1 direct-object testing because H1a shows that the character
+  endpoint generated a mannequin despite the pinned isolation prompt.
+- **Option B:** spend the separately quoted **2 generations** on H1b only after
+  these draft masks are reviewed/approved and Leo explicitly re-authorizes it,
+  because weapon behavior may differ by slot.
+
+This document does not choose between those options. H2a, H2b, and
+`transfer-outfit-v2` remain suspended as well.
+
 ## Raw-output custody
 
-Raw outputs land under `docs/playtest/2026-08-06-pixellab-gear-probe/` (unlisted
-until approved for sharing), hashed into the evidence records. Extracted layers,
-masks, and composites follow `GEAR_CUSTODY_CONTRACT.md`, not the static-NPC test.
+Raw H1a outputs remain in a local/private archive outside the committed repository
+and are not available through a public repo path. The sanitized evidence bundle was
+supplied directly to ChatGPT and reviewed; it is not committed. Do not publish raw
+metadata, UUIDs, live download URLs, the unrelated account listing, or private job
+records. Extracted layers, masks, and composites follow `GEAR_CUSTODY_CONTRACT.md`,
+not the static-NPC test.
+
+The H1a UUID appeared in an earlier public commit and must be treated as exposed.
+This revision redacts it from the current document, but does not claim that history
+has been made secret. Do not rewrite branch history without Leo's explicit
+authorization.
 
 ---
 
@@ -229,6 +265,6 @@ This keeps a proven third option one word away without opening a new research ro
 
 ## North Star alignment
 
-Not visually relevant — this is a spend-authorization request; the one executed
-call (H1a) produced a floating equipment icon, not a character or world asset. No
-alignment verdict required.
+**Intentional interim gap** — the one executed H1a call produced an unapproved
+private research output, not a committed character, equipment, or world asset.
+The game has no runtime visual change, and no North Star direction is superseded.

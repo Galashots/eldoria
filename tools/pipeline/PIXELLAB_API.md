@@ -403,17 +403,21 @@ failure modes is the point of this file.
 - **A summarizing fetch twice reported that `/animate-character` does not exist.**
   It does. Parse the spec directly.
 
-**North Star alignment:** process and cost documentation only. No art, no visual
-change, no alteration to the approved direction.
+**North Star alignment:** this historical section covers process and cost
+documentation only. Its claims do not describe the later H1a research output,
+which is recorded separately in §8; no production art or runtime visual change
+resulted from this section.
 
 ---
 
 ## 8. Live-schema re-verification (2026-08-06) — Sub-project A gear research
 
-Re-verified read-only against `api.pixellab.ai/v2/openapi.json` and
-`api.pixellab.ai/mcp/docs` (`curl` + script parse; **no summarizing fetch**; no
-generation, no token used). The Gemini/ChatGPT research inputs on PR #53 were treated
-as **hypotheses**; this section records only what the live schema actually exposes.
+The schema portion was re-verified read-only against
+`api.pixellab.ai/v2/openapi.json` and `api.pixellab.ai/mcp/docs` (`curl` + script
+parse; **no summarizing fetch**; no generation or token used for schema
+verification). The Gemini/ChatGPT research inputs on PR #53 were treated as
+**hypotheses**; this section records what the live schema exposes and, separately,
+what the later H1a probe exercised.
 Full research artifacts: `GEAR_CUSTODY_CONTRACT.md`,
 `GEAR_EVIDENCE_RECORD_TEMPLATE.md`, and
 `docs/ai-team/PIXELLAB_METHOD_PROBE_AUTH_20260806.md`.
@@ -478,6 +482,23 @@ Full research artifacts: `GEAR_CUSTODY_CONTRACT.md`,
   repair/prep, **banned from the custody path** because layer extraction must be
   deterministic (`GEAR_CUSTODY_CONTRACT.md` GC8).
 
-**North Star alignment:** documentation and schema verification only. No art, no
-visual change. No spend occurred; every generation batch — probe included — still
-needs Leo's explicit per-batch authorization.
+### Live-exercised H1a result (not schema inference)
+
+After the read-only schema verification, one H1a `POST /v2/create-character-v3`
+from-scratch call was exercised under the prior conditional authorization. It
+charged **2 generations** and returned eight rotations. The exported canvas was
+**120×120**, despite the prior assumed/default 64×64 sizing note. Its metadata
+reported `template_id=mannequin`, and every rotation was a substantially complete,
+headless mannequin/outfit with arms, gloves, belt/lower-body clothing, legs and
+boots rather than an isolated breastplate. This is live-exercised evidence from
+one result, not a general claim about every create-character-v3 call.
+
+The H1a human semantic gate is **FAIL**, so `H1 / body / direct-overlay` is
+**LOSE before GC scoring**. The sanitized private-review evidence was supplied
+directly to ChatGPT and visually reviewed; the raw archive and unapproved output
+remain outside `assets/` and are not committed. H1b and H2 remain suspended. The
+remaining 10 generations of the original 12-generation ceiling are not authorized.
+
+**North Star alignment:** Intentional interim gap — this research output is not a
+production asset or runtime visual change. The game remains unchanged; no further
+generation is authorized without Leo's explicit per-batch approval.

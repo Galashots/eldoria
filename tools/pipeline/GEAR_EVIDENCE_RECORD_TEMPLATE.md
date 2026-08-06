@@ -14,7 +14,10 @@ row is a fact the next reviewer can re-verify cold.
 A record is what feeds the gear custody validator (`GEAR_CUSTODY_CONTRACT.md`) and
 the human/North Star review. **Machine PASS ≠ visual PASS**: the validator fields
 and the human-verdict fields are both required before a slot's route can be called a
-winner.
+winner. A human semantic **FAIL** may eliminate a route before GC scoring; record
+the route as `LOSE`, set custody `scoring_status` to `UNSCORED`, and explain that
+the mask was pending or otherwise unavailable. This is distinct from a scored
+GC4/GC5 `FAIL` and never permits a `PASS` without an approved mask.
 
 ---
 
@@ -30,9 +33,11 @@ Generation
 - exact command / params:      <full call, incl. mode, view, no_background>
 - seed:                        <int or "random – not reproducible">
 - approved reference(s):       <path + SHA-256 of each input the batch was approved with>
-- approved mask:               <path + SHA-256 of the (slot,facing) mask — MANDATORY for every route,
-                                  direct-overlay included. No mask ⇒ record GC4/GC5 as FAIL, not "n/a";
-                                  see GEAR_CUSTODY_CONTRACT.md §2 (fail closed, no route is exempt)>
+- approved mask:               <status APPROVED|PENDING|MISSING; path + SHA-256 when a draft or approved
+                                  mask exists — a final custody PASS requires APPROVED. A PENDING
+                                  mask leaves GC4/GC5 UNSCORED only when a human gate already records
+                                  LOSE; otherwise missing approval is a fail-closed FAIL. Direct-overlay
+                                  is not exempt; see GEAR_CUSTODY_CONTRACT.md §2>
 
 Size & geometry
 - source dimensions:           <w×h of the fed reference>
@@ -48,13 +53,15 @@ Cost (measured, not estimated)
 - failed output count:         <n, with the failure mode>
 
 Custody validator (GC1–GC8; PASS/FAIL each; see GEAR_CUSTODY_CONTRACT.md)
+- custody scoring status:       <SCORED | UNSCORED — reason; PENDING mask may not score PASS>
 - GC4 mask containment:        <PASS/FAIL>
-- GC5 off-mask identity px changed: <count – MUST be 0 outside approved masks>
+- GC5 off-mask identity px changed: <count | UNSCORED — MUST be 0 outside approved masks when scored>
 - GC6 layer-order fidelity:    <PASS/FAIL>
 - GC8 determinism (re-run SHA): <PASS/FAIL>
 - other GC gates:              <PASS/FAIL summary>
 
 Human / North Star verdicts (not machine-checkable)
+- human semantic gate:          <PASS | FAIL | NOT RUN + note>
 - heading fidelity:            <PASS/FAIL + note>
 - cross-facing recognizability:<same item reads across facings? note>
 - semantic drift:              <hallucinated props/companions/gear moved? note>
@@ -91,7 +98,7 @@ future collation script.
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "GearEvidenceRecord",
   "type": "object",
-  "required": ["slot", "route", "generation", "cost", "custody_validator", "verdict"],
+  "required": ["slot", "route", "generation", "cost", "custody_validator", "human_verdicts", "verdict", "verdict_reason"],
   "properties": {
     "slot":  { "enum": ["head", "body", "weapon", "cape"] },
     "route": { "enum": ["direct-overlay", "equipped-state", "transfer-outfit"] },
@@ -111,10 +118,20 @@ future collation script.
             "properties": { "path": {"type":"string"}, "sha256": {"type":"string"} } }
         },
         "approved_mask": {
-          "description": "MANDATORY for every route, direct-overlay included — GC4/GC5 fail closed with no mask (GEAR_CUSTODY_CONTRACT.md §2).",
+          "description": "MANDATORY for every route, direct-overlay included. PENDING records a draft/unapproved mask and cannot produce GC4/GC5 PASS; it is UNSCORED only when a human semantic FAIL already makes the route LOSE. (GEAR_CUSTODY_CONTRACT.md §2)",
           "type": "object",
-          "required": ["path", "sha256"],
-          "properties": { "path": {"type":"string"}, "sha256": {"type":"string"} }
+          "required": ["status"],
+          "properties": {
+            "status": { "enum": ["APPROVED", "PENDING", "MISSING"] },
+            "path": {"type":"string"},
+            "sha256": {"type":"string"},
+            "reason": {"type":"string"}
+          },
+          "allOf": [
+            { "if": { "properties": { "status": { "const": "APPROVED" } } }, "then": { "required": ["path", "sha256"] } },
+            { "if": { "properties": { "status": { "const": "PENDING" } } }, "then": { "required": ["path", "sha256", "reason"] } },
+            { "if": { "properties": { "status": { "const": "MISSING" } } }, "then": { "required": ["reason"] } }
+          ]
         }
       }
     },
@@ -142,13 +159,15 @@ future collation script.
     },
     "custody_validator": {
       "type": "object",
-      "required": ["gc5_offmask_pixels_changed"],
+      "required": ["scoring_status", "gc5_offmask_pixels_changed"],
       "properties": {
+        "scoring_status": { "enum": ["SCORED", "UNSCORED"] },
+        "unscored_reason": { "type": ["string", "null"] },
         "gc4_mask_containment": {
-          "description": "Fail closed: a finalized record with no approved_mask records FAIL here, never null/n-a. null is only valid mid-fill, before the record is finalized.",
+          "description": "PASS is allowed only with an APPROVED mask. null is UNSCORED only for a route already eliminated by a human semantic FAIL or still mid-fill; otherwise a missing/pending mask is FAIL.",
           "enum": ["PASS", "FAIL", null]
         },
-        "gc5_offmask_pixels_changed": { "type": ["integer", "null"] },
+        "gc5_offmask_pixels_changed": { "type": ["integer", "null", "string"] },
         "gc6_layer_order": { "enum": ["PASS", "FAIL", null] },
         "gc8_determinism": { "enum": ["PASS", "FAIL", null] },
         "other_gates": { "type": "string" }
@@ -156,7 +175,9 @@ future collation script.
     },
     "human_verdicts": {
       "type": "object",
+      "required": ["semantic_gate"],
       "properties": {
+        "semantic_gate": { "enum": ["PASS", "FAIL", "NOT_RUN"] },
         "heading_fidelity": { "type": "string" },
         "cross_facing_recognizability": { "type": "string" },
         "semantic_drift": { "type": "string" },

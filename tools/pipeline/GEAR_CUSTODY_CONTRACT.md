@@ -2,8 +2,16 @@
 
 **Status:** DESIGN ONLY (Sub-project A research output, 2026-08-06). No validator
 code is shipped by this document; it specifies one precisely enough to implement
-under Sub-project A's implementation lane. No art exists to validate yet — this
-contract is what generated equipment **must** pass before it may enter `assets/`.
+under Sub-project A's implementation lane. One unapproved H1a research output
+exists outside `assets/`; its human semantic gate failed before custody validation
+could be completed. This contract is what generated equipment **must** pass before
+it may enter `assets/`.
+
+The H1a result is therefore recorded as **LOSE before GC scoring**, not merely an
+unscored custody failure: its mannequin/outfit content violates the direct-overlay
+hypothesis independently of the still-pending masks. GC4/GC5 remain fail-closed;
+the draft masks in `tools/pipeline/masks/gear-probe-20260806/` are explicitly not
+owner/review-approved and cannot produce a custody PASS.
 
 **Why this exists.** `docs/superpowers/specs/2026-08-05-combat-armor-design.md` §6
 and ChatGPT's non-author review (PR #53) both ruled that PR #48's
