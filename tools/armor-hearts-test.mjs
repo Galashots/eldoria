@@ -289,5 +289,58 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T6: no console errors', errors.length === 0);
 }
 
+// ---- Task 7: compensating balance pass (measured envelope) ----
+{
+  const { browser, page, errors } = await launch();
+  const HELPERS = `
+    function mash(n){ for (var i=0;i<n;i++) executeSlash(); }
+    function fightBoss(area, index) {
+      activateArea(area); var boss = currentEnemies[index]; boss.alive = true;
+      openCombat(boss); combatEnemy.hp = combatEnemy.maxHp;
+      var q = 0, guard = 60;
+      while (combatOpen && guard-- > 0) { answerCombat(combatAnswer); mash(50); q++; if (combatOpen) endSlashPhase(); }
+      return q;
+    }
+    function killRegular(area, index) {
+      activateArea(area); var e = currentEnemies[index]; e.alive = true;
+      openCombat(e); combatEnemy.hp = combatEnemy.maxHp;
+      answerCombat(combatAnswer); var oneShot = !combatOpen || combatEnemy.hp <= 0;
+      var dealt = combatEnemy.maxHp - Math.max(0, combatEnemy.hp);
+      if (combatOpen) { endSlashPhase(); closeCombat(); }
+      return { oneShot: oneShot, dealt: dealt };
+    }
+  `;
+  const r = await page.evaluate(HELPERS + `(() => {
+    var out = {};
+    selectProfile('adventurer');
+    // Hearts-only "strong" loadout: best weapon + full armour (armour now = HP, not damage).
+    player.gear = { weapon: 'eldoria_blade', head: 'titan_helm', body: 'wyrm_scale', cape: 'dragon_cape' };
+    player.atkUpgrades = 0; player.level = 20;
+    player.maxHp = computeMaxHp(); player.hp = player.maxHp;
+    out.strongMaxHp = player.maxHp;                       // armour visibly adds hearts
+    out.wardenQ = fightBoss('deepwoods', 3);
+    out.wyrmQ = fightBoss('mine', 2);
+    // Bare loadout (no armour) survivability is strictly lower than armoured.
+    var armouredMax = computeMaxHp();
+    player.gear = { weapon: 'eldoria_blade', head: null, body: null, cape: null };
+    var bareMax = computeMaxHp();
+    out.survivabilityTrade = armouredMax > bareMax;
+    // Regular enemies still die fast on a correct zero-tap (unchanged feel).
+    player.gear = { weapon: 'wooden_sword', head: 'leather_cap', body: 'iron_armor', cape: 'hero_cape' };
+    player.level = 2; player.maxHp = computeMaxHp(); player.hp = player.maxHp;
+    out.slime = killRegular('wilds', 0);                  // Slime 15 HP
+    return out;
+  })()`);
+  await browser.close();
+  check('T7: armour adds hearts to max HP (strong loadout > base)', r.strongMaxHp > 20 + 19 * 5);
+  check('T7: Shadow Warden still needs >= 3 answered questions', r.wardenQ >= 3);
+  check('T7: Shadow Warden fight stays bounded (<= 12 questions)', r.wardenQ <= 12);
+  check('T7: Crystal Wyrm still needs >= 3 answered questions', r.wyrmQ >= 3);
+  check('T7: Crystal Wyrm fight stays bounded (<= 12 questions)', r.wyrmQ <= 12);
+  check('T7: armour is the survivability trade (armoured max HP > bare)', r.survivabilityTrade);
+  check('T7: regular Slime still one-shot by a correct zero-tap', r.slime.oneShot);
+  check('T7: no console errors', errors.length === 0);
+}
+
 if (fails.length) { console.log('\n' + fails.length + ' FAILED'); process.exit(1); }
 console.log('\nAll armor-hearts tests passed.');
