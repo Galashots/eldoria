@@ -400,11 +400,15 @@ function rollDumpling() {
   if (player.pullsSinceLegendary >= DUMPLING_PITY_PULLS - 1) {
     rarity = 'legendary';
   } else {
+    // Walk the SAME table the child is shown, so the odds on screen are the odds
+    // being rolled. Hard-coded thresholds here would silently drift from the display.
     var rarityRoll = Math.random();
-    if (rarityRoll < 0.55) rarity = 'common';
-    else if (rarityRoll < 0.82) rarity = 'rare';
-    else if (rarityRoll < 0.94) rarity = 'epic';
-    else rarity = 'legendary';
+    var cumulative = 0;
+    rarity = DUMPLING_ODDS[DUMPLING_ODDS.length - 1].rarity;
+    for (var band = 0; band < DUMPLING_ODDS.length; band++) {
+      cumulative += DUMPLING_ODDS[band].chance;
+      if (rarityRoll < cumulative) { rarity = DUMPLING_ODDS[band].rarity; break; }
+    }
   }
 
   var pool = dumplingPool(rarity);
@@ -422,6 +426,90 @@ function rollDumpling() {
   return { id: picked.id, name: picked.name, rarity: rarity, duplicate: duplicate };
 }
 
+var dumplingPickMode = false;   // true while the child is choosing a dumpling with dough
+
+function openDoughPicker() {
+  if (!canPickWithDough()) return;
+  dumplingPickMode = true;
+  document.getElementById('dumplingStatus').textContent =
+    'Tap the dumpling you want! It costs ' + DUMPLING_DOUGH_PER_PICK + ' dough.';
+  renderDumplingModal();
+  // Bring the shelf into view. Telling a child to tap a card that is scrolled off
+  // the bottom of the panel is the same as not offering the choice at all.
+  var grid = document.getElementById('dumplingGrid');
+  if (grid && grid.scrollIntoView) grid.scrollIntoView({ block: 'nearest' });
+}
+
+function cancelDoughPicker() {
+  dumplingPickMode = false;
+  renderDumplingModal();
+}
+
+// ---- Dough: the deterministic completion path (owner-approved) ----
+// Duplicates give dough; enough dough hand-picks a dumpling you don't own. This is
+// what guarantees a child can finish the shelf without relying on luck.
+function missingDumplings() {
+  var missing = [];
+  for (var i = 0; i < DUMPLINGS.length; i++) {
+    if (!(player.dumplings[DUMPLINGS[i].id] > 0)) missing.push(DUMPLINGS[i]);
+  }
+  return missing;
+}
+
+function canPickWithDough() {
+  return player.dumplingDough >= DUMPLING_DOUGH_PER_PICK && missingDumplings().length > 0;
+}
+
+// Spend dough on a specific dumpling the child chooses — never a random one, or it
+// would be another pull wearing a different hat.
+function pickDumplingWithDough(id) {
+  if (!gameActive || !dumplingOpen) return false;
+  var target = DUMPLING_BY_ID[id];
+  if (!target || player.dumplings[id] > 0) return false;          // already owned
+  if (player.dumplingDough < DUMPLING_DOUGH_PER_PICK) return false;
+
+  player.dumplingDough -= DUMPLING_DOUGH_PER_PICK;
+  player.dumplings[id] = (player.dumplings[id] || 0) + 1;
+  selectedDumplingId = id;
+  var message = 'You chose ' + target.name + ' with ' + DUMPLING_DOUGH_PER_PICK + ' dough!';
+  document.getElementById('dumplingStatus').textContent = message;
+  soundWin();
+  showToast(message);
+  speak(message);
+  updateHUD();
+  renderDumplingModal();
+  saveGame();
+  return true;
+}
+
+// Nothing left to pick: dough stops being a dead currency and turns into gold.
+function exchangeDoughForGold() {
+  if (!gameActive || !dumplingOpen) return false;
+  if (player.dumplingDough < DUMPLING_DOUGH_PER_PICK) return false;
+  if (missingDumplings().length > 0) return false;                // picking comes first
+  player.dumplingDough -= DUMPLING_DOUGH_PER_PICK;
+  player.gold += DUMPLING_DOUGH_GOLD_VALUE * DUMPLING_DOUGH_PER_PICK;
+  var message = 'Traded ' + DUMPLING_DOUGH_PER_PICK + ' dough for ' +
+    (DUMPLING_DOUGH_GOLD_VALUE * DUMPLING_DOUGH_PER_PICK) + ' gold!';
+  document.getElementById('dumplingStatus').textContent = message;
+  soundCoin();
+  showToast(message);
+  updateHUD();
+  renderDumplingModal();
+  saveGame();
+  return true;
+}
+
+// Plain-language odds, built from the SAME table the roll uses (owner-approved:
+// "visible odds in plain language"). Percentages are what the numbers actually are.
+function dumplingOddsText() {
+  var parts = [];
+  for (var i = 0; i < DUMPLING_ODDS.length; i++) {
+    parts.push(Math.round(DUMPLING_ODDS[i].chance * 100) + '% ' + DUMPLING_ODDS[i].rarity);
+  }
+  return 'Every pull: ' + parts.join(' · ');
+}
+
 function selectDumpling(id) {
   if (!DUMPLING_BY_ID[id] || !(player.dumplings[id] > 0)) return;
   selectedDumplingId = id;
@@ -437,9 +525,42 @@ function renderDumplingModal() {
   document.getElementById('dumplingPity').textContent =
     'Legendary in ' + untilPity + ' pull' + (untilPity === 1 ? '' : 's') + ' or fewer';
 
-  for (var count in DUMPLING_BUNDLES) {
-    var pullButton = document.getElementById('dumplingPull' + count);
-    if (pullButton) pullButton.disabled = player.gold < DUMPLING_BUNDLES[count];
+  for (var pc = 0; pc < DUMPLING_PULL_COUNTS.length; pc++) {
+    var pullCount = DUMPLING_PULL_COUNTS[pc];
+    var pullButton = document.getElementById('dumplingPull' + pullCount);
+    if (pullButton) {
+      var pullPrice = dumplingPullCost(pullCount);
+      pullButton.disabled = player.gold < pullPrice;
+      // Say the price plainly. Same price per pull every time, so there is nothing
+      // to "work out" and nothing to hold out for.
+      pullButton.textContent = (pullCount === 1 ? '1 pull' : pullCount + ' pulls') +
+        ' · ' + pullPrice + 'g';
+    }
+  }
+
+  document.getElementById('dumplingOdds').textContent = dumplingOddsText();
+
+  // Dough panel: either spend it on a missing dumpling, or trade it once the shelf
+  // is full. Always says how much more is needed rather than just sitting disabled.
+  var missing = missingDumplings();
+  var doughBtn = document.getElementById('dumplingDoughAction');
+  var doughHint = document.getElementById('dumplingDoughHint');
+  if (doughBtn && doughHint) {
+    var needed = DUMPLING_DOUGH_PER_PICK - player.dumplingDough;
+    if (missing.length === 0) {
+      doughBtn.textContent = 'Trade ' + DUMPLING_DOUGH_PER_PICK + ' dough for ' +
+        (DUMPLING_DOUGH_GOLD_VALUE * DUMPLING_DOUGH_PER_PICK) + 'g';
+      doughBtn.disabled = player.dumplingDough < DUMPLING_DOUGH_PER_PICK;
+      doughBtn.onclick = function() { exchangeDoughForGold(); };
+      doughHint.textContent = 'Shelf complete! Spare dough becomes gold.';
+    } else {
+      doughBtn.textContent = 'Choose a dumpling (' + DUMPLING_DOUGH_PER_PICK + ' dough)';
+      doughBtn.disabled = !canPickWithDough();
+      doughBtn.onclick = function() { openDoughPicker(); };
+      doughHint.textContent = needed > 0
+        ? ('Duplicates make dough. ' + needed + ' more dough and you can pick any dumpling you want.')
+        : 'You can pick any dumpling you want!';
+    }
   }
 
   if (!selectedDumplingId || !(player.dumplings[selectedDumplingId] > 0)) {
@@ -460,13 +581,20 @@ function renderDumplingModal() {
   for (var i = 0; i < DUMPLINGS.length; i++) {
     var dumpling = DUMPLINGS[i];
     var owned = (player.dumplings[dumpling.id] || 0) > 0;
+    // In pick mode the LOCKED cards are the live ones: the child taps the dumpling
+    // they actually want and dough buys that one, not a random one.
+    var pickable = dumplingPickMode && !owned && canPickWithDough();
     var card = document.createElement('button');
     card.type = 'button';
     card.className = 'dumpling-card' + (owned ? '' : ' locked') +
+      (pickable ? ' pickable' : '') +
       (selectedDumplingId === dumpling.id ? ' selected' : '');
     card.dataset.id = dumpling.id;
-    card.disabled = !owned;
-    card.setAttribute('aria-label', owned ? dumpling.name + ', ' + dumpling.rarity : 'Locked dumpling');
+    card.disabled = pickable ? false : !owned;
+    card.setAttribute('aria-label', owned
+      ? dumpling.name + ', ' + dumpling.rarity
+      : (pickable ? 'Choose ' + dumpling.name + ' for ' + DUMPLING_DOUGH_PER_PICK + ' dough'
+                  : 'Locked dumpling'));
 
     var icon = document.createElement('div');
     icon.className = 'dumpling-icon ' + dumpling.rarity;
@@ -476,9 +604,16 @@ function renderDumplingModal() {
     card.appendChild(icon);
 
     var label = document.createElement('div');
-    label.textContent = owned ? dumpling.name : '???';
+    label.textContent = owned ? dumpling.name : (pickable ? dumpling.name : '???');
     card.appendChild(label);
-    if (owned) card.addEventListener('click', function() { selectDumpling(this.dataset.id); });
+    if (pickable) {
+      card.addEventListener('click', function() {
+        dumplingPickMode = false;
+        pickDumplingWithDough(this.dataset.id);
+      });
+    } else if (owned) {
+      card.addEventListener('click', function() { selectDumpling(this.dataset.id); });
+    }
     grid.appendChild(card);
   }
 }
@@ -493,7 +628,10 @@ function openDumplingVendor() {
   }
   renderDumplingModal();
   modalShellOpen('dumplingModal');
-  speak('Welcome to the Squishy Dumpling stall. Save gold for a better bundle deal!');
+  // No "save up for a better deal" line: that nudge is exactly what the owner ruling
+  // removed. The welcome states the price plainly and stops there.
+  speak('Welcome to the Squishy Dumpling stall. Every pull costs ' +
+    DUMPLING_PULL_COST + ' gold.');
 }
 
 function closeDumplingVendor() {
@@ -503,8 +641,9 @@ function closeDumplingVendor() {
 registerModal('dumplingModal', closeDumplingVendor);   // Escape = leave the stall
 
 function buyDumplingBundle(count) {
-  var cost = DUMPLING_BUNDLES[count];
-  if (!gameActive || !dumplingOpen || !cost) return false;
+  if (!gameActive || !dumplingOpen) return false;
+  if (DUMPLING_PULL_COUNTS.indexOf(count) === -1) return false;
+  var cost = dumplingPullCost(count);
   if (player.gold < cost) {
     showToast('You need ' + cost + ' gold!');
     speak('You need ' + cost + ' gold.');

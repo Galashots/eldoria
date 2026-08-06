@@ -136,11 +136,14 @@
       <span id="dumplingGold">Gold: 0g</span>
       <span id="dumplingOwned">Collection: 0/18</span>
     </div>
-    <p class="shop-hint">Every pull uses earned game gold. Save for a bundle to get a better deal!</p>
+    <!-- Every pull is the same price. Pulling several at once saves taps, never gold,
+         so there is nothing to hold out for (owner ruling, ELD-PT-013). -->
+    <p class="shop-hint">Every pull uses gold you earned. Every pull costs the same.</p>
+    <p class="dumpling-odds" id="dumplingOdds">Every pull: 55% common · 27% rare · 12% epic · 6% legendary</p>
     <div class="dumpling-pulls">
-      <button id="dumplingPull1" onclick="buyDumplingBundle(1)" aria-label="Buy one dumpling pull for 20 gold">1 Pull<small>20g each</small></button>
-      <button id="dumplingPull3" onclick="buyDumplingBundle(3)" aria-label="Buy three dumpling pulls for 50 gold">3 Pulls<small>50g · 16.7g each</small></button>
-      <button id="dumplingPull10" onclick="buyDumplingBundle(10)" aria-label="Buy ten dumpling pulls for 150 gold">10 Pulls<small>150g · 15g each</small></button>
+      <button id="dumplingPull1" onclick="buyDumplingBundle(1)" aria-label="Pull once for 20 gold">1 pull · 20g</button>
+      <button id="dumplingPull3" onclick="buyDumplingBundle(3)" aria-label="Pull three times for 60 gold">3 pulls · 60g</button>
+      <button id="dumplingPull10" onclick="buyDumplingBundle(10)" aria-label="Pull ten times for 200 gold">10 pulls · 200g</button>
     </div>
     <p class="dumpling-status" id="dumplingStatus" aria-live="polite">Choose a pull to meet your first dumpling!</p>
     <div class="dumpling-showcase" id="dumplingShowcase">
@@ -152,6 +155,12 @@
     <div class="dumpling-balance">
       <span id="dumplingDough">Dough: 0</span>
       <span id="dumplingPity">Legendary in 15 pulls or fewer</span>
+    </div>
+    <!-- Dough is the deterministic path: duplicates always move you toward finishing
+         the shelf, so completion never depends on luck (owner-approved). -->
+    <div class="dumpling-dough-panel">
+      <button class="btn-buy" id="dumplingDoughAction" type="button" disabled>Choose a dumpling (10 dough)</button>
+      <p class="dumpling-dough-hint" id="dumplingDoughHint">Duplicates make dough. 10 more dough and you can pick any dumpling you want.</p>
     </div>
     <p class="shop-hint">Duplicate: +4g refund and +1 dough. Buddy powers are coming next.</p>
     <button class="btn-close" onclick="closeDumplingVendor()" aria-label="Leave the dumpling stall">Leave</button>

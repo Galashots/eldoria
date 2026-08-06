@@ -473,7 +473,14 @@ function winCombat() {
   var enemyType = combatEnemy.type;
   if (combatSource) {
     combatSource.alive = false;
-    combatSource.respawnAt = Date.now() + 30000;
+    // OWNER RULING (2026-08-05): bosses come back on a LONG (daily) timer rather than
+    // in 30 seconds. A boss that returned every half minute was a re-farmable gold
+    // faucet pointed straight at the dumpling stall. Ordinary enemies are unchanged,
+    // so normal play still has things to fight. respawnAt is already persisted and
+    // honoured on re-entry, so the long timer survives closing the game.
+    var respawnDelay = (ENEMIES[combatEnemy.type] && ENEMIES[combatEnemy.type].boss)
+      ? BOSS_RESPAWN_MS : ENEMY_RESPAWN_MS;
+    combatSource.respawnAt = Date.now() + respawnDelay;
   }
   if (!player.killCounts) player.killCounts = {};
   player.killCounts[enemyType] = (player.killCounts[enemyType] || 0) + 1;
