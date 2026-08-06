@@ -43,5 +43,37 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T1: no console errors', errors.length === 0);
 }
 
+// ---- Task 2: computeMaxHp derivation ----
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    var out = {};
+    selectProfile('adventurer');
+    // Base level-1, no crystals, no gear = 20.
+    player.level = 1; player.hpUpgrades = 0;
+    player.gear = { weapon: null, head: null, body: null, cape: null };
+    out.base = computeMaxHp() === 20;
+    // Level + crystals: 20 + (level-1)*5 + hpUpgrades*5.
+    player.level = 7; player.hpUpgrades = 3;
+    out.levelCrystals = computeMaxHp() === 20 + 6 * 5 + 3 * 5; // 65
+    // A weapon adds NO hp.
+    player.gear.weapon = 'eldoria_blade';
+    out.weaponNoHp = computeMaxHp() === 65;
+    // Armour adds its hearts; multiple pieces sum (OWNER 14: wyrm_scale=20, titan_helm=15).
+    player.gear.body = 'wyrm_scale'; player.gear.head = 'titan_helm';
+    out.armourSums = computeMaxHp() === 65 + 20 + 15; // 100
+    // Pure helper matches the live reader.
+    out.pureMatches = maxHpFor(7, 3, player.gear) === computeMaxHp();
+    return out;
+  });
+  await browser.close();
+  check('T2: base level-1 no gear = 20', r.base);
+  check('T2: level + crystals term', r.levelCrystals);
+  check('T2: weapons contribute no hp', r.weaponNoHp);
+  check('T2: armour hearts sum into maxHp', r.armourSums);
+  check('T2: maxHpFor pure helper matches computeMaxHp', r.pureMatches);
+  check('T2: no console errors', errors.length === 0);
+}
+
 if (fails.length) { console.log('\n' + fails.length + ' FAILED'); process.exit(1); }
 console.log('\nAll armor-hearts tests passed.');

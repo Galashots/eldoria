@@ -27,6 +27,33 @@ function playerDamage() {
   return 5 + (player.level - 1) * 2 + gearDamageBonus() + player.atkUpgrades * TRAIN_ATK;
 }
 
+// Sum of +HP (hearts) from all equipped armour. Weapons carry `damage`, not `hp`.
+function armorHpBonus() {
+  var bonus = 0;
+  for (var i = 0; i < EQUIPMENT_SLOTS.length; i++) {
+    var id = player.gear[EQUIPMENT_SLOTS[i]];
+    if (id && GEAR[id] && typeof GEAR[id].hp === 'number') bonus += GEAR[id].hp;
+  }
+  return bonus;
+}
+
+// Pure derivation (combat-armor spec §4): the ONE formula for max HP. Takes explicit
+// state so save ingest can derive from a canonical snapshot before `player` is live.
+//   20 (base) + (level-1)*5 + hpUpgrades*HEART_HP + armour hearts
+function maxHpFor(level, hpUpgrades, gear) {
+  var armor = 0;
+  for (var i = 0; i < EQUIPMENT_SLOTS.length; i++) {
+    var id = gear[EQUIPMENT_SLOTS[i]];
+    if (id && GEAR[id] && typeof GEAR[id].hp === 'number') armor += GEAR[id].hp;
+  }
+  return 20 + (level - 1) * 5 + hpUpgrades * HEART_HP + armor;
+}
+
+// Live reader over the current player. Single source of truth for player.maxHp.
+function computeMaxHp() {
+  return maxHpFor(player.level, player.hpUpgrades, player.gear);
+}
+
 // Roll the enemy's loot table for a gear drop. Returns the item id or null.
 function rollLoot(enemyType) {
   var loot = ENEMIES[enemyType].loot;
