@@ -1,0 +1,79 @@
+{
+  "status": "FINAL",
+  "slot": "body",
+  "facing": "down-right",
+  "route": "direct-overlay",
+  "generation": {
+    "tool": "PixelLab create-character-v3",
+    "endpoint": "/v2/create-character-v3",
+    "schema_verified_on": "2026-08-06",
+    "command": "One from-scratch H1a probe; no reference image; isolation prompt recorded privately",
+    "seed": 20260806,
+    "approved_references": [],
+    "approved_mask": {
+      "status": "PENDING",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right.png",
+      "sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+      "reason": "Draft mask retained for review; human semantic FAIL eliminates H1a before custody scoring."
+    },
+    "canvas_custody": {
+      "source_canvas_px": 120,
+      "validation_canvas_px": 64,
+      "mask_canvas_px": 64,
+      "transform": "not run: semantic LOSE before custody scoring; no crop, scale, interpolation, rotation, or translation permitted",
+      "anchor": "not run: H1a vendor canvas is not being placed on the engine canvas",
+      "normalization": "not run"
+    }
+  },
+  "geometry": {
+    "source_dimensions": "from-scratch",
+    "output_figure_px": null,
+    "output_canvas_px": 120,
+    "facings_generated": ["south", "south-east", "east", "north-east", "north", "north-west", "west", "south-west"],
+    "facings_evaluated": ["down-right", "right", "up-left"],
+    "states_covered": ["static"]
+  },
+  "cost": {
+    "generations_quoted": 2,
+    "generations_charged": 2,
+    "accepted_count": 0,
+    "failed_count": 8,
+    "failure_modes": ["human semantic drift: complete headless mannequin/outfit in every rotation"]
+  },
+  "custody_validator": {
+    "scoring_status": "UNSCORED",
+    "unscored_reason": "Human semantic FAIL eliminates H1a before GC scoring; masks are draft/pending.",
+    "gc4_mask_containment": null,
+    "gc5_offmask_pixels_changed": "UNSCORED",
+    "gc6_layer_order": null,
+    "gc8_determinism": null,
+    "extracted_layer_sha256": null,
+    "recomposed_sha256": null
+  },
+  "human_verdicts": {
+    "semantic_gate": "FAIL",
+    "heading_fidelity": "FAIL: output is not an equipment-only overlay",
+    "cross_facing_recognizability": "N/A after semantic elimination",
+    "semantic_drift": "FAIL: mannequin/outfit body, arms, gloves, belt/lower-body clothing, legs, and boots",
+    "temporal_stability": "N/A for static probe",
+    "north_star_alignment": "Intentional interim gap"
+  },
+  "custody": {
+    "raw_output_location": "Private attachment iron-armor-h1a-sanitized-review.zip; archive not committed",
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "candidate_sha256": "[REDACTED — unapproved output; raw candidate remains private]",
+    "mask_sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+    "raw_output_sha256": [
+      "d66aad6c35c7ef9fb67a825aa8f9006b6cdaebf0f5d4278e7d06d828e25e7f84",
+      "0ace98928255a6405e5e7a5bc858e0077bf0cff668aa52f42a37c5ee13a74fda",
+      "f59d65513e237c497ee22f51de6d76a0a62ecf01119f49b090d3745164e05c03",
+      "d3c9eee653d4b1ad4589e08985494d48900c2db21eedef0f81c870d48fb7f800",
+      "c0dc9418a49b223874081dbe0c3a2ede3586a52425502dbaca96ff4d06e21dc1",
+      "ea64162fe1148825493ab695f1a8eff74239c2a50d6ef9451cda9c74cd7df337",
+      "955915552309fecf909f1572cafd2603b2d614f0218e584ab6c60922adfef210",
+      "9721e33ecbc4a57e9e10e68217ae553b91f4378ce0d487a2e43e38d08bd2b94d"
+    ]
+  },
+  "verdict": "LOSE",
+  "verdict_reason": "H1/body/direct-overlay is a permanent LOSE before GC scoring: every rotation is a substantially complete headless mannequin/outfit, not equipment-only art."
+}

@@ -132,15 +132,16 @@ above.
 | Job | Endpoint / mode | Notes |
 |---|---|---|
 | Hero / named NPC identity | `create-character-v3` **with** `reference_image` | The supported identity route. See §3 |
+| Eldoria equipment direct overlay | `create-character-v3` from-scratch | **Rejected permanently for this purpose:** the single H1a call cost 2 generations and returned eight 120×120 headless mannequin/outfit rotations; H1/body/direct-overlay is LOSE before custody scoring. No H1b object/weapon call is authorized |
 | Rotate an existing approved sprite | `generate-8-rotations-v3` | Takes `first_frame` + optional `description` hint |
 | Simple humanoid enemy | `create-character-with-8-directions` | `proportions` works here (not in v3) |
 | Quadruped | `--template-id bear\|cat\|dog\|horse\|lion` | Template must match the body in the reference |
 | Non-template body (blob, serpent, flyer) | `mode=pro` | Expensive; confirm cost first |
-| Gear / outfit / pose variant of an existing character | **`create-character-state`** | One edit applied consistently across **all** rotations; keeps identity, body type and proportions. `use_color_palette_from_reference` snaps it to the source palette |
+| Gear / outfit / pose variant of an existing character | **Standard PixelLab Inpaint in Pixelorama** | Phase 1 primary: exact committed 64×64 frame plus one approved per-slot/facing binary mask; one fixed-seed result per item; actual UI cost must be recorded before owner approval |
 | Stock motion | `animate-character` + `template_animation_id` | 1 gen/direction |
 | Custom motion | `animate-character` + `action_description` | v3; see §5 |
 | Fill in directions a partial animation missed | MCP `animate_character(animation_group_id=...)` or the web UI's per-slot rocket icon | Appends to the existing group instead of regenerating the set. **Not available on the REST character route** ([REST-VERIFIED 2026-07-30]: `CreateCharacterAnimationRequest` has no append field; REST's `animation_group_id` exists only on the *object*-animation endpoint) |
-| Reskin frames with an outfit/weapon (candidate gear route) | `transfer-outfit-v2` | **[LIVE-VERIFIED 2026-08-06, UNEXERCISED]** Takes an outfit reference + 2–16 supplied frames; returns **composited frames, not a layer** (`no_background` available). Vendor use cases include "apply armour to a walking animation" and "transfer weapon to an action sequence." Candidate third gear method — see §8 and `GEAR_CUSTODY_CONTRACT.md` |
+| Reskin frames with an outfit/weapon (future owner-gated route) | `transfer-outfit-v2` | Browser Pixelorama/Aseprite workflow; one outfit reference per call; corrected size/frame/cost table in §8; outside the historical 12-generation cap |
 | Strip a background to transparent PNG | `remove-background` | **[LIVE-VERIFIED 2026-08-06]** Model call, max 400×400. **Banned from the gear custody path** (extraction must be deterministic — `GEAR_CUSTODY_CONTRACT.md` GC8); repair/prep only |
 | Download everything | `GET /characters/{id}/zip` | Rotations, animation frames, `metadata.json`, and per-frame keypoints |
 
@@ -226,12 +227,14 @@ you shrink a reference.
 
 Generate the hero **unarmed**, and treat the weapon as a `weapon`-slot overlay.
 
-**[UNTESTED]** `create-character-state` (§2) applies one edit consistently across
-all rotations, keeping identity and proportions — but it returns a **complete
-edited character**, not an engine-ready transparent equipment-slot overlay.
-Producing transparent per-slot overlays (weapon, body, head, cape) that composite
-correctly with Eldoria's layer pipeline is a separate, untested calibration need.
-Do not assume the overlay pipeline is solved.
+**PARKED** `create-character-state` applies one edit consistently across rotations,
+but returns a **complete edited character**, not an engine-ready transparent
+equipment-slot overlay. It is removed from the current batch because the remote
+256px character is not byte-identical to the committed 64px runtime source, exact
+normalization cannot presently be reconstructed, and its pre-call generation cost
+is not adequately bounded. A future raw-source experiment must compare at the
+same resolution before extracting a layer; resizing first can change off-mask
+pixels and invalidate GC5. Do not assume this route solves overlays.
 
 PixelLab has no equipment-layer endpoint that attaches an item to a specific
 limb. Eldoria's overlays are full-frame aligned layers, not hand-anchored.
@@ -412,6 +415,39 @@ resulted from this section.
 
 ## 8. Live-schema re-verification (2026-08-06) — Sub-project A gear research
 
+> **Phase 1 disposition (current authority).** The schema verification below was
+> read-only. A later H1a probe call executed exactly once and charged 2
+> generations; it returned eight 120×120 mannequin/outfit rotations with
+> `template_id=mannequin`. This live result, not schema inference, makes
+> `create-character-v3` unsuitable for Eldoria direct overlays. H1/body is LOSE
+> before custody scoring; H1b is removed and no object/weapon call through that
+> endpoint is authorized.
+
+### Phase 1 method map and corrected Transfer Outfit costs
+
+| Method | Phase 1 disposition |
+|---|---|
+| Standard PixelLab Inpaint in Pixelorama | Primary future experiment on exact committed 64×64 Ranger `down-right`, one approved mask per slot, fixed seed, one result per item; no call authorized by this PR |
+| `create-character-state` | Parked future raw-source experiment only; complete characters, remote 256px source not byte-identical to committed 64px, normalization not reconstructible, pre-call cost not bounded |
+| Edit Animation Pro | Future owner-gated browser experiment after one-facing test; exact 64×64 directional frames, 20 generations per 2–16-frame batch |
+| Transfer Outfit Pro | Future owner-gated browser experiment after one-facing test; approved visual item reference, 20 generations at 64px |
+
+Transfer Outfit is a separate browser Pixelorama/Aseprite workflow, with one
+outfit reference per call, and is outside the historical 12-generation cap:
+
+| Reference size | Maximum frames | Cost |
+|---|---:|---:|
+| 32–64px | up to 15 | 20 generations |
+| 65–80px | up to 8 | 20 generations |
+| 81–128px | up to 3 | 20 generations |
+| 129–170px | up to 3 | 25 generations |
+| 171–256px | up to 3 | 40 generations |
+
+For any future raw-source method, compare raw full-resolution composite versus a
+same-resolution hash-pinned base and mask before resizing. Normalize only a
+passing extracted layer to 64×64. Human placement is prohibited; crop, scale,
+interpolation, pivot/anchor, and translation must be deterministic and recorded.
+
 The schema portion was re-verified read-only against
 `api.pixellab.ai/v2/openapi.json` and `api.pixellab.ai/mcp/docs` (`curl` + script
 parse; **no summarizing fetch**; no generation or token used for schema
@@ -496,9 +532,19 @@ one result, not a general claim about every create-character-v3 call.
 The H1a human semantic gate is **FAIL**, so `H1 / body / direct-overlay` is
 **LOSE before GC scoring**. The sanitized private-review evidence was supplied
 directly to ChatGPT and visually reviewed; the raw archive and unapproved output
-remain outside `assets/` and are not committed. H1b and H2 remain suspended. The
+remain outside `assets/` and are not committed. H1b is removed; H2 is parked and
+not in the current batch. The
 remaining 10 generations of the original 12-generation ceiling are not authorized.
 
 **North Star alignment:** Intentional interim gap — this research output is not a
 production asset or runtime visual change. The game remains unchanged; no further
 generation is authorized without Leo's explicit per-batch approval.
+
+### Phase 1 supersession note
+
+Any earlier candidate-arm wording in this historical section is superseded by the
+Phase 1 method map above: no H1b, H2, or Transfer Outfit call is authorized by
+this PR; `create-character-state` is parked; Transfer Outfit is not part of the
+remaining 12-generation cap; and the only completed call was the one H1a probe
+recorded above. Schema verification itself was read-only, while the later H1a
+result was live-exercised evidence.
