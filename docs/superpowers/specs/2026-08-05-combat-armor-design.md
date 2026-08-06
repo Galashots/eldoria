@@ -225,7 +225,7 @@ Each row is its own implementation plan and its own PR.
 | 0 | **Guidance-doc realignment** — authorize this scope, rank the plans, retire stale ones (§8) | none | — |
 | 1 | **Retire top-down** — pure deletion; areas default to iso; no-facing-saved assertion; paper-doll overlays retained (§3) | none | 0 |
 | 2 | **Armor hearts-only** — `computeMaxHp` derivation, `GEAR.hp` + `sellValue`, heart display, balance pass, Character-screen comparisons | none | 0 (parallel with 1) |
-| A | **PixelLab research** — runs from day one, no code; outputs docs, gear custody contract + render-model verdict | none | — |
+| A | **PixelLab research** — runs from day one, no code; outputs docs, gear custody contract + render-model verdict | optional bounded probe, owner-approved | — |
 | 3 | **World combat staging** — same loop behind a controller/presentation seam, sprites on the map, HUD-overlaid questions | none new | 1 |
 | 4 | **Gear-art composability slice** — four-slot loadout + one swap, both heroes, combat-facing subset, iPad evidence → owner authorizes bulk | small | A, 3 |
 | 5 | **Bulk gear art + combat animations** — attack/hurt/death, gear-aware | large | 4 |

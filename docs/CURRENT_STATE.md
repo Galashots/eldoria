@@ -135,8 +135,9 @@
   `docs/ai-team/MOMO_INTEGRATION_BRIEF_20260805.md`. PixelLab generation was
   paused again after that overrun; the combat/armor spec re-opens it *as an
   exercise* but does not lift the pause — see the scope list below. Research is
-  documentation only, and generation still needs Leo's explicit per-batch
-  authorization.
+  documentation-led (its one permitted generation is the separately Leo-approved
+  method-elimination probe), and generation of any kind still needs Leo's explicit
+  per-batch authorization.
 - [`tools/3D_ISO_SPRITE_PIPELINE.md`](../tools/3D_ISO_SPRITE_PIPELINE.md) is historical. Do not restart its generation route; only the retained engine-contract facts explicitly referenced by the v2 pipeline remain applicable.
 
 ## Recommended next outcome
@@ -195,8 +196,9 @@ Out of scope unless Leo explicitly expands it:
   because it removes the fallback renderer before iso combat is proven;
 - unapproved visual identities or silent North Star replacement;
 - **PixelLab generation — in scope for this exercise**, but still gated: the research
-  phase is documentation only, and **every generation batch — including the
-  composability-slice batch itself — requires Leo's explicit approval before
+  phase is documentation-led, its only permitted generation being the bounded
+  method-elimination probe, and **every generation batch — the probe and the
+  composability-slice batch included — requires Leo's explicit approval before
   generation**. The slice's iPad inspection gates *acceptance* of its output and the
   bulk spend that follows; inspection never grants spend authorization. The generation
   pause from the Momo probe overrun is lifted only by that per-batch approval, never by
