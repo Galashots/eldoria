@@ -267,7 +267,22 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
                                      !c.classList.contains('owned'));
     const readBtn = document.getElementById('dumplingReadOdds');
     const readRect = readBtn.getBoundingClientRect();
+    // The exit from selection mode must be on screen the moment picking begins:
+    // openDoughPicker scrolls the dough panel (which carries the exit) into view.
+    const cancel = document.getElementById('dumplingDoughAction').getBoundingClientRect();
+    // The dough panel now sits ABOVE the shelf, so nothing ever scrolls over the
+    // cards. Prove it two ways: the panel clears the grid entirely (no overlap at any
+    // scroll), and the last card can be scrolled fully into view inside the grid's own
+    // scroller (the shelf is the sole scrolling region now).
+    const gridRect = grid.getBoundingClientRect();
+    const panel = document.querySelector('.dumpling-dough-panel').getBoundingClientRect();
+    grid.scrollTop = grid.scrollHeight;
+    const lastCard = cards.length ? cards[cards.length - 1].getBoundingClientRect() : null;
     return {
+      cancelInView: cancel.top >= 0 && cancel.bottom <= window.innerHeight,
+      panelAboveShelf: panel.bottom <= gridRect.top + 1,
+      lastCardClear: !!lastCard && lastCard.bottom <= gridRect.bottom + 1 &&
+                                   lastCard.top >= gridRect.top - 1,
       gridHeight,
       cardCount: cards.length,
       pickableCount: pickable.length,
@@ -279,6 +294,9 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   });
 
   check('phone: the shelf has usable rendered height', r.gridHeight > 40);
+  check('phone: the way out of choosing stays on screen', r.cancelInView === true);
+  check('phone: the dough panel sits above the shelf, never over it', r.panelAboveShelf === true);
+  check('phone: the last card scrolls fully into view', r.lastCardClear === true);
   check('phone: the shelf actually renders its cards', r.cardCount === 18);
   check('phone: pickable cards exist while choosing', r.pickableCount > 0);
   check('phone: pickable cards are not disabled', r.pickableDisabled === false);

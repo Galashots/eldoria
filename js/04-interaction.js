@@ -489,20 +489,30 @@ function rollDumpling() {
 
 var dumplingPickMode = false;   // true while the child is choosing a dumpling with dough
 
+// Four call sites clear this mode, so they all go through one setter rather than
+// each remembering the flag. The dough panel (the only exit from selection mode)
+// now sits above the shelf in the DOM, so nothing scrolls over it and no sticky
+// pinning class is needed to keep the exit reachable.
+function setDumplingPickMode(on) {
+  dumplingPickMode = on;
+}
+
 function openDoughPicker() {
   if (!canPickWithDough()) return;
-  dumplingPickMode = true;
+  setDumplingPickMode(true);
   document.getElementById('dumplingStatus').textContent =
     'Tap the dumpling you want! It costs ' + DUMPLING_DOUGH_PER_PICK + ' dough.';
   renderDumplingModal();
-  // Bring the shelf into view. Telling a child to tap a card that is scrolled off
-  // the bottom of the panel is the same as not offering the choice at all.
-  var grid = document.getElementById('dumplingGrid');
-  if (grid && grid.scrollIntoView) grid.scrollIntoView({ block: 'nearest' });
+  // Bring the exit ("Cancel choosing") and the shelf below it into view together.
+  // The panel sits directly above the shelf, so showing it shows the child both the
+  // way out and the cards to tap. Telling a child to tap a card that is scrolled off
+  // screen is the same as not offering the choice at all.
+  var panel = document.querySelector('#dumplingModal .dumpling-dough-panel');
+  if (panel && panel.scrollIntoView) panel.scrollIntoView({ block: 'start' });
 }
 
 function cancelDoughPicker() {
-  dumplingPickMode = false;
+  setDumplingPickMode(false);
   renderDumplingModal();
 }
 
@@ -691,7 +701,7 @@ function renderDumplingModal() {
     card.appendChild(label);
     if (pickable) {
       card.addEventListener('click', function() {
-        dumplingPickMode = false;
+        setDumplingPickMode(false);
         pickDumplingWithDough(this.dataset.id);
       });
     } else if (owned) {
@@ -707,7 +717,7 @@ function openDumplingVendor() {
   dumplingOpen = true;
   // Dough-pick mode is a per-visit interaction, not a saved preference: a stall that
   // reopens already in "choose a dumpling" mode gives a child no visible cause for it.
-  dumplingPickMode = false;
+  setDumplingPickMode(false);
   if (dumplingCollectionCount() === 0) {
     document.getElementById('dumplingStatus').textContent =
       'Choose a pull to meet your first dumpling!';
@@ -724,7 +734,7 @@ function closeDumplingVendor() {
   dumplingOpen = false;
   // Clear selection mode on the way out too, so Escape and the close button leave
   // the stall in the same neutral state the next visit expects.
-  dumplingPickMode = false;
+  setDumplingPickMode(false);
   modalShellClose('dumplingModal');
 }
 registerModal('dumplingModal', closeDumplingVendor);   // Escape = leave the stall

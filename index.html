@@ -168,17 +168,19 @@
       <div class="dumpling-selected-name" id="dumplingSelectedName">No dumpling selected</div>
       <div class="dumpling-selected-rarity" id="dumplingSelectedRarity">Pull one to begin</div>
     </div>
-    <div class="dumpling-grid" id="dumplingGrid" aria-label="Dumpling collection"></div>
     <div class="dumpling-balance">
       <span id="dumplingDough">Dough: 0</span>
       <span id="dumplingPity">Legendary in 15 pulls or fewer</span>
     </div>
     <!-- Dough is the deterministic path: duplicates always move you toward finishing
-         the shelf, so completion never depends on luck (owner-approved). -->
+         the shelf, so completion never depends on luck (owner-approved). The dough
+         panel carries the only exit from selection mode, so it sits ABOVE the shelf:
+         the shelf is the sole scrolling region and nothing ever scrolls over the exit. -->
     <div class="dumpling-dough-panel">
       <button class="btn-buy" id="dumplingDoughAction" type="button" disabled>Choose a dumpling (10 dough)</button>
       <p class="dumpling-dough-hint" id="dumplingDoughHint">Duplicates make dough. 10 more dough and you can pick any dumpling you want.</p>
     </div>
+    <div class="dumpling-grid" id="dumplingGrid" aria-label="Dumpling collection"></div>
     <p class="shop-hint">Duplicate: +4g refund and +1 dough. Buddy powers are coming next.</p>
     <button class="btn-close" onclick="closeDumplingVendor()" aria-label="Leave the dumpling stall">Leave</button>
   </div>
