@@ -64,6 +64,35 @@ function rollLoot(enemyType) {
   return null;
 }
 
+// Apply a max-HP change after gear changed. `previousMax` is the max BEFORE the gear edit.
+// Equip (max grows): grant the delta to current hp immediately (Heart Crystal precedent,
+// combat-armor spec OWNER 13). Unequip (max shrinks): clamp hp down to the new max, floored
+// at 1 for a LIVING hero (a defeated hero at hp<=0 is left as-is — recomputation never
+// resurrects).
+function applyEquipHpChange(previousMax) {
+  var newMax = computeMaxHp();
+  player.maxHp = newMax;
+  var delta = newMax - previousMax;
+  if (delta > 0) player.hp += delta;                 // immediate grant
+  if (player.hp > newMax) player.hp = newMax;         // clamp down
+  if (player.hp > 0 && player.hp < 1) player.hp = 1;  // living-hero floor (defensive)
+}
+
+// The one number that ranks two items in the SAME slot: weapons by damage, armour by hp.
+// (Each slot carries exactly one stat, so same-slot items always compare on the same field.)
+function gearRankStat(itemId) {
+  var g = GEAR[itemId];
+  if (!g) return 0;
+  return (typeof g.damage === 'number') ? g.damage : (g.hp || 0);
+}
+
+// Child-readable effect line for equip messages: weapons say damage, armour says hearts.
+function equipEffectText(item) {
+  if (typeof item.damage === 'number') return '+' + item.damage + ' damage';
+  var hearts = item.hp / HEART_HP;
+  return '+' + hearts + (hearts === 1 ? ' heart' : ' hearts');
+}
+
 // Equip a gear drop if it's better than what's in that slot (or slot is empty). Anything
 // not equipped goes into your bag (player.inventory) so you can SELL it later — nothing is
 // ever silently lost. Equipped gear is never in the bag, so you can't sell what you wear.
@@ -71,7 +100,7 @@ function equipGear(itemId) {
   var item = GEAR[itemId];
   if (!item) return;
   var current = player.gear[item.slot];
-  if (current && GEAR[current] && GEAR[current].damage >= item.damage) {
+  if (current && GEAR[current] && gearRankStat(current) >= gearRankStat(itemId)) {
     // Not an upgrade — keep it in the bag to sell for gold.
     player.inventory.push(itemId);
     // An automatic drop is a rare progression event, not a menu action: it is worth
@@ -81,11 +110,13 @@ function equipGear(itemId) {
     return;
   }
   // It's an upgrade: the old item (if any) drops into the bag so it's not lost.
+  var previousMax = player.maxHp;
   if (current) player.inventory.push(current);
   player.gear[item.slot] = itemId;
+  applyEquipHpChange(previousMax);
   // Same here: this equip is automatic on a drop, not a tap in the Character screen.
-  showToast('Equipped ' + item.name + '! +' + item.damage + ' damage');
-  speak('You found a ' + item.name + '! Plus ' + item.damage + ' damage!');
+  showToast('Equipped ' + item.name + '! ' + equipEffectText(item));
+  speak('You found a ' + item.name + '! ' + equipEffectText(item) + '!');
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
 }
 
@@ -145,16 +176,19 @@ function renderGearSell() {
 
 // Equip one bag item by its exact index in player.inventory. Returns true on success.
 function equipFromBag(index) {
+  if (combatOpen) return false;                       // equipment locked during combat (OWNER 13)
   if (typeof index !== 'number' || index % 1 !== 0) return false;
   if (index < 0 || index >= player.inventory.length) return false;
   var itemId = player.inventory[index];
   var item = GEAR[itemId];
   if (!item) return false;
+  var previousMax = player.maxHp;
   player.inventory.splice(index, 1);            // remove THAT exact instance
   var current = player.gear[item.slot];
   if (current) player.inventory.push(current);  // the old item goes into the bag
   player.gear[item.slot] = itemId;
-  announceRoutine('Equipped ' + item.name + '! (+' + item.damage + ' dmg)');
+  applyEquipHpChange(previousMax);              // grant/clamp HP for armour swaps
+  announceRoutine('Equipped ' + item.name + '! (' + equipEffectText(item) + ')');
   updateHUD();
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
   saveGame();
@@ -163,11 +197,14 @@ function equipFromBag(index) {
 
 // Unequip one slot into the bag. Returns true on success; empty/invalid slot is a no-op.
 function unequipSlot(slot) {
+  if (combatOpen) return false;                       // equipment locked during combat (OWNER 13)
   if (EQUIPMENT_SLOTS.indexOf(slot) === -1) return false;
   var itemId = player.gear[slot];
   if (!itemId || !GEAR[itemId]) return false;
+  var previousMax = player.maxHp;
   player.inventory.push(itemId);
   player.gear[slot] = null;
+  applyEquipHpChange(previousMax);              // clamp hp down (floor 1 for a living hero)
   announceRoutine('Put ' + GEAR[itemId].name + ' in your bag.');
   updateHUD();
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();

@@ -116,5 +116,65 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T3: no console errors', errors.length === 0);
 }
 
+// ---- Task 4: equip/unequip HP custody ----
+{
+  const { browser, page, errors } = await launch();
+  const r = await page.evaluate(() => {
+    var out = {};
+    selectProfile('adventurer');
+    player.level = 1; player.hpUpgrades = 0;
+    player.gear = { weapon: null, head: null, body: null, cape: null };
+    player.inventory = [];
+    player.maxHp = computeMaxHp(); player.hp = player.maxHp;   // 20/20
+    player.hp = 18;                                            // 18/20
+
+    // (a) Equipping armour grants the new HP immediately: 18/20 + iron_armor(5, OWNER 14) -> 23/25.
+    player.inventory = ['iron_armor'];
+    equipFromBag(0);
+    out.grantOnEquip = player.maxHp === 25 && player.hp === 23;
+
+    // (b) Unequip clamps hp to the new max: 23/25 -> remove -> 20/20 (min(23,20)=20; max shrank, no grant).
+    unequipSlot('body');
+    out.clampOnUnequip = player.maxHp === 20 && player.hp === 20;
+
+    // (c) Unequip floors a living hero at >=1 and never at 0.
+    player.gear.body = 'wyrm_scale'; player.maxHp = computeMaxHp(); player.hp = 1; // 1/40 (20 base + 20 wyrm_scale)
+    unequipSlot('body');
+    out.floorLiving = player.maxHp === 20 && player.hp >= 1;
+
+    // (d) Auto-equip picks the higher-HP armour by hp, not damage.
+    player.gear = { weapon: null, head: null, body: 'iron_armor', cape: null };
+    player.inventory = [];
+    player.maxHp = computeMaxHp(); player.hp = player.maxHp;
+    equipGear('mithril_armor');                        // 15 hp > iron 5 -> upgrade
+    out.autoUpgradeArmour = player.gear.body === 'mithril_armor' && player.inventory.indexOf('iron_armor') !== -1;
+    equipGear('iron_armor');                           // 5 hp < 15 -> stays in bag
+    out.autoKeepWeaker = player.gear.body === 'mithril_armor' &&
+      player.inventory.filter(function (x){return x==='iron_armor';}).length === 2;
+
+    // (e) Equipment is locked during combat: equip/unequip are no-ops while combatOpen.
+    activateArea('wilds');
+    var slime = currentEnemies[0]; slime.alive = true;
+    player.gear = { weapon: null, head: null, body: null, cape: null };
+    player.inventory = ['iron_armor'];
+    player.maxHp = computeMaxHp(); player.hp = player.maxHp;
+    openCombat(slime);
+    var equipDuring = equipFromBag(0);
+    var unequipDuring = unequipSlot('body');
+    out.lockedDuringCombat = equipDuring === false && unequipDuring === false &&
+      player.gear.body === null && player.maxHp === 20;
+    endSlashPhase(); closeCombat();
+    return out;
+  });
+  await browser.close();
+  check('T4: equip grants the new HP immediately (18/20 -> 23/25)', r.grantOnEquip);
+  check('T4: unequip clamps hp to the new max', r.clampOnUnequip);
+  check('T4: unequip floors a living hero at >=1', r.floorLiving);
+  check('T4: auto-equip upgrades armour by hp', r.autoUpgradeArmour);
+  check('T4: auto-equip keeps weaker armour in the bag', r.autoKeepWeaker);
+  check('T4: equipment locked during combat', r.lockedDuringCombat);
+  check('T4: no console errors', errors.length === 0);
+}
+
 if (fails.length) { console.log('\n' + fails.length + ' FAILED'); process.exit(1); }
 console.log('\nAll armor-hearts tests passed.');
