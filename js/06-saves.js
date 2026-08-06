@@ -238,7 +238,7 @@ function migrateSaveToV4(s) {
   for (var gs = 0; gs < EQUIPMENT_SLOTS.length; gs++) {
     var slot = EQUIPMENT_SLOTS[gs];
     var gid = p.gear ? p.gear[slot] : null;
-    op.gear[slot] = (gid && GEAR[gid]) ? gid : null;
+    op.gear[slot] = (gid && GEAR[gid] && GEAR[gid].slot === slot) ? gid : null;
   }
   op.inventory = [];
   if (Array.isArray(p.inventory))

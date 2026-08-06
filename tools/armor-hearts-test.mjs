@@ -114,6 +114,16 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
                   gear: { weapon: 'steel_sword', head: null, body: null, cape: null } } };
     var pres = ingestSaveObject(plain);
     out.reproduces = pres.ok && pres.state.player.maxHp === (20 + 4*5 + 2*5) && pres.state.player.hp === 30;
+    // (f) Equipped gear is canonicalized to its declared slot; duplicate cross-slot
+    // entries keep only the valid body placement, and direct derivation is defensive too.
+    var wrongSlots = { version: 4, player: { level: 1, hpUpgrades: 0, maxHp: 999, hp: 20,
+      gear: { weapon: 'wyrm_scale', head: 'wyrm_scale', body: 'wyrm_scale', cape: 'wyrm_scale' } } };
+    var wsres = ingestSaveObject(wrongSlots);
+    out.slotCustody = wsres.ok && wsres.state.player.gear.weapon === null &&
+      wsres.state.player.gear.head === null && wsres.state.player.gear.body === 'wyrm_scale' &&
+      wsres.state.player.gear.cape === null && wsres.state.player.maxHp === 40;
+    out.maxHpSlotGuard = maxHpFor(1, 0,
+      { weapon: 'wyrm_scale', head: 'wyrm_scale', body: 'wyrm_scale', cape: 'wyrm_scale' }) === 40;
     return out;
   });
   await browser.close();
@@ -122,6 +132,8 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T3: current hp clamps DOWN to derived max', r.clampDown);
   check('T3: canonical round-trip is idempotent', r.idempotent);
   check('T3: derivation reproduces a well-formed stored maxHp', r.reproduces);
+  check('T3: ingest strips wrong-slot and duplicate equipped gear', r.slotCustody);
+  check('T3: maxHp derivation ignores wrong-slot gear', r.maxHpSlotGuard);
   check('T3: no console errors', errors.length === 0);
 }
 
@@ -270,7 +282,8 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
     // Guard B — a hero hurt by 5 HP out of 250 still reads correctly: the exact text is the
     // truth (245/250), and the chip text is exact regardless of how many shown hearts are full.
     var chipGuardB = heartsFor(250, 245);
-    out.chipGuardBRender = chipGuardB.chipText === '+20' && chipGuardB.num === '245/250';
+    out.chipGuardBRender = chipGuardB.full === 29 && chipGuardB.half === 1 &&
+      chipGuardB.chipText === '+20' && chipGuardB.num === '245/250';
     // The player HP row shows hearts, not a proportional fill bar.
     out.noPlayerBar = document.getElementById('youHpFill') === null;
     // The enemy row keeps its bar + exact readout untouched.
@@ -294,7 +307,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T6: stress 190 HP = 30 hearts + chip "+8"', r.s190);
   check('T6: stress 200 HP = 30 hearts + chip "+10"', r.s200);
   check('T6: chip territory Guard A render (1/250 -> half heart + "+20")', r.chipGuardARender);
-  check('T6: chip territory Guard B render (245/250 -> "+20", exact text is truth)', r.chipGuardBRender);
+  check('T6: chip territory Guard B render (245/250 reserves a visible half-heart)', r.chipGuardBRender);
   check('T6: player HP fill bar is gone', r.noPlayerBar);
   check('T6: enemy bar + exact readout kept', r.enemyBarKept);
   check('T6: no console errors', errors.length === 0);

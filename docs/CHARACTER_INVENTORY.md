@@ -41,7 +41,7 @@ shared modal lifecycle in `js/01-core-canvas.js`.
 
 Four slots: **Head, Body, Weapon, Cape** (`EQUIPMENT_SLOTS`). Saves store bare gear-ID
 strings in `player.gear` and `player.inventory` — never item objects. `SAVE_VERSION`
-remains 3.
+remains 4.
 
 Each slot carries exactly one stat (combat-armor spec §4, OWNER 12): the **Weapon** slot
 carries `damage` (feeds `playerDamage()`); **Head/Body/Cape** carry `hp` (hearts of max

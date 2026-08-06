@@ -26,8 +26,9 @@ function playerDamage() {
 function armorHpBonus() {
   var bonus = 0;
   for (var i = 0; i < EQUIPMENT_SLOTS.length; i++) {
-    var id = player.gear[EQUIPMENT_SLOTS[i]];
-    if (id && GEAR[id] && typeof GEAR[id].hp === 'number') bonus += GEAR[id].hp;
+    var slot = EQUIPMENT_SLOTS[i];
+    var id = player.gear[slot];
+    if (id && GEAR[id] && GEAR[id].slot === slot && typeof GEAR[id].hp === 'number') bonus += GEAR[id].hp;
   }
   return bonus;
 }
@@ -38,8 +39,9 @@ function armorHpBonus() {
 function maxHpFor(level, hpUpgrades, gear) {
   var armor = 0;
   for (var i = 0; i < EQUIPMENT_SLOTS.length; i++) {
-    var id = gear[EQUIPMENT_SLOTS[i]];
-    if (id && GEAR[id] && typeof GEAR[id].hp === 'number') armor += GEAR[id].hp;
+    var slot = EQUIPMENT_SLOTS[i];
+    var id = gear[slot];
+    if (id && GEAR[id] && GEAR[id].slot === slot && typeof GEAR[id].hp === 'number') armor += GEAR[id].hp;
   }
   return 20 + (level - 1) * 5 + hpUpgrades * HEART_HP + armor;
 }
@@ -284,9 +286,15 @@ function renderHearts(el, hp, maxHp) {
   var filledHalves = heartHalfUnits(hp, maxHp);
   var totalHearts = maxHalves / 2;
   var shown = Math.min(totalHearts, HEART_DISPLAY_CAP);
+  // Guard B applies to the visible capped display too: if a hurt hero's missing HP
+  // falls entirely beyond the 30 drawn hearts, reserve a visible half-heart rather
+  // than showing a misleadingly complete capped set. The exact numeric readout remains
+  // authoritative for the true hp/maxHp values.
+  var visibleFilledHalves = Math.min(filledHalves, shown * 2);
+  if (hp < maxHp && shown > 0 && visibleFilledHalves >= shown * 2) visibleFilledHalves = shown * 2 - 1;
   var html = '';
   for (var i = 0; i < shown; i++) {
-    var remainingHalves = filledHalves - i * 2;         // half-units remaining for THIS heart
+    var remainingHalves = visibleFilledHalves - i * 2;  // half-units remaining for THIS heart
     var cls = remainingHalves >= 2 ? 'heart-full' : (remainingHalves === 1 ? 'heart-half' : 'heart-empty');
     html += '<span class="' + cls + '" aria-hidden="true">♥</span>';
   }
