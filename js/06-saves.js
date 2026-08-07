@@ -248,10 +248,21 @@ function migrateSaveToV4(s) {
   // Derived-wins max-HP custody (combat-armor spec §4): max HP is DERIVED from level,
   // Heart Crystals, and equipped armour — the stored maxHp is never trusted. This needs
   // op.gear resolved first (above). No save-version bump: for every well-formed post-
-  // change save the derivation reproduces the stored value exactly. Current hp clamps
-  // DOWN only; a defeated hero (hp <= 0) is never resurrected by recomputation.
+  // change save the derivation reproduces the stored value exactly.
+  //
+  // When the derived max is HIGHER than what the save stored, a LIVING hero receives the
+  // difference immediately (owner ruling 2026-08-06). This is the same grant equipping
+  // performs in applyEquipHpChange: loading is the moment the armour a kid is already
+  // wearing becomes hearts, so a kid who logged off at full health comes back at full
+  // health instead of appearing wounded for free. It is not a save/reload exploit — the
+  // derivation is stable, so the second load computes a delta of zero.
+  //
+  // A defeated hero (hp <= 0) is never resurrected by recomputation, and current hp still
+  // clamps DOWN whenever the derived max is lower than the stored hp.
   op.maxHp = maxHpFor(op.level, op.hpUpgrades, op.gear);
-  var storedHp = (p.hp != null) ? p.hp : op.maxHp;
+  var storedMax = (p.maxHp != null) ? p.maxHp : op.maxHp;
+  var storedHp = (p.hp != null) ? p.hp : storedMax;
+  if (storedHp > 0 && op.maxHp > storedMax) storedHp += op.maxHp - storedMax;  // grant
   op.hp = Math.min(storedHp, op.maxHp);
 
   for (var fi = 0; fi < FOOD_TYPES.length; fi++)

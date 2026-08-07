@@ -261,7 +261,9 @@ function spokenQuestion(text) {
 }
 
 var HEART_HP_HALF = 2.5;        // 1 heart = 5 HP = 2 half-heart units
-var HEARTS_PER_ROW = 10;        // phone-portrait wrap width (styling reflects this)
+var HEARTS_PER_ROW = 10;        // phone-portrait wrap width — DOCUMENTATION ONLY: the wrap is
+                                // enforced by `.hearts { max-width }` in eldoria.css, which owns
+                                // this number. Change both together or they drift silently.
 var HEART_DISPLAY_CAP = 30;     // hearts drawn before the +N overflow chip (150 HP)
 
 // Half-heart units (integer), FLOORED, with both rounding guards (combat-armor spec §5):

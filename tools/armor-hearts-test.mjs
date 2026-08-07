@@ -94,8 +94,9 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
       player: { level: 7, hpUpgrades: 0, maxHp: 20, hp: 20,
                 gear: { weapon: null, head: null, body: 'wyrm_scale', cape: null } } };
     var res = ingestSaveObject(s);
-    // derived = 20 + 6*5 + 20 (wyrm_scale, OWNER 14) = 70; hp clamps DOWN to min(20, 70) = 20 (not resurrected up).
-    out.derivedWins = res.ok && res.state.player.maxHp === 70 && res.state.player.hp === 20;
+    // derived = 20 + 6*5 + 20 (wyrm_scale, OWNER 14) = 70. The stored max (20) is lower, so a
+    // LIVING hero is granted the 50-point difference (owner ruling 2026-08-06): 20 -> 70.
+    out.derivedWins = res.ok && res.state.player.maxHp === 70 && res.state.player.hp === 70;
     // (b) No resurrection: stored hp 0 stays 0 even though maxHp derives higher.
     var dead = { version: 4, player: { level: 3, hpUpgrades: 0, maxHp: 30, hp: 0,
                  gear: { weapon: null, head: null, body: 'iron_armor', cape: null } } };
@@ -106,6 +107,23 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
                  gear: { weapon: null, head: null, body: null, cape: null } } };
     var ores = ingestSaveObject(over);
     out.clampDown = ores.ok && ores.state.player.maxHp === 20 && ores.state.player.hp === 20;
+    // (c2) The transition case the owner ruled on: a kid who logged off at FULL health
+    // wearing armour comes back at full health, not appearing wounded. 20/20 + iron_armor
+    // derives a max of 25, so the 5-point difference is granted: 25/25.
+    var atFull = { version: 4, player: { level: 1, hpUpgrades: 0, maxHp: 20, hp: 20,
+                   gear: { weapon: null, head: null, body: 'iron_armor', cape: null } } };
+    var fres = ingestSaveObject(atFull);
+    out.grantAtFull = fres.ok && fres.state.player.maxHp === 25 && fres.state.player.hp === 25;
+    // (c3) A HURT kid keeps the same deficit rather than being healed to full: 12/20 with
+    // the same armour derives 25 and is granted the same 5 points -> 17/25 (still 8 down).
+    var hurt = { version: 4, player: { level: 1, hpUpgrades: 0, maxHp: 20, hp: 12,
+                 gear: { weapon: null, head: null, body: 'iron_armor', cape: null } } };
+    var hres = ingestSaveObject(hurt);
+    out.grantWhenHurt = hres.ok && hres.state.player.maxHp === 25 && hres.state.player.hp === 17;
+    // (c4) The grant is one-time, not a save/reload heal: re-ingesting the canonical text
+    // of the hurt result derives the same max, so the delta is zero and hp does not move.
+    var hre = ingestSaveText(hres.canonicalText);
+    out.grantNotRepeatable = hre.ok && hre.state.player.maxHp === 25 && hre.state.player.hp === 17;
     // (d) Idempotent round-trip: ingesting canonicalText reproduces identical state.
     var re = ingestSaveText(res.canonicalText);
     out.idempotent = re.ok && JSON.stringify(re.state) === JSON.stringify(res.state);
@@ -130,6 +148,9 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   check('T3: derived maxHp wins over disagreeing stored value', r.derivedWins);
   check('T3: hp<=0 is never resurrected by recomputation', r.noResurrect);
   check('T3: current hp clamps DOWN to derived max', r.clampDown);
+  check('T3: a full-health armoured save loads at full health (owner grant)', r.grantAtFull);
+  check('T3: a hurt armoured save keeps its deficit after the grant', r.grantWhenHurt);
+  check('T3: the grant is one-time — reloading heals nothing', r.grantNotRepeatable);
   check('T3: canonical round-trip is idempotent', r.idempotent);
   check('T3: derivation reproduces a well-formed stored maxHp', r.reproduces);
   check('T3: ingest strips wrong-slot and duplicate equipped gear', r.slotCustody);

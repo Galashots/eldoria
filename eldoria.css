@@ -604,9 +604,9 @@
   }
   .hp-fill { height: 100%; transition: width 0.2s; }
   .hp-fill.enemy { background: #cc4444; }
-  .hp-fill.you   { background: #55cc66; }
   .hp-num { width: 58px; text-align: right; }
-  /* Player hearts (combat-armor spec §5): floored half-hearts, phone-portrait wrap. */
+  /* Player hearts (combat-armor spec §5): floored half-hearts, phone-portrait wrap.
+     max-width OWNS the 10-per-row wrap that HEARTS_PER_ROW documents in js/05. */
   .hearts {
     flex: 1;
     display: flex;
