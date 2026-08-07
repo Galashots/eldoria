@@ -41,6 +41,13 @@ The validator requires all of the following:
 The current draft masks are review artifacts, not approval. No missing or pending
 mask can produce GC4/GC5 PASS.
 
+Body-equipment masks must explicitly exclude protected identity regions by
+default: face, hair, exposed skin or hands, and unrelated costume regions. An
+approved overlap is permitted only when the slot design explicitly requires it
+and the overlap is documented in the evidence record. A technically contained
+result is not semantically equipment-only when its mask grants the model access
+to protected identity pixels.
+
 ## 3. Canvas, anchor, and transform custody
 
 Every evidence record declares the source canvas, validation canvas, mask canvas,

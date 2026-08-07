@@ -1,0 +1,95 @@
+{
+  "status": "SCORED",
+  "verdict": "INCONCLUSIVE",
+  "verdict_reason": "The one Inpaint v3 call completed and the visible result is retained in PixelLab, but the exact exported raw PNG was not retrievable in the local checkout. The 64x64 candidate used for the diagnostic validator is explicitly screenshot-derived and is not authoritative custody evidence.",
+  "slot": "body",
+  "facing": "down-right",
+  "generation": {
+    "tool": "Inpaint v3",
+    "purpose": "Candidate C single-facing Iron Armor probe",
+    "prompt": "Fitted brushed iron breastplate over the existing torso clothing, shaped to the Ranger's body and perspective, simple steel chest plate with restrained brown leather straps, readable RPG pixel-art armour.",
+    "seed": 20260808,
+    "live_cost_generations": 20,
+    "actual_charge_generations": 20,
+    "balance_before": "523 / 2,000",
+    "balance_after": "543 / 2,000",
+    "approved_mask": {
+      "status": "APPROVED",
+      "scope": "one PR54 Inpaint v3 body-armour probe only",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidate-C.png",
+      "sha256": "454d285e9d3a4782ade5a16f65327d8941950a4fef01ad7bc9ba2a5b3163832d",
+      "active_pixel_count": 239,
+      "protected_identity_overlap_count": 0
+    },
+    "pixellab_facing_mask": {
+      "status": "PROBE EVIDENCE ONLY",
+      "path": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/pixellab-inpainting-black-body-down-right-candidate-c.png",
+      "sha256": "49bf2f642bdb209b0730d95ba67ac7b958dc27518cb673591aba2ce61bb94ee1",
+      "active_pixel_count": 239,
+      "coordinate_equivalence": "PASS"
+    },
+    "canvas_custody": {
+      "source_canvas_px": 64,
+      "validation_canvas_px": 64,
+      "mask_canvas_px": 64,
+      "transform": "identity",
+      "anchor": "origin (0,0); no crop, scale, interpolation, rotation, or translation"
+    }
+  },
+  "custody": {
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "candidate_sha256": "27ddac476de53cf0a01bf7b0feb3a247d9447244b62ed1d6488b0be23e74bb4a",
+    "mask_sha256": "454d285e9d3a4782ade5a16f65327d8941950a4fef01ad7bc9ba2a5b3163832d",
+    "candidate_provenance": "SCREEN_DERIVED_NON_CUSTODY",
+    "raw_output_location": "Private PixelLab result remains in the authenticated PixelLab session; exact export was not retrievable in this checkout.",
+    "raw_output_sha256": null
+  },
+  "diagnostic_surrogate_measurements": {
+    "candidate_path": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/candidate-c-v3-screen-derived.png",
+    "candidate_sha256": "27ddac476de53cf0a01bf7b0feb3a247d9447244b62ed1d6488b0be23e74bb4a",
+    "changed_pixel_count": 1238,
+    "off_mask_changed_pixel_count": 999,
+    "off_mask_coordinates_file": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/diagnostic-metrics.json",
+    "alpha_values": [0, 255],
+    "canonical_pixel_sha256": {
+      "base": "2269915a6e54784866b8116b8cd2bf8af745becc5664a15f34cf1a30b23c79dc",
+      "candidate_surrogate": "3ec4814e6dd8fa7126250e8d0124ca2952295028fd7fe374dcfd30e9cb565dc1"
+    },
+    "extracted_layer_sha256": "27ddac476de53cf0a01bf7b0feb3a247d9447244b62ed1d6488b0be23e74bb4a",
+    "recomposed_sha256": "27ddac476de53cf0a01bf7b0feb3a247d9447244b62ed1d6488b0be23e74bb4a",
+    "recomposition_pixel_identical": true,
+    "validator_exit_code": 1,
+    "custody_interpretation": "Diagnostic only. These measurements cannot be attributed to the raw PixelLab export because that file was not retrieved."
+  },
+  "custody_validator": {
+    "scoring_status": "SCORED",
+    "gc4_mask_containment": "FAIL — diagnostic screenshot-derived surrogate only",
+    "gc5_offmask_pixels_changed": 999,
+    "gc6_layer_order": "PASS",
+    "gc8_determinism": "PASS for deterministic diagnostic extraction/recomposition"
+  },
+  "human_verdicts": {
+    "semantic_gate": "PENDING — ChatGPT visual review of the completed Candidate C probe",
+    "heading_fidelity": "PENDING",
+    "cross_facing_recognizability": "PENDING — single-facing probe only",
+    "semantic_drift": "PENDING",
+    "temporal_stability": "NOT APPLICABLE — no animation generated",
+    "north_star_alignment": "PENDING"
+  },
+  "evidence_files": {
+    "preflight": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/mask-preflight.json",
+    "pre_generation_screenshot": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/pre-generation-settings.png",
+    "completion_screenshot": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/generation-complete.png",
+    "candidate_visual_surrogate": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/candidate-c-v3-screen-derived.png",
+    "contact_sheet": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/candidate-c-v3-contact-sheet.png",
+    "extracted_layer_diagnostic": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/extracted-body-diagnostic.png",
+    "recomposed_diagnostic": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/recomposed-diagnostic.png"
+  },
+  "research_spend": {
+    "prior_generations": 25,
+    "this_call_generations": 20,
+    "cumulative_generations": 45,
+    "remaining_from_100_generation_ceiling": 55,
+    "next_action": "STOP paid generation pending ChatGPT visual review and raw-export custody resolution"
+  }
+}
