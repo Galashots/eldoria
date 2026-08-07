@@ -6,10 +6,11 @@
 
 ## Verdict
 
-**REVISE — reconnaissance completed; byte-exact import/export rehearsal is blocked
-by Chrome file-upload permission. No PixelLab generation was submitted and no
-credits were spent. Stage 1 must not begin until the exact local-file rehearsal
-passes and the live price is disclosed for the selected route.**
+**REVISE — reconnaissance completed; the local-file rehearsal ran after Chrome
+file access was enabled, but Pixelorama's 1× PNG export was pixel-identical rather
+than byte-identical because it added an `sRGB` ancillary chunk. No PixelLab
+generation was submitted and no credits were spent. Stage 1 must not begin until
+this export-custody discrepancy is resolved or explicitly accepted by the owner.**
 
 ## Official PixelLab documentation reviewed
 
@@ -136,15 +137,15 @@ The disposable copy was prepared from:
 - SHA-256: `a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300`
 - Intended project: exact 64×64 RGBA Ranger `down-right` frame
 
-The rehearsal could not begin. Chrome's ChatGPT extension rejected the file
-chooser upload with `Not allowed` because **Allow access to file URLs** is not
-enabled. This is an automation permission blocker, not a Pixelorama custody
-failure. No source pixels were changed and no file was uploaded to PixelLab.
+The first rehearsal attempt was blocked by Chrome's ChatGPT extension until
+**Allow access to file URLs** was enabled. After Leo enabled the setting, the
+exact PNG imported successfully through Pixelorama's `File > Open` flow. The
+source remained private and was not uploaded to a PixelLab generation endpoint.
 
 Screenshots of the Pixelorama welcome dialog, blank 64×64 editor, and the three
 Inpaint panels were captured during reconnaissance. They are not committed here
-because they are browser-session evidence rather than production art and the
-file-upload permission is still pending.
+because they are browser-session evidence rather than production art. The exact
+source, draft mask, project, and export remain private local evidence.
 
 ## Automation and persistence findings
 
@@ -154,22 +155,28 @@ file-upload permission is still pending.
 - The editor is canvas-based inside an iframe; DOM snapshots expose little of the
   Pixelorama UI, so screenshots/coordinate-grounded controls are required for
   visual confirmation.
-- Local file upload is currently blocked by the ChatGPT Chrome extension setting.
+- Local file upload is now functional after the Chrome extension file-URL setting
+  was enabled; the first successful import required dismissing Pixelorama's
+  recovery prompt and confirming its image-import dialog.
 - The written Pixelorama manual recommends saving a `.pxo` project and exporting
-  PNG separately. Browser download/save persistence and exact export bytes remain
-  untested until the local PNG can be imported.
+  PNG separately. The rehearsal confirmed local `.pxo` save and PNG export
+  persistence; decoded pixels matched, but the PNG byte stream gained a
+  deterministic `sRGB` ancillary chunk.
 
 ## Stage 0 disposition and next step
 
-**REVISE.** Reconnaissance is valuable and complete enough to identify a material
-method/cost discrepancy, but the byte-exact rehearsal and live price capture for
-the intended standard route are pending. Do not click Generate, do not authorize
-Stage 1, and do not spend any generations until:
+**REVISE.** Reconnaissance and the live price capture are complete for the
+inspected Inpaint route, and the exact source/mask import path works. The export
+round-trip is pixel-identical but not byte-identical because Pixelorama adds an
+`sRGB` PNG chunk. Do not click Generate, do not authorize Stage 1, and do not
+spend any generations until:
 
-1. Chrome's ChatGPT extension has file-URL access enabled;
-2. the exact 64×64 PNG imports without resizing or palette conversion;
-3. the disposable `.pxo` save and 1× PNG export round-trip is byte-identical;
-4. the actual selected-route price is visible and within the staged cap; and
+1. the export-custody treatment of the added `sRGB` chunk is resolved or owner-
+   accepted;
+2. the exact 64×64 PNG remains imported without resizing or palette conversion;
+3. the disposable `.pxo` save and 1× PNG export round-trip remains pixel- and,
+   if required by the final contract, byte-identical;
+4. the actual selected-route price remains visible and within the staged cap; and
 5. the draft masks receive the required visual review/approval.
 
 ## Additional Stage 0 reconnaissance: combat animation and armor workflows
@@ -231,3 +238,36 @@ Pixelorama v1.1.9-stable. PixelLab's current linked tutorial was titled
 `Pixelorama + PixelLab: Create, Edit, Rotate, and Animate Pixel Art` and showed
 an 11:38 runtime. This report treats “InStudio” as a possible name for the
 in-browser integrated studio/editor, not as a separately verified method.
+
+## Stage 0 dry rehearsal run: exact frame, mask, save, and export
+
+**Run date:** 2026-08-07
+**Route inspected:** PixelLab Pixelorama v1.1.9-stable; Inpaint (v3) panel
+**Generation result:** no generation submitted; no credits spent
+
+The exact committed Ranger `down-right` source imported successfully after the
+Chrome file-URL setting was enabled. Pixelorama displayed the expected 64×64
+canvas and the expected Ranger frame. The draft
+`body-down-right.png` mask then imported as a separate layer; its import dialog
+also displayed 64×64. Standard Inpaint recognized the white mask region in its
+preview, and the live panel disclosed **20 generations**. The settings were
+inspected without clicking `Generate`; the temporary description field did not
+accept browser text injection, so no prompt was persisted or submitted.
+
+The disposable project was saved locally as `ranger-down-right.png.pxo` and the
+unchanged visible base was exported at 100% / 64×64 using nearest-neighbor
+interpolation. The files remain private in the browser download directory and
+are not committed.
+
+| Check | Result |
+|---|---|
+| Source | 64×64 RGBA; alpha values `[0, 255]`; SHA-256 `a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300` |
+| Export | 64×64 RGBA; alpha values `[0, 255]`; SHA-256 `9d7cbff6414f26d435319ee80d03cd8090016387935abf4211b4e8072861d3b6` |
+| Decoded pixels | **0 differing pixels**; RGBA pixel data is identical |
+| PNG bytes | **Not identical**; source has `IHDR, IDAT, IEND`, export has `IHDR, sRGB, IDAT, IEND` |
+| Export settings | 100% / 64×64; visible layers only; nearest interpolation; no JSON metadata |
+
+This is a **REVISE** result for strict byte custody, not a PixelLab generation
+result. The observed `sRGB` chunk is deterministic export metadata, but the owner
+must decide whether the custody contract compares decoded RGBA pixels or exact
+PNG byte streams. No generated art was produced.
