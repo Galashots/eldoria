@@ -61,8 +61,11 @@ Human / North Star review
 
 Custody
 - raw output location: <private path or N/A; never publish UUIDs/URLs>
-- base SHA-256: <hash>
-- candidate SHA-256: <hash>
+- base/source file SHA-256: <hash>
+- candidate/export file SHA-256: <hash>
+- base/source canonical pixel SHA-256: <dimensions + decoded RGBA hash>
+- candidate/export canonical pixel SHA-256: <dimensions + decoded RGBA hash>
+- Chrome canvas decode comparison: <PASS | FAIL; drawImage/getImageData; differing RGBA count>
 - mask SHA-256: <hash>
 
 verdict: <WIN | LOSE | INCONCLUSIVE>
@@ -171,6 +174,17 @@ verdict_reason: <one-line reason>
         "raw_output_location": {"type": "string"},
         "base_sha256": {"type": "string"},
         "candidate_sha256": {"type": "string"},
+        "base_pixel_sha256": {"type": "string", "description": "SHA-256 over canonical dimensions followed by decoded RGBA bytes"},
+        "candidate_pixel_sha256": {"type": "string", "description": "SHA-256 over canonical dimensions followed by decoded RGBA bytes"},
+        "chrome_canvas_decode": {
+          "type": "object",
+          "required": ["status", "differing_rgba_bytes"],
+          "properties": {
+            "status": {"enum": ["PASS", "FAIL", "NOT_RUN"]},
+            "differing_rgba_bytes": {"type": ["integer", "null"]},
+            "note": {"type": "string"}
+          }
+        },
         "mask_sha256": {"type": "string"},
         "raw_output_sha256": {"type": "array", "items": {"type": "string"}},
         "committed_sha256": {"type": "array", "items": {"type": "string"}}

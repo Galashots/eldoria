@@ -27,8 +27,11 @@ that endpoint is authorized or proposed. The historical output UUID appeared in
 an earlier public commit and must be treated as exposed; this revision redacts it
 and does not rewrite published history.
 
-The remaining 10 generations of the historical 12-generation ceiling are closed
-to use by this PR. No additional generation is authorized.
+The remaining 10 generations of the historical 12-generation ceiling remain
+recorded, but this document authorizes no automatic spend. The study-derived
+method experiments below are bounded by the existing 100-generation total
+research ceiling and Reserve rules; Leo must still authorize each cheapest
+discriminating call from the live quote. No call is executed by this revision.
 
 ## Method map
 
@@ -53,21 +56,45 @@ off-mask comparison is invalid because interpolation can change pixels outside a
 mask. Only an extracted passing layer may then be deterministically normalized to
 64×64.
 
-### Primary experiment after review: standard PixelLab Inpaint
+### Paid-test priority after Stage 0 review
 
-The proposed method is standard PixelLab Inpaint in Pixelorama, using the exact
-committed 64×64 Ranger frame and one approved binary mask per slot/facing. The
-first experiment is deliberately one facing only:
+Stage 0 image custody is **PASS**: source-file and export-file SHA-256 values are
+separate provenance fields, the canonical pixel SHA-256 matches, and a Chrome
+canvas `drawImage` → `getImageData` comparison found zero differing RGBA bytes.
+The deterministic `sRGB` ancillary PNG chunk is not a custody failure.
+
+The first paid test is now the cheapest discriminating route available in the
+live client:
+
+1. **Try on**, documented at 1 generation per run: exact committed Ranger frame
+   as subject, one pinned armour/item reference, armour first, one call only. If
+   it clearly fails, stop without retrying.
+2. **Multi image**, documented at 1 generation per run: use only if available and
+   either Try on fails or reconnaissance shows a materially better
+   input/reference contract. Use one exact Ranger plus one pinned item/reference
+   image; no retry without a diagnosed cause.
+3. **Standard Inpaint / Classic**, using the exact committed 64×64 Ranger frame
+   and one approved binary mask. Capture the actual live cost first, use one
+   armour or weapon call initially, and do not accidentally select Inpaint v3.
+4. **Inpaint v3** is quality escalation only. Its confirmed live cost is 20
+   generations; use it only if a cheaper route is promising and quality is the
+   remaining problem.
+
+Try on and Multi image were not exposed in the inspected Pixelorama editor, so
+their live availability remains a gate. The first confirmed one-facing fallback
+is standard PixelLab Inpaint, using the exact committed 64×64 Ranger frame and
+one approved binary mask per slot/facing. The first-facing matrix remains:
 
 | Facing | Body item | Weapon item |
 |---|---|---|
 | `down-right` | iron armour body test | steel sword weapon test |
 
 For each item: one result, one fixed seed, exact hand and sword orientation
-pinned, and the actual cost disclosed by the live UI recorded before any owner
-approval. This document authorizes **zero** calls. After ChatGPT reviews this
-protocol and the masks, Leo may authorize at most two single-facing standard-
-Inpaint calls based on that live UI quote.
+pinned, and the actual cost disclosed by the live UI recorded before owner
+approval. This document authorizes **zero calls in this revision**. After
+ChatGPT reviews this protocol and the masks, Leo may authorize at most one
+single-facing first-priority call, followed by at most one controlled fallback
+only if the priority rules justify it.
 
 Weapon orientation is pinned to the Ranger's right hand. In the draft masks, the
 blade starts at that hand/forearm and extends screen-up-right for `down-right`,
@@ -86,6 +113,19 @@ These are future owner-gated browser experiments only:
 
 Options B and C are not authorized by this PR. No animation generation or
 production asset integration is included.
+
+### Paid-call evidence checklist
+
+Every paid call must record: tool; exact input paths and SHA-256 values; prompt;
+fixed seed; live displayed cost before approval; actual cost and cumulative spend;
+screenshots; raw output SHA-256; off-mask pixel count and coordinates;
+deterministic extraction/recomposition result; visual verdict; and any
+canonical-pixel/Chrome-canvas comparison used for custody. No multi-facing or
+animation work begins until one single-facing gear method passes.
+
+`Animate with Text (New)` at 64×64 is recorded only as a future combat-animation
+candidate: the current official documentation lists 1 generation for 4, 8, or
+16 frames. It is outside the current static gear-method stage.
 
 ## Transfer Outfit reference map
 

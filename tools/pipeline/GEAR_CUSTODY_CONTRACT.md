@@ -21,6 +21,12 @@ produce a custody PASS.
   declared deterministic transform are the anchor contract.
 - This contract governs generated equipment layers, extracted layers, masks, and
   composites. The static-NPC crop/translate contract remains separate.
+- Source-file SHA-256 and candidate/export-file SHA-256 are separate provenance
+  fields. For same-resolution PNG custody, also record a canonical pixel
+  SHA-256 over dimensions followed by decoded RGBA bytes. A no-cost Chrome canvas
+  `drawImage` → `getImageData` comparison must report zero differing RGBA bytes.
+  Deterministic ancillary PNG metadata does not fail image custody when those
+  pixel checks pass.
 
 ## 2. Required validator inputs
 
@@ -108,8 +114,15 @@ custody path. Vendor background removal is not a custody step.
 
 ## 5. Route disposition
 
-- **Standard Inpaint:** the Phase 1 primary route. Use the exact 64x64 frame and
-  mask on the same computation canvas.
+- **Try on:** first paid discriminator when live-available; use the exact 64x64
+  subject and one pinned item reference, then apply this same custody contract
+  to the returned composite.
+- **Multi image:** conditional second discriminator when live-available; use
+  same-size exact inputs and apply this same custody contract to the result.
+- **Standard Inpaint / Classic:** controlled fallback. Use the exact 64x64 frame
+  and mask on the same computation canvas.
+- **Inpaint v3:** quality escalation only; its confirmed live cost is 20
+  generations/use and it must not be the first paid test.
 - **`create-character-v3`:** permanently eliminated as Eldoria direct-overlay by
   H1a. No H1b object/weapon call is authorized through it.
 - **`create-character-state`:** parked as a possible future raw-source experiment;

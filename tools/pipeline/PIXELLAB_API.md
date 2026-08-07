@@ -137,7 +137,10 @@ above.
 | Simple humanoid enemy | `create-character-with-8-directions` | `proportions` works here (not in v3) |
 | Quadruped | `--template-id bear\|cat\|dog\|horse\|lion` | Template must match the body in the reference |
 | Non-template body (blob, serpent, flyer) | `mode=pro` | Expensive; confirm cost first |
-| Gear / outfit / pose variant of an existing character | **Standard PixelLab Inpaint in Pixelorama** | Phase 1 primary: exact committed 64×64 frame plus one approved per-slot/facing binary mask; one fixed-seed result per item; actual UI cost must be recorded before owner approval |
+| Gear / outfit / pose variant of an existing character — first paid discriminator | **Try on** (experimental web tool) | Documented 1 generation/run; exact committed 64×64 Ranger as subject plus one pinned armour/item reference; armour first; one call only; live availability in Pixelorama is not confirmed |
+| Gear / outfit / pose variant — conditional second discriminator | **Multi image** (experimental web tool) | Documented 1 generation/run; requires two or more same-size inputs; use only if available and Try on fails or its input/reference contract is materially better; no retry without diagnosed cause |
+| Gear / outfit / pose variant — controlled fallback | **Standard PixelLab Inpaint / Classic in Pixelorama** | Exact committed 64×64 frame plus one approved per-slot/facing binary mask; one fixed-seed result; capture actual live cost before approval; do not substitute Inpaint v3 |
+| Gear / outfit / pose variant — quality escalation | **Inpaint v3 in Pixelorama** | Confirmed 20 generations/use; only after a cheaper route is promising and quality is the remaining problem |
 | Stock motion | `animate-character` + `template_animation_id` | 1 gen/direction |
 | Custom motion | `animate-character` + `action_description` | v3; see §5 |
 | Fill in directions a partial animation missed | MCP `animate_character(animation_group_id=...)` or the web UI's per-slot rocket icon | Appends to the existing group instead of regenerating the set. **Not available on the REST character route** ([REST-VERIFIED 2026-07-30]: `CreateCharacterAnimationRequest` has no append field; REST's `animation_group_id` exists only on the *object*-animation endpoint) |
@@ -427,7 +430,10 @@ resulted from this section.
 
 | Method | Phase 1 disposition |
 |---|---|
-| Standard PixelLab Inpaint in Pixelorama | Primary future experiment on exact committed 64×64 Ranger `down-right`, one approved mask per slot, fixed seed, one result per item; no call authorized by this PR |
+| Try on | First paid discriminator when live-available: exact committed 64×64 Ranger subject plus one pinned armour/item reference; documented 1 generation/run; armour first, one call only; no call authorized by this PR |
+| Multi image | Conditional second discriminator when live-available: exact Ranger plus pinned item/reference image; documented 1 generation/run; only after Try on fails or a materially better contract is demonstrated; no call authorized by this PR |
+| Standard PixelLab Inpaint / Classic in Pixelorama | Controlled fallback on exact committed 64×64 Ranger `down-right`, one approved mask per slot, fixed seed, one result per item; capture live UI cost; no call authorized by this PR |
+| Inpaint v3 in Pixelorama | Quality escalation only; live-verified at 20 generations/use; no call authorized by this PR |
 | `create-character-state` | Parked future raw-source experiment only; complete characters, remote 256px source not byte-identical to committed 64px, normalization not reconstructible, pre-call cost not bounded |
 | Edit Animation Pro | Future owner-gated browser experiment after one-facing test; exact 64×64 directional frames, 20 generations per 2–16-frame batch |
 | Transfer Outfit Pro | Future owner-gated browser experiment after one-facing test; approved visual item reference, 20 generations at 64px |

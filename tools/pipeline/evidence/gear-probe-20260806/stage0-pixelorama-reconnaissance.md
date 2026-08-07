@@ -2,15 +2,17 @@
 
 **Date:** 2026-08-06  
 **PR:** #54  
-**Purpose:** no-generation browser reconnaissance and custody rehearsal preparation
+**Purpose:** no-generation browser reconnaissance and custody rehearsal record
 
 ## Verdict
 
-**REVISE — reconnaissance completed; the local-file rehearsal ran after Chrome
-file access was enabled, but Pixelorama's 1× PNG export was pixel-identical rather
-than byte-identical because it added an `sRGB` ancillary chunk. No PixelLab
-generation was submitted and no credits were spent. Stage 1 must not begin until
-this export-custody discrepancy is resolved or explicitly accepted by the owner.**
+**PASS — Stage 0 image custody.** The source and Pixelorama export have the same
+canonical pixel SHA-256, and a no-cost Chrome canvas `drawImage` → `getImageData`
+comparison found zero differing RGBA bytes. Their file SHA-256 values remain
+separate provenance fields; the only file-level difference is Pixelorama's
+deterministic `sRGB` ancillary PNG chunk. PNG-container byte identity is not
+required for this Stage 0 image-custody ruling. No PixelLab generation was
+submitted and no credits were spent.
 
 ## Official PixelLab documentation reviewed
 
@@ -21,6 +23,9 @@ this export-custody discrepancy is resolved or explicitly accepted by the owner.
 - [Inpaint](https://www.pixellab.ai/docs/tools/inpaint)
 - [Inpainting options](https://www.pixellab.ai/docs/options/inpainting)
 - [Inpaint v3](https://www.pixellab.ai/docs/tools/inpaint-v3)
+- [Try on](https://www.pixellab.ai/docs/tools/try-on)
+- [Multi image](https://www.pixellab.ai/docs/tools/multi-image)
+- [Animate with Text (New)](https://www.pixellab.ai/docs/tools/animate-with-text-new)
 - [Edit Animation Pro](https://www.pixellab.ai/docs/tools/edit-animation-pro)
 - [Transfer Outfit Pro](https://www.pixellab.ai/docs/tools/transfer-outfit-pro)
 - [Edit Image Pro](https://www.pixellab.ai/docs/tools/edit-image-pro)
@@ -43,6 +48,14 @@ Material observations:
   random; a nonzero seed is required for a fixed-seed experiment.
 - Inpaint v3 is documented as 20 generations per use and is available in the
   Pixelorama/Aseprite extensions.
+- Try on is documented as an experimental one-generation run with one subject
+  image and one try-on image; both inputs support 16×16 through 320×320 areas.
+- Multi image is documented as an experimental one-generation run requiring at
+  least two same-size images; its documentation warns it may not be available in
+  every client.
+- Animate with Text (New) is a future combat-animation candidate: at 64×64 its
+  documented cost is 1 generation for 4, 8, or 16 frames. It is not part of the
+  current static gear-method test.
 - The live documentation currently lists Edit Animation Pro as 20 generations
   for 32–80px, 20 for 81–128px, 25 for 129–170px, and 40 for 171–256px, with
   frame limits that differ from the addendum's older planning table. This is a
@@ -129,6 +142,25 @@ This means the addendum's planned Stage 1 budget cannot be treated as confirmed
 for the live Classic route. The route and cost must be identified from the live
 UI after the exact frame/mask are imported, without clicking Generate.
 
+### Experimental routes and exact 64×64 support
+
+The live Pixelorama editor's `Create` panel was inspected with the exact
+64×64 Ranger project open. It exposed Create Image, Style Reference, 8-Direction
+Character, Image to Pixel Art, Same-Style Character, and other create tools, but
+did not expose `Try on` or `Multi image`. Neither route appeared in the live
+Inpaint panel. Therefore their Pixelorama availability and exact-frame behavior
+remain **not confirmed**, even though the official documentation lists both as
+experimental web tools. Do not treat documentation availability as a live
+Pixelorama control or authorize a call from it.
+
+| Route | Live Pixelorama availability | Inputs / output behavior | Live cost | Exact committed 64×64 frame |
+|---|---|---|---|---|
+| Try on | Not exposed in the inspected editor panels | Official docs: one subject plus one try-on image; one output image | Not displayed because route unavailable | Not confirmed in Pixelorama; official input area permits 64×64 |
+| Multi image | Not exposed in the inspected editor panels | Official docs: at least two same-size images plus description; one output image | Not displayed because route unavailable | Not confirmed in Pixelorama; official input area permits 64×64 |
+| Inpaint / Classic | Legacy selector present; controls were documented in the editor | Masked image, description, output method, optional init image, palette, seed | No live price displayed during inspection | Yes: exact 64×64 project remained open and unresized |
+| Inpaint M-L / Pixpatch v2 | Visible `M-L` route with `PRO` badge | Masked image preview, description, camera/direction, outline/shading/details, init image, output method, background, advanced options | No live price displayed during inspection | Yes: exact 64×64 project remained open and unresized |
+| Inpaint v3 | Visible `v3` route with `PRO` badge | Masked image preview, description, output method, remove background, crop to mask, seed | **20 generations** displayed | Yes: exact 64×64 project remained open and unresized |
+
 ## Import/export dry rehearsal
 
 The disposable copy was prepared from:
@@ -165,19 +197,25 @@ source, draft mask, project, and export remain private local evidence.
 
 ## Stage 0 disposition and next step
 
-**REVISE.** Reconnaissance and the live price capture are complete for the
-inspected Inpaint route, and the exact source/mask import path works. The export
-round-trip is pixel-identical but not byte-identical because Pixelorama adds an
-`sRGB` PNG chunk. Do not click Generate, do not authorize Stage 1, and do not
-spend any generations until:
+**PASS for Stage 0 image custody; REVISE for paid-method authorization.** The
+exact source/mask import path works, the canonical pixel hash matches, and the
+Chrome canvas comparison found zero differing RGBA bytes. The deterministic
+`sRGB` container chunk is provenance, not a pixel-custody failure. No generation
+is authorized by this report. The cheapest discriminating paid-test order is:
 
-1. the export-custody treatment of the added `sRGB` chunk is resolved or owner-
-   accepted;
-2. the exact 64×64 PNG remains imported without resizing or palette conversion;
-3. the disposable `.pxo` save and 1× PNG export round-trip remains pixel- and,
-   if required by the final contract, byte-identical;
-4. the actual selected-route price remains visible and within the staged cap; and
-5. the draft masks receive the required visual review/approval.
+1. Try on, one 1-generation armour call, if the route becomes available in the
+   live client; stop if it clearly fails.
+2. Multi image, one 1-generation call only if available and materially better or
+   needed after Try on fails.
+3. Standard Inpaint / Classic, one armour or weapon call with the live quoted
+   cost recorded first; do not substitute Inpaint v3.
+4. Inpaint v3 only as a quality escalation; its confirmed live cost is 20.
+
+Before any paid call, exact inputs/hashes, prompt, seed, live quote, actual cost,
+screenshots, raw-output hash, off-mask count, recomposition, visual verdict, and
+cumulative spend must be recorded. Draft masks still require visual review and
+approval. Do not begin multi-facing or animation work until one single-facing
+gear method passes.
 
 ## Additional Stage 0 reconnaissance: combat animation and armor workflows
 
@@ -214,15 +252,14 @@ to edit, with optional instructions describing how the character faces and how
 the outfit should appear from that angle. Its output is `New frames`, not an
 isolated armor layer. It therefore does not replace the Phase 1 custody method.
 
-For Eldoria's controlled combat-gear test, the safer division remains:
-
-1. Use standard PixelLab Inpaint in Pixelorama on the exact committed 64×64
-   Ranger frame with one approved binary mask for the body or weapon slot.
-2. Keep the hand, sword orientation, fixed seed, output layer, and live price
-   as evidence fields.
-3. Consider `Edit Animation` only after one facing passes visual and machine
-   review, using the exact directional frames as inputs and treating the result
-   as a new full-frame animation that must pass per-frame custody checks.
+For Eldoria's controlled combat-gear test, use the cheapest discriminating
+method first: Try on, then Multi image if available and justified, then standard
+Inpaint / Classic. Keep the hand, sword orientation, fixed seed, output layer,
+and live price as evidence fields. Inpaint v3 is a 20-generation quality
+escalation, not the first paid test. Consider `Edit Animation` only after one
+facing passes visual and machine review, using the exact directional frames as
+inputs and treating the result as a new full-frame animation that must pass
+per-frame custody checks.
 
 The animation menu's full-frame routes can help explore combat motion, but they
 do not establish byte-safe equipment overlays. Any generated frame would still
@@ -263,11 +300,14 @@ are not committed.
 |---|---|
 | Source | 64×64 RGBA; alpha values `[0, 255]`; SHA-256 `a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300` |
 | Export | 64×64 RGBA; alpha values `[0, 255]`; SHA-256 `9d7cbff6414f26d435319ee80d03cd8090016387935abf4211b4e8072861d3b6` |
+| Canonical pixel SHA-256 | **Equal**: `2269915a6e54784866b8116b8cd2bf8af745becc5664a15f34cf1a30b23c79dc`; hash input is little-endian width/height followed by decoded RGBA bytes |
 | Decoded pixels | **0 differing pixels**; RGBA pixel data is identical |
+| Chrome canvas comparison | **PASS**: `drawImage` → `getImageData`; both 64×64; 16,384 decoded RGBA bytes; `differingRGBABytes=0`; no first differences |
 | PNG bytes | **Not identical**; source has `IHDR, IDAT, IEND`, export has `IHDR, sRGB, IDAT, IEND` |
 | Export settings | 100% / 64×64; visible layers only; nearest interpolation; no JSON metadata |
 
-This is a **REVISE** result for strict byte custody, not a PixelLab generation
-result. The observed `sRGB` chunk is deterministic export metadata, but the owner
-must decide whether the custody contract compares decoded RGBA pixels or exact
-PNG byte streams. No generated art was produced.
+This is a **PASS** for Stage 0 image custody under the ruling: source-file and
+export-file SHA-256 values are retained separately, the canonical pixel hashes
+match, and Chrome's no-cost canvas decode comparison has zero differing RGBA
+bytes. The observed `sRGB` chunk is deterministic file metadata and does not
+invalidate pixel custody. No generated art was produced.
