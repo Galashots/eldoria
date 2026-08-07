@@ -1,0 +1,107 @@
+{
+  "status": "FINAL",
+  "slot": "body",
+  "facing": "down-right",
+  "route": "standard-inpaint-classic-mask-semantics-retry",
+  "generation": {
+    "tool": "PixelLab Pixelorama Inpaint / Classic",
+    "input_base": "assets/adventurer-down-right.png",
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "base_canonical_pixel_sha256": "e8f93f590d2a4f927c80b3cd357c689db14d9091297e8348e7c85ce4f95c107e",
+    "approved_mask": {
+      "status": "APPROVED",
+      "scope": "Stage-1 experimental probe only; not global production approval",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right.png",
+      "sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5"
+    },
+    "model_facing_mask": {
+      "status": "PROBE_EVIDENCE_ONLY",
+      "path": "docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/pixellab-inpainting-black-body-down-right.png",
+      "sha256": "0ed9bafb21cc94440e779dd02313c94fc1887af33020da6c43e2caaea23e167e",
+      "convention": "black opaque pixels are the editable/painted region; transparent pixels are outside",
+      "active_pixel_count": 239,
+      "canonical_active_coordinates_sha256": "b732c0a79e3fd2273b0cc89b09ad377211b67a165da0d40372194615fb1bb9dc",
+      "model_active_coordinates_sha256": "b732c0a79e3fd2273b0cc89b09ad377211b67a165da0d40372194615fb1bb9dc",
+      "active_coordinates_identical": true,
+      "transform": "identity; no dilation, erosion, expansion, translation, repaint, crop, scale, or interpolation",
+      "canonical_replacement": false
+    },
+    "canvas_custody": {
+      "source_canvas_px": 64,
+      "validation_canvas_px": 64,
+      "mask_canvas_px": 64,
+      "transform": "identity; no crop, scale, interpolation, rotation, or translation",
+      "anchor": "origin (0,0)"
+    },
+    "prompt": "plain brushed steel grey iron armor breastplate with simple leather straps fitted only inside the masked torso and shoulder area preserve the exact ranger head hair face cloak hands arms legs boots pose palette silhouette and transparent background no weapon no extra limbs no mannequin no background no effects",
+    "negative_description": "mixels. amateur. multiple. grainy background",
+    "seed": 20260806,
+    "camera_view": "None",
+    "direction": "None",
+    "settings": {
+      "method": "Classic (Legacy)",
+      "outline": "Selective outline",
+      "shading": "Basic shading",
+      "details": "Medium detail",
+      "guidance_weight": 80,
+      "isometric": false,
+      "oblique_projection": false,
+      "use_view_and_direction": false,
+      "use_init_image": "No",
+      "limit_colors": "No",
+      "output_method": "New frame",
+      "remove_background": true,
+      "advanced_options": true
+    },
+    "generation_quote": "Not displayed by the live Classic panel",
+    "balance_before": "501 / 2,000 generations (continuation of the last verified post-call balance; editor did not display account balance)",
+    "balance_after": "502 / 2,000 generations (one charged generation; account balance not displayed in editor)",
+    "actual_generations_charged": 1,
+    "raw_output_location": "Private local export: C:/Users/Leo/Downloads/classic-body-down-right-mask-semantics-retry.png; not committed",
+    "screenshots": [
+      "docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/classic-retry-result.png",
+      "docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/mask-semantics-visual-confirmation.png",
+      "docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/pixpatch-v2-panel-scrolled.png"
+    ]
+  },
+  "custody_validator": {
+    "scoring_status": "UNSCORED",
+    "gc4_mask_containment": "FAIL",
+    "gc5_offmask_pixels_changed": 1000,
+    "gc6_layer_order": "UNSCORED",
+    "gc8_determinism": "PASS",
+    "candidate_alpha_values": [0, 178, 255],
+    "changed_pixel_count": 1239,
+    "base_alpha_erasure_count": 1033,
+    "extracted_layer_sha256": "effc5c744a271a3d5ef43c60fde5f7aa671067e7ba7f97ee50f18147765d7a84",
+    "recomposed_sha256": "effc5c744a271a3d5ef43c60fde5f7aa671067e7ba7f97ee50f18147765d7a84",
+    "recomposed_byte_identical_to_candidate": true,
+    "validator_command": "python tools/pipeline/validate_gear.py --base assets/adventurer-down-right.png --candidate C:/Users/Leo/Downloads/classic-body-down-right-mask-semantics-retry.png --candidate-kind composite --mask tools/pipeline/masks/gear-probe-20260806/body-down-right.png --slot body --facing down-right --evidence docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/classic-body-down-right-mask-semantics-retry.json --layer-out docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/extracted-body-validator.png --recomposed-out docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/recomposed-validator.png",
+    "validator_exit_code": 1,
+    "validator_failure": "candidate alpha is not binary: C:/Users/Leo/Downloads/classic-body-down-right-mask-semantics-retry.png"
+  },
+  "human_verdicts": {
+    "semantic_gate": "FAIL",
+    "heading_fidelity": "FAIL",
+    "cross_facing_recognizability": "not applicable to single-facing probe",
+    "semantic_drift": "FAIL",
+    "temporal_stability": "N/A for static test",
+    "north_star_alignment": "Intentional interim gap: isolated non-character output is not a candidate game asset"
+  },
+  "custody": {
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "candidate_sha256": "36a268b21d9d86fe0c80b2ca9b14f76cd2895a7e71f873b8ce02a059d1ad5c41",
+    "candidate_canonical_pixel_sha256": "not computed; candidate alpha is non-binary and raw output is a failed result",
+    "mask_sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+    "model_facing_mask_sha256": "0ed9bafb21cc94440e779dd02313c94fc1887af33020da6c43e2caaea23e167e",
+    "raw_output_sha256": ["36a268b21d9d86fe0c80b2ca9b14f76cd2895a7e71f873b8ce02a059d1ad5c41"],
+    "raw_output_location": "C:/Users/Leo/Downloads/classic-body-down-right-mask-semantics-retry.png",
+    "active_coordinates_identical": true,
+    "active_coordinate_sha256": "b732c0a79e3fd2273b0cc89b09ad377211b67a165da0d40372194615fb1bb9dc",
+    "changed_pixel_coordinates": "see custody-measurements.json",
+    "offmask_pixel_coordinates": "see custody-measurements.json"
+  },
+  "contact_sheet": "docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/classic-body-down-right-mask-semantics-retry-contact-sheet.png",
+  "verdict": "LOSE",
+  "verdict_reason": "Second controlled Classic attempt with the exact Ranger, armour description, negative description, fixed seed, camera/direction, palette/guidance settings and output method, changing only the model-facing mask convention, produced an isolated circular object rather than Ranger armour. The candidate had non-binary alpha, 1,000 off-mask changes, and 1,033 base-alpha erasures. Classic Ranger body armour is eliminated after two controlled attempts."
+}

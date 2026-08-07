@@ -1,0 +1,103 @@
+{
+  "status": "FINAL",
+  "slot": "body",
+  "facing": "down-right",
+  "route": "inpaint-m-l-pixpatch-v2",
+  "generation": {
+    "tool": "PixelLab Pixelorama Inpaint M-L (Pixpatch v2)",
+    "input_base": "assets/adventurer-down-right.png",
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "base_canonical_pixel_sha256": "e8f93f590d2a4f927c80b3cd357c689db14d9091297e8348e7c85ce4f95c107e",
+    "approved_mask": {
+      "status": "APPROVED",
+      "scope": "Stage-1 experimental probe only; not global production approval",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right.png",
+      "sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+      "active_pixel_count": 239
+    },
+    "model_facing_mask": {
+      "status": "PROBE_EVIDENCE_ONLY",
+      "path": "docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/pixellab-inpainting-black-body-down-right.png",
+      "sha256": "0ed9bafb21cc94440e779dd02313c94fc1887af33020da6c43e2caaea23e167e",
+      "active_pixel_count": 239,
+      "active_coordinates_identical": true,
+      "active_coordinates_sha256": "b732c0a79e3fd2273b0cc89b09ad377211b67a165da0d40372194615fb1bb9dc",
+      "reconstruction": "Deterministically reconstructed on the disposable Pixelorama Inpainting layer from the exact stored coordinate list because Godot clipboard image paste was unavailable; no geometry change was introduced.",
+      "coordinate_source": "docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/pixellab-black-mask-active-coordinates.json"
+    },
+    "canvas_custody": {
+      "source_canvas_px": 64,
+      "validation_canvas_px": 64,
+      "mask_canvas_px": 64,
+      "transform": "identity; no crop, scale, interpolation, rotation, or translation",
+      "anchor": "origin (0,0)"
+    },
+    "prompt": "Same Eldoria Ranger character, unchanged identity, hood, face, hair, hands, legs, boots, pose, proportions, direction, camera, outline and pixel-art style, wearing a simple fitted brushed iron breastplate over the existing torso clothing, with restrained leather fastening. The armour occupies the torso only. No helmet, weapon, gloves, leg armour, mannequin, additional character or pose change.",
+    "seed": 20260807,
+    "seed_returned": "20260807.0",
+    "camera_view": "High Top-Down (ca 35°)",
+    "direction": "South (facing the camera)",
+    "outline": "Selective outline",
+    "shading": "Basic shading",
+    "details": "Medium detail",
+    "guidance_weight": 80,
+    "isometric": false,
+    "oblique_projection": false,
+    "paint_in_selection": false,
+    "use_init_image": true,
+    "init_image": "Exact committed Ranger down-right frame",
+    "init_image_strength": 700,
+    "limit_colors": "No",
+    "output_method": "Modify current layer",
+    "remove_background": false,
+    "work_layer": "Disposable duplicate Layer 1 (copy); original Ranger layer retained below",
+    "generation_quote": "No live cost was displayed by the M-L panel",
+    "balance_before": "502 / 2,000 generations",
+    "balance_after": "503 / 2,000 generations",
+    "actual_generations_charged": 1,
+    "raw_output_location": "Private local export: C:/Users/Leo/Downloads/pixpatch-v2-iron-armor-down-right.png; not committed",
+    "screenshots": [
+      "docs/playtest/2026-08-06-pixellab-gear-probe/h3-pixpatch-v2-armour-down-right/pre-generation-prompt.png",
+      "docs/playtest/2026-08-06-pixellab-gear-probe/h3-pixpatch-v2-armour-down-right/pre-generation-settings.png",
+      "docs/playtest/2026-08-06-pixellab-gear-probe/h3-pixpatch-v2-armour-down-right/pixpatch-result.png"
+    ]
+  },
+  "custody_validator": {
+    "scoring_status": "SCORED",
+    "gc4_mask_containment": "PASS",
+    "gc5_offmask_pixels_changed": 0,
+    "gc6_layer_order": "PASS",
+    "gc8_determinism": "PASS",
+    "candidate_alpha_values": [0, 255],
+    "changed_pixel_count": 235,
+    "base_alpha_erasure_count": 0,
+    "extracted_layer_sha256": "9330ee9e37a26db6e08dccad4ef9721043dba621a60a5add8c6b283103c0baa7",
+    "recomposed_sha256": "e03c73870ae8f0c4b05465150f098d4a43d9416d88821e034750b4863019aabf",
+    "recomposed_pixel_identical_to_candidate": true,
+    "validator_command": "python tools/pipeline/validate_gear.py --base assets/adventurer-down-right.png --candidate C:/Users/Leo/Downloads/pixpatch-v2-iron-armor-down-right.png --candidate-kind composite --mask tools/pipeline/masks/gear-probe-20260806/body-down-right.png --slot body --facing down-right --evidence docs/playtest/2026-08-06-pixellab-gear-probe/h3-pixpatch-v2-armour-down-right/pixpatch-v2-armour-down-right.json --layer-out docs/playtest/2026-08-06-pixellab-gear-probe/h3-pixpatch-v2-armour-down-right/extracted-validator.png --recomposed-out docs/playtest/2026-08-06-pixellab-gear-probe/h3-pixpatch-v2-armour-down-right/recomposed-validator.png",
+    "validator_exit_code": 0
+  },
+  "human_verdicts": {
+    "semantic_gate": "FAIL",
+    "heading_fidelity": "PASS",
+    "cross_facing_recognizability": "not applicable to single-facing probe",
+    "semantic_drift": "PASS; Ranger identity, pose, camera and direction remain recognizable",
+    "temporal_stability": "N/A for static test",
+    "north_star_alignment": "Intentional interim gap: output preserves the Ranger but does not produce the requested equipment"
+  },
+  "custody": {
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "candidate_sha256": "d2be262ad197ff2da4d2519b90d090069f1098b581e638dd7224eeecd1997b57",
+    "candidate_canonical_pixel_sha256": "not recorded; byte-level custody and recomposition were sufficient for this scored composite",
+    "mask_sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+    "model_facing_mask_sha256": "0ed9bafb21cc94440e779dd02313c94fc1887af33020da6c43e2caaea23e167e",
+    "raw_output_sha256": ["d2be262ad197ff2da4d2519b90d090069f1098b581e638dd7224eeecd1997b57"],
+    "raw_output_location": "C:/Users/Leo/Downloads/pixpatch-v2-iron-armor-down-right.png",
+    "changed_pixel_count": 235,
+    "offmask_pixel_coordinates": [],
+    "changed_coordinates": "see custody-measurements.json"
+  },
+  "contact_sheet": "docs/playtest/2026-08-06-pixellab-gear-probe/h3-pixpatch-v2-armour-down-right/pixpatch-v2-armour-down-right-contact-sheet.png",
+  "verdict": "LOSE",
+  "verdict_reason": "Pixpatch v2 completed exactly once and produced a binary-alpha 64x64 composite with 235 changed pixels, all within the approved mask, and exact deterministic recomposition. However, visual review shows no meaningful fitted iron breastplate; the output remains the Ranger with only small torso-region pixel changes. Identity, pose, camera and direction were preserved, but the equipment semantic gate failed. Stop paid generation as instructed."
+}
