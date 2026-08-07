@@ -220,38 +220,44 @@ var ENEMIES = {
                   loot: [{ item: 'wyrm_scale', chance: 1 }] }
 };
 
-// ---- Gear (slice 10c-ii): dropped by enemies, auto-equipped, gives a damage bonus.
+// ---- Gear (slice 10c-ii): dropped by enemies, auto-equipped, gives a weapon a damage
+// bonus or armour/head/cape a hearts (max HP) bonus (combat-armor spec §4, OWNER 12).
 // Each item fills one equipment slot. If you already have something better in that slot
 // the drop is acknowledged but not equipped. The sprite's visual overlay follows player.gear
 // automatically (hasVisualEquipment), so there is nothing separate to keep in step.
 // tier/source/trophy are PRESENTATION metadata for the Character screen (Step 5):
 // progression tier, where the item comes from, and which boss it commemorates.
-// They change no damage, drop chance, sell value, slot, price, or XP number, and
+// They change no damage, hp, drop chance, sell value, slot, price, or XP number, and
 // saves keep storing bare gear-ID strings — never item objects.
+//
+// hp values on armour/head/cape are OWNER 14 (2026-08-06): the gentler scale — 5/5/5
+// (tier 1), 10/10/10 (tier 2), 15/15/15 (tier 3) + 20 for the Wyrm Scale trophy. Every
+// value is a multiple of HEART_HP (5). sellValue stays pinned to the OLD damage*5 price
+// so removing `damage` from armour moves no economy number (combat-armor spec §4).
 var GEAR = {
   // Tier 1 (Wilds drops)
-  wooden_sword:  { name: 'Wooden Sword',  slot: 'weapon', damage: 2, tier: 1, source: 'Wilds' },
-  leather_cap:   { name: 'Leather Cap',   slot: 'head',   damage: 1, tier: 1, source: 'Wilds' },
-  hero_cape:     { name: "Hero's Cape",    slot: 'cape',   damage: 1, tier: 1, source: 'Wilds' },
-  iron_armor:    { name: 'Iron Armor',     slot: 'body',   damage: 2, tier: 1, source: 'Wilds' },
-  crystal_blade: { name: 'Crystal Blade',  slot: 'weapon', damage: 5, tier: 1, source: 'Wilds' },
+  wooden_sword:  { name: 'Wooden Sword',  slot: 'weapon', damage: 2, sellValue: 10, tier: 1, source: 'Wilds' },
+  leather_cap:   { name: 'Leather Cap',   slot: 'head',   hp: 5,     sellValue: 5,  tier: 1, source: 'Wilds' },
+  hero_cape:     { name: "Hero's Cape",   slot: 'cape',   hp: 5,     sellValue: 5,  tier: 1, source: 'Wilds' },
+  iron_armor:    { name: 'Iron Armor',    slot: 'body',   hp: 5,     sellValue: 10, tier: 1, source: 'Wilds' },
+  crystal_blade: { name: 'Crystal Blade', slot: 'weapon', damage: 5, sellValue: 25, tier: 1, source: 'Wilds' },
   // Tier 2 (Deep Woods drops) — all stronger than their tier-1 slot-mates.
-  steel_sword:    { name: 'Steel Sword',     slot: 'weapon', damage: 6, tier: 2, source: 'Deep Woods' },
-  crystal_staff:  { name: 'Crystal Staff',   slot: 'weapon', damage: 8, tier: 2, source: 'Deep Woods' },
-  crystal_crown:  { name: 'Crystal Crown',   slot: 'head',   damage: 3, tier: 2, source: 'Deep Woods' },
-  guardian_armor: { name: 'Guardian Armor',  slot: 'body',   damage: 4, tier: 2, source: 'Deep Woods' },
-  shadow_cape:    { name: 'Shadow Cape',     slot: 'cape',   damage: 3, tier: 2, source: 'Deep Woods' },
+  steel_sword:    { name: 'Steel Sword',    slot: 'weapon', damage: 6,  sellValue: 30, tier: 2, source: 'Deep Woods' },
+  crystal_staff:  { name: 'Crystal Staff',  slot: 'weapon', damage: 8,  sellValue: 40, tier: 2, source: 'Deep Woods' },
+  crystal_crown:  { name: 'Crystal Crown',  slot: 'head',   hp: 10,     sellValue: 15, tier: 2, source: 'Deep Woods' },
+  guardian_armor: { name: 'Guardian Armor', slot: 'body',   hp: 10,     sellValue: 20, tier: 2, source: 'Deep Woods' },
+  shadow_cape:    { name: 'Shadow Cape',    slot: 'cape',   hp: 10,     sellValue: 15, tier: 2, source: 'Deep Woods' },
   // Boss reward (Shadow Warden) — the best weapon in the game, a guaranteed boss/trophy
   // drop on every win (chance 1 in the loot table).
-  eldoria_blade:  { name: 'Eldoria Blade',   slot: 'weapon', damage: 12, tier: 2, source: 'Shadow Warden', trophy: 'Shadow Warden' },
+  eldoria_blade:  { name: 'Eldoria Blade',  slot: 'weapon', damage: 12, sellValue: 60, tier: 2, source: 'Shadow Warden', trophy: 'Shadow Warden' },
   // Tier 3 (Mine drops, slice 20) — all stronger than their tier-2 slot-mates. Weapons stay
   // BELOW the Eldoria Blade (12) so slice 17's "best weapon in the game" promise holds.
-  obsidian_blade: { name: 'Obsidian Blade',  slot: 'weapon', damage: 10, tier: 3, source: 'Mine' },
-  titan_helm:     { name: 'Titan Helm',      slot: 'head',   damage: 5, tier: 3, source: 'Mine' },
-  dragon_cape:    { name: 'Dragon Cape',     slot: 'cape',   damage: 5, tier: 3, source: 'Mine' },
-  mithril_armor:  { name: 'Mithril Armor',   slot: 'body',   damage: 6, tier: 3, source: 'Mine' },
-  // Crystal Wyrm boss reward — best armor in the game, guaranteed every win.
-  wyrm_scale:     { name: 'Wyrm Scale Armor', slot: 'body',  damage: 9, tier: 3, source: 'Crystal Wyrm', trophy: 'Crystal Wyrm' }
+  obsidian_blade: { name: 'Obsidian Blade', slot: 'weapon', damage: 10, sellValue: 50, tier: 3, source: 'Mine' },
+  titan_helm:     { name: 'Titan Helm',     slot: 'head',   hp: 15,     sellValue: 25, tier: 3, source: 'Mine' },
+  dragon_cape:    { name: 'Dragon Cape',    slot: 'cape',   hp: 15,     sellValue: 25, tier: 3, source: 'Mine' },
+  mithril_armor:  { name: 'Mithril Armor',  slot: 'body',   hp: 15,     sellValue: 30, tier: 3, source: 'Mine' },
+  // Crystal Wyrm boss reward — best armour in the game, guaranteed every win.
+  wyrm_scale:     { name: 'Wyrm Scale Armor', slot: 'body', hp: 20,     sellValue: 45, tier: 3, source: 'Crystal Wyrm', trophy: 'Crystal Wyrm' }
 };
 
 // ---- Area enemies (slice 10c-ii / 16, reworked for profile-owned state): monsters along

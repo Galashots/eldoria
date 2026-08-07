@@ -24,6 +24,15 @@ var SLOT_LABELS = { head: 'Head', body: 'Body', weapon: 'Weapon', cape: 'Cape' }
 // Diablo-style slot order: reading order for the equipped panel.
 var SLOT_ORDER = ['head', 'body', 'weapon', 'cape'];
 
+// The stat blurb for an item wherever it is listed: weapons in damage, armour in hearts.
+function gearStatText(itemId) {
+  var g = GEAR[itemId];
+  if (!g) return '';
+  if (typeof g.damage === 'number') return '+' + g.damage + ' dmg';
+  var hearts = g.hp / HEART_HP;
+  return '+' + hearts + (hearts === 1 ? ' heart' : ' hearts');
+}
+
 // One escape hatch for text nodes built with innerHTML (custom hero names are the
 // only free text that flows through here, and they are typed by the kids).
 function escapeHtml(s) {
@@ -31,21 +40,28 @@ function escapeHtml(s) {
                   .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-// Child-readable total-Attack comparison for equipping a bag item: what the number
-// on the HUD would become. Uses the LIVE playerDamage() as its base so it can never
-// drift from real combat math.
-function attackComparison(itemId) {
+// Child-readable comparison for equipping a bag item: weapons compare total Attack,
+// armour compares total hearts (max HP). Uses LIVE playerDamage()/computeMaxHp() as the
+// base so it can never drift from real game math.
+function gearCompare(itemId) {
   var item = GEAR[itemId];
   if (!item) return { text: '', cls: 'cmp-same' };
   var cur = player.gear[item.slot];
-  var delta = item.damage - (cur && GEAR[cur] ? GEAR[cur].damage : 0);
-  if (delta === 0) return { text: 'Same Attack', cls: 'cmp-same' };
-  var now = playerDamage();
-  var after = now + delta;
-  return {
-    text: 'Attack ' + now + ' → ' + after + ' (' + (delta > 0 ? '+' : '') + delta + ')',
-    cls: delta > 0 ? 'cmp-up' : 'cmp-down'
-  };
+  if (typeof item.damage === 'number') {
+    var dmgDelta = item.damage - (cur && GEAR[cur] ? (GEAR[cur].damage || 0) : 0);
+    if (dmgDelta === 0) return { text: 'Same Attack', cls: 'cmp-same' };
+    var now = playerDamage();
+    return { text: 'Attack ' + now + ' → ' + (now + dmgDelta) + ' (' + (dmgDelta > 0 ? '+' : '') + dmgDelta + ')',
+             cls: dmgDelta > 0 ? 'cmp-up' : 'cmp-down' };
+  }
+  // Armour: compare hearts (max HP).
+  var hpDelta = (item.hp || 0) - (cur && GEAR[cur] ? (GEAR[cur].hp || 0) : 0);
+  if (hpDelta === 0) return { text: 'Same Hearts', cls: 'cmp-same' };
+  var nowMax = computeMaxHp();
+  var hearts = hpDelta / HEART_HP;
+  return { text: 'Hearts ' + (nowMax / HEART_HP) + ' → ' + ((nowMax + hpDelta) / HEART_HP) +
+             ' (' + (hpDelta > 0 ? '+' : '') + hearts + ')',
+           cls: hpDelta > 0 ? 'cmp-up' : 'cmp-down' };
 }
 
 // The boss-trophy marker, shown wherever a trophy item appears.
@@ -129,7 +145,7 @@ function renderEquippedSlots() {
     if (g) {
       html += '<div class="slot-row">' +
         '<div class="slot-info"><b>' + SLOT_LABELS[slot] + ':</b> ' + g.name + trophyMarkHtml(itemId) +
-        '<small>' + trophySmallText(itemId) + '+' + g.damage + ' dmg · tier ' + g.tier + '</small></div>' +
+        '<small>' + trophySmallText(itemId) + gearStatText(itemId) + ' · tier ' + g.tier + '</small></div>' +
         '<button class="btn-unequip" onclick="unequipSlot(\'' + slot + '\')" ' +
         'aria-label="Unequip ' + g.name + ' from the ' + SLOT_LABELS[slot] + ' slot">Unequip</button>' +
         '</div>';
@@ -158,11 +174,11 @@ function renderBag() {
     var itemId = player.inventory[i];
     var g = GEAR[itemId];
     if (!g) continue;
-    var cmp = attackComparison(itemId);
+    var cmp = gearCompare(itemId);
     html += '<div class="bag-row">' +
       '<div class="slot-info"><b>' + g.name + '</b>' + trophyMarkHtml(itemId) +
-      '<small>' + SLOT_LABELS[g.slot] + ' · ' + trophySmallText(itemId) + '+' + g.damage +
-      ' dmg · sells ' + gearSellPrice(itemId) + 'g at the Store</small>' +
+      '<small>' + SLOT_LABELS[g.slot] + ' · ' + trophySmallText(itemId) + gearStatText(itemId) +
+      ' · sells ' + gearSellPrice(itemId) + 'g at the Store</small>' +
       '<small class="' + cmp.cls + '">' + cmp.text + '</small></div>' +
       '<button class="btn-equip" onclick="equipFromBag(' + i + ')" ' +
       'aria-label="Equip ' + g.name + ' in the ' + SLOT_LABELS[g.slot] + ' slot. ' + cmp.text + '">Equip</button>' +

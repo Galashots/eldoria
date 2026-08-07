@@ -10,18 +10,45 @@ var combatAnswer = 0;       // correct answer to the current question
 var combatEnemy = null;     // a fresh, fightable COPY of the enemy template for this fight
 var combatSource = null;    // the profile-owned AREA_ENEMIES entry this fight is against
 
-// Sum of +damage from all equipped gear.
+// Sum of +damage from the equipped weapon. Combat-armor spec §4 (OWNER 12): only the
+// weapon slot is an attack source; armour/head/cape carry `hp` instead.
 function gearDamageBonus() {
-  var bonus = 0;
-  for (var slot in player.gear) {
-    if (player.gear[slot] && GEAR[player.gear[slot]]) bonus += GEAR[player.gear[slot]].damage;
-  }
-  return bonus;
+  var id = player.gear && player.gear.weapon;
+  return id && GEAR[id] && typeof GEAR[id].damage === 'number' ? GEAR[id].damage : 0;
 }
 
 // How much damage the player deals on a correct answer. Grows with level + gear.
 function playerDamage() {
   return 5 + (player.level - 1) * 2 + gearDamageBonus() + player.atkUpgrades * TRAIN_ATK;
+}
+
+// Sum of +HP (hearts) from all equipped armour. Weapons carry `damage`, not `hp`.
+function armorHpBonus() {
+  var bonus = 0;
+  for (var i = 0; i < EQUIPMENT_SLOTS.length; i++) {
+    var slot = EQUIPMENT_SLOTS[i];
+    var id = player.gear[slot];
+    if (id && GEAR[id] && GEAR[id].slot === slot && typeof GEAR[id].hp === 'number') bonus += GEAR[id].hp;
+  }
+  return bonus;
+}
+
+// Pure derivation (combat-armor spec §4): the ONE formula for max HP. Takes explicit
+// state so save ingest can derive from a canonical snapshot before `player` is live.
+//   20 (base) + (level-1)*5 + hpUpgrades*HEART_HP + armour hearts
+function maxHpFor(level, hpUpgrades, gear) {
+  var armor = 0;
+  for (var i = 0; i < EQUIPMENT_SLOTS.length; i++) {
+    var slot = EQUIPMENT_SLOTS[i];
+    var id = gear[slot];
+    if (id && GEAR[id] && GEAR[id].slot === slot && typeof GEAR[id].hp === 'number') armor += GEAR[id].hp;
+  }
+  return 20 + (level - 1) * 5 + hpUpgrades * HEART_HP + armor;
+}
+
+// Live reader over the current player. Single source of truth for player.maxHp.
+function computeMaxHp() {
+  return maxHpFor(player.level, player.hpUpgrades, player.gear);
 }
 
 // Roll the enemy's loot table for a gear drop. Returns the item id or null.
@@ -34,6 +61,35 @@ function rollLoot(enemyType) {
   return null;
 }
 
+// Apply a max-HP change after gear changed. `previousMax` is the max BEFORE the gear edit.
+// Equip (max grows): grant the delta to current hp immediately (Heart Crystal precedent,
+// combat-armor spec OWNER 13). Unequip (max shrinks): clamp hp down to the new max, floored
+// at 1 for a LIVING hero (a defeated hero at hp<=0 is left as-is — recomputation never
+// resurrects).
+function applyEquipHpChange(previousMax) {
+  var newMax = computeMaxHp();
+  player.maxHp = newMax;
+  var delta = newMax - previousMax;
+  if (delta > 0) player.hp += delta;                 // immediate grant
+  if (player.hp > newMax) player.hp = newMax;         // clamp down
+  if (player.hp > 0 && player.hp < 1) player.hp = 1;  // living-hero floor (defensive)
+}
+
+// The one number that ranks two items in the SAME slot: weapons by damage, armour by hp.
+// (Each slot carries exactly one stat, so same-slot items always compare on the same field.)
+function gearRankStat(itemId) {
+  var g = GEAR[itemId];
+  if (!g) return 0;
+  return (typeof g.damage === 'number') ? g.damage : (g.hp || 0);
+}
+
+// Child-readable effect line for equip messages: weapons say damage, armour says hearts.
+function equipEffectText(item) {
+  if (typeof item.damage === 'number') return '+' + item.damage + ' damage';
+  var hearts = item.hp / HEART_HP;
+  return '+' + hearts + (hearts === 1 ? ' heart' : ' hearts');
+}
+
 // Equip a gear drop if it's better than what's in that slot (or slot is empty). Anything
 // not equipped goes into your bag (player.inventory) so you can SELL it later — nothing is
 // ever silently lost. Equipped gear is never in the bag, so you can't sell what you wear.
@@ -41,7 +97,7 @@ function equipGear(itemId) {
   var item = GEAR[itemId];
   if (!item) return;
   var current = player.gear[item.slot];
-  if (current && GEAR[current] && GEAR[current].damage >= item.damage) {
+  if (current && GEAR[current] && gearRankStat(current) >= gearRankStat(itemId)) {
     // Not an upgrade — keep it in the bag to sell for gold.
     player.inventory.push(itemId);
     // An automatic drop is a rare progression event, not a menu action: it is worth
@@ -51,19 +107,22 @@ function equipGear(itemId) {
     return;
   }
   // It's an upgrade: the old item (if any) drops into the bag so it's not lost.
+  var previousMax = player.maxHp;
   if (current) player.inventory.push(current);
   player.gear[item.slot] = itemId;
+  applyEquipHpChange(previousMax);
   // Same here: this equip is automatic on a drop, not a tap in the Character screen.
-  showToast('Equipped ' + item.name + '! +' + item.damage + ' damage');
-  speak('You found a ' + item.name + '! Plus ' + item.damage + ' damage!');
+  showToast('Equipped ' + item.name + '! ' + equipEffectText(item));
+  speak('You found a ' + item.name + '! ' + equipEffectText(item) + '!');
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
 }
 
-// What a spare gear item sells for: 5 gold per damage point (the price IS a multiply —
-// hidden curriculum). Equipped gear isn't sellable, so this only ever runs on bag items.
+// What a spare gear item sells for. Pinned per item as `sellValue` (combat-armor spec §4)
+// so removing `damage` from armour moves no economy number. Equipped gear isn't sellable,
+// so this only ever runs on bag items.
 function gearSellPrice(itemId) {
   var item = GEAR[itemId];
-  return item ? item.damage * 5 : 0;
+  return item ? item.sellValue : 0;
 }
 
 // Sell one spare gear item from the bag (by its index in player.inventory).
@@ -97,7 +156,7 @@ function renderGearSell() {
     if (!g) continue;
     var price = gearSellPrice(id);
     html += '<div class="shop-row">' +
-      '<div class="shop-info"><b>' + g.name + '</b><small>+' + g.damage + ' dmg · sells ' + price + 'g</small></div>' +
+      '<div class="shop-info"><b>' + g.name + '</b><small>' + gearStatText(id) + ' · sells ' + price + 'g</small></div>' +
       '<button class="btn-sell" onclick="sellGear(' + i + ')" aria-label="Sell ' + g.name + ' for ' + price + ' gold">Sell ' + price + 'g</button>' +
       '</div>';
   }
@@ -114,16 +173,19 @@ function renderGearSell() {
 
 // Equip one bag item by its exact index in player.inventory. Returns true on success.
 function equipFromBag(index) {
+  if (combatOpen) return false;                       // equipment locked during combat (OWNER 13)
   if (typeof index !== 'number' || index % 1 !== 0) return false;
   if (index < 0 || index >= player.inventory.length) return false;
   var itemId = player.inventory[index];
   var item = GEAR[itemId];
   if (!item) return false;
+  var previousMax = player.maxHp;
   player.inventory.splice(index, 1);            // remove THAT exact instance
   var current = player.gear[item.slot];
   if (current) player.inventory.push(current);  // the old item goes into the bag
   player.gear[item.slot] = itemId;
-  announceRoutine('Equipped ' + item.name + '! (+' + item.damage + ' dmg)');
+  applyEquipHpChange(previousMax);              // grant/clamp HP for armour swaps
+  announceRoutine('Equipped ' + item.name + '! (' + equipEffectText(item) + ')');
   updateHUD();
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
   saveGame();
@@ -132,11 +194,14 @@ function equipFromBag(index) {
 
 // Unequip one slot into the bag. Returns true on success; empty/invalid slot is a no-op.
 function unequipSlot(slot) {
+  if (combatOpen) return false;                       // equipment locked during combat (OWNER 13)
   if (EQUIPMENT_SLOTS.indexOf(slot) === -1) return false;
   var itemId = player.gear[slot];
   if (!itemId || !GEAR[itemId]) return false;
+  var previousMax = player.maxHp;
   player.inventory.push(itemId);
   player.gear[slot] = null;
+  applyEquipHpChange(previousMax);              // clamp hp down (floor 1 for a living hero)
   announceRoutine('Put ' + GEAR[itemId].name + ' in your bag.');
   updateHUD();
   if (characterOpen && typeof renderCharacter === 'function') renderCharacter();
@@ -195,15 +260,65 @@ function spokenQuestion(text) {
              .replace(' = ?', '').replace('?', '');
 }
 
-// Repaint both HP bars (width + number) from the live combat state.
+var HEART_HP_HALF = 2.5;        // 1 heart = 5 HP = 2 half-heart units
+var HEARTS_PER_ROW = 10;        // phone-portrait wrap width — DOCUMENTATION ONLY: the wrap is
+                                // enforced by `.hearts { max-width }` in eldoria.css, which owns
+                                // this number. Change both together or they drift silently.
+var HEART_DISPLAY_CAP = 30;     // hearts drawn before the +N overflow chip (150 HP)
+
+// Half-heart units (integer), FLOORED, with both rounding guards (combat-armor spec §5):
+//   Guard A: a living hero (hp>0) shows at least half a heart.
+//   Guard B: a hurt hero (hp<maxHp) never shows a full row.
+// Both guards are computed against the TRUE hp/maxHp, so they hold identically whether
+// or not the capped display (renderHearts) is showing an overflow chip.
+function heartHalfUnits(hp, maxHp) {
+  var maxHalves = Math.round(maxHp / HEART_HP_HALF);   // maxHp is a multiple of 5 -> even
+  var halves = Math.floor(hp / HEART_HP_HALF);         // floor: never rounds up
+  if (halves < 0) halves = 0;
+  if (halves > maxHalves) halves = maxHalves;
+  if (hp > 0 && halves < 1) halves = 1;                // Guard A
+  if (hp < maxHp && halves >= maxHalves) halves = maxHalves - 1;  // Guard B
+  return halves;
+}
+
+// Draw hearts into `el` for hp/maxHp: full (♥), half, empty, capped with a +N chip.
+function renderHearts(el, hp, maxHp) {
+  if (!el) return;
+  var maxHalves = Math.round(maxHp / HEART_HP_HALF);
+  var filledHalves = heartHalfUnits(hp, maxHp);
+  var totalHearts = maxHalves / 2;
+  var shown = Math.min(totalHearts, HEART_DISPLAY_CAP);
+  // Guard B applies to the visible capped display too: if a hurt hero's missing HP
+  // falls entirely beyond the 30 drawn hearts, reserve a visible half-heart rather
+  // than showing a misleadingly complete capped set. The exact numeric readout remains
+  // authoritative for the true hp/maxHp values.
+  var visibleFilledHalves = Math.min(filledHalves, shown * 2);
+  if (hp < maxHp && shown > 0 && visibleFilledHalves >= shown * 2) visibleFilledHalves = shown * 2 - 1;
+  var html = '';
+  for (var i = 0; i < shown; i++) {
+    var remainingHalves = visibleFilledHalves - i * 2;  // half-units remaining for THIS heart
+    var cls = remainingHalves >= 2 ? 'heart-full' : (remainingHalves === 1 ? 'heart-half' : 'heart-empty');
+    html += '<span class="' + cls + '" aria-hidden="true">♥</span>';
+  }
+  if (totalHearts > HEART_DISPLAY_CAP) {
+    // Exact chip text is authoritative (combat-armor spec §5, locked 2026-08-06):
+    // ASCII "+" + N, no fullwidth glyph, no space, no suffix word.
+    html += '<span class="heart-overflow" aria-hidden="true">+' + (totalHearts - HEART_DISPLAY_CAP) + '</span>';
+  }
+  el.innerHTML = html;
+  el.setAttribute('aria-label', 'Your health: ' + Math.max(0, hp) + ' of ' + maxHp);
+}
+
+// Repaint both HP displays from the live combat state: the enemy keeps its proportional
+// bar + exact readout; the player shows floored half-hearts (combat-armor spec §5) —
+// hearts are the player's display only.
 function updateCombatBars() {
   if (!combatEnemy) return;
   var ePct = Math.max(0, combatEnemy.hp) / combatEnemy.maxHp * 100;
   document.getElementById('enemyName').textContent = combatEnemy.name;
   document.getElementById('enemyHpFill').style.width = ePct + '%';
   document.getElementById('enemyHpNum').textContent = Math.max(0, combatEnemy.hp) + '/' + combatEnemy.maxHp;
-  var yPct = Math.max(0, player.hp) / player.maxHp * 100;
-  document.getElementById('youHpFill').style.width = yPct + '%';
+  renderHearts(document.getElementById('youHearts'), player.hp, player.maxHp);
   document.getElementById('youHpNum').textContent = Math.max(0, player.hp) + '/' + player.maxHp;
 }
 

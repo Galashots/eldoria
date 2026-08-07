@@ -604,8 +604,22 @@
   }
   .hp-fill { height: 100%; transition: width 0.2s; }
   .hp-fill.enemy { background: #cc4444; }
-  .hp-fill.you   { background: #55cc66; }
   .hp-num { width: 58px; text-align: right; }
+  /* Player hearts (combat-armor spec §5): floored half-hearts, phone-portrait wrap.
+     max-width OWNS the 10-per-row wrap that HEARTS_PER_ROW documents in js/05. */
+  .hearts {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1px;
+    max-width: calc(10 * 1.15em);
+    line-height: 1;
+  }
+  .hearts .heart-full { color: #e53e3e; }
+  .hearts .heart-half { color: #e53e3e; opacity: 0.55; }
+  .hearts .heart-empty { color: #4a2b2b; }
+  .hearts .heart-overflow { color: #e53e3e; font-weight: 700; margin-left: 2px; font-size: 0.8em; }
   /* The turn result line above the question (e.g. "Hit! Slime hits back 2."). */
   #combatMsg { font-size: 1rem; color: #ffe0a0; min-height: 1.2em; margin: 2px 0; }
 

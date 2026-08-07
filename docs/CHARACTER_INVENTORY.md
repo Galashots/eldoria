@@ -41,7 +41,13 @@ shared modal lifecycle in `js/01-core-canvas.js`.
 
 Four slots: **Head, Body, Weapon, Cape** (`EQUIPMENT_SLOTS`). Saves store bare gear-ID
 strings in `player.gear` and `player.inventory` — never item objects. `SAVE_VERSION`
-remains 3.
+remains 4.
+
+Each slot carries exactly one stat (combat-armor spec §4, OWNER 12): the **Weapon** slot
+carries `damage` (feeds `playerDamage()`); **Head/Body/Cape** carry `hp` (hearts of max
+HP, feeding the single-source-of-truth `computeMaxHp()`). Equipping armour grants the new
+max HP to `player.hp` immediately; unequipping clamps `player.hp` down to the new max
+(floored at 1 for a living hero). Equipment changes are unavailable during combat.
 
 Item-preservation rules (all paths):
 
@@ -68,15 +74,19 @@ it reads `player.gear` live.
 
 ## Comparison rule
 
-Bag entries show an explicit, child-readable total-Attack comparison against the equipped
-item in that slot, computed from the live `playerDamage()`:
-`Attack 18 → 21 (+3)` · `Attack 21 → 18 (-3)` · `Same Attack`.
+Bag entries show an explicit, child-readable comparison against the equipped item in that
+slot (`gearCompare(itemId)`), computed from live game math so it can never drift. Weapons
+compare total Attack, from live `playerDamage()`: `Attack 18 → 21 (+3)` ·
+`Attack 21 → 18 (-3)` · `Same Attack`. Armour (Head/Body/Cape) compares total Hearts,
+from live `computeMaxHp()`: `Hearts 4 → 6 (+2)` · `Hearts 6 → 4 (-2)` · `Same Hearts`.
 
 ## Selling
 
 The Character screen displays sell value, but gear is sellable **only through the
-General Store** (equipped gear is never listed there). Spare gear price remains
-`damage × 5`.
+General Store** (equipped gear is never listed there). Sell price is a **pinned
+`sellValue`** field on each item (combat-armor spec §4) — set once to the item's prior
+`damage × 5` price when armour lost its `damage` stat, so removing `damage` from armour
+moved no economy number. It no longer derives from a live stat.
 
 ## Boss trophies
 
