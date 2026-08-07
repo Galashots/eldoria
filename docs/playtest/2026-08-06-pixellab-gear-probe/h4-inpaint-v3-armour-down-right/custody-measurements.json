@@ -1,0 +1,23 @@
+{
+  "base_file_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+  "candidate_raw_file_sha256": "578626e2635f9776c67b23942ddbc4f34092356da2ef9c44996539423b9b72ba",
+  "base_canonical_pixel_sha256": "2269915a6e54784866b8116b8cd2bf8af745becc5664a15f34cf1a30b23c79dc",
+  "candidate_canonical_pixel_sha256": "4acbe5e0c88cc008fd6219423e5fd61eb35eb978ac2aa73687724e062704ab82",
+  "custody_mask_sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+  "custody_mask_active_pixels": 239,
+  "changed_pixel_count": 235,
+  "off_mask_changed_pixel_count": 0,
+  "off_mask_changed_coordinates": [],
+  "base_alpha_erasures": 0,
+  "candidate_alpha_values": [
+    0,
+    255
+  ],
+  "mask_nonbinary_values": [],
+  "extracted_layer_sha256": "9b242d179924c9176779fee906b8bcafbada1b8ba60018c1733bb30f15d02586",
+  "recomposed_file_sha256": "a1351ddbf666548889fbaa129154d4c35c5f17de68b6fd64ae1e16ab886f93dd",
+  "recomposed_canonical_pixel_sha256": "4acbe5e0c88cc008fd6219423e5fd61eb35eb978ac2aa73687724e062704ab82",
+  "recomposition_pixel_identical": true,
+  "extracted_nontransparent_pixels": 235,
+  "contact_sheet_sha256": "4ae79a174572ca38c36f54256d4b1faae8cee93badc47e9e201827d558fed9ce"
+}
