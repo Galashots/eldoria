@@ -168,6 +168,13 @@ The six masks below are deterministic 64×64 binary review artifacts. Every one 
 **DRAFT — NOT OWNER/REVIEW APPROVED**. The contact sheet overlays each mask on the
 actual committed Ranger hero frame; it is not a mask-only sheet.
 
+Mask disposition after visual review: the original `body-down-right.png` is
+**REJECTED FOR BODY-SLOT PRODUCTION GEOMETRY - historical probe evidence only**.
+The other original masks remain draft. Three replacement down-right candidates
+are recorded under
+`tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/`; all
+require ChatGPT/Leo visual approval before any further generation.
+
 Base-frame SHA-256 values:
 
 | Facing | Base path | Base SHA-256 |
@@ -178,7 +185,7 @@ Base-frame SHA-256 values:
 
 | Slot | Facing | Mask | SHA-256 | Status |
 |---|---|---|---|---|
-| body | down-right | `tools/pipeline/masks/gear-probe-20260806/body-down-right.png` | `a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5` | DRAFT — NOT OWNER/REVIEW APPROVED |
+| body | down-right | `tools/pipeline/masks/gear-probe-20260806/body-down-right.png` | `a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5` | REJECTED FOR BODY-SLOT PRODUCTION GEOMETRY - historical probe evidence only |
 | body | right | `tools/pipeline/masks/gear-probe-20260806/body-right.png` | `70a4c8bbb6b32984ffcafad2a081825e390b932d503fe0da0dc1cb550d527847` | DRAFT — NOT OWNER/REVIEW APPROVED |
 | body | up-left | `tools/pipeline/masks/gear-probe-20260806/body-up-left.png` | `2ce7543b0dec1ec3e2fd92599e77f7b61f43a18f6c87c004dbac011cc004c547` | DRAFT — NOT OWNER/REVIEW APPROVED |
 | weapon | down-right | `tools/pipeline/masks/gear-probe-20260806/weapon-down-right.png` | `49545f2722cc242b6e827be2e6757a670b90106ebb54e98f130b925a3b99359a` | DRAFT — NOT OWNER/REVIEW APPROVED |

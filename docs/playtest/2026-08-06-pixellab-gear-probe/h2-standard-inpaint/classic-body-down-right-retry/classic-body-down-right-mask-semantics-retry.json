@@ -9,10 +9,11 @@
     "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
     "base_canonical_pixel_sha256": "e8f93f590d2a4f927c80b3cd357c689db14d9091297e8348e7c85ce4f95c107e",
     "approved_mask": {
-      "status": "APPROVED",
+      "status": "PENDING",
       "scope": "Stage-1 experimental probe only; not global production approval",
       "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right.png",
-      "sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5"
+      "sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+      "reason": "Retired after visual review: REJECTED FOR BODY-SLOT PRODUCTION GEOMETRY; retained as historical probe evidence only."
     },
     "model_facing_mask": {
       "status": "PROBE_EVIDENCE_ONLY",

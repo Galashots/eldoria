@@ -1,0 +1,250 @@
+{
+  "status": "DRAFT \u2014 NOT OWNER/REVIEW APPROVED",
+  "base_path": "assets/adventurer-down-right.png",
+  "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+  "rejected_historical_mask": {
+    "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right.png",
+    "sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+    "classification": "REJECTED FOR BODY-SLOT PRODUCTION GEOMETRY \u2014 historical probe evidence only"
+  },
+  "candidates": {
+    "A": {
+      "status": "DRAFT \u2014 NOT OWNER/REVIEW APPROVED",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidate-A.png",
+      "base_path": "assets/adventurer-down-right.png",
+      "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+      "description": "tight central chest and abdomen envelope",
+      "polygons": [
+        [
+          [
+            27,
+            29
+          ],
+          [
+            37,
+            29
+          ],
+          [
+            38,
+            33
+          ],
+          [
+            38,
+            38
+          ],
+          [
+            39,
+            42
+          ],
+          [
+            37,
+            47
+          ],
+          [
+            28,
+            47
+          ],
+          [
+            26,
+            44
+          ],
+          [
+            25,
+            41
+          ],
+          [
+            26,
+            37
+          ],
+          [
+            26,
+            33
+          ]
+        ]
+      ],
+      "canvas": "64x64",
+      "mode": "L",
+      "binary_values": [
+        0,
+        255
+      ],
+      "active_pixel_count": 241,
+      "sha256": "0d4f898b48c61c780e45b6557e8fba103bfc999e66f0398b68cb58de44ee2d89",
+      "source": "explicit integer polygons from the committed Ranger base; no generated output used"
+    },
+    "B": {
+      "status": "DRAFT \u2014 NOT OWNER/REVIEW APPROVED",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidate-B.png",
+      "base_path": "assets/adventurer-down-right.png",
+      "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+      "description": "wider fitted breastplate envelope with lower extension",
+      "polygons": [
+        [
+          [
+            26,
+            29
+          ],
+          [
+            38,
+            29
+          ],
+          [
+            40,
+            33
+          ],
+          [
+            39,
+            37
+          ],
+          [
+            40,
+            42
+          ],
+          [
+            39,
+            46
+          ],
+          [
+            37,
+            49
+          ],
+          [
+            27,
+            49
+          ],
+          [
+            25,
+            46
+          ],
+          [
+            24,
+            42
+          ],
+          [
+            25,
+            37
+          ],
+          [
+            24,
+            33
+          ]
+        ]
+      ],
+      "canvas": "64x64",
+      "mode": "L",
+      "binary_values": [
+        0,
+        255
+      ],
+      "active_pixel_count": 315,
+      "sha256": "707d804fe98823146553d2ba5e994369371b8088e687cd4cfd7c3f44b8832eb3",
+      "source": "explicit integer polygons from the committed Ranger base; no generated output used"
+    },
+    "C": {
+      "status": "DRAFT \u2014 NOT OWNER/REVIEW APPROVED",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidate-C.png",
+      "base_path": "assets/adventurer-down-right.png",
+      "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+      "description": "central plate with small strap/shoulder-edge allowances",
+      "polygons": [
+        [
+          [
+            27,
+            30
+          ],
+          [
+            37,
+            30
+          ],
+          [
+            38,
+            34
+          ],
+          [
+            37,
+            39
+          ],
+          [
+            38,
+            44
+          ],
+          [
+            37,
+            48
+          ],
+          [
+            27,
+            48
+          ],
+          [
+            26,
+            44
+          ],
+          [
+            27,
+            39
+          ],
+          [
+            26,
+            34
+          ]
+        ],
+        [
+          [
+            25,
+            31
+          ],
+          [
+            27,
+            31
+          ],
+          [
+            28,
+            35
+          ],
+          [
+            27,
+            37
+          ],
+          [
+            25,
+            35
+          ]
+        ],
+        [
+          [
+            37,
+            31
+          ],
+          [
+            39,
+            31
+          ],
+          [
+            39,
+            35
+          ],
+          [
+            37,
+            37
+          ]
+        ]
+      ],
+      "canvas": "64x64",
+      "mode": "L",
+      "binary_values": [
+        0,
+        255
+      ],
+      "active_pixel_count": 239,
+      "sha256": "454d285e9d3a4782ade5a16f65327d8941950a4fef01ad7bc9ba2a5b3163832d",
+      "source": "explicit integer polygons from the committed Ranger base; no generated output used"
+    }
+  },
+  "contact_sheet": {
+    "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidates-review.png",
+    "sha256": "cd532674f0cdfa4d116856b15c3d0974d8d426da849be748aaed8a6e73122e15",
+    "layout": "4x2 nearest-neighbour panels: original, rejected overlay, and each candidate raw/overlay pair"
+  },
+  "generation_authorization": "none; this artifact is zero-generation mask review evidence"
+}

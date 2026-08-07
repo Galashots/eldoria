@@ -8,9 +8,10 @@ equipment must pass before it may enter `assets/`.
 
 H1a is therefore **LOSE before GC scoring**, not merely an unscored custody
 failure. Its mannequin/outfit content independently violates the direct-overlay
-hypothesis. GC4/GC5 remain fail-closed; the six masks under
-`tools/pipeline/masks/gear-probe-20260806/` are explicitly draft and cannot
-produce a custody PASS.
+hypothesis. GC4/GC5 remain fail-closed. The former `body-down-right.png` mask
+is now **REJECTED FOR BODY-SLOT PRODUCTION GEOMETRY - historical probe evidence
+only**; the other original masks and the three replacement down-right candidates
+remain draft and cannot produce a production custody PASS.
 
 ## 1. Contract facts
 

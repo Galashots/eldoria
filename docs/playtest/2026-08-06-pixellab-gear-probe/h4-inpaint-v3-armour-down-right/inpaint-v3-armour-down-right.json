@@ -1,5 +1,5 @@
 {
-  "status": "SCORED",
+  "status": "FINAL",
   "slot": "body",
   "facing": "down-right",
   "route": "inpaint-v3",
@@ -10,11 +10,12 @@
     "base_canonical_pixel_sha256": "2269915a6e54784866b8116b8cd2bf8af745becc5664a15f34cf1a30b23c79dc",
     "canonical_pixel_hash_method": "SHA-256 over little-endian uint32 width, little-endian uint32 height, then decoded RGBA bytes",
     "approved_mask": {
-      "status": "APPROVED",
+      "status": "PENDING",
       "scope": "Stage-1 experimental probe only; not global production approval",
       "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right.png",
       "sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
-      "active_pixel_count": 239
+      "active_pixel_count": 239,
+      "reason": "Retired after visual review: REJECTED FOR BODY-SLOT PRODUCTION GEOMETRY; retained as historical probe evidence only."
     },
     "model_facing_mask": {
       "status": "PROBE_EVIDENCE_ONLY",
@@ -69,12 +70,12 @@
     "validator_exit_code": 0
   },
   "human_verdicts": {
-    "semantic_gate": "PROMISING_PENDING_CHATGPT_VISUAL_REVIEW",
+    "semantic_gate": "FAIL",
     "heading_fidelity": "PASS on single-facing visual inspection",
     "cross_facing_recognizability": "not applicable to single-facing probe",
-    "semantic_drift": "PASS provisionally; Ranger identity, pose, camera and direction remain recognizable",
+    "semantic_drift": "FAIL; the mask permits face/identity and green-cloak pixels, so the extracted layer is not equipment-only",
     "temporal_stability": "N/A for static test",
-    "north_star_alignment": "Intentional interim gap: recognizable iron armour is present, pending visual review for composable Eldoria gear quality"
+    "north_star_alignment": "Intentional interim gap: v3 respected the invalid probe geometry but did not yield semantically composable equipment"
   },
   "custody": {
     "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
@@ -90,6 +91,6 @@
     "changed_coordinates": "see custody-measurements.json"
   },
   "contact_sheet": "docs/playtest/2026-08-06-pixellab-gear-probe/h4-inpaint-v3-armour-down-right/contact-sheet.png",
-  "verdict": "INCONCLUSIVE",
-  "verdict_reason": "Inpaint v3 completed exactly once at the live 20-generation cost. The 64x64 result visibly contains a grey iron breastplate-like torso treatment while preserving the Ranger presentation, and custody passed with 235 changed pixels, zero off-mask changes, binary alpha, deterministic extraction and exact recomposition. This is promising for ChatGPT visual review only; it is not owner-approved production gear. Stop paid generation here as instructed."
+  "verdict": "LOSE",
+  "verdict_reason": "ChatGPT visual review found the former body-down-right mask semantically invalid for production body armour: it reaches into face/identity and green-cloak pixels and does not provide a suitable lower-torso breastplate envelope. Inpaint v3 respected that geometry with technical custody PASS, but the extracted result is not equipment-only. The mask is rejected for body-slot production geometry and retained only as historical probe evidence. No further generation is authorized until a replacement mask is visually approved."
 }
