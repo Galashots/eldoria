@@ -1,7 +1,7 @@
 {
-  "status": "SCORED",
+  "status": "DRAFT",
   "verdict": "INCONCLUSIVE",
-  "verdict_reason": "The one Inpaint v3 call completed and the visible result is retained in PixelLab, but the exact exported raw PNG was not retrievable in the local checkout. The 64x64 candidate used for the diagnostic validator is explicitly screenshot-derived and is not authoritative custody evidence.",
+  "verdict_reason": "ChatGPT visual review found the screenshot-visible H5 result semantically promising/pass, but the exact generated PNG could not be recovered from the authenticated Pixelorama session. Production custody therefore remains INCONCLUSIVE; the screenshot-derived surrogate is not evidence.",
   "slot": "body",
   "facing": "down-right",
   "generation": {
@@ -62,19 +62,19 @@
     "custody_interpretation": "Diagnostic only. These measurements cannot be attributed to the raw PixelLab export because that file was not retrieved."
   },
   "custody_validator": {
-    "scoring_status": "SCORED",
-    "gc4_mask_containment": "FAIL — diagnostic screenshot-derived surrogate only",
-    "gc5_offmask_pixels_changed": 999,
-    "gc6_layer_order": "PASS",
-    "gc8_determinism": "PASS for deterministic diagnostic extraction/recomposition"
+    "scoring_status": "UNSCORED",
+    "gc4_mask_containment": "UNSCORED — exact raw H5 PNG unavailable",
+    "gc5_offmask_pixels_changed": "UNSCORED — surrogate reported 999, not attributable to PixelLab",
+    "gc6_layer_order": "UNSCORED",
+    "gc8_determinism": "UNSCORED for the raw result"
   },
   "human_verdicts": {
-    "semantic_gate": "PENDING — ChatGPT visual review of the completed Candidate C probe",
-    "heading_fidelity": "PENDING",
+    "semantic_gate": "PASS — ChatGPT visual review; fitted iron/steel armour reads clearly",
+    "heading_fidelity": "PASS — Ranger identity, face, hair, pose, camera, and direction preserved visually",
     "cross_facing_recognizability": "PENDING — single-facing probe only",
-    "semantic_drift": "PENDING",
+    "semantic_drift": "PASS — no visible identity or costume reconstruction drift in the reviewed result",
     "temporal_stability": "NOT APPLICABLE — no animation generated",
-    "north_star_alignment": "PENDING"
+    "north_star_alignment": "PENDING — not part of the custody recovery decision"
   },
   "evidence_files": {
     "preflight": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/mask-preflight.json",
@@ -83,7 +83,8 @@
     "candidate_visual_surrogate": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/candidate-c-v3-screen-derived.png",
     "contact_sheet": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/candidate-c-v3-contact-sheet.png",
     "extracted_layer_diagnostic": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/extracted-body-diagnostic.png",
-    "recomposed_diagnostic": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/recomposed-diagnostic.png"
+    "recomposed_diagnostic": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/recomposed-diagnostic.png",
+    "recovery_log": "docs/playtest/2026-08-06-pixellab-gear-probe/h5-inpaint-v3-candidate-c-armour-down-right/recovery-attempts.md"
   },
   "research_spend": {
     "prior_generations": 25,
