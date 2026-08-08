@@ -132,14 +132,20 @@ above.
 | Job | Endpoint / mode | Notes |
 |---|---|---|
 | Hero / named NPC identity | `create-character-v3` **with** `reference_image` | The supported identity route. See §3 |
+| Eldoria equipment direct overlay | `create-character-v3` from-scratch | **Rejected permanently for this purpose:** the single H1a call cost 2 generations and returned eight 120×120 headless mannequin/outfit rotations; H1/body/direct-overlay is LOSE before custody scoring. No H1b object/weapon call is authorized |
 | Rotate an existing approved sprite | `generate-8-rotations-v3` | Takes `first_frame` + optional `description` hint |
 | Simple humanoid enemy | `create-character-with-8-directions` | `proportions` works here (not in v3) |
 | Quadruped | `--template-id bear\|cat\|dog\|horse\|lion` | Template must match the body in the reference |
 | Non-template body (blob, serpent, flyer) | `mode=pro` | Expensive; confirm cost first |
-| Gear / outfit / pose variant of an existing character | **`create-character-state`** | One edit applied consistently across **all** rotations; keeps identity, body type and proportions. `use_color_palette_from_reference` snaps it to the source palette |
+| Gear / outfit / pose variant of an existing character — first paid discriminator | **Try on** (experimental web tool) | Documented 1 generation/run; exact committed 64×64 Ranger as subject plus one pinned armour/item reference; armour first; one call only; live availability in Pixelorama is not confirmed |
+| Gear / outfit / pose variant — conditional second discriminator | **Multi image** (experimental web tool) | Documented 1 generation/run; requires two or more same-size inputs; use only if available and Try on fails or its input/reference contract is materially better; no retry without diagnosed cause |
+| Gear / outfit / pose variant — controlled fallback | **Standard PixelLab Inpaint / Classic in Pixelorama** | Exact committed 64×64 frame plus one approved per-slot/facing binary mask; one fixed-seed result; capture actual live cost before approval; do not substitute Inpaint v3 |
+| Gear / outfit / pose variant — quality escalation | **Inpaint v3 in Pixelorama** | Confirmed 20 generations/use; only after a cheaper route is promising and quality is the remaining problem |
 | Stock motion | `animate-character` + `template_animation_id` | 1 gen/direction |
 | Custom motion | `animate-character` + `action_description` | v3; see §5 |
 | Fill in directions a partial animation missed | MCP `animate_character(animation_group_id=...)` or the web UI's per-slot rocket icon | Appends to the existing group instead of regenerating the set. **Not available on the REST character route** ([REST-VERIFIED 2026-07-30]: `CreateCharacterAnimationRequest` has no append field; REST's `animation_group_id` exists only on the *object*-animation endpoint) |
+| Reskin frames with an outfit/weapon (future owner-gated route) | `transfer-outfit-v2` | Browser Pixelorama/Aseprite workflow; one outfit reference per call; corrected size/frame/cost table in §8; outside the historical 12-generation cap |
+| Strip a background to transparent PNG | `remove-background` | **[LIVE-VERIFIED 2026-08-06]** Model call, max 400×400. **Banned from the gear custody path** (extraction must be deterministic — `GEAR_CUSTODY_CONTRACT.md` GC8); repair/prep only |
 | Download everything | `GET /characters/{id}/zip` | Rotations, animation frames, `metadata.json`, and per-frame keypoints |
 
 **[VENDOR-DOCUMENTED] Downloads need no authentication — the UUID is the access
@@ -224,12 +230,14 @@ you shrink a reference.
 
 Generate the hero **unarmed**, and treat the weapon as a `weapon`-slot overlay.
 
-**[UNTESTED]** `create-character-state` (§2) applies one edit consistently across
-all rotations, keeping identity and proportions — but it returns a **complete
-edited character**, not an engine-ready transparent equipment-slot overlay.
-Producing transparent per-slot overlays (weapon, body, head, cape) that composite
-correctly with Eldoria's layer pipeline is a separate, untested calibration need.
-Do not assume the overlay pipeline is solved.
+**PARKED** `create-character-state` applies one edit consistently across rotations,
+but returns a **complete edited character**, not an engine-ready transparent
+equipment-slot overlay. It is removed from the current batch because the remote
+256px character is not byte-identical to the committed 64px runtime source, exact
+normalization cannot presently be reconstructed, and its pre-call generation cost
+is not adequately bounded. A future raw-source experiment must compare at the
+same resolution before extracting a layer; resizing first can change off-mask
+pixels and invalidate GC5. Do not assume this route solves overlays.
 
 PixelLab has no equipment-layer endpoint that attaches an item to a specific
 limb. Eldoria's overlays are full-frame aligned layers, not hand-anchored.
@@ -296,9 +304,14 @@ hard-code an unreviewed 8→4 selection.
 - **`frame_count`** 4–16, even, **v3 only.** Pro ignores it: frame count is fixed
   by size (≤64 px → 16 frames, >64 px → 4).
 - **`ai_freedom`** (0–900) is **template mode only**; 0 follows the template rigidly.
-- **`custom_start_frame_url` / `end_frame_url`** enable interpolation between two
-  poses — **v3 only, one direction per call.** Prefer the URL forms; inline
-  base64 is routinely truncated by MCP clients, which silently corrupts the image.
+- **Interpolation between two poses** — the REST fields are
+  **`custom_start_frame` / `end_frame`** (base64 `Base64Image`) on the character
+  animation endpoint, **v3 only, exactly one direction per call**, and the end
+  frame's dimensions must match the start [REST-VERIFIED 2026-08-06]. The earlier
+  `*_url` names here were MCP aliases, not REST fields — the MCP tool exposes
+  `start_frame_url` / `end_frame_url`, and via MCP prefer the URL form because
+  inline base64 is routinely truncated by MCP clients, which silently corrupts the
+  image.
 - **Seeds are not stored server-side.** `character.json` records id, prompt, view,
   directions and status — no seed. The command is the only durable record.
 - **Template motions available** include `walk`, `walking`, `walking-2..10`,
@@ -396,5 +409,195 @@ failure modes is the point of this file.
 - **A summarizing fetch twice reported that `/animate-character` does not exist.**
   It does. Parse the spec directly.
 
-**North Star alignment:** process and cost documentation only. No art, no visual
-change, no alteration to the approved direction.
+**North Star alignment:** this historical section covers process and cost
+documentation only. Its claims do not describe the later H1a research output,
+which is recorded separately in §8; no production art or runtime visual change
+resulted from this section.
+
+---
+
+## 8. Live-schema re-verification (2026-08-06) — Sub-project A gear research
+
+> **Phase 1 disposition (current authority).** The schema verification below was
+> read-only. A later H1a probe call executed exactly once and charged 2
+> generations; it returned eight 120×120 mannequin/outfit rotations with
+> `template_id=mannequin`. This live result, not schema inference, makes
+> `create-character-v3` unsuitable for Eldoria direct overlays. H1/body is LOSE
+> before custody scoring; H1b is removed and no object/weapon call through that
+> endpoint is authorized.
+
+### Phase 1 historical method map and corrected Transfer Outfit costs
+
+The table below records the pre-call priority plan. It is superseded by the
+final PR54 disposition that follows it; PR54 authorizes no further generation.
+
+| Method | Phase 1 disposition |
+|---|---|
+| Try on | First paid discriminator when live-available: exact committed 64×64 Ranger subject plus one pinned armour/item reference; documented 1 generation/run; armour first, one call only; not exercised in this record |
+| Multi image | Conditional second discriminator when live-available: exact Ranger plus pinned item/reference image; documented 1 generation/run; only after Try on fails or a materially better contract is demonstrated; not exercised in this record |
+| Standard PixelLab Inpaint / Classic in Pixelorama | Controlled fallback on exact committed 64×64 Ranger `down-right`, one approved mask per slot, fixed seed; two controlled armour attempts were completed and the route is LOSE; no retry |
+| Inpaint v3 in Pixelorama | Quality escalation only; live-verified at 20 generations/use; H5 visual method PASS but custody INCONCLUSIVE because the exact embedded export was unrecoverable |
+| `create-character-state` | Parked future raw-source experiment only; complete characters, remote 256px source not byte-identical to committed 64px, normalization not reconstructible, pre-call cost not bounded |
+| Edit Animation Pro | Future owner-gated browser experiment after one-facing test; exact 64×64 directional frames, 20 generations per 2–16-frame batch |
+| Transfer Outfit Pro | Future owner-gated browser experiment after one-facing test; approved visual item reference, 20 generations at 64px |
+
+### Final PR54 research disposition
+
+The executed-route record is now closed; no further PixelLab generation is
+authorized in PR54:
+
+| Route | Final disposition |
+|---|---|
+| `create-character-v3` direct overlay | **LOSE** — H1a produced a substantially complete headless mannequin/outfit; H1b is removed |
+| Classic Inpaint | **LOSE** after two controlled attempts |
+| Pixpatch v2 / Inpaint M-L | **Technical/custody PASS, semantic LOSE** |
+| Pixelorama Inpaint v3 + Candidate C | **Visual semantic PASS, custody INCONCLUSIVE** because the authoritative embedded-editor export could not be recovered |
+| REST API Inpaint v3 + Candidate C | **Semantic armour success, custody LOSE**: the tested `crop_to_mask=true`, `no_background=false`, Candidate C contract changed 2,858 pixels outside the mask |
+| `create-character-state` | **PARKED**, not a failure |
+| Transfer Outfit | **PARKED / UNTESTED**, not a failure |
+
+No tested PixelLab route has proven the strict pixel-custody properties required
+for direct runtime equipment-overlay generation. PixelLab is currently suitable
+as an Eldoria visual/reference authoring tool for equipment; production layers
+must be created through a separate deterministic/manual-assisted pipeline.
+This REST result is evidence about the tested contract only and must not be
+generalized to every Inpaint v3 configuration. `no_background=true` was not
+tested and is not authorized by PR54.
+
+The final research ledger is **65/100 generations used and 35/100 unspent**.
+The ceiling does not need to be exhausted. Raw API/H1a results, credentials,
+job IDs, live URLs, and private generated pixels remain outside the repository.
+
+Approved PixelLab armour visuals may be retained as design references. Transfer
+Outfit or another method may be revisited only under a new owner-gated
+experiment if a future need justifies it.
+
+Transfer Outfit is a separate browser Pixelorama/Aseprite workflow, with one
+outfit reference per call, and is outside the historical 12-generation cap:
+
+| Reference size | Maximum frames | Cost |
+|---|---:|---:|
+| 32–64px | up to 15 | 20 generations |
+| 65–80px | up to 8 | 20 generations |
+| 81–128px | up to 3 | 20 generations |
+| 129–170px | up to 3 | 25 generations |
+| 171–256px | up to 3 | 40 generations |
+
+For any future raw-source method, compare raw full-resolution composite versus a
+same-resolution hash-pinned base and mask before resizing. Normalize only a
+passing extracted layer to 64×64. Human placement is prohibited; crop, scale,
+interpolation, pivot/anchor, and translation must be deterministic and recorded.
+
+The schema portion was re-verified read-only against
+`api.pixellab.ai/v2/openapi.json` and `api.pixellab.ai/mcp/docs` (`curl` + script
+parse; **no summarizing fetch**; no generation or token used for schema
+verification). The Gemini/ChatGPT research inputs on PR #53 were treated as
+**hypotheses**; this section records what the live schema exposes and, separately,
+what the later H1a probe exercised.
+Full research artifacts: `GEAR_CUSTODY_CONTRACT.md`,
+`GEAR_EVIDENCE_RECORD_TEMPLATE.md`, and
+`docs/ai-team/PIXELLAB_METHOD_PROBE_AUTH_20260806.md`.
+
+### Confirmed real (safe to rely on)
+
+- **`POST /v2/inpaint-v3`** — live schema and one authorized API call confirm
+  the request fields `description`, `inpainting_image`, `mask_image`, `seed`,
+  `no_background`, and `crop_to_mask`. The route is Pro, returns a background
+  job ID, and the completed job's `last_response` contains the authoritative
+  result. The live mask convention is **white = generate, black = preserve**.
+  The account charges subscription generations; the official tool cost is 20
+  generations/use. The exact API probe used the 64×64 Ranger and Candidate C,
+  charged 20 generations, and returned a 64×64 opaque RGBA image. It made 3,097
+  changes, including 2,858 off-mask changes, so custody failed. This is live
+  evidence from one request, not a general claim about every prompt or setting.
+  Raw PNG, job metadata, and live URLs remain private and outside `assets/`.
+
+- **`create-character-state`** — real. `character_id` + `edit_description` required;
+  applies one edit across all 4/8 rotations; `use_color_palette_from_reference`
+  snaps to the source palette. Returns a **complete edited character, not an
+  engine-ready layer** — matches spec §6. Per-call **generation count is not
+  published** in the schema; measure the balance before/after.
+- **Pose interpolation** — real, via `custom_start_frame` / `end_frame` (base64),
+  v3 only, one direction, matching dims (corrected in §5).
+- **`enhance_prompt`** — real on `create-character-v3` (from-scratch only; 422 with a
+  reference) and on the character animation endpoint (v3 only; 422 with
+  template/pro); +0.05 gen each. Standalone endpoints exist too
+  (`/enhance-character-v3-prompt`, `/enhance-animation-v3-prompt`,
+  `/enhance-pixen-prompt`). The prior "[UNTESTED]" note on the animation route is now
+  schema-confirmed to exist (behaviour still unexercised here).
+- **Cost model unchanged** — the schema restates it: v3 ref-mode
+  `ceil(w·h·8/65536)`; `pro` 20–40 gen/dir; `enhance` +0.05. (There is **no
+  `confirm_cost` field** in the REST schema — it is a client/MCP-side guard, not a
+  request parameter.)
+
+### Corrections to prior research/doc claims (the mismatch report)
+
+- **Style-reference anchoring across a gear family EXISTS, but only via the
+  expensive `pro` route — corrected 2026-08-06.** A prior pass of this doc said it
+  was "not available on the character route." That was wrong: `CreateCharacterProRequest`
+  has `style_character_id` — *"ID of one of your existing 8-direction characters to
+  use as the style reference. Its 8 directional sprites guide the new character's
+  style in every direction; its south sprite becomes the center style image unless
+  `reference_image` is also provided."* This could point at the approved Ranger
+  `character_id` to style-anchor a generated gear item to the hero's palette/outline
+  across all 8 directions — a real 8-direction anchor, not a flat image.
+  **Excluded from the method probe anyway**, not because it doesn't exist but
+  because it only exists on `create-character-pro` (**20–40 gen/direction**,
+  160–320 for a full set) — cost-prohibitive for exploration; `confirm_cost` must
+  never be set on a first call, and the quote goes to Leo first. `style_images` /
+  `StyleImage` / `StyleOptions` (a separate, unrelated mechanism) remain
+  character-route-absent as originally found — they exist only on
+  `generate-with-style-v2` and the `create-image-*` / tileset endpoints, flat images
+  with no 8-direction rotation. On `create-character-v3` / `create-character-state`
+  (the probe's actual routes) the only anchor remains
+  `create-character-state`'s `use_color_palette_from_reference` — **palette only**,
+  not outline/detail/shading.
+- **"Clothing-only / no-mannequin / no-ghost-body" cannot be a negative prompt on
+  these routes.** There is **no `negative_description`** on `create-character-v3`,
+  `create-character-state`, or the character animation endpoint (confirms §5). It
+  exists only on `animate-with-text`, the create-image endpoints, and `inpaint`. On
+  the gear routes the positive edit/action text is the only lever.
+
+### New capabilities the research didn't list
+
+- **`transfer-outfit-v2`** — outfit/weapon reskin of 2–16 supplied frames; returns
+  **composited frames, not a layer**; `no_background`, `additional_instructions`;
+  sizes 32–256 (frame count drops as size grows because the reference + frames pack
+  into one grid). A genuine **third candidate gear method** (alongside H1 direct
+  overlay and H2 equipped-state). Recorded as a **flagged, owner-gated extension** to
+  the two-arm probe — not folded into it. See the probe auth doc.
+- **`remove-background`** — model background stripper, max 400×400. Useful for
+  repair/prep, **banned from the custody path** because layer extraction must be
+  deterministic (`GEAR_CUSTODY_CONTRACT.md` GC8).
+
+### Live-exercised H1a result (not schema inference)
+
+After the read-only schema verification, one H1a `POST /v2/create-character-v3`
+from-scratch call was exercised under the prior conditional authorization. It
+charged **2 generations** and returned eight rotations. The exported canvas was
+**120×120**, despite the prior assumed/default 64×64 sizing note. Its metadata
+reported `template_id=mannequin`, and every rotation was a substantially complete,
+headless mannequin/outfit with arms, gloves, belt/lower-body clothing, legs and
+boots rather than an isolated breastplate. This is live-exercised evidence from
+one result, not a general claim about every create-character-v3 call.
+
+The H1a human semantic gate is **FAIL**, so `H1 / body / direct-overlay` is
+**LOSE before GC scoring**. The sanitized private-review evidence was supplied
+directly to ChatGPT and visually reviewed; the raw archive and unapproved output
+remain outside `assets/` and are not committed. H1b is removed; H2 is parked and
+not in the current batch. The
+remaining 10 generations of the original 12-generation ceiling are not authorized.
+
+**North Star alignment:** Intentional interim gap — this research output is not a
+production asset or runtime visual change. The game remains unchanged; no further
+generation is authorized without Leo's explicit per-batch approval.
+
+### Phase 1 supersession note
+
+Any earlier candidate-arm wording in this historical section is superseded by the
+Phase 1 method map above: no H1b, H2, or Transfer Outfit call is authorized by
+this PR; `create-character-state` is parked; Transfer Outfit is not part of the
+remaining 12-generation cap; and the completed live probes are the H1a call plus
+the separately recorded Inpaint v3 API confirmation. Schema verification itself
+was read-only, while both probe results are live-exercised evidence. No further
+generation is authorized by this record.

@@ -1,0 +1,96 @@
+{
+  "status": "FINAL",
+  "slot": "body",
+  "facing": "down-right",
+  "route": "inpaint-v3",
+  "generation": {
+    "tool": "PixelLab Pixelorama Inpaint (v3)",
+    "input_base": "assets/adventurer-down-right.png",
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "base_canonical_pixel_sha256": "2269915a6e54784866b8116b8cd2bf8af745becc5664a15f34cf1a30b23c79dc",
+    "canonical_pixel_hash_method": "SHA-256 over little-endian uint32 width, little-endian uint32 height, then decoded RGBA bytes",
+    "approved_mask": {
+      "status": "PENDING",
+      "scope": "Stage-1 experimental probe only; not global production approval",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right.png",
+      "sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+      "active_pixel_count": 239,
+      "reason": "Retired after visual review: REJECTED FOR BODY-SLOT PRODUCTION GEOMETRY; retained as historical probe evidence only."
+    },
+    "model_facing_mask": {
+      "status": "PROBE_EVIDENCE_ONLY",
+      "path": "docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/pixellab-inpainting-black-body-down-right.png",
+      "sha256": "0ed9bafb21cc94440e779dd02313c94fc1887af33020da6c43e2caaea23e167e",
+      "active_pixel_count": 239,
+      "active_coordinates_identical": true,
+      "active_coordinates_sha256": "b732c0a79e3fd2273b0cc89b09ad377211b67a165da0d40372194615fb1bb9dc",
+      "geometry_change": "none; deterministic black-painted representation of the canonical custody geometry"
+    },
+    "canvas_custody": {
+      "source_canvas_px": 64,
+      "validation_canvas_px": 64,
+      "mask_canvas_px": 64,
+      "transform": "identity; no crop, scale, interpolation, rotation, or translation for custody comparison",
+      "anchor": "origin (0,0)"
+    },
+    "prompt": "Fitted brushed iron breastplate over the existing torso clothing, shaped to the Ranger's body and perspective, simple steel chest plate with restrained brown leather straps, readable RPG pixel-art armour.",
+    "seed": 20260808,
+    "seed_returned": "20260808.0",
+    "crop_to_mask": true,
+    "paint_in_selection": false,
+    "remove_background": false,
+    "output_method": "New frame",
+    "advanced_options": true,
+    "work_layer": "Disposable duplicate Layer 1 (copy); original Ranger layer retained",
+    "generation_quote": "This tool costs 20 generations.",
+    "balance_before": "503 / 2,000 generations",
+    "balance_after": "523 / 2,000 generations",
+    "actual_generations_charged": 20,
+    "raw_output_location": "Private local export: C:/Users/Leo/Downloads/inpaint-v3-iron-armor-down-right_0001.png; not committed",
+    "screenshots": [
+      "docs/playtest/2026-08-06-pixellab-gear-probe/h4-inpaint-v3-armour-down-right/pre-generation-settings.png",
+      "docs/playtest/2026-08-06-pixellab-gear-probe/h4-inpaint-v3-armour-down-right/generation-complete.png"
+    ],
+    "cumulative_research_spend": 25,
+    "remaining_research_ceiling": 75
+  },
+  "custody_validator": {
+    "scoring_status": "SCORED",
+    "gc4_mask_containment": "PASS",
+    "gc5_offmask_pixels_changed": 0,
+    "gc6_layer_order": "PASS",
+    "gc8_determinism": "PASS",
+    "candidate_alpha_values": [0, 255],
+    "changed_pixel_count": 235,
+    "base_alpha_erasure_count": 0,
+    "extracted_layer_sha256": "9b242d179924c9176779fee906b8bcafbada1b8ba60018c1733bb30f15d02586",
+    "recomposed_sha256": "a1351ddbf666548889fbaa129154d4c35c5f17de68b6fd64ae1e16ab886f93dd",
+    "recomposed_pixel_identical_to_candidate": true,
+    "validator_command": "python tools/pipeline/validate_gear.py --base assets/adventurer-down-right.png --candidate C:/Users/Leo/Downloads/inpaint-v3-iron-armor-down-right_0001.png --candidate-kind composite --mask tools/pipeline/masks/gear-probe-20260806/body-down-right.png --slot body --facing down-right --evidence docs/playtest/2026-08-06-pixellab-gear-probe/h4-inpaint-v3-armour-down-right/inpaint-v3-armour-down-right.json --layer-out docs/playtest/2026-08-06-pixellab-gear-probe/h4-inpaint-v3-armour-down-right/extracted-validator.png --recomposed-out docs/playtest/2026-08-06-pixellab-gear-probe/h4-inpaint-v3-armour-down-right/recomposed-validator.png",
+    "validator_exit_code": 0
+  },
+  "human_verdicts": {
+    "semantic_gate": "FAIL",
+    "heading_fidelity": "PASS on single-facing visual inspection",
+    "cross_facing_recognizability": "not applicable to single-facing probe",
+    "semantic_drift": "FAIL; the mask permits face/identity and green-cloak pixels, so the extracted layer is not equipment-only",
+    "temporal_stability": "N/A for static test",
+    "north_star_alignment": "Intentional interim gap: v3 respected the invalid probe geometry but did not yield semantically composable equipment"
+  },
+  "custody": {
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "base_canonical_pixel_sha256": "2269915a6e54784866b8116b8cd2bf8af745becc5664a15f34cf1a30b23c79dc",
+    "candidate_sha256": "578626e2635f9776c67b23942ddbc4f34092356da2ef9c44996539423b9b72ba",
+    "candidate_canonical_pixel_sha256": "4acbe5e0c88cc008fd6219423e5fd61eb35eb978ac2aa73687724e062704ab82",
+    "mask_sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+    "model_facing_mask_sha256": "0ed9bafb21cc94440e779dd02313c94fc1887af33020da6c43e2caaea23e167e",
+    "raw_output_sha256": ["578626e2635f9776c67b23942ddbc4f34092356da2ef9c44996539423b9b72ba"],
+    "raw_output_location": "C:/Users/Leo/Downloads/inpaint-v3-iron-armor-down-right_0001.png",
+    "changed_pixel_count": 235,
+    "offmask_pixel_coordinates": [],
+    "changed_coordinates": "see custody-measurements.json"
+  },
+  "contact_sheet": "docs/playtest/2026-08-06-pixellab-gear-probe/h4-inpaint-v3-armour-down-right/contact-sheet.png",
+  "verdict": "LOSE",
+  "verdict_reason": "ChatGPT visual review found the former body-down-right mask semantically invalid for production body armour: it reaches into face/identity and green-cloak pixels and does not provide a suitable lower-torso breastplate envelope. Inpaint v3 respected that geometry with technical custody PASS, but the extracted result is not equipment-only. The mask is rejected for body-slot production geometry and retained only as historical probe evidence. No further generation is authorized until a replacement mask is visually approved."
+}

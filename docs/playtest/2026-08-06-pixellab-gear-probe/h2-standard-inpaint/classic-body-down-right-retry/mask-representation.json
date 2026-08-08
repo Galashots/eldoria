@@ -1,0 +1,19 @@
+{
+  "representation": "PixelLab-facing inpainting layer",
+  "status": "PROBE_EVIDENCE_ONLY",
+  "canonical_custody_mask": "tools/pipeline/masks/gear-probe-20260806/body-down-right.png",
+  "canonical_sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+  "model_facing_mask": "docs/playtest/2026-08-06-pixellab-gear-probe/h2-standard-inpaint/classic-body-down-right-retry/pixellab-inpainting-black-body-down-right.png",
+  "model_facing_sha256": "0ed9bafb21cc94440e779dd02313c94fc1887af33020da6c43e2caaea23e167e",
+  "canvas": [
+    64,
+    64
+  ],
+  "convention": "black opaque pixels are the editable/painted region; transparent pixels are outside the painted region",
+  "active_pixel_count": 239,
+  "canonical_active_coordinates_sha256": "b732c0a79e3fd2273b0cc89b09ad377211b67a165da0d40372194615fb1bb9dc",
+  "model_active_coordinates_sha256": "b732c0a79e3fd2273b0cc89b09ad377211b67a165da0d40372194615fb1bb9dc",
+  "active_coordinates_identical": true,
+  "transform": "identity; no dilation, erosion, expansion, translation, repaint, crop, scale, or interpolation",
+  "canonical_replacement": false
+}

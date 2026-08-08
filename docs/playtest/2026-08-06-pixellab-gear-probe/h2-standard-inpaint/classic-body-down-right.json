@@ -1,0 +1,62 @@
+{
+  "status": "FINAL",
+  "slot": "body",
+  "facing": "down-right",
+  "route": "standard-inpaint",
+  "generation": {
+    "tool": "PixelLab Pixelorama Inpaint / Classic",
+    "input_base": "assets/adventurer-down-right.png",
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "base_canonical_pixel_sha256": "e8f93f590d2a4f927c80b3cd357c689db14d9091297e8348e7c85ce4f95c107e",
+    "approved_mask": {
+      "status": "PENDING",
+      "scope": "Stage-1 experimental probe only; not global production approval",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right.png",
+      "sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+      "reason": "Retired after visual review: REJECTED FOR BODY-SLOT PRODUCTION GEOMETRY; retained as historical probe evidence only."
+    },
+    "canvas_custody": {
+      "source_canvas_px": 64,
+      "validation_canvas_px": 64,
+      "mask_canvas_px": 64,
+      "transform": "identity; no crop, scale, interpolation, rotation, or translation",
+      "anchor": "origin (0,0)"
+    },
+    "prompt": "plain brushed steel grey iron armor breastplate with simple leather straps fitted only inside the masked torso and shoulder area preserve the exact ranger head hair face cloak hands arms legs boots pose palette silhouette and transparent background no weapon no extra limbs no mannequin no background no effects",
+    "seed": 20260806,
+    "generation_quote": "Not displayed by the live Classic panel",
+    "balance_before": "500 / 2,000 generations",
+    "balance_after": "501 / 2,000 generations",
+    "actual_generations_charged": 1,
+    "raw_output_location": "Private local Pixelorama export; not committed"
+  },
+  "custody_validator": {
+    "scoring_status": "SCORED",
+    "gc4_mask_containment": "PASS",
+    "gc5_offmask_pixels_changed": 0,
+    "gc6_layer_order": "PASS",
+    "gc8_determinism": "PASS",
+    "extracted_layer_sha256": "ee5f4ae0aae66a3d9ad8166933132bf2fad25da6220d8f02127f69546b5a4795",
+    "recomposed_sha256": "fa2204441b9d0a58405fb1e04ea7c00ca7b6c747cf555d4e38637f6eb328de23"
+  },
+  "human_verdicts": {
+    "semantic_gate": "FAIL",
+    "heading_fidelity": "PASS; no-op preserved the Ranger",
+    "cross_facing_recognizability": "not applicable to single-facing probe",
+    "semantic_drift": "PASS; no-op preserved identity, pose, camera and direction",
+    "temporal_stability": "N/A for static test",
+    "north_star_alignment": "Intentional interim gap: no equipment was produced"
+  },
+  "custody": {
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "candidate_sha256": "9d7cbff6414f26d435319ee80d03cd8090016387935abf4211b4e8072861d3b6",
+    "candidate_canonical_pixel_sha256": "e8f93f590d2a4f927c80b3cd357c689db14d9091297e8348e7c85ce4f95c107e",
+    "mask_sha256": "a07def2a3959f598bd6a32c9dee3b79b529731c2bb644ed12952692585327ec5",
+    "raw_output_sha256": ["9d7cbff6414f26d435319ee80d03cd8090016387935abf4211b4e8072861d3b6"],
+    "chrome_canvas_decode": "not run for this export; canonical decoded pixel hash matches the base",
+    "changed_pixel_coordinates": [],
+    "offmask_pixel_coordinates": []
+  },
+  "verdict": "LOSE",
+  "verdict_reason": "First controlled Classic attempt completed and charged one generation, but the exported candidate was pixel-identical to the Ranger base; no armour pixels were produced. The later controlled mask-semantics retry is recorded separately and also LOSE, so Classic Ranger body armour is eliminated after two attempts."
+}

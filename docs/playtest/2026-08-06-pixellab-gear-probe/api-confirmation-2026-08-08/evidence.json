@@ -1,0 +1,92 @@
+{
+  "status": "DRAFT",
+  "verdict": "LOSE",
+  "verdict_reason": "The authoritative API result is 64x64 RGBA and visibly contains a torso armour treatment, but no_background=false returned an opaque full-canvas image. That caused 2,858 changed pixels outside the 239-pixel Candidate C mask, so the result cannot pass gear custody and is not a method WIN.",
+  "slot": "body",
+  "facing": "down-right",
+  "generation": {
+    "tool": "PixelLab REST API POST /v2/inpaint-v3",
+    "purpose": "Single authorized API confirmation of Inpaint v3 with Candidate C",
+    "prompt": "Fitted brushed iron breastplate over the existing torso clothing, shaped to the Ranger's body and perspective, simple steel chest plate with restrained brown leather straps, readable RPG pixel-art armour.",
+    "seed": 20260808,
+    "live_cost_generations": 20,
+    "actual_charge_generations": 20,
+    "balance_before": "1457 / 2,000 generations",
+    "balance_after": "1437 / 2,000 generations",
+    "no_background": false,
+    "crop_to_mask": true,
+    "approved_mask": {
+      "status": "APPROVED",
+      "scope": "one PR54 Inpaint v3 body-armour probe only",
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidate-C.png",
+      "sha256": "454d285e9d3a4782ade5a16f65327d8941950a4fef01ad7bc9ba2a5b3163832d",
+      "active_pixel_count": 239,
+      "mask_convention": "white = generate; black = preserve"
+    },
+    "canvas_custody": {
+      "source_canvas_px": 64,
+      "validation_canvas_px": 64,
+      "mask_canvas_px": 64,
+      "transform": "identity",
+      "anchor": "origin (0,0); no crop, scale, interpolation, rotation, or translation"
+    },
+    "api_schema": {
+      "endpoint": "/v2/inpaint-v3",
+      "schema_sha256": "5562b7f77a25ff6cd7b407257648f061620ffaa4835bae998f8684d88a3f0b27",
+      "request_fields": ["description", "inpainting_image", "mask_image", "seed", "no_background", "crop_to_mask"],
+      "authoritative_result": "completed GET /v2/background-jobs/{job_id} last_response; job id private and redacted"
+    }
+  },
+  "custody": {
+    "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+    "candidate_sha256": "b900f840742eed4aba81ff823d72b238ee35554c0fb9e138a6e12c6ce2b1eda0",
+    "mask_sha256": "454d285e9d3a4782ade5a16f65327d8941950a4fef01ad7bc9ba2a5b3163832d",
+    "raw_output_location": "Private untracked raw API PNG under this evidence directory; outside assets/",
+    "raw_output_sha256": "b900f840742eed4aba81ff823d72b238ee35554c0fb9e138a6e12c6ce2b1eda0"
+  },
+  "custody_measurements": {
+    "raw_dimensions": "64x64",
+    "raw_mode": "RGBA",
+    "raw_alpha_values": [255],
+    "changed_pixel_count": 3097,
+    "off_mask_changed_pixel_count": 2858,
+    "off_mask_coordinates": "custody-measurements.json",
+    "extracted_layer_sha256": "079b261f792520535e88c11dc67295f50ecd9948f51589e5bb839b7c4042a7fe",
+    "recomposed_sha256": "e139d812a8e3e172ad51f30af1c90bf7dadadb52476789af836cde7b3bb2870a",
+    "recomposition_pixel_identical": true
+  },
+  "custody_validator": {
+    "scoring_status": "SCORED",
+    "gc4_mask_containment": "FAIL — 2858 changed pixels outside Candidate C",
+    "gc5_offmask_pixels_changed": 2858,
+    "gc6_layer_order": "PASS",
+    "gc8_determinism": "PASS"
+  },
+  "human_verdicts": {
+    "semantic_gate": "PASS — ChatGPT visual review: recognizable torso armour was generated",
+    "heading_fidelity": "PASS — the single-facing result retained the Ranger presentation sufficiently for semantic review",
+    "cross_facing_recognizability": "NOT APPLICABLE — single facing",
+    "semantic_drift": "PASS — semantic armour success; custody failure is recorded independently",
+    "temporal_stability": "NOT APPLICABLE — no animation",
+    "north_star_alignment": "Intentional interim gap — private research evidence only; no runtime asset changed"
+  },
+  "evidence_files": {
+    "preflight": "preflight-public.json",
+    "request": "request-public.json",
+    "post_response": "post-response-public.json",
+    "job_completion": "job-completion-public.json",
+    "raw_result_metadata": "raw-result-metadata.json",
+    "raw_result": "private untracked raw-api-result.png",
+    "custody_measurements": "custody-measurements.json",
+    "validator_output": "validator-output.txt",
+    "contact_sheet": "api-inpaint-v3-candidate-c-contact-sheet.png"
+  },
+  "research_spend": {
+    "prior_generations": 45,
+    "this_call_generations": 20,
+    "cumulative_generations": 65,
+    "remaining_from_100_generation_ceiling": 35,
+    "next_action": "STOP paid generation; no tuning or follow-up call authorized"
+  },
+  "private_data_policy": "API credential, background job id, and any live result URL are not recorded in public evidence."
+}

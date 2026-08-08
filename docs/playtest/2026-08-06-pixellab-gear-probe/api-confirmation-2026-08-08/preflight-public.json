@@ -1,0 +1,87 @@
+{
+  "status": "PRECALL READ-ONLY GATE PASS",
+  "timestamp_utc": "2026-08-08T14:51:23.649133+00:00",
+  "schema": {
+    "url": "https://api.pixellab.ai/v2/openapi.json",
+    "sha256": "5562b7f77a25ff6cd7b407257648f061620ffaa4835bae998f8684d88a3f0b27",
+    "openapi": "3.1.0",
+    "endpoint": "/inpaint-v3",
+    "operation_id": "inpaint_v3_inpaint_v3_post",
+    "request_fields": [
+      "description",
+      "inpainting_image",
+      "mask_image",
+      "context_image",
+      "bounding_box",
+      "seed",
+      "no_background",
+      "crop_to_mask"
+    ],
+    "required_request_fields": [
+      "description",
+      "inpainting_image",
+      "mask_image"
+    ],
+    "response_fields": [
+      "usage",
+      "background_job_id",
+      "status"
+    ],
+    "background_job_fields": [
+      "usage",
+      "id",
+      "status",
+      "created_at",
+      "last_response"
+    ],
+    "mask_convention": "white = generate; black = preserve",
+    "authoritative_result_path": "GET /v2/background-jobs/{job_id} -> last_response"
+  },
+  "inputs": {
+    "base": {
+      "path": "assets/adventurer-down-right.png",
+      "sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+      "size": "64x64",
+      "mode": "RGBA"
+    },
+    "mask": {
+      "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidate-C.png",
+      "sha256": "454d285e9d3a4782ade5a16f65327d8941950a4fef01ad7bc9ba2a5b3163832d",
+      "active_pixels": 239,
+      "size": "64x64"
+    }
+  },
+  "request": {
+    "method": "POST",
+    "path": "/inpaint-v3",
+    "fields": [
+      "description",
+      "inpainting_image",
+      "mask_image",
+      "seed",
+      "no_background",
+      "crop_to_mask"
+    ],
+    "seed": 20260808,
+    "no_background": false,
+    "crop_to_mask": true,
+    "description": "Fitted brushed iron breastplate over the existing torso clothing, shaped to the Ranger's body and perspective, simple steel chest plate with restrained brown leather straps, readable RPG pixel-art armour.",
+    "input_convention": "Candidate C canonical mask; white = generate; black = preserve",
+    "transforms": "none; exact 64x64 input and mask"
+  },
+  "charging": {
+    "account_model": "subscription generations",
+    "balance_before": {
+      "subscription_generations_remaining": 1457.0,
+      "subscription_generations_total": 2000.0,
+      "subscription_status": "active",
+      "credits_usd": 0.0
+    },
+    "expected_call_cost_generations": 20,
+    "pr54_prior_spend_generations": 45,
+    "pr54_expected_cumulative_generations": 65,
+    "pr54_ceiling_generations": 100,
+    "official_cost_basis": "PixelLab Inpaint v3 documentation: 20 generations per use"
+  },
+  "authorization": "exactly one POST, then poll only its returned job; stop after this call"
+}

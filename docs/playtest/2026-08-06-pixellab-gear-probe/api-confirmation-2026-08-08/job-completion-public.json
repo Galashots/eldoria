@@ -1,0 +1,9 @@
+{
+  "status": "completed",
+  "poll_count": 9,
+  "usage": {
+    "type": "generations",
+    "generations": 20.0
+  },
+  "result_source": "completed background job last_response; private job id redacted"
+}
