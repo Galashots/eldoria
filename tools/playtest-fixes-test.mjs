@@ -231,26 +231,27 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
-// --- ELD-PT-005 (cont.): the TOP-DOWN projection, where one step down-screen is row+1 only ---
+// --- ELD-PT-005 (cont.): a Wilds enemy's overhang, in iso (one step up-screen = row-1, col-1) ---
+// The Wilds render in iso since top-down was retired (combat/armor spec sub-project 1), so this
+// keeps the enemy/combat interaction class under the ELD-PT-005 overhang-tap guard, iso-projected.
 {
-  const { browser, page } = await launch('?iso=0');
+  const { browser, page } = await launch('?iso=1');
   const r = await page.evaluate(() => {
     selectProfile('adventurer');
-    activateArea('wilds');           // not ported to iso, so this exercises the top-down path
-    var isIso = isoActive();
+    activateArea('wilds');
     var enemy = currentEnemies[0];
     enemy.alive = true;
     player.x = enemy.col * TILE;
     player.y = (enemy.row + 1) * TILE;
 
-    // Top-down: the tile the enemy's body overhangs is directly above it, same column.
-    var overhang = interactAtVisibleTile(enemy.row - 1, enemy.col);
+    // Iso screen-y is (px + py) / 2, so the tile the enemy's body overhangs is one step
+    // up-screen: (row - 1, col - 1).
+    var overhang = interactAtVisibleTile(enemy.row - 1, enemy.col - 1);
     var opened = combatOpen;
     closeCombat();
-    return { isIso: isIso, overhang: overhang, opened: opened };
+    return { overhang: overhang, opened: opened };
   });
-  check('ELD-PT-005: the Wilds really is the top-down renderer', r.isIso === false);
-  check('ELD-PT-005: top-down overhang tap opens combat (row+1, same column)',
+  check('ELD-PT-005: iso overhang tap on a Wilds enemy opens combat (row-1, col-1)',
         r.overhang === true && r.opened === true);
   await browser.close();
 }

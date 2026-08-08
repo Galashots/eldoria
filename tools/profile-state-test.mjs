@@ -375,6 +375,44 @@ const check = (name, ok) => { console.log((ok ? 'PASS ' : 'FAIL ') + name); if (
   await browser.close();
 }
 
+// --- Retire top-down (sub-project 1): no save stores a facing, and no field was added ---
+// The top-down renderer is gone; player.facing is runtime-only. saveGame() must serialize no
+// facing, ingestSaveText must drop an incoming facing (no migration), and the schema stays v4.
+{
+  const { browser, page } = await launch();
+  const r = await page.evaluate(() => {
+    localStorage.clear();
+    selectProfile('adventurer');
+    player.facing = 'down-right';
+    saveGame();
+    var stored = localStorage.getItem('eldoria_save_adventurer');
+
+    // Feed a save that explicitly carries a facing through the ONE ingestion door.
+    var parsed = JSON.parse(stored);
+    var withFacing = JSON.stringify({
+      version: 4, area: 'farm', x: parsed.x, y: parsed.y,
+      player: Object.assign({ facing: 'left' }, parsed.player),
+      areas: parsed.areas
+    });
+    var ing = ingestSaveText(withFacing);
+    var playerKeys = Object.keys(defaultState().player);
+    localStorage.clear();
+    return {
+      savedHasFacing: stored.indexOf('"facing"') !== -1,
+      ingestOk: ing.ok,
+      canonicalHasFacing: ing.ok ? ing.canonicalText.indexOf('"facing"') !== -1 : true,
+      version: SAVE_VERSION,
+      playerHasFacingKey: playerKeys.indexOf('facing') !== -1
+    };
+  });
+  check('FACING: saveGame() serializes no facing field', r.savedHasFacing === false);
+  check('FACING: ingestSaveText drops an incoming facing (no migration, not stored)',
+    r.ingestOk === true && r.canonicalHasFacing === false);
+  check('FACING: the deletion adds no save field (schema stays v4)', r.version === 4);
+  check('FACING: defaultState player shape carries no facing key', r.playerHasFacingKey === false);
+  await browser.close();
+}
+
 if (fails.length) {
   console.error('\n' + fails.length + ' profile-state test(s) failed.');
   process.exit(1);

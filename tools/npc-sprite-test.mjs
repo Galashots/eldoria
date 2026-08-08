@@ -36,7 +36,8 @@ try {
         path: rec && rec.img.getAttribute('src')
       };
     });
-    return { bindings, draws: window.__isoNpcDraws.slice(), iso: isoActive() };
+    // Rendering is iso-only since top-down was retired (combat/armor spec sub-project 1).
+    return { bindings, draws: window.__isoNpcDraws.slice(), iso: true };
   }, NPC_IDS);
 
   check('boot: zero console errors', errors.length === 0);

@@ -76,6 +76,16 @@ have a transparent background, the same square canvas, palette, scale, and botto
 foot anchor as its matching base sprite. Missing overlays are invisible; they never
 replace the base hero.
 
+> **Retirement note (2026-08-06, combat/armor spec sub-project 1).** The top-down renderer
+> was retired; the game renders **isometric-only** in every area. These four-cardinal
+> equipment overlays now serve the **Character-screen paper doll only** (it composites the
+> `right` view), and `paperDollDirection` stays `'right'` until per-item art exists. The
+> cardinal-only **attack strips** (`<hero>-<direction>-attack.png`,
+> `<hero>-<direction>-<slot>-attack.png`) retire with the top-down renderer: their code +
+> manifest retirement lands in the immediate fast-follow PR (1b), and item-specific overlay
+> art is authored later in sub-project 5. See
+> [`docs/superpowers/plans/2026-08-06-retire-topdown.md`](../docs/superpowers/plans/2026-08-06-retire-topdown.md).
+
 An optional animated overlay uses the same four-frame horizontal format as a base walk
 strip: `<hero>-<direction>-<slot>-walk.png`. If it is absent, the static overlay remains
 visible while the base body walks.
