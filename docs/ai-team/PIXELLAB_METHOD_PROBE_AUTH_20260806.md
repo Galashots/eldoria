@@ -1,14 +1,16 @@
 # Sub-project A Phase 1 — PixelLab method map and H1a failure record
 
-> **SUSPENDED.** This document records one completed H1a probe and defines a
-> documentation/tooling review protocol. It authorizes no new PixelLab call.
+> **SUSPENDED.** This document records the completed H1a probe and the later
+> single API confirmation probe, then defines the documentation/tooling review
+> protocol. It authorizes no further PixelLab call.
 > ChatGPT is the visual/method reviewer; Leo owns spend, mask approval, and any
 > later authorization. This PR does not merge, integrate art, or change runtime.
 
 ## Scope and disposition
 
 Phase 1 is a method map, custody validator, and failure record. It is not a
-generation batch. The only executed gear probe is H1a:
+production generation batch. The executed probes are H1a and one later Inpaint
+v3 API confirmation:
 
 | Fact | Recorded result |
 |---|---|
@@ -91,10 +93,9 @@ one approved binary mask per slot/facing. The first-facing matrix remains:
 
 For each item: one result, one fixed seed, exact hand and sword orientation
 pinned, and the actual cost disclosed by the live UI recorded before owner
-approval. This document authorizes **zero calls in this revision**. After
-ChatGPT reviews this protocol and the masks, Leo may authorize at most one
-single-facing first-priority call, followed by at most one controlled fallback
-only if the priority rules justify it.
+approval. The browser method map above was the pre-API plan. The later API
+confirmation below was separately authorized by Leo after zero-generation
+schema and cost reconnaissance. No further call is authorized by this record.
 
 Weapon orientation is pinned to the Ranger's right hand. In the draft masks, the
 blade starts at that hand/forearm and extends screen-up-right for `down-right`,
@@ -195,6 +196,42 @@ Base-frame SHA-256 values:
 The validator and evidence schema enforce that a draft or missing mask cannot
 produce GC4/GC5 PASS, and that a `WIN` requires complete machine and human fields.
 Reviewer sheet SHA-256: `b0b1f68d84b754f8181f801eed70b1118462e28fd102e6bc80ad5e3918650960`.
+
+## Inpaint v3 API confirmation — 2026-08-08
+
+The live schema was re-read read-only before the call. `POST /v2/inpaint-v3`
+requires `description`, `inpainting_image`, and `mask_image`; it accepts
+`seed`, `no_background`, and `crop_to_mask`; and it returns a background job
+ID. The completed `GET /v2/background-jobs/{job_id}` response exposes the
+authoritative result in `last_response`. The live schema also documents white
+as generate and black as preserve for the mask.
+
+The account is charged in subscription generations. The official Inpaint v3
+documentation quoted 20 generations per use. The pre-call balance was 1,457
+of 2,000; the post-call balance was 1,437, confirming an actual 20-generation
+charge. PR54 research spend therefore moved from 45 to 65 of the separate
+100-generation-equivalent ceiling. The request used the exact 64x64 Ranger
+frame SHA `a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300`,
+Candidate C SHA
+`454d285e9d3a4782ade5a16f65327d8941950a4fef01ad7bc9ba2a5b3163832d`, seed
+`20260808`, `no_background=false`, and `crop_to_mask=true`. No PixelLab
+credential, job ID, or live result URL is committed.
+
+The authoritative raw result is 64x64 RGBA with alpha value 255 throughout.
+It visibly contains a fitted torso armour treatment, but it changed 3,097
+pixels against the base and 2,858 of those changes were outside Candidate C.
+The deterministic extracted layer SHA is
+`079b261f792520535e88c11dc67295f50ecd9948f51589e5bb839b7c4042a7fe`; the
+recomposed SHA is
+`e139d812a8e3e172ad51f30af1c90bf7dadadb52476789af836cde7b3bb2870a`; and
+recomposition is byte-identical. The machine result is therefore custody
+**LOSE** despite deterministic recomposition. The raw PNG and six-panel sheet
+remain private, outside `assets/`, and are not production gear. No API retry,
+sword, other facing, Transfer Outfit, animation, or other paid route is
+authorized.
+
+Evidence record:
+`docs/playtest/2026-08-06-pixellab-gear-probe/api-confirmation-2026-08-08/evidence.json`.
 
 ## H1a evidence custody
 

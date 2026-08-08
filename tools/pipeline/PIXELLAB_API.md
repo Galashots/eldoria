@@ -430,10 +430,10 @@ resulted from this section.
 
 | Method | Phase 1 disposition |
 |---|---|
-| Try on | First paid discriminator when live-available: exact committed 64×64 Ranger subject plus one pinned armour/item reference; documented 1 generation/run; armour first, one call only; no call authorized by this PR |
-| Multi image | Conditional second discriminator when live-available: exact Ranger plus pinned item/reference image; documented 1 generation/run; only after Try on fails or a materially better contract is demonstrated; no call authorized by this PR |
-| Standard PixelLab Inpaint / Classic in Pixelorama | Controlled fallback on exact committed 64×64 Ranger `down-right`, one approved mask per slot, fixed seed, one result per item; capture live UI cost; no call authorized by this PR |
-| Inpaint v3 in Pixelorama | Quality escalation only; live-verified at 20 generations/use; no call authorized by this PR |
+| Try on | First paid discriminator when live-available: exact committed 64×64 Ranger subject plus one pinned armour/item reference; documented 1 generation/run; armour first, one call only; not exercised in this record |
+| Multi image | Conditional second discriminator when live-available: exact Ranger plus pinned item/reference image; documented 1 generation/run; only after Try on fails or a materially better contract is demonstrated; not exercised in this record |
+| Standard PixelLab Inpaint / Classic in Pixelorama | Controlled fallback on exact committed 64×64 Ranger `down-right`, one approved mask per slot, fixed seed; two controlled armour attempts were completed and the route is LOSE; no retry |
+| Inpaint v3 in Pixelorama | Quality escalation only; live-verified at 20 generations/use; H5 visual method PASS but custody INCONCLUSIVE because the exact embedded export was unrecoverable |
 | `create-character-state` | Parked future raw-source experiment only; complete characters, remote 256px source not byte-identical to committed 64px, normalization not reconstructible, pre-call cost not bounded |
 | Edit Animation Pro | Future owner-gated browser experiment after one-facing test; exact 64×64 directional frames, 20 generations per 2–16-frame batch |
 | Transfer Outfit Pro | Future owner-gated browser experiment after one-facing test; approved visual item reference, 20 generations at 64px |
@@ -465,6 +465,18 @@ Full research artifacts: `GEAR_CUSTODY_CONTRACT.md`,
 `docs/ai-team/PIXELLAB_METHOD_PROBE_AUTH_20260806.md`.
 
 ### Confirmed real (safe to rely on)
+
+- **`POST /v2/inpaint-v3`** — live schema and one authorized API call confirm
+  the request fields `description`, `inpainting_image`, `mask_image`, `seed`,
+  `no_background`, and `crop_to_mask`. The route is Pro, returns a background
+  job ID, and the completed job's `last_response` contains the authoritative
+  result. The live mask convention is **white = generate, black = preserve**.
+  The account charges subscription generations; the official tool cost is 20
+  generations/use. The exact API probe used the 64×64 Ranger and Candidate C,
+  charged 20 generations, and returned a 64×64 opaque RGBA image. It made 3,097
+  changes, including 2,858 off-mask changes, so custody failed. This is live
+  evidence from one request, not a general claim about every prompt or setting.
+  Raw PNG, job metadata, and live URLs remain private and outside `assets/`.
 
 - **`create-character-state`** — real. `character_id` + `edit_description` required;
   applies one edit across all 4/8 rotations; `use_color_palette_from_reference`
@@ -551,6 +563,7 @@ generation is authorized without Leo's explicit per-batch approval.
 Any earlier candidate-arm wording in this historical section is superseded by the
 Phase 1 method map above: no H1b, H2, or Transfer Outfit call is authorized by
 this PR; `create-character-state` is parked; Transfer Outfit is not part of the
-remaining 12-generation cap; and the only completed call was the one H1a probe
-recorded above. Schema verification itself was read-only, while the later H1a
-result was live-exercised evidence.
+remaining 12-generation cap; and the completed live probes are the H1a call plus
+the separately recorded Inpaint v3 API confirmation. Schema verification itself
+was read-only, while both probe results are live-exercised evidence. No further
+generation is authorized by this record.

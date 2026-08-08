@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "path": "/inpaint-v3",
+  "description": "Fitted brushed iron breastplate over the existing torso clothing, shaped to the Ranger's body and perspective, simple steel chest plate with restrained brown leather straps, readable RPG pixel-art armour.",
+  "seed": 20260808,
+  "no_background": false,
+  "crop_to_mask": true,
+  "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
+  "mask_sha256": "454d285e9d3a4782ade5a16f65327d8941950a4fef01ad7bc9ba2a5b3163832d",
+  "base_size": "64x64",
+  "mask_size": "64x64",
+  "mask_convention": "white = generate; black = preserve",
+  "secrets": "excluded"
+}

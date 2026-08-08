@@ -1,0 +1,28 @@
+{
+  "raw_sha256": "b900f840742eed4aba81ff823d72b238ee35554c0fb9e138a6e12c6ce2b1eda0",
+  "bytes": 4307,
+  "size": [
+    64,
+    64
+  ],
+  "mode": "RGBA",
+  "alpha_values": [
+    255
+  ],
+  "source": "authoritative completed background job last_response",
+  "raw_location": "private untracked file; outside assets/",
+  "balance_before": {
+    "subscription_generations_remaining": 1457.0,
+    "subscription_generations_total": 2000.0,
+    "subscription_status": "active",
+    "credits_usd": 0.0
+  },
+  "balance_after": {
+    "subscription_generations_remaining": 1437.0,
+    "subscription_generations_total": 2000.0,
+    "subscription_status": "active",
+    "credits_usd": 0.0
+  },
+  "actual_charge_generations": 20.0,
+  "pr54_cumulative_spend_if_expected": 65.0
+}
