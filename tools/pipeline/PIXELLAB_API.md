@@ -426,7 +426,10 @@ resulted from this section.
 > before custody scoring; H1b is removed and no object/weapon call through that
 > endpoint is authorized.
 
-### Phase 1 method map and corrected Transfer Outfit costs
+### Phase 1 historical method map and corrected Transfer Outfit costs
+
+The table below records the pre-call priority plan. It is superseded by the
+final PR54 disposition that follows it; PR54 authorizes no further generation.
 
 | Method | Phase 1 disposition |
 |---|---|
@@ -437,6 +440,37 @@ resulted from this section.
 | `create-character-state` | Parked future raw-source experiment only; complete characters, remote 256px source not byte-identical to committed 64px, normalization not reconstructible, pre-call cost not bounded |
 | Edit Animation Pro | Future owner-gated browser experiment after one-facing test; exact 64×64 directional frames, 20 generations per 2–16-frame batch |
 | Transfer Outfit Pro | Future owner-gated browser experiment after one-facing test; approved visual item reference, 20 generations at 64px |
+
+### Final PR54 research disposition
+
+The executed-route record is now closed; no further PixelLab generation is
+authorized in PR54:
+
+| Route | Final disposition |
+|---|---|
+| `create-character-v3` direct overlay | **LOSE** — H1a produced a substantially complete headless mannequin/outfit; H1b is removed |
+| Classic Inpaint | **LOSE** after two controlled attempts |
+| Pixpatch v2 / Inpaint M-L | **Technical/custody PASS, semantic LOSE** |
+| Pixelorama Inpaint v3 + Candidate C | **Visual semantic PASS, custody INCONCLUSIVE** because the authoritative embedded-editor export could not be recovered |
+| REST API Inpaint v3 + Candidate C | **Semantic armour success, custody LOSE**: the tested `crop_to_mask=true`, `no_background=false`, Candidate C contract changed 2,858 pixels outside the mask |
+| `create-character-state` | **PARKED**, not a failure |
+| Transfer Outfit | **PARKED / UNTESTED**, not a failure |
+
+No tested PixelLab route has proven the strict pixel-custody properties required
+for direct runtime equipment-overlay generation. PixelLab is currently suitable
+as an Eldoria visual/reference authoring tool for equipment; production layers
+must be created through a separate deterministic/manual-assisted pipeline.
+This REST result is evidence about the tested contract only and must not be
+generalized to every Inpaint v3 configuration. `no_background=true` was not
+tested and is not authorized by PR54.
+
+The final research ledger is **65/100 generations used and 35/100 unspent**.
+The ceiling does not need to be exhausted. Raw API/H1a results, credentials,
+job IDs, live URLs, and private generated pixels remain outside the repository.
+
+Approved PixelLab armour visuals may be retained as design references. Transfer
+Outfit or another method may be revisited only under a new owner-gated
+experiment if a future need justifies it.
 
 Transfer Outfit is a separate browser Pixelorama/Aseprite workflow, with one
 outfit reference per call, and is outside the historical 12-generation cap:

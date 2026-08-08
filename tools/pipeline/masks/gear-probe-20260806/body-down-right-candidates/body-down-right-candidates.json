@@ -9,7 +9,7 @@
   },
   "candidates": {
     "A": {
-      "status": "DRAFT \u2014 NOT OWNER/REVIEW APPROVED",
+      "status": "REJECTED \u2014 visual review: Candidate A was too broad/rounded; not production-approved",
       "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidate-A.png",
       "base_path": "assets/adventurer-down-right.png",
       "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
@@ -73,7 +73,7 @@
       "source": "explicit integer polygons from the committed Ranger base; no generated output used"
     },
     "B": {
-      "status": "DRAFT \u2014 NOT OWNER/REVIEW APPROVED",
+      "status": "REJECTED \u2014 visual review: Candidate B was too permissive; not production-approved",
       "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidate-B.png",
       "base_path": "assets/adventurer-down-right.png",
       "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",
@@ -141,7 +141,7 @@
       "source": "explicit integer polygons from the committed Ranger base; no generated output used"
     },
     "C": {
-      "status": "DRAFT \u2014 NOT OWNER/REVIEW APPROVED",
+      "status": "APPROVED FOR ONE PR54 INPAINT V3 BODY-ARMOUR PROBE ONLY \u2014 NOT GLOBAL PRODUCTION APPROVAL",
       "path": "tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/body-down-right-candidate-C.png",
       "base_path": "assets/adventurer-down-right.png",
       "base_sha256": "a59a6d7caec21752f99304e22390f8fbba7df14aced6efe4b8853b53b9f40300",

@@ -1,4 +1,4 @@
-# Sub-project A Phase 1 — PixelLab method map and H1a failure record
+# Sub-project A Phase 1 — PixelLab method map and final research disposition
 
 > **SUSPENDED.** This document records the completed H1a probe and the later
 > single API confirmation probe, then defines the documentation/tooling review
@@ -30,10 +30,41 @@ an earlier public commit and must be treated as exposed; this revision redacts i
 and does not rewrite published history.
 
 The remaining 10 generations of the historical 12-generation ceiling remain
-recorded, but this document authorizes no automatic spend. The study-derived
-method experiments below are bounded by the existing 100-generation total
-research ceiling and Reserve rules; Leo must still authorize each cheapest
-discriminating call from the live quote. No call is executed by this revision.
+recorded, but this document authorizes no automatic spend. The final PR54
+ledger is **65/100 generations used and 35/100 unspent**; the ceiling does not
+need to be exhausted. No further PixelLab generation is authorized.
+
+## Executive conclusion — final PR54 disposition
+
+PR54 tested methods, not production art. The final dispositions are:
+
+| Route | Final disposition |
+|---|---|
+| `create-character-v3` direct overlay | **LOSE** — H1a returned a complete headless mannequin/outfit rather than equipment-only pixels; H1b is removed |
+| Classic Inpaint | **LOSE** after two controlled attempts |
+| Pixpatch v2 / Inpaint M-L | **Technical/custody PASS, semantic LOSE** |
+| Pixelorama Inpaint v3 + Candidate C | **Visual semantic PASS, custody INCONCLUSIVE** — the authoritative raw export could not be recovered from the embedded editor session |
+| REST API Inpaint v3 + Candidate C | **Semantic armour success, custody LOSE** — the tested `crop_to_mask=true`, `no_background=false` contract changed 2,858 pixels outside Candidate C |
+| `create-character-state` | **PARKED**, not a failure; possible future raw-source experiment only |
+| Transfer Outfit | **PARKED / UNTESTED**, not a failure |
+
+No tested PixelLab route has demonstrated the strict pixel-custody properties
+required for direct runtime equipment-overlay generation. PixelLab is currently
+suitable for Eldoria visual/reference authoring for equipment, but production
+equipment layers must come from a separate deterministic or manual-assisted
+pipeline until a new owner-gated experiment proves otherwise. This REST result
+is evidence about the tested contract only; it does not generalize to every
+possible Inpaint v3 configuration. In particular, PR54 does not test or
+authorize `no_background=true`.
+
+### Future direction
+
+Approved PixelLab armour visuals may serve as design references. Production
+equipment layers should be created through a separate deterministic/manual-
+assisted pipeline using the preserved custody contract. Transfer Outfit or
+another PixelLab method may be revisited later only under a new owner-gated
+experiment if a future need justifies it. Parked routes remain untested or
+deferred, not failures.
 
 ## Method map
 
@@ -58,7 +89,10 @@ off-mask comparison is invalid because interpolation can change pixels outside a
 mask. Only an extracted passing layer may then be deterministically normalized to
 64×64.
 
-### Paid-test priority after Stage 0 review
+### Historical paid-test priority after Stage 0 review
+
+This priority list records the pre-call plan and is superseded by the final
+dispositions above. PR54 is now closed to further generation.
 
 Stage 0 image custody is **PASS**: source-file and export-file SHA-256 values are
 separate provenance fields, the canonical pixel SHA-256 matches, and a Chrome
@@ -171,10 +205,12 @@ actual committed Ranger hero frame; it is not a mask-only sheet.
 
 Mask disposition after visual review: the original `body-down-right.png` is
 **REJECTED FOR BODY-SLOT PRODUCTION GEOMETRY - historical probe evidence only**.
-The other original masks remain draft. Three replacement down-right candidates
-are recorded under
-`tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/`; all
-require ChatGPT/Leo visual approval before any further generation.
+Candidate A and Candidate B are **REJECTED**. Candidate C was visually approved
+and exercised for **one PR54 probe only**; it is **not globally production-
+approved**. The other original masks remain draft. Three replacement down-right
+candidates are recorded under
+`tools/pipeline/masks/gear-probe-20260806/body-down-right-candidates/`; no
+further generation is authorized.
 
 Base-frame SHA-256 values:
 

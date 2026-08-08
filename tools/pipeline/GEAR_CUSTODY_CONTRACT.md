@@ -140,6 +140,20 @@ custody path. Vendor background removal is not a custody step.
   so same-resolution comparison and deterministic extraction remain mandatory.
   Its size/frame/cost table is outside the historical 12-generation cap.
 
+### Final PR54 production conclusion
+
+PR54 tested `create-character-v3` direct overlay, Classic Inpaint, Pixpatch v2,
+Pixelorama Inpaint v3, and REST API Inpaint v3. No tested route demonstrated the
+strict pixel-custody properties required for direct runtime equipment-overlay
+generation. PixelLab remains suitable as a visual/reference authoring tool for
+equipment, while production layers require a separate deterministic or
+manual-assisted pipeline. The REST API result is scoped to its tested
+`crop_to_mask=true`, `no_background=false`, Candidate C contract; it does not
+generalize to all Inpaint v3 configurations. `no_background=true` was not tested
+in PR54. Candidate C was approved only for one probe and is not globally
+production-approved; the original body-down-right mask remains rejected
+historical evidence, and Candidates A/B remain rejected.
+
 ## 6. Human gates and evidence states
 
 Machine PASS is only eligibility for review. Heading fidelity, semantic drift,

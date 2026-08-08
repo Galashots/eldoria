@@ -15,7 +15,7 @@ never produce a PASS without an approved mask.
 status: <DRAFT | SCORED | FINAL>
 slot: <head | body | weapon | cape>
 facing: <exact facing>
-route: <standard-inpaint | direct-overlay | equipped-state | transfer-outfit>
+route: <standard-inpaint | inpaint-v3-api | direct-overlay | equipped-state | transfer-outfit>
 
 Generation
 - interface/tool: <Pixelorama Inpaint | REST | MCP | browser Creator>
@@ -95,7 +95,7 @@ verdict_reason: <one-line reason>
     "status": {"enum": ["DRAFT", "SCORED", "FINAL"]},
     "slot": {"enum": ["head", "body", "weapon", "cape"]},
     "facing": {"type": "string", "minLength": 1},
-    "route": {"enum": ["standard-inpaint", "direct-overlay", "equipped-state", "transfer-outfit"]},
+    "route": {"enum": ["standard-inpaint", "inpaint-v3-api", "direct-overlay", "equipped-state", "transfer-outfit"]},
     "generation": {
       "type": "object",
       "required": ["tool", "endpoint", "schema_verified_on", "command", "approved_references", "approved_mask", "canvas_custody"],

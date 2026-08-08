@@ -63,10 +63,10 @@
     "gc8_determinism": "PASS"
   },
   "human_verdicts": {
-    "semantic_gate": "PENDING — raw API result visibly shows a torso armour treatment; formal visual review remains separate from custody",
-    "heading_fidelity": "PENDING",
+    "semantic_gate": "PASS — ChatGPT visual review: recognizable torso armour was generated",
+    "heading_fidelity": "PASS — the single-facing result retained the Ranger presentation sufficiently for semantic review",
     "cross_facing_recognizability": "NOT APPLICABLE — single facing",
-    "semantic_drift": "PENDING",
+    "semantic_drift": "PASS — semantic armour success; custody failure is recorded independently",
     "temporal_stability": "NOT APPLICABLE — no animation",
     "north_star_alignment": "Intentional interim gap — private research evidence only; no runtime asset changed"
   },
