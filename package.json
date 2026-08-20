@@ -17,6 +17,6 @@
     "ranger-proof:integrity": "node tools/check-ranger-png-integrity.mjs"
   },
   "devDependencies": {
-    "puppeteer": "^25.4.0"
+    "puppeteer": "^25.8.0"
   }
 }
