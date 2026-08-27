@@ -116,7 +116,7 @@ jobs:
         id: gemini_review
         if: steps.credential.outputs.available == 'true'
         continue-on-error: true
-        uses: google-github-actions/run-gemini-cli@f5a57753971eb5f2734c70df7e796f2fcfbef6e7
+        uses: google-github-actions/run-gemini-cli@387c8ddb7a72078825da941758b811b9153c71e8
         env:
           GEMINI_CLI_TRUST_WORKSPACE: "true"
           GITHUB_TOKEN: ${{ github.token }}
